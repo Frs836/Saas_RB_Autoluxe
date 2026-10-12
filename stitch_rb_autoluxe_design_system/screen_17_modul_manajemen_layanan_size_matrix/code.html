@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+
+<html lang="id"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"brand-500":"#2563EB","surface-container-highest":"#e1e2ed","brand-400":"#60A5FA","success-base":"#10B981","surface-container":"#ededf9","surface-tint":"#0053db","tertiary-container":"#bc4800","on-surface-variant":"#434655","primary-container":"#2563eb","text-muted":"#94A3B8","on-secondary":"#ffffff","border-strong":"#CBD5E1","danger-surface":"#FEE2E2","secondary-fixed-dim":"#b7c4ff","surface-bright":"#faf8ff","error":"#ba1a1a","secondary":"#1d4ed8","warning-base":"#F59E0B","on-secondary-fixed":"#001551","text-secondary":"#475569","canvas":"#F0F4FA","on-secondary-fixed-variant":"#0039b5","on-surface":"#191b23","on-primary-container":"#eeefff","brand-600":"#1D4ED8","on-primary":"#ffffff","border-subtle":"#E2E8F0","surface-overlay":"#EBF2FA","surface-dim":"#d9d9e5","warning-surface":"#FEF3C7","secondary-fixed":"#dce1ff","brand-50":"#EFF6FF","on-error-container":"#93000a","outline":"#737686","tertiary-fixed-dim":"#ffb596","surface":"#FFFFFF","on-tertiary-fixed":"#360f00","primary-fixed":"#dbe1ff","surface-container-high":"#e7e7f3","on-error":"#ffffff","primary-fixed-dim":"#b4c5ff","tertiary-fixed":"#ffdbcd","whatsapp":"#25D366","on-tertiary":"#ffffff","danger-base":"#EF4444","on-tertiary-container":"#ffede6","surface-container-lowest":"#ffffff","inverse-on-surface":"#f0f0fb","tertiary":"#943700","inverse-surface":"#2e3039","inverse-primary":"#b4c5ff","on-background":"#191b23","on-secondary-container":"#fffbff","on-primary-fixed":"#00174b","primary":"#004ac6","success-text":"#065F46","on-primary-fixed-variant":"#003ea8","danger-text":"#991B1B","error-container":"#ffdad6","outline-variant":"#c3c6d7","surface-container-low":"#f3f3fe","secondary-container":"#4069f2","text-primary":"#0F172A","brand-100":"#DBEAFE","warning-text":"#78350F","success-surface":"#ECFDF5","surface-variant":"#e1e2ed","brand-200":"#BFDBFE","on-tertiary-fixed-variant":"#7d2d00","brand-700":"#1E40AF","background":"#faf8ff"},borderRadius:{DEFAULT:"0.25rem",lg:"0.5rem",xl:"0.75rem",full:"9999px"},spacing:{"space-xl":"2rem","space-sm":"0.5rem","space-xs":"0.25rem",margin:"1.5rem","space-lg":"1.5rem","space-md":"1rem",gutter:"1rem"},fontFamily:{"body-regular":["Plus Jakarta Sans"],"headline-1":["Plus Jakarta Sans"],"body-bold":["Plus Jakarta Sans"],"headline-2":["Plus Jakarta Sans"],"metric-display":["Plus Jakarta Sans"],caption:["Plus Jakarta Sans"],"micro-badge":["Plus Jakarta Sans"]},fontSize:{"body-regular":["14px",{lineHeight:"20px",letterSpacing:"0em",fontWeight:"400"}],"headline-1":["20px",{lineHeight:"26px",letterSpacing:"-0.01em",fontWeight:"600"}],"body-bold":["14px",{lineHeight:"20px",letterSpacing:"0em",fontWeight:"600"}],"headline-2":["16px",{lineHeight:"22px",letterSpacing:"0em",fontWeight:"600"}],"metric-display":["28px",{lineHeight:"34px",letterSpacing:"-0.02em",fontWeight:"700"}],caption:["12px",{lineHeight:"16px",letterSpacing:"+0.01em",fontWeight:"500"}],"micro-badge":["10px",{lineHeight:"12px",letterSpacing:"+0.02em",fontWeight:"700"}]}}}};</script><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#F0F4FA;color:#191b23;}body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}.clay-notch{box-shadow:0px 12px 28px -6px rgba(37,99,235,0.12),0px 8px 12px -4px rgba(15,23,42,0.03),inset 0px 2px 4px rgba(255,255,255,0.95),inset 0px -2px 4px rgba(37,99,235,0.05);}.clay-fab{box-shadow:0px 10px 22px rgba(37,99,235,0.32),inset 0px 2px 4px rgba(255,255,255,0.4);}</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-canvas font-body-regular text-body-regular antialiased flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/85 backdrop-blur-xl shadow-[0_4px_20px_rgba(37,99,235,0.06)]"><div class="h-20 px-4 flex items-center justify-between gap-3"><div class="flex items-center gap-3 min-w-0 flex-1"><img alt="RB LOGO NEW.PNG" class="h-8 w-auto object-contain shrink-0" src="https://lh3.googleusercontent.com/aida/AEtjO1WlrwZaM2-D-fZsBos3T-x4ewp2MDZJvwv7BgDisQ1hnvnY-y6sQTDouFpgoavjKbeSsxxqCxnloE0PhFg_3g41XEkQUy6uJ7-SUmyZUunj9hXIoabKCmt_xY1ip2_TeVd6mf_SbIO-I0BXVYz314m0diiPr04laX5J_3BAvV4zLZ51EEUSceyQK5bqgHmGhNhFJY0ENYm-yoQMR4mohPnMu_BzZxSyIvjB0_mDtZZt3zW3r91HKikf1PqoPQQ3iWy3WVTIER2aUw"/><div class="flex flex-col min-w-0"><div class="flex items-center gap-2"><h1 class="font-headline-2 text-headline-2 text-on-surface truncate tracking-tight">Beranda</h1></div><div class="flex items-center gap-1.5 mt-0.5"><span class="inline-flex items-center px-1.5 py-0.5 rounded-full bg-brand-50 text-brand-700 font-micro-badge text-micro-badge uppercase tracking-wider">Super Admin / Owner</span></div></div></div><div class="flex items-center gap-2 shrink-0"><button aria-label="Tambah Cabang" class="w-11 h-11 rounded-xl bg-brand-500 hover:bg-brand-600 active:scale-95 transition-all text-on-primary flex items-center justify-center shadow-[0_4px_12px_rgba(37,99,235,0.25)]" type="button"><span class="material-symbols-outlined text-[20px]">add</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex-1 flex flex-col relative w-full pt-20 pb-28 px-4 bg-canvas"><div class="flex flex-col w-full pb-28">
+<!-- Branch Badge & Quick Context Bar -->
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-2">
+<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-50 text-brand-600 font-caption text-caption shadow-[inset_0px_1px_2px_rgba(255,255,255,0.8)]">
+<span class="material-symbols-outlined text-[16px] text-brand-500">store</span>
+<span class="font-body-bold">Cabang: Depok Utama</span>
+</span>
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-success-surface text-success-text font-micro-badge text-micro-badge">
+<span class="w-1.5 h-1.5 rounded-full bg-success-base"></span>
+        Online POS
+      </span>
+</div>
+<button class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-brand-500 text-on-primary font-caption text-caption shadow-[0_6px_16px_rgba(37,99,235,0.28),inset_0_1px_2px_rgba(255,255,255,0.4)] active:scale-95 transition-transform" type="button">
+<span class="material-symbols-outlined text-[16px]">add</span>
+<span class="font-body-bold">Tambah Layanan</span>
+</button>
+</div>
+<!-- Search Bar with Clay Aesthetic -->
+<div class="relative mb-3.5">
+<div class="relative flex items-center w-full bg-surface rounded-xl shadow-[0_4px_16px_rgba(37,99,235,0.06),inset_0_2px_4px_rgba(255,255,255,0.95)]">
+<span class="material-symbols-outlined absolute left-3.5 text-text-muted text-[20px] pointer-events-none">search</span>
+<input class="w-full h-11 pl-10 pr-4 bg-transparent text-text-primary placeholder:text-text-muted font-body-regular text-body-regular rounded-xl focus:outline-none" placeholder="Cari nama layanan atau paket detailing..." type="text"/>
+<button aria-label="Filter" class="pr-3 text-text-muted hover:text-brand-500 flex items-center" type="button">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+</button>
+</div>
+</div>
+<!-- Horizontal Filter Pills -->
+<div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 mb-4">
+<button class="shrink-0 px-4 py-2 rounded-full bg-gradient-to-r from-brand-700 via-brand-500 to-brand-400 text-on-primary font-caption text-caption shadow-[0_4px_12px_rgba(37,99,235,0.25)]" type="button">
+      Semua Layanan
+    </button>
+<button class="shrink-0 px-4 py-2 rounded-full bg-surface text-text-secondary font-caption text-caption shadow-[0_2px_6px_rgba(15,23,42,0.04)] active:scale-95 transition-transform" type="button">
+      Wash
+    </button>
+<button class="shrink-0 px-4 py-2 rounded-full bg-surface text-text-secondary font-caption text-caption shadow-[0_2px_6px_rgba(15,23,42,0.04)] active:scale-95 transition-transform" type="button">
+      Coating Nano
+    </button>
+<button class="shrink-0 px-4 py-2 rounded-full bg-surface text-text-secondary font-caption text-caption shadow-[0_2px_6px_rgba(15,23,42,0.04)] active:scale-95 transition-transform" type="button">
+      Detailing
+    </button>
+<button class="shrink-0 px-4 py-2 rounded-full bg-surface text-text-secondary font-caption text-caption shadow-[0_2px_6px_rgba(15,23,42,0.04)] active:scale-95 transition-transform" type="button">
+      Bundling
+    </button>
+</div>
+<!-- Stats Mosaic Overview Cards -->
+<div class="grid grid-cols-2 gap-3 mb-4">
+<!-- Card Stat 1 -->
+<div class="p-3.5 rounded-2xl bg-surface shadow-[0_12px_28px_-6px_rgba(37,99,235,0.1),0_8px_12px_-4px_rgba(15,23,42,0.02)] relative overflow-hidden flex flex-col justify-between">
+<div class="flex items-center justify-between mb-1.5">
+<span class="font-caption text-caption text-text-secondary">Layanan Aktif</span>
+<div class="w-7 h-7 rounded-lg bg-brand-50 flex items-center justify-center text-brand-600">
+<span class="material-symbols-outlined text-[16px]">verified</span>
+</div>
+</div>
+<div class="flex items-baseline gap-1.5">
+<span class="font-headline-1 text-headline-1 text-text-primary">24</span>
+<span class="font-caption text-caption text-text-muted">Item Menu</span>
+</div>
+<div class="mt-1 flex items-center gap-1 text-text-muted font-micro-badge text-micro-badge">
+<span class="w-1.5 h-1.5 rounded-full bg-success-base"></span>
+        3 Kategori Aktif
+      </div>
+</div>
+<!-- Card Stat 2 -->
+<div class="p-3.5 rounded-2xl bg-surface shadow-[0_12px_28px_-6px_rgba(37,99,235,0.1),0_8px_12px_-4px_rgba(15,23,42,0.02)] relative overflow-hidden flex flex-col justify-between">
+<div class="flex items-center justify-between mb-1.5">
+<span class="font-caption text-caption text-text-secondary">Size Matrix</span>
+<div class="w-7 h-7 rounded-lg bg-secondary-fixed flex items-center justify-center text-brand-600">
+<span class="material-symbols-outlined text-[16px]">grid_view</span>
+</div>
+</div>
+<div class="flex items-baseline gap-1.5">
+<span class="font-headline-1 text-headline-1 text-text-primary">5</span>
+<span class="font-caption text-caption text-text-muted">Tier Kendaraan</span>
+</div>
+<div class="mt-1 text-brand-600 font-micro-badge text-micro-badge font-body-bold">
+        S, M, L, XL, Motor
+      </div>
+</div>
+</div>
+<!-- Service Catalog List -->
+<div class="flex flex-col gap-3.5">
+<!-- Card 1: Nano Ceramic Coating 3-Layers -->
+<div class="p-4 rounded-2xl bg-surface shadow-[0_12px_28px_-6px_rgba(37,99,235,0.12),0_8px_12px_-4px_rgba(15,23,42,0.03)] relative">
+<!-- Card Header -->
+<div class="flex items-start justify-between gap-2 mb-3">
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-2 mb-1">
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-brand-700 font-micro-badge text-micro-badge uppercase tracking-wide">
+              Coating Nano
+            </span>
+<span class="inline-flex items-center gap-1 text-success-text font-caption text-caption">
+<span class="w-1.5 h-1.5 rounded-full bg-success-base"></span>
+              Aktif
+            </span>
+</div>
+<h2 class="font-headline-2 text-headline-2 text-text-primary truncate">Nano Ceramic Coating 3-Layers</h2>
+</div>
+<!-- Toggle Switch -->
+<button aria-label="Toggle Service" class="shrink-0 w-11 h-6 bg-brand-500 rounded-full p-0.5 flex items-center justify-end shadow-inner transition-colors" type="button">
+<div class="w-5 h-5 rounded-full bg-surface shadow-sm"></div>
+</button>
+</div>
+<!-- Size Matrix Pricing Grid (5 Columns) -->
+<div class="mb-3.5">
+<div class="text-text-muted font-micro-badge text-micro-badge uppercase mb-1.5 tracking-wider flex items-center justify-between">
+<span>Matriks Harga Sesuai Ukuran</span>
+<span class="text-brand-600 flex items-center gap-0.5"><span class="material-symbols-outlined text-[12px]">info</span> Standar RB</span>
+</div>
+<div class="grid grid-cols-5 gap-1.5">
+<!-- Col Size S -->
+<div class="flex flex-col items-center justify-center p-2 rounded-xl bg-surface-container-low text-center">
+<span class="font-micro-badge text-micro-badge text-text-muted uppercase">Size S</span>
+<span class="font-body-bold text-caption text-text-primary mt-0.5">2.8M</span>
+</div>
+<!-- Col Size M -->
+<div class="flex flex-col items-center justify-center p-2 rounded-xl bg-surface-container-low text-center">
+<span class="font-micro-badge text-micro-badge text-text-muted uppercase">Size M</span>
+<span class="font-body-bold text-caption text-text-primary mt-0.5">3.1M</span>
+</div>
+<!-- Col Size L (Highlighted: Bestseller) -->
+<div class="relative flex flex-col items-center justify-center p-2 rounded-xl bg-brand-50 shadow-[0_2px_8px_rgba(37,99,235,0.12),inset_0_1px_2px_rgba(255,255,255,0.9)] text-center">
+<span class="absolute -top-2 px-1 py-0.2 rounded-full bg-brand-600 text-on-primary font-micro-badge text-[9px] uppercase tracking-tighter">Laris</span>
+<span class="font-micro-badge text-micro-badge text-brand-700 uppercase font-body-bold">Size L</span>
+<span class="font-body-bold text-caption text-brand-600 mt-0.5">3.5M</span>
+</div>
+<!-- Col Size XL -->
+<div class="flex flex-col items-center justify-center p-2 rounded-xl bg-surface-container-low text-center">
+<span class="font-micro-badge text-micro-badge text-text-muted uppercase">Size XL</span>
+<span class="font-body-bold text-caption text-text-primary mt-0.5">4.0M</span>
+</div>
+<!-- Col Motor -->
+<div class="flex flex-col items-center justify-center p-2 rounded-xl bg-surface-container-low text-center">
+<span class="font-micro-badge text-micro-badge text-text-muted uppercase">Motor</span>
+<span class="font-body-bold text-caption text-text-primary mt-0.5">1.8M</span>
+</div>
+</div>
+</div>
+<!-- Card Action Footer -->
+<div class="flex items-center justify-between pt-2.5 bg-surface-bright -mx-4 -mb-4 px-4 py-3 rounded-b-2xl">
+<div class="flex items-center gap-1.5 text-text-secondary font-caption text-caption min-w-0 pr-2">
+<span class="material-symbols-outlined text-[16px] text-brand-500 shrink-0">schedule</span>
+<span class="truncate">8 Jam • Garansi 3 Th</span>
+</div>
+<button class="shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-lg bg-brand-50 text-brand-600 hover:bg-brand-100 font-caption text-caption font-body-bold shadow-[inset_0_1px_2px_rgba(255,255,255,0.8)] active:scale-95 transition-all" type="button">
+<span class="material-symbols-outlined text-[15px]">edit</span>
+<span>Edit Matrix</span>
+</button>
+</div>
+</div>
+<!-- Card 2: Express Wash & Wax Gloss -->
+<div class="p-4 rounded-2xl bg-surface shadow-[0_12px_28px_-6px_rgba(37,99,235,0.12),0_8px_12px_-4px_rgba(15,23,42,0.03)] relative">
+<!-- Card Header -->
+<div class="flex items-start justify-between gap-2 mb-3">
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-2 mb-1">
+<span class="px-2 py-0.5 rounded-full bg-success-surface text-success-text font-micro-badge text-micro-badge uppercase tracking-wide">
+              Wash Reguler
+            </span>
+<span class="inline-flex items-center gap-1 text-success-text font-caption text-caption">
+<span class="w-1.5 h-1.5 rounded-full bg-success-base"></span>
+              Aktif
+            </span>
+</div>
+<h2 class="font-headline-2 text-headline-2 text-text-primary truncate">Express Wash &amp; Wax Gloss</h2>
+</div>
+<!-- Toggle Switch -->
+<button aria-label="Toggle Service" class="shrink-0 w-11 h-6 bg-brand-500 rounded-full p-0.5 flex items-center justify-end shadow-inner transition-colors" type="button">
+<div class="w-5 h-5 rounded-full bg-surface shadow-sm"></div>
+</button>
+</div>
+<!-- Size Matrix Pricing Grid (5 Columns) -->
+<div class="mb-3.5">
+<div class="text-text-muted font-micro-badge text-micro-badge uppercase mb-1.5 tracking-wider flex items-center justify-between">
+<span>Matriks Harga Sesuai Ukuran</span>
+<span class="text-text-secondary font-caption text-[11px]">Hitungan Flat</span>
+</div>
+<div class="grid grid-cols-5 gap-1.5">
+<!-- Col Size S -->
+<div class="flex flex-col items-center justify-center p-2 rounded-xl bg-surface-container-low text-center">
+<span class="font-micro-badge text-micro-badge text-text-muted uppercase">Size S</span>
+<span class="font-body-bold text-caption text-text-primary mt-0.5">120k</span>
+</div>
+<!-- Col Size M -->
+<div class="flex flex-col items-center justify-center p-2 rounded-xl bg-surface-container-low text-center">
+<span class="font-micro-badge text-micro-badge text-text-muted uppercase">Size M</span>
+<span class="font-body-bold text-caption text-text-primary mt-0.5">135k</span>
+</div>
+<!-- Col Size L -->
+<div class="flex flex-col items-center justify-center p-2 rounded-xl bg-surface-container-low text-center">
+<span class="font-micro-badge text-micro-badge text-text-muted uppercase">Size L</span>
+<span class="font-body-bold text-caption text-text-primary mt-0.5">150k</span>
+</div>
+<!-- Col Size XL -->
+<div class="flex flex-col items-center justify-center p-2 rounded-xl bg-surface-container-low text-center">
+<span class="font-micro-badge text-micro-badge text-text-muted uppercase">Size XL</span>
+<span class="font-body-bold text-caption text-text-primary mt-0.5">175k</span>
+</div>
+<!-- Col Motor -->
+<div class="flex flex-col items-center justify-center p-2 rounded-xl bg-surface-container-low text-center">
+<span class="font-micro-badge text-micro-badge text-text-muted uppercase">Motor</span>
+<span class="font-body-bold text-caption text-text-primary mt-0.5">60k</span>
+</div>
+</div>
+</div>
+<!-- Card Action Footer -->
+<div class="flex items-center justify-between pt-2.5 bg-surface-bright -mx-4 -mb-4 px-4 py-3 rounded-b-2xl">
+<div class="flex items-center gap-1.5 text-text-secondary font-caption text-caption min-w-0 pr-2">
+<span class="material-symbols-outlined text-[16px] text-brand-500 shrink-0">timer</span>
+<span class="truncate">Durasi: 45 Menit</span>
+</div>
+<button class="shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-lg bg-brand-50 text-brand-600 hover:bg-brand-100 font-caption text-caption font-body-bold shadow-[inset_0_1px_2px_rgba(255,255,255,0.8)] active:scale-95 transition-all" type="button">
+<span class="material-symbols-outlined text-[15px]">edit</span>
+<span>Edit Matrix</span>
+</button>
+</div>
+</div>
+<!-- Card 3: Interior Deep Clean & Ozone Anti-Bakteri -->
+<div class="p-4 rounded-2xl bg-surface shadow-[0_12px_28px_-6px_rgba(37,99,235,0.12),0_8px_12px_-4px_rgba(15,23,42,0.03)] relative">
+<!-- Card Header -->
+<div class="flex items-start justify-between gap-2 mb-3">
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-2 mb-1">
+<span class="px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 font-micro-badge text-micro-badge uppercase tracking-wide">
+              Detailing Interior
+            </span>
+<span class="inline-flex items-center gap-1 text-success-text font-caption text-caption">
+<span class="w-1.5 h-1.5 rounded-full bg-success-base"></span>
+              Aktif
+            </span>
+</div>
+<h2 class="font-headline-2 text-headline-2 text-text-primary truncate">Interior Deep Clean &amp; Ozone</h2>
+</div>
+<!-- Toggle Switch -->
+<button aria-label="Toggle Service" class="shrink-0 w-11 h-6 bg-brand-500 rounded-full p-0.5 flex items-center justify-end shadow-inner transition-colors" type="button">
+<div class="w-5 h-5 rounded-full bg-surface shadow-sm"></div>
+</button>
+</div>
+<!-- Size Matrix Pricing Grid (5 Columns) -->
+<div class="mb-3.5">
+<div class="text-text-muted font-micro-badge text-micro-badge uppercase mb-1.5 tracking-wider flex items-center justify-between">
+<span>Matriks Harga Sesuai Ukuran</span>
+<span class="text-text-secondary font-caption text-[11px]">Paket Sehat</span>
+</div>
+<div class="grid grid-cols-5 gap-1.5">
+<!-- Col Size S -->
+<div class="flex flex-col items-center justify-center p-2 rounded-xl bg-surface-container-low text-center">
+<span class="font-micro-badge text-micro-badge text-text-muted uppercase">Size S</span>
+<span class="font-body-bold text-caption text-text-primary mt-0.5">450k</span>
+</div>
+<!-- Col Size M -->
+<div class="flex flex-col items-center justify-center p-2 rounded-xl bg-surface-container-low text-center">
+<span class="font-micro-badge text-micro-badge text-text-muted uppercase">Size M</span>
+<span class="font-body-bold text-caption text-text-primary mt-0.5">500k</span>
+</div>
+<!-- Col Size L -->
+<div class="flex flex-col items-center justify-center p-2 rounded-xl bg-surface-container-low text-center">
+<span class="font-micro-badge text-micro-badge text-text-muted uppercase">Size L</span>
+<span class="font-body-bold text-caption text-text-primary mt-0.5">600k</span>
+</div>
+<!-- Col Size XL -->
+<div class="flex flex-col items-center justify-center p-2 rounded-xl bg-surface-container-low text-center">
+<span class="font-micro-badge text-micro-badge text-text-muted uppercase">Size XL</span>
+<span class="font-body-bold text-caption text-text-primary mt-0.5">750k</span>
+</div>
+<!-- Col Motor -->
+<div class="flex flex-col items-center justify-center p-2 rounded-xl bg-surface-container-low text-center">
+<span class="font-micro-badge text-micro-badge text-text-muted uppercase">Motor</span>
+<span class="font-body-bold text-caption text-text-primary mt-0.5">250k</span>
+</div>
+</div>
+</div>
+<!-- Card Action Footer -->
+<div class="flex items-center justify-between pt-2.5 bg-surface-bright -mx-4 -mb-4 px-4 py-3 rounded-b-2xl">
+<div class="flex items-center gap-1.5 text-text-secondary font-caption text-caption min-w-0 pr-2">
+<span class="material-symbols-outlined text-[16px] text-brand-500 shrink-0">heat_pump</span>
+<span class="truncate">3 Jam • Free Fogging</span>
+</div>
+<button class="shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-lg bg-brand-50 text-brand-600 hover:bg-brand-100 font-caption text-caption font-body-bold shadow-[inset_0_1px_2px_rgba(255,255,255,0.8)] active:scale-95 transition-all" type="button">
+<span class="material-symbols-outlined text-[15px]">edit</span>
+<span>Edit Matrix</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Cloud Sync Notification Banner -->
+<div class="mt-4 p-3 rounded-2xl bg-surface shadow-[0_8px_20px_rgba(37,99,235,0.08)] flex items-center justify-between gap-3">
+<div class="flex items-center gap-2.5 min-w-0">
+<div class="w-8 h-8 rounded-full bg-success-surface flex items-center justify-center text-success-base shrink-0">
+<span class="material-symbols-outlined text-[18px]">cloud_done</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-body-bold text-caption text-text-primary truncate">Matriks Tersinkronisasi</span>
+<span class="font-caption text-[11px] text-text-muted truncate">Perubahan langsung aktif di terminal kasir</span>
+</div>
+</div>
+<span class="px-2 py-1 rounded-md bg-surface-container-high text-brand-600 font-micro-badge text-micro-badge shrink-0">
+      Auto-Sync
+    </span>
+</div>
+</div></main><nav class="fixed bottom-0 w-full z-50 pb-safe px-4 pointer-events-none" data-active-classes="text-brand-600 font-body-bold"><div class="max-w-md mx-auto mb-3 pointer-events-auto"><div class="relative bg-surface/95 backdrop-blur-xl rounded-full clay-notch px-3 py-2 flex items-center justify-between"><a class="flex flex-col items-center justify-center min-w-[56px] min-h-[44px] text-on-surface-variant transition-colors hover:text-brand-500" data-path="beranda" href="#"><span class="material-symbols-outlined text-[22px]">storefront</span><span class="font-caption text-caption mt-0.5">Beranda</span></a><a class="flex flex-col items-center justify-center min-w-[56px] min-h-[44px] text-on-surface-variant transition-colors hover:text-brand-500" data-path="absensi" href="#"><span class="material-symbols-outlined text-[22px]">badge</span><span class="font-caption text-caption mt-0.5">Absensi</span></a><div class="relative -top-5 flex items-center justify-center px-1"><a class="w-14 h-14 rounded-full bg-gradient-to-tr from-brand-600 to-brand-400 text-on-primary flex items-center justify-center clay-fab active:scale-90 transition-transform" data-path="tambah-order" href="#"><span class="material-symbols-outlined text-[28px]">add</span></a></div><a class="flex flex-col items-center justify-center min-w-[56px] min-h-[44px] text-on-surface-variant transition-colors hover:text-brand-500" data-path="order" href="#"><span class="material-symbols-outlined text-[22px]">receipt_long</span><span class="font-caption text-caption mt-0.5">Order</span></a><a class="flex flex-col items-center justify-center min-w-[56px] min-h-[44px] text-on-surface-variant transition-colors hover:text-brand-500" data-path="profil" href="#"><span class="material-symbols-outlined text-[22px]">manage_accounts</span><span class="font-caption text-caption mt-0.5">Profil</span></a></div></div></nav></body></html>

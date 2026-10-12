@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#F0F4FA;}body{overscroll-behavior:none;font-family:'Plus Jakarta Sans',sans-serif;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "tertiary-fixed": "#ffdbcd", "on-primary-fixed-variant": "#003ea8", "inverse-surface": "#2e3039", "surface-overlay": "#EBF2FA", "warning-base": "#F59E0B", "text-secondary": "#475569", "text-muted": "#94A3B8", "danger-base": "#EF4444", "error-container": "#ffdad6", "canvas": "#F0F4FA", "on-surface-variant": "#434655", "on-primary-fixed": "#00174b", "tertiary-container": "#bc4800", "tertiary-fixed-dim": "#ffb596", "danger-text": "#991B1B", "on-error-container": "#93000a", "on-secondary-fixed": "#001551", "on-tertiary-container": "#ffede6", "outline-variant": "#c3c6d7", "secondary": "#1d4ed8", "surface-variant": "#e1e2ed", "inverse-primary": "#b4c5ff", "inverse-on-surface": "#f0f0fb", "primary-container": "#2563eb", "surface-container-highest": "#e1e2ed", "on-tertiary-fixed": "#360f00", "surface-container-high": "#e7e7f3", "warning-text": "#78350F", "on-secondary": "#ffffff", "text-primary": "#0F172A", "surface-bright": "#faf8ff", "on-secondary-container": "#fffbff", "on-secondary-fixed-variant": "#0039b5", "error": "#ba1a1a", "whatsapp": "#25D366", "secondary-container": "#4069f2", "secondary-fixed": "#dce1ff", "danger-surface": "#FEE2E2", "primary-fixed-dim": "#b4c5ff", "on-error": "#ffffff", "background": "#faf8ff", "surface-dim": "#d9d9e5", "border-subtle": "#E2E8F0", "surface-tint": "#0053db", "brand-100": "#DBEAFE", "on-background": "#191b23", "brand-50": "#EFF6FF", "brand-700": "#1E40AF", "on-surface": "#191b23", "brand-400": "#60A5FA", "surface": "#FFFFFF", "on-primary-container": "#eeefff", "surface-container": "#ededf9", "primary-fixed": "#dbe1ff", "border-strong": "#CBD5E1", "brand-500": "#2563EB", "on-tertiary-fixed-variant": "#7d2d00", "surface-container-low": "#f3f3fe", "on-tertiary": "#ffffff", "primary": "#004ac6", "outline": "#737686", "brand-600": "#1D4ED8", "success-text": "#065F46", "tertiary": "#943700", "success-base": "#10B981", "secondary-fixed-dim": "#b7c4ff", "warning-surface": "#FEF3C7", "success-surface": "#ECFDF5", "surface-container-lowest": "#ffffff", "brand-200": "#BFDBFE", "on-primary": "#ffffff" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-xl": "2rem", "space-lg": "1.5rem", "space-md": "1rem", "space-xs": "0.25rem", "gutter": "1rem", "space-sm": "0.5rem", "margin": "1.5rem" }, "fontFamily": { "caption": ["Plus Jakarta Sans"], "body-bold": ["Plus Jakarta Sans"], "headline-1": ["Plus Jakarta Sans"], "metric-display": ["Plus Jakarta Sans"], "headline-2": ["Plus Jakarta Sans"], "body-regular": ["Plus Jakarta Sans"], "micro-badge": ["Plus Jakarta Sans"] }, "fontSize": { "caption": ["12px", { "lineHeight": "16px", "letterSpacing": "+0.01em", "fontWeight": "500" }], "body-bold": ["14px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "600" }], "headline-1": ["20px", { "lineHeight": "26px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "metric-display": ["28px", { "lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "headline-2": ["16px", { "lineHeight": "22px", "letterSpacing": "0em", "fontWeight": "600" }], "body-regular": ["14px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400" }], "micro-badge": ["10px", { "lineHeight": "12px", "letterSpacing": "+0.02em", "fontWeight": "700" }] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-canvas text-on-surface flex flex-col min-h-screen selection:bg-brand-100 selection:text-brand-700"><header class="fixed top-0 inset-x-0 z-50 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] pt-safe"><div class="h-16 px-4 flex items-center justify-between gap-3"><div class="flex items-center gap-3 min-w-0 flex-1"><img alt="RB LOGO NEW.PNG" class="h-8 w-auto object-contain shrink-0" src="https://lh3.googleusercontent.com/aida/AEtjO1WlrwZaM2-D-fZsBos3T-x4ewp2MDZJvwv7BgDisQ1hnvnY-y6sQTDouFpgoavjKbeSsxxqCxnloE0PhFg_3g41XEkQUy6uJ7-SUmyZUunj9hXIoabKCmt_xY1ip2_TeVd6mf_SbIO-I0BXVYz314m0diiPr04laX5J_3BAvV4zLZ51EEUSceyQK5bqgHmGhNhFJY0ENYm-yoQMR4mohPnMu_BzZxSyIvjB0_mDtZZt3zW3r91HKikf1PqoPQQ3iWy3WVTIER2aUw"/><div class="flex flex-col min-w-0"><div class="flex items-center gap-2"><h1 class="font-headline-2 text-headline-2 text-text-primary font-bold truncate leading-none">Komisi &amp; Insentif Staf</h1><span class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full font-micro-badge text-micro-badge bg-brand-50 text-brand-600 font-bold shrink-0">Cabang: Depok Utama</span></div><span class="font-caption text-caption text-text-muted truncate sm:hidden">Cabang: Depok Utama</span></div></div><div class="flex items-center gap-2 shrink-0"><button aria-label="Pengaturan" class="w-11 h-11 flex items-center justify-center rounded-xl text-text-secondary hover:text-text-primary hover:bg-surface-overlay transition-colors"><span class="material-symbols-outlined text-[22px]">settings</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0 shadow-[0_2px_6px_rgba(0,74,198,0.25)]"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex-1 flex flex-col relative w-full pt-16 pb-28 px-4 bg-canvas"><div class="flex flex-col w-full max-w-md mx-auto space-y-4">
+<!-- Geofence & System Security Micro-Bar -->
+<div class="w-full bg-surface rounded-2xl p-3.5 flex items-center justify-between shadow-[0_2px_8px_rgba(15,23,42,0.04)] [box-shadow:inset_0px_2px_4px_rgba(255,255,255,0.95)]">
+<div class="flex items-center gap-2.5 min-w-0">
+<div class="w-7 h-7 rounded-lg bg-emerald-50 text-success-base flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[18px]">verified_user</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-success-base animate-pulse"></span>
+<p class="font-caption text-caption text-text-primary font-semibold truncate">Geofence 30m Aktif</p>
+</div>
+<p class="font-micro-badge text-micro-badge text-text-muted truncate">MediaPipe Biometric Protected • GPS Workshop Locked</p>
+</div>
+</div>
+<button aria-label="Ekspor Laporan Kehadiran" class="h-8 px-2.5 rounded-xl bg-brand-50 text-brand-600 hover:bg-brand-100 flex items-center gap-1.5 shrink-0 transition-colors">
+<span class="material-symbols-outlined text-[16px]">download</span>
+<span class="font-caption text-caption font-semibold">Laporan</span>
+</button>
+</div>
+<!-- Daily Attendance Health Hero Card -->
+<div class="w-full rounded-[22px] p-5 text-on-primary relative overflow-hidden bg-gradient-to-br from-brand-700 via-brand-500 to-brand-400 shadow-[0_10px_22px_rgba(37,99,235,0.32)] [box-shadow:inset_0px_2px_4px_rgba(255,255,255,0.35)]">
+<div class="absolute -right-6 -bottom-6 w-32 h-32 rounded-full bg-white/10 blur-xl pointer-events-none"></div>
+<div class="flex items-center justify-between mb-4 relative z-10">
+<div class="flex items-center gap-2 min-w-0">
+<div class="w-8 h-8 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-white text-[18px]">how_to_reg</span>
+</div>
+<span class="font-caption text-caption font-medium text-white/90 truncate">Kehadiran Hari Ini (11 Okt 2026)</span>
+</div>
+<span class="px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-md font-micro-badge text-micro-badge font-bold uppercase tracking-wider text-white shrink-0">
+        Shift Pagi (07:30 WIB)
+      </span>
+</div>
+<div class="mb-3.5 relative z-10">
+<div class="flex items-baseline justify-between">
+<h2 class="font-metric-display text-metric-display font-bold text-white tracking-tight">8 dari 8 Staf Hadir</h2>
+<span class="font-headline-2 text-headline-2 font-bold text-white/95">100%</span>
+</div>
+<div class="w-full bg-white/25 h-2 rounded-full mt-2 overflow-hidden backdrop-blur-sm">
+<div class="bg-white h-full rounded-full w-full transition-all duration-700"></div>
+</div>
+</div>
+<!-- Frosted Sub-info Pill -->
+<div class="relative z-10 bg-white/15 backdrop-blur-md rounded-xl px-3 py-2 flex items-center justify-between text-white/95 text-caption font-caption">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-emerald-300"></span>
+<span>On-Time: <strong>7</strong></span>
+</div>
+<span class="text-white/40">•</span>
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-amber-300"></span>
+<span>Terlambat: <strong>1</strong></span>
+</div>
+<span class="text-white/40">•</span>
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-white/60"></span>
+<span>Izin: <strong>0</strong></span>
+</div>
+</div>
+</div>
+<!-- Date Selector Navigation -->
+<div class="w-full bg-surface rounded-2xl p-2.5 flex items-center justify-between shadow-[0_12px_28px_-6px_rgba(37,99,235,0.08)] [box-shadow:inset_0px_2px_4px_rgba(255,255,255,0.95)]">
+<button aria-label="Tanggal Sebelumnya" class="w-9 h-9 rounded-xl flex items-center justify-center text-text-secondary hover:bg-surface-overlay active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[20px]">chevron_left</span>
+</button>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-brand-600 text-[18px]">calendar_today</span>
+<span class="font-body-bold text-body-bold text-text-primary">Minggu, 11 Oktober 2026</span>
+<span class="px-2 py-0.5 rounded-full font-micro-badge text-micro-badge bg-brand-50 text-brand-600 font-bold">Hari Ini</span>
+</div>
+<button aria-label="Tanggal Berikutnya" class="w-9 h-9 rounded-xl flex items-center justify-center text-text-secondary hover:bg-surface-overlay active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[20px]">chevron_right</span>
+</button>
+</div>
+<!-- Horizontal Filter Pills -->
+<div class="w-full flex items-center gap-2 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-none" id="attendanceFilterRow">
+<button class="filter-chip px-3.5 py-1.5 rounded-full font-caption text-caption font-semibold shrink-0 bg-gradient-to-r from-brand-600 to-brand-500 text-on-primary shadow-[0_4px_12px_rgba(37,99,235,0.25)] transition-all">
+      Semua Staf (8)
+    </button>
+<button class="filter-chip px-3.5 py-1.5 rounded-full font-caption text-caption font-semibold shrink-0 bg-surface text-text-secondary hover:text-text-primary shadow-[0_2px_6px_rgba(15,23,42,0.04)] [box-shadow:inset_0px_2px_4px_rgba(255,255,255,0.95)] transition-all">
+      Hadir On-Time (7)
+    </button>
+<button class="filter-chip px-3.5 py-1.5 rounded-full font-caption text-caption font-semibold shrink-0 bg-surface text-text-secondary hover:text-text-primary shadow-[0_2px_6px_rgba(15,23,42,0.04)] [box-shadow:inset_0px_2px_4px_rgba(255,255,255,0.95)] flex items-center gap-1.5 transition-all">
+<span>Terlambat</span>
+<span class="px-1.5 py-0.2 rounded-full font-micro-badge text-micro-badge bg-warning-surface text-warning-text font-bold">1</span>
+</button>
+<button class="filter-chip px-3.5 py-1.5 rounded-full font-caption text-caption font-semibold shrink-0 bg-surface text-text-muted hover:text-text-secondary shadow-[0_2px_6px_rgba(15,23,42,0.04)] [box-shadow:inset_0px_2px_4px_rgba(255,255,255,0.95)] transition-all">
+      Izin / Cuti (0)
+    </button>
+</div>
+<!-- Attendance Log Stack -->
+<div class="flex flex-col space-y-3.5 pt-1">
+<!-- Staff Log Card 1: On-Time Verified - Siti Rahma -->
+<div class="w-full bg-surface rounded-[20px] p-4 shadow-[0_12px_28px_-6px_rgba(37,99,235,0.1)] [box-shadow:inset_0px_2px_4px_rgba(255,255,255,0.95),0_12px_28px_-6px_rgba(37,99,235,0.1)] transition-transform active:scale-[0.99]">
+<div class="flex items-start justify-between gap-3 mb-3">
+<div class="flex items-center gap-3 min-w-0">
+<div class="relative shrink-0">
+<div class="w-11 h-11 rounded-2xl bg-brand-50 text-brand-600 font-headline-2 text-headline-2 font-bold flex items-center justify-center shadow-inner">
+              SR
+            </div>
+<span class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-success-base text-white flex items-center justify-center ring-2 ring-white">
+<span class="material-symbols-outlined text-[10px] font-bold">check</span>
+</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<h3 class="font-body-bold text-body-bold text-text-primary truncate">Siti Rahma</h3>
+<span class="px-2 py-0.5 rounded-full font-micro-badge text-micro-badge bg-brand-50 text-brand-600 font-bold shrink-0">Admin Kasir</span>
+</div>
+<div class="flex items-center gap-1.5 mt-0.5 text-success-text">
+<span class="material-symbols-outlined text-[15px]">schedule</span>
+<span class="font-caption text-caption font-semibold">Masuk: 07:18 WIB (12m awal)</span>
+</div>
+</div>
+</div>
+<button aria-label="Lihat Foto Selfie Siti Rahma" class="h-9 px-2.5 rounded-xl bg-surface-overlay text-brand-600 hover:bg-brand-50 flex items-center gap-1 shrink-0 transition-colors" onclick="openProofModal('Siti Rahma', '07:18 WIB', '8m dari workshop', '99.8% Match', 'Admin Kasir')">
+<span class="material-symbols-outlined text-[18px]">photo_camera</span>
+<span class="font-caption text-caption font-semibold">Selfie</span>
+</button>
+</div>
+<div class="flex flex-wrap items-center gap-1.5 pt-1">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-success-text font-caption text-caption">
+<span class="w-1.5 h-1.5 rounded-full bg-success-base"></span>
+          GPS Verified (8m)
+        </span>
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-surface-container-low text-text-secondary font-caption text-caption">
+<span class="material-symbols-outlined text-[14px] text-brand-600">face</span>
+          Face ID 99.8% Match
+        </span>
+</div>
+</div>
+<!-- Staff Log Card 2: Late Arrival Warning - Rian Dimas -->
+<div class="w-full bg-surface rounded-[20px] p-4 shadow-[0_12px_28px_-6px_rgba(245,158,11,0.15)] [box-shadow:inset_0px_2px_4px_rgba(255,255,255,0.95),0_12px_28px_-6px_rgba(245,158,11,0.12)] relative overflow-hidden transition-transform active:scale-[0.99]">
+<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-warning-base"></div>
+<div class="flex items-start justify-between gap-3 mb-2 pl-1">
+<div class="flex items-center gap-3 min-w-0">
+<div class="relative shrink-0">
+<div class="w-11 h-11 rounded-2xl bg-warning-surface text-warning-text font-headline-2 text-headline-2 font-bold flex items-center justify-center shadow-inner">
+              RD
+            </div>
+<span class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-warning-base text-white flex items-center justify-center ring-2 ring-white">
+<span class="material-symbols-outlined text-[10px] font-bold">priority_high</span>
+</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<h3 class="font-body-bold text-body-bold text-text-primary truncate">Rian Dimas</h3>
+<span class="px-2 py-0.5 rounded-full font-micro-badge text-micro-badge bg-brand-50 text-brand-600 font-bold shrink-0">Lead Detailer</span>
+</div>
+<div class="flex items-center gap-1.5 mt-0.5 text-warning-text">
+<span class="material-symbols-outlined text-[15px]">schedule</span>
+<span class="font-caption text-caption font-semibold">Masuk: 07:42 WIB</span>
+</div>
+</div>
+</div>
+<button aria-label="Lihat Foto Selfie Rian Dimas" class="h-9 px-2.5 rounded-xl bg-warning-surface text-warning-text hover:bg-amber-100 flex items-center gap-1 shrink-0 transition-colors" onclick="openProofModal('Rian Dimas', '07:42 WIB', '14m dari workshop', '99.4% Match', 'Lead Detailer')">
+<span class="material-symbols-outlined text-[18px]">photo_camera</span>
+<span class="font-caption text-caption font-semibold">Selfie</span>
+</button>
+</div>
+<div class="pl-1 mb-2">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-warning-surface text-warning-text font-micro-badge text-micro-badge font-bold">
+<span class="material-symbols-outlined text-[13px]">warning</span>
+          Terlambat 12 Menit (Batas Shift 07:30)
+        </span>
+</div>
+<div class="flex flex-wrap items-center gap-1.5 pl-1">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-success-text font-caption text-caption">
+<span class="w-1.5 h-1.5 rounded-full bg-success-base"></span>
+          GPS Verified (14m)
+        </span>
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-surface-container-low text-text-secondary font-caption text-caption">
+<span class="material-symbols-outlined text-[14px] text-brand-600">face</span>
+          Face ID 99.4% Match
+        </span>
+</div>
+</div>
+<!-- Staff Log Card 3: On-Time Verified - Budi Santoso -->
+<div class="w-full bg-surface rounded-[20px] p-4 shadow-[0_12px_28px_-6px_rgba(37,99,235,0.1)] [box-shadow:inset_0px_2px_4px_rgba(255,255,255,0.95),0_12px_28px_-6px_rgba(37,99,235,0.1)] transition-transform active:scale-[0.99]">
+<div class="flex items-start justify-between gap-3 mb-3">
+<div class="flex items-center gap-3 min-w-0">
+<div class="relative shrink-0">
+<div class="w-11 h-11 rounded-2xl bg-surface-container-low text-text-primary font-headline-2 text-headline-2 font-bold flex items-center justify-center shadow-inner">
+              BS
+            </div>
+<span class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-success-base text-white flex items-center justify-center ring-2 ring-white">
+<span class="material-symbols-outlined text-[10px] font-bold">check</span>
+</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<h3 class="font-body-bold text-body-bold text-text-primary truncate">Budi Santoso</h3>
+<span class="px-2 py-0.5 rounded-full font-micro-badge text-micro-badge bg-surface-container-low text-text-secondary font-bold shrink-0">Washer Senior</span>
+</div>
+<div class="flex items-center gap-1.5 mt-0.5 text-success-text">
+<span class="material-symbols-outlined text-[15px]">schedule</span>
+<span class="font-caption text-caption font-semibold">Masuk: 07:22 WIB (On-Time)</span>
+</div>
+</div>
+</div>
+<button aria-label="Lihat Foto Selfie Budi Santoso" class="h-9 px-2.5 rounded-xl bg-surface-overlay text-brand-600 hover:bg-brand-50 flex items-center gap-1 shrink-0 transition-colors" onclick="openProofModal('Budi Santoso', '07:22 WIB', '12m dari workshop', '99.6% Match', 'Washer Senior')">
+<span class="material-symbols-outlined text-[18px]">photo_camera</span>
+<span class="font-caption text-caption font-semibold">Selfie</span>
+</button>
+</div>
+<div class="flex flex-wrap items-center gap-1.5 pt-1">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-success-text font-caption text-caption">
+<span class="w-1.5 h-1.5 rounded-full bg-success-base"></span>
+          GPS Verified (12m)
+        </span>
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-surface-container-low text-text-secondary font-caption text-caption">
+<span class="material-symbols-outlined text-[14px] text-brand-600">face</span>
+          Face ID 99.6% Match
+        </span>
+</div>
+</div>
+<!-- Staff Log Card 4: On-Time Verified - Ahmad Fauzi -->
+<div class="w-full bg-surface rounded-[20px] p-4 shadow-[0_12px_28px_-6px_rgba(37,99,235,0.1)] [box-shadow:inset_0px_2px_4px_rgba(255,255,255,0.95),0_12px_28px_-6px_rgba(37,99,235,0.1)] transition-transform active:scale-[0.99]">
+<div class="flex items-start justify-between gap-3 mb-3">
+<div class="flex items-center gap-3 min-w-0">
+<div class="relative shrink-0">
+<div class="w-11 h-11 rounded-2xl bg-surface-container-low text-text-primary font-headline-2 text-headline-2 font-bold flex items-center justify-center shadow-inner">
+              AF
+            </div>
+<span class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-success-base text-white flex items-center justify-center ring-2 ring-white">
+<span class="material-symbols-outlined text-[10px] font-bold">check</span>
+</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<h3 class="font-body-bold text-body-bold text-text-primary truncate">Ahmad Fauzi</h3>
+<span class="px-2 py-0.5 rounded-full font-micro-badge text-micro-badge bg-surface-container-low text-text-secondary font-bold shrink-0">Detailer Junior</span>
+</div>
+<div class="flex items-center gap-1.5 mt-0.5 text-success-text">
+<span class="material-symbols-outlined text-[15px]">schedule</span>
+<span class="font-caption text-caption font-semibold">Masuk: 07:25 WIB (On-Time)</span>
+</div>
+</div>
+</div>
+<button aria-label="Lihat Foto Selfie Ahmad Fauzi" class="h-9 px-2.5 rounded-xl bg-surface-overlay text-brand-600 hover:bg-brand-50 flex items-center gap-1 shrink-0 transition-colors" onclick="openProofModal('Ahmad Fauzi', '07:25 WIB', '6m dari workshop', '99.7% Match', 'Detailer Junior')">
+<span class="material-symbols-outlined text-[18px]">photo_camera</span>
+<span class="font-caption text-caption font-semibold">Selfie</span>
+</button>
+</div>
+<div class="flex flex-wrap items-center gap-1.5 pt-1">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-success-text font-caption text-caption">
+<span class="w-1.5 h-1.5 rounded-full bg-success-base"></span>
+          GPS Verified (6m)
+        </span>
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-surface-container-low text-text-secondary font-caption text-caption">
+<span class="material-symbols-outlined text-[14px] text-brand-600">face</span>
+          Face ID 99.7% Match
+        </span>
+</div>
+</div>
+</div>
+<!-- Micro Attendance Audit Summary Footer Widget -->
+<div class="w-full bg-surface-container-low rounded-2xl p-3.5 flex items-center justify-between text-text-secondary">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-brand-600">sync_saved_locally</span>
+<span class="font-caption text-caption font-medium">Auto-Sync Cloud POS: Real-Time</span>
+</div>
+<span class="font-micro-badge text-micro-badge font-bold px-2 py-0.5 rounded-md bg-white text-text-primary">
+      Depok Cloud DB #8841
+    </span>
+</div>
+<!-- Verification Selfie Modal (Claymorphic Inspection Overlay) -->
+<div class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm" id="selfieProofModal">
+<div class="w-full max-w-sm bg-surface rounded-[24px] p-5 shadow-[0_16px_36px_-4px_rgba(15,23,42,0.16)] [box-shadow:inset_0px_2px_4px_rgba(255,255,255,0.95)] flex flex-col space-y-4">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2 min-w-0">
+<div class="w-8 h-8 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+</div>
+<div>
+<h4 class="font-body-bold text-body-bold text-text-primary" id="modalStaffName">Siti Rahma</h4>
+<p class="font-caption text-caption text-text-muted" id="modalStaffRole">Admin Kasir</p>
+</div>
+</div>
+<button class="w-8 h-8 rounded-full bg-surface-container-low text-text-secondary hover:text-text-primary flex items-center justify-center" onclick="closeProofModal()">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</div>
+<!-- Photo Frame 4:3 -->
+<div class="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-slate-100 flex items-center justify-center shadow-inner">
+<img class="w-full h-full object-cover" data-alt="Staff attendance check-in selfie inside an automotive workshop with bright interior LED lighting, wearing official navy blue RB Autoluxe uniform shirt, smiling professionally into front-facing smartphone camera with timestamp watermark overlaid, natural candid lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAz36e3Xjk-zQr-vFscitnKvfB2Jr0W9ZNqGdeME8NswnrjUX1s48S7mxJal-JmTFg5PtKenGp2HFqaKgIftUas6MJrKMtO3lR_h7qxu6s85oyBpyGga7nzoEKWW8oldPxelJ3up6wDGnnt5i-wcZperMke6od60xkpy8E1TC_xjcj-d9eW6YG_qn2NfnZ4EsnHp57A8-rNMy6st4KxOQlvqPnl0OXiFKwdhYj7um8PUHqpaQ0dY-df"/>
+<div class="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full font-micro-badge text-micro-badge bg-black/60 backdrop-blur-md text-white font-bold tracking-wider">
+          VERIFIED ATTENDANCE
+        </div>
+<div class="absolute bottom-2.5 inset-x-2.5 bg-black/60 backdrop-blur-md text-white rounded-xl p-2 flex items-center justify-between text-caption font-caption">
+<span class="font-medium text-emerald-400" id="modalClockTime">07:18 WIB</span>
+<span class="text-white/80" id="modalGpsDist">Depok Workshop Area</span>
+</div>
+</div>
+<!-- Detail Badges -->
+<div class="grid grid-cols-2 gap-2">
+<div class="p-2.5 rounded-xl bg-surface-overlay flex flex-col">
+<span class="font-micro-badge text-micro-badge text-text-muted">BIOMETRIC SCORE</span>
+<span class="font-body-bold text-body-bold text-brand-600 mt-0.5" id="modalBiometric">99.8% Match</span>
+</div>
+<div class="p-2.5 rounded-xl bg-surface-overlay flex flex-col">
+<span class="font-micro-badge text-micro-badge text-text-muted">GEOFENCE LOCATION</span>
+<span class="font-body-bold text-body-bold text-success-text mt-0.5" id="modalDistanceBadge">Verified Inside</span>
+</div>
+</div>
+<button class="w-full py-2.5 rounded-xl bg-brand-600 text-on-primary font-body-bold text-body-bold shadow-[0_6px_16px_rgba(37,99,235,0.3)] active:scale-[0.98] transition-all" onclick="closeProofModal()">
+        Tutup Verifikasi
+      </button>
+</div>
+</div>
+</div>
+<script>
+  function openProofModal(name, time, gps, bio, role) {
+    document.getElementById('modalStaffName').textContent = name;
+    document.getElementById('modalStaffRole').textContent = role;
+    document.getElementById('modalClockTime').textContent = time;
+    document.getElementById('modalGpsDist').textContent = gps;
+    document.getElementById('modalBiometric').textContent = bio;
+    document.getElementById('selfieProofModal').classList.remove('hidden');
+  }
+
+  function closeProofModal() {
+    document.getElementById('selfieProofModal').classList.add('hidden');
+  }
+
+  // Client Filter Pill Micro-interaction
+  const filterPills = document.querySelectorAll('.filter-chip');
+  filterPills.forEach(pill => {
+    pill.addEventListener('click', () => {
+      filterPills.forEach(p => {
+        p.className = 'filter-chip px-3.5 py-1.5 rounded-full font-caption text-caption font-semibold shrink-0 bg-surface text-text-secondary hover:text-text-primary shadow-[0_2px_6px_rgba(15,23,42,0.04)] [box-shadow:inset_0px_2px_4px_rgba(255,255,255,0.95)] transition-all';
+      });
+      pill.className = 'filter-chip px-3.5 py-1.5 rounded-full font-caption text-caption font-semibold shrink-0 bg-gradient-to-r from-brand-600 to-brand-500 text-on-primary shadow-[0_4px_12px_rgba(37,99,235,0.25)] transition-all';
+    });
+  });
+</script></main><div class="fixed bottom-0 inset-x-0 z-50 pointer-events-none pb-safe px-4"><nav class="pointer-events-auto max-w-md mx-auto mb-3 bg-surface/95 backdrop-blur-xl rounded-[28px] px-3 py-2 flex items-center justify-around shadow-[0_12px_28px_-6px_rgba(37,99,235,0.12),0_8px_12px_-4px_rgba(15,23,42,0.03)] [box-shadow:inset_0px_2px_4px_rgba(255,255,255,0.95),0px_12px_28px_-6px_rgba(37,99,235,0.14)]" data-active-classes="text-primary font-bold scale-105"><a class="flex flex-col items-center justify-center min-w-[52px] min-h-[48px] text-text-muted hover:text-text-primary transition-all duration-200 group" data-path="beranda" href="#"><span class="material-symbols-outlined text-[22px] group-hover:-translate-y-0.5 transition-transform">dashboard</span><span class="font-caption text-[11px] leading-tight mt-0.5">Beranda</span></a><a class="flex flex-col items-center justify-center min-w-[52px] min-h-[48px] text-text-muted hover:text-text-primary transition-all duration-200 group" data-path="absensi" href="#"><span class="material-symbols-outlined text-[22px] group-hover:-translate-y-0.5 transition-transform">badge</span><span class="font-caption text-[11px] leading-tight mt-0.5">Absensi</span></a><div class="relative flex items-center justify-center -mt-6 mx-1"><a aria-label="Aksi Cepat Transaksi" class="w-13 h-13 w-[52px] h-[52px] rounded-full bg-gradient-to-tr from-brand-600 to-primary-container text-on-primary flex items-center justify-center shadow-[0_10px_22px_rgba(37,99,235,0.35)] hover:scale-105 active:scale-95 transition-all duration-200 [box-shadow:inset_0px_2px_4px_rgba(255,255,255,0.4),0px_10px_22px_rgba(37,99,235,0.35)]" data-path="tambah-order" href="#"><span class="material-symbols-outlined text-[28px]">add</span></a></div><a class="flex flex-col items-center justify-center min-w-[52px] min-h-[48px] text-text-muted hover:text-text-primary transition-all duration-200 group" data-path="order" href="#"><span class="material-symbols-outlined text-[22px] group-hover:-translate-y-0.5 transition-transform">receipt_long</span><span class="font-caption text-[11px] leading-tight mt-0.5">Order</span></a><a class="flex flex-col items-center justify-center min-w-[52px] min-h-[48px] text-text-muted hover:text-text-primary transition-all duration-200 group" data-path="profil" href="#"><span class="material-symbols-outlined text-[22px] group-hover:-translate-y-0.5 transition-transform">account_circle</span><span class="font-caption text-[11px] leading-tight mt-0.5">Profil</span></a></nav></div></body></html>

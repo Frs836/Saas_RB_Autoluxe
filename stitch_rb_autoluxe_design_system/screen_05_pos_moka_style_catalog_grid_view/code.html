@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Screen 05 - POS Moka-Style Catalog Grid View</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#EFF6FF',
+              100: '#DBEAFE',
+              200: '#BFDBFE',
+              400: '#60A5FA',
+              500: '#2563EB',
+              600: '#1D4ED8',
+              700: '#1E40AF',
+            },
+            canvas: '#F0F4FA',
+            surface: '#FFFFFF',
+            'clay-overlay': '#EBF2FA',
+            'text-primary': '#0F172A',
+            'text-secondary': '#475569',
+            'text-muted': '#94A3B8',
+          },
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+          },
+          boxShadow: {
+            'clay-card': '0px 12px 28px -6px rgba(37, 99, 235, 0.12), 0px 8px 12px -4px rgba(15, 23, 42, 0.03)',
+            'clay-glow': '0px 10px 22px rgba(37, 99, 235, 0.32)',
+            'subtle': '0px 2px 4px rgba(15, 23, 42, 0.03)',
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #F0F4FA;
+      color: #0F172A;
+    }
+    .inner-highlight {
+      box-shadow: inset 0px 2px 4px rgba(255, 255, 255, 0.95), inset 0px -2px 4px rgba(37, 99, 235, 0.05);
+    }
+    .primary-gradient {
+      background: linear-gradient(135deg, #1D4ED8 0%, #3B82F6 50%, #60A5FA 100%);
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #CBD5E1;
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-canvas flex p-4 gap-4 overflow-hidden select-none">
+
+  <!-- 1. COLLAPSIBLE ICON-ONLY SIDEBAR (Tablet Landscape 72px) -->
+  <aside class="w-[72px] shrink-0 bg-surface rounded-[20px] border border-slate-200/80 shadow-clay-card inner-highlight flex flex-col items-center py-5 justify-between z-20">
+    <div class="flex flex-col items-center gap-6 w-full">
+      <!-- Logo RB AUTOLUXE -->
+      <div class="w-11 h-11 rounded-2xl bg-brand-50 border border-brand-100 flex items-center justify-center p-1.5 shadow-subtle hover:scale-105 transition-transform cursor-pointer">
+        <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAj7-T_r38mgOcBPmxVgkwhmJ6mz-kpS9Qz5SzeRwJMHX2U3ymWS4xNj5UUcCVNBrUkEDaLmgEyEiQPLlJuxNra5irq-NAN_P1N7Vwg3dqNUAtenq0cjSjLlgA5E928xy7FqOXwXZm5s8vbwac1tN0KXIlAG0LKHgyNOYWf1pgNA_1waQTRWW-z4rdG4kF3YtJoLwS64z4YvFfgUVjVcajMDN-LW5NnJ1fYXVfaOm7DJ9emU3PIEoWbm_5yydzYGOb6dQ" alt="RB AUTOLUXE Logo" class="w-full h-full object-contain">
+      </div>
+
+      <!-- Navigation Icons -->
+      <nav class="flex flex-col items-center gap-3 w-full px-2">
+        <!-- Dashboard Nav -->
+        <button title="Dashboard Operasional" class="w-11 h-11 rounded-xl text-slate-500 hover:text-brand-600 hover:bg-brand-50 flex items-center justify-center transition-all group">
+          <span class="material-symbols-outlined text-[24px]">dashboard</span>
+        </button>
+
+        <!-- POS / Kasir Nav (Active) -->
+        <button title="POS Kasir" class="w-11 h-11 rounded-xl primary-gradient text-white flex items-center justify-center shadow-clay-glow relative transition-transform">
+          <span class="material-symbols-outlined text-[24px]">point_of_sale</span>
+          <span class="absolute -right-1 -top-1 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-white"></span>
+        </button>
+
+        <!-- Antrean Order -->
+        <button title="Antrean Order" class="w-11 h-11 rounded-xl text-slate-500 hover:text-brand-600 hover:bg-brand-50 flex items-center justify-center transition-all">
+          <span class="material-symbols-outlined text-[24px]">view_timeline</span>
+        </button>
+
+        <!-- Absensi Staf -->
+        <button title="Absensi Biometrik" class="w-11 h-11 rounded-xl text-slate-500 hover:text-brand-600 hover:bg-brand-50 flex items-center justify-center transition-all">
+          <span class="material-symbols-outlined text-[24px]">badge</span>
+        </button>
+
+        <!-- Inventaris Obat Detailing -->
+        <button title="Stok Inventaris" class="w-11 h-11 rounded-xl text-slate-500 hover:text-brand-600 hover:bg-brand-50 flex items-center justify-center transition-all">
+          <span class="material-symbols-outlined text-[24px]">inventory_2</span>
+        </button>
+
+        <!-- Laporan & Rekap Kasir -->
+        <button title="Rekap Keuangan" class="w-11 h-11 rounded-xl text-slate-500 hover:text-brand-600 hover:bg-brand-50 flex items-center justify-center transition-all">
+          <span class="material-symbols-outlined text-[24px]">receipt_long</span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- Bottom Actions / Settings -->
+    <div class="flex flex-col items-center gap-3 w-full px-2">
+      <button title="Pengaturan Sistem" class="w-11 h-11 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center transition-all">
+        <span class="material-symbols-outlined text-[22px]">settings</span>
+      </button>
+      <div class="w-10 h-10 rounded-full bg-brand-600 text-white font-bold text-xs flex items-center justify-center border-2 border-brand-200 shadow-subtle cursor-pointer" title="Admin Kasir: Siti Rahma">
+        SR
+      </div>
+    </div>
+  </aside>
+
+  <!-- 2. MAIN BENTO GRID AREA (Split: Left Catalog 62% & Right Cart 38%) -->
+  <main class="flex-1 grid grid-cols-12 gap-4 h-[calc(100vh-2rem)] overflow-hidden">
+
+    <!-- LEFT CATALOG AREA (Col-Span-7 or 8 -> col-span-7 xl:col-span-8) -->
+    <section class="col-span-7 xl:col-span-8 flex flex-col gap-3.5 h-full overflow-hidden">
+      
+      <!-- TOP POS BAR: Branch identifier, Cashier profile, Quick Search -->
+      <div class="bg-surface rounded-[20px] p-3.5 px-5 border border-slate-200/80 shadow-clay-card inner-highlight flex items-center justify-between gap-4 shrink-0">
+        <!-- Branch & Cashier Info -->
+        <div class="flex items-center gap-3">
+          <div class="flex items-center gap-2 bg-brand-50 border border-brand-200/80 px-3 py-1.5 rounded-full">
+            <span class="material-symbols-outlined text-brand-600 text-[18px]">storefront</span>
+            <span class="text-xs font-bold text-brand-700">Cabang: Depok Utama</span>
+          </div>
+          <div class="hidden sm:flex items-center gap-1.5 text-xs text-slate-500 font-medium">
+            <span class="material-symbols-outlined text-emerald-500 text-[16px]">verified_user</span>
+            <span>Kasir: <strong class="text-slate-800 font-semibold">Siti Rahma</strong> (Shift Pagi)</span>
+          </div>
+        </div>
+
+        <!-- Quick Search Input -->
+        <div class="flex-1 max-w-xs relative">
+          <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
+          <input 
+            type="text" 
+            placeholder="Cari layanan, paket, atau obat..." 
+            class="w-full h-10 pl-9 pr-3.5 bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 focus:border-brand-500 rounded-xl text-xs text-slate-800 placeholder-slate-400 outline-none transition-all focus:ring-2 focus:ring-brand-100"
+          >
+        </div>
+
+        <!-- Mode Toggle & Refresh -->
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button class="h-9 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold flex items-center gap-1 transition-colors">
+            <span class="material-symbols-outlined text-[16px]">tune</span>
+            <span class="hidden md:inline">Filter</span>
+          </button>
+          <button class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors">
+            <span class="material-symbols-outlined text-[18px]">refresh</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- CATEGORY SEGMENTED PILLS -->
+      <div class="flex items-center gap-2 overflow-x-auto pb-1 shrink-0 custom-scroll">
+        <button class="primary-gradient text-white shadow-clay-glow px-4 py-2 rounded-full text-xs font-bold shrink-0 flex items-center gap-1.5 transition-transform active:scale-95">
+          <span class="material-symbols-outlined text-[16px]">apps</span>
+          <span>Semua Layanan (14)</span>
+        </button>
+        <button class="bg-surface hover:bg-brand-50 text-slate-600 hover:text-brand-600 border border-slate-200 px-4 py-2 rounded-full text-xs font-semibold shrink-0 flex items-center gap-1.5 transition-all">
+          <span class="material-symbols-outlined text-[16px]">local_car_wash</span>
+          <span>Cuci (Wash)</span>
+        </button>
+        <button class="bg-surface hover:bg-brand-50 text-slate-600 hover:text-brand-600 border border-slate-200 px-4 py-2 rounded-full text-xs font-semibold shrink-0 flex items-center gap-1.5 transition-all">
+          <span class="material-symbols-outlined text-[16px]">diamond</span>
+          <span>Coating Nano</span>
+        </button>
+        <button class="bg-surface hover:bg-brand-50 text-slate-600 hover:text-brand-600 border border-slate-200 px-4 py-2 rounded-full text-xs font-semibold shrink-0 flex items-center gap-1.5 transition-all">
+          <span class="material-symbols-outlined text-[16px]">airline_seat_recline_extra</span>
+          <span>Detailing Interior</span>
+        </button>
+        <button class="bg-surface hover:bg-brand-50 text-slate-600 hover:text-brand-600 border border-slate-200 px-4 py-2 rounded-full text-xs font-semibold shrink-0 flex items-center gap-1.5 transition-all">
+          <span class="material-symbols-outlined text-[16px]">featured_seasonal_and_gifts</span>
+          <span>Paket Bundling</span>
+        </button>
+        <button class="bg-surface hover:bg-brand-50 text-slate-600 hover:text-brand-600 border border-slate-200 px-4 py-2 rounded-full text-xs font-semibold shrink-0 flex items-center gap-1.5 transition-all">
+          <span class="material-symbols-outlined text-[16px]">handyman</span>
+          <span>Glass Detailing</span>
+        </button>
+      </div>
+
+      <!-- MOKA-STYLE CATALOG GRID CARDS (3 Columns) -->
+      <div class="flex-1 overflow-y-auto pr-1 custom-scroll grid grid-cols-2 md:grid-cols-3 gap-3.5 pb-2">
+        
+        <!-- CARD 1: Express Wash & Wax -->
+        <div class="bg-surface rounded-[20px] p-4 border border-slate-200/90 shadow-clay-card inner-highlight flex flex-col justify-between hover:border-brand-300 hover:shadow-lg transition-all cursor-pointer group active:scale-[0.98]">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <div class="w-10 h-10 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center border border-brand-100 group-hover:scale-105 transition-transform">
+                <span class="material-symbols-outlined text-[22px]">local_car_wash</span>
+              </div>
+              <span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-bold text-[10px] tracking-wide border border-emerald-200">
+                WASH REGULER
+              </span>
+            </div>
+            <h3 class="font-bold text-slate-900 text-sm leading-snug group-hover:text-brand-600 transition-colors">
+              Express Wash & Wax Gloss
+            </h3>
+            <p class="text-[11px] text-slate-500 mt-1 line-clamp-2 leading-relaxed">
+              Touchless wash ph-neutral shampoo, tyre dressing & high gloss seal.
+            </p>
+          </div>
+
+          <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
+            <div>
+              <span class="text-[10px] text-slate-400 font-medium block">Harga Mulai (Size M)</span>
+              <span class="text-sm font-extrabold text-brand-600">Rp 150.000</span>
+            </div>
+            <div class="w-8 h-8 rounded-full bg-brand-50 group-hover:bg-brand-500 group-hover:text-white text-brand-600 flex items-center justify-center transition-all shadow-sm">
+              <span class="material-symbols-outlined text-[18px]">add</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 2: Deep Interior Detailing (In Cart Item) -->
+        <div class="bg-surface rounded-[20px] p-4 border-2 border-brand-400 shadow-clay-card inner-highlight flex flex-col justify-between relative transition-all cursor-pointer group active:scale-[0.98]">
+          <span class="absolute -top-2 -right-2 px-2 py-0.5 rounded-full primary-gradient text-white text-[10px] font-bold shadow-clay-glow flex items-center gap-1">
+            <span class="material-symbols-outlined text-[12px]">check</span> 1 di Keranjang
+          </span>
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <div class="w-10 h-10 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center border border-brand-100 group-hover:scale-105 transition-transform">
+                <span class="material-symbols-outlined text-[22px]">airline_seat_recline_extra</span>
+              </div>
+              <span class="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 font-bold text-[10px] tracking-wide border border-amber-200">
+                INTERIOR
+              </span>
+            </div>
+            <h3 class="font-bold text-brand-600 text-sm leading-snug">
+              Deep Interior Steam Detailing
+            </h3>
+            <p class="text-[11px] text-slate-500 mt-1 line-clamp-2 leading-relaxed">
+              Pembersihan plafon, jok kulit/fabric, karpet dasar, anti-bacterial ozone.
+            </p>
+          </div>
+
+          <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
+            <div>
+              <span class="text-[10px] text-slate-400 font-medium block">Varian Size L</span>
+              <span class="text-sm font-extrabold text-brand-600">Rp 850.000</span>
+            </div>
+            <div class="w-8 h-8 rounded-full primary-gradient text-white flex items-center justify-center shadow-clay-glow">
+              <span class="material-symbols-outlined text-[18px]">done</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 3: Nano Ceramic Coating 9H (In Cart Item) -->
+        <div class="bg-surface rounded-[20px] p-4 border-2 border-brand-400 shadow-clay-card inner-highlight flex flex-col justify-between relative transition-all cursor-pointer group active:scale-[0.98]">
+          <span class="absolute -top-2 -right-2 px-2 py-0.5 rounded-full primary-gradient text-white text-[10px] font-bold shadow-clay-glow flex items-center gap-1">
+            <span class="material-symbols-outlined text-[12px]">check</span> 1 di Keranjang
+          </span>
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center border border-purple-100 group-hover:scale-105 transition-transform">
+                <span class="material-symbols-outlined text-[22px]">diamond</span>
+              </div>
+              <span class="px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 font-bold text-[10px] tracking-wide border border-purple-200">
+                COATING 9H
+              </span>
+            </div>
+            <h3 class="font-bold text-brand-600 text-sm leading-snug">
+              Nano Ceramic Coating 3-Layers
+            </h3>
+            <p class="text-[11px] text-slate-500 mt-1 line-clamp-2 leading-relaxed">
+              Paint correction 3-step, 3 lapis ceramic coating, garansi kilap 3 tahun.
+            </p>
+          </div>
+
+          <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
+            <div>
+              <span class="text-[10px] text-slate-400 font-medium block">Varian Size L (Garansi 3 Th)</span>
+              <span class="text-sm font-extrabold text-brand-600">Rp 3.500.000</span>
+            </div>
+            <div class="w-8 h-8 rounded-full primary-gradient text-white flex items-center justify-center shadow-clay-glow">
+              <span class="material-symbols-outlined text-[18px]">done</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 4: Coating Maintenance 1 Layer -->
+        <div class="bg-surface rounded-[20px] p-4 border border-slate-200/90 shadow-clay-card inner-highlight flex flex-col justify-between hover:border-brand-300 hover:shadow-lg transition-all cursor-pointer group active:scale-[0.98]">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <div class="w-10 h-10 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center border border-brand-100 group-hover:scale-105 transition-transform">
+                <span class="material-symbols-outlined text-[22px]">auto_fix_high</span>
+              </div>
+              <span class="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-bold text-[10px] tracking-wide border border-blue-200">
+                MAINTENANCE
+              </span>
+            </div>
+            <h3 class="font-bold text-slate-900 text-sm leading-snug group-hover:text-brand-600 transition-colors">
+              Coating Maintenance 1-Layer
+            </h3>
+            <p class="text-[11px] text-slate-500 mt-1 line-clamp-2 leading-relaxed">
+              Degreasing, decontam clay bar, 1 layer top coat booster & water spot removal.
+            </p>
+          </div>
+
+          <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
+            <div>
+              <span class="text-[10px] text-slate-400 font-medium block">Size L Paket Perawatan</span>
+              <span class="text-sm font-extrabold text-brand-600">Rp 1.250.000</span>
+            </div>
+            <div class="w-8 h-8 rounded-full bg-brand-50 group-hover:bg-brand-500 group-hover:text-white text-brand-600 flex items-center justify-center transition-all shadow-sm">
+              <span class="material-symbols-outlined text-[18px]">add</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 5: Glass Detailing & Water Repellent -->
+        <div class="bg-surface rounded-[20px] p-4 border border-slate-200/90 shadow-clay-card inner-highlight flex flex-col justify-between hover:border-brand-300 hover:shadow-lg transition-all cursor-pointer group active:scale-[0.98]">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <div class="w-10 h-10 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center border border-cyan-100 group-hover:scale-105 transition-transform">
+                <span class="material-symbols-outlined text-[22px]">water_drop</span>
+              </div>
+              <span class="px-2 py-0.5 rounded-full bg-cyan-50 text-cyan-700 font-bold text-[10px] tracking-wide border border-cyan-200">
+                KACA & RAIN CLEAR
+              </span>
+            </div>
+            <h3 class="font-bold text-slate-900 text-sm leading-snug group-hover:text-brand-600 transition-colors">
+              Glass Polishing & Coating Kaca
+            </h3>
+            <p class="text-[11px] text-slate-500 mt-1 line-clamp-2 leading-relaxed">
+              Hilangkan jamur kaca seluruh mobil + coating hidrofobik anti air hujan.
+            </p>
+          </div>
+
+          <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
+            <div>
+              <span class="text-[10px] text-slate-400 font-medium block">All Windows Treatment</span>
+              <span class="text-sm font-extrabold text-brand-600">Rp 450.000</span>
+            </div>
+            <div class="w-8 h-8 rounded-full bg-brand-50 group-hover:bg-brand-500 group-hover:text-white text-brand-600 flex items-center justify-center transition-all shadow-sm">
+              <span class="material-symbols-outlined text-[18px]">add</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 6: Engine Bay Detailing -->
+        <div class="bg-surface rounded-[20px] p-4 border border-slate-200/90 shadow-clay-card inner-highlight flex flex-col justify-between hover:border-brand-300 hover:shadow-lg transition-all cursor-pointer group active:scale-[0.98]">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <div class="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center border border-orange-100 group-hover:scale-105 transition-transform">
+                <span class="material-symbols-outlined text-[22px]">build</span>
+              </div>
+              <span class="px-2 py-0.5 rounded-full bg-orange-50 text-orange-700 font-bold text-[10px] tracking-wide border border-orange-200">
+                RUANG MESIN
+              </span>
+            </div>
+            <h3 class="font-bold text-slate-900 text-sm leading-snug group-hover:text-brand-600 transition-colors">
+              Engine Bay Dressing & Clean
+            </h3>
+            <p class="text-[11px] text-slate-500 mt-1 line-clamp-2 leading-relaxed">
+              Dry steam wash ruang mesin, pembersihan oli & dressing selang pelindung.
+            </p>
+          </div>
+
+          <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
+            <div>
+              <span class="text-[10px] text-slate-400 font-medium block">Semua Tipe Mesin</span>
+              <span class="text-sm font-extrabold text-brand-600">Rp 350.000</span>
+            </div>
+            <div class="w-8 h-8 rounded-full bg-brand-50 group-hover:bg-brand-500 group-hover:text-white text-brand-600 flex items-center justify-center transition-all shadow-sm">
+              <span class="material-symbols-outlined text-[18px]">add</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- RIGHT ACTIVE CART & CHECKOUT SUMMARY PANEL (Col-Span-5 or 4 -> col-span-5 xl:col-span-4) -->
+    <section class="col-span-5 xl:col-span-4 bg-surface rounded-[20px] border border-slate-200/90 shadow-clay-card inner-highlight flex flex-col h-full overflow-hidden p-4">
+      
+      <!-- Cart Header & Plate + Size Selector -->
+      <div class="border-b border-slate-100 pb-3 shrink-0">
+        <div class="flex items-center justify-between mb-2.5">
+          <div class="flex items-center gap-2">
+            <span class="w-7 h-7 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center">
+              <span class="material-symbols-outlined text-[18px]">shopping_cart</span>
+            </span>
+            <h2 class="font-bold text-slate-900 text-sm">Keranjang Transaksi Aktif</h2>
+          </div>
+          <span class="px-2 py-0.5 rounded-full bg-brand-50 text-brand-600 font-bold text-[11px]">
+            2 Layanan
+          </span>
+        </div>
+
+        <!-- Vehicle Plate & Client Input -->
+        <div class="grid grid-cols-2 gap-2 mb-2">
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-[16px]">pin</span>
+            <input 
+              type="text" 
+              value="B 1188 RBA" 
+              class="w-full h-8 pl-7 pr-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 tracking-wider uppercase focus:bg-white focus:border-brand-500 outline-none"
+            >
+          </div>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-[16px]">person</span>
+            <input 
+              type="text" 
+              value="Ibu Jessica Tan" 
+              class="w-full h-8 pl-7 pr-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-800 focus:bg-white focus:border-brand-500 outline-none"
+            >
+          </div>
+        </div>
+
+        <!-- Vehicle Size Selector Pill -->
+        <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+          <button class="flex-1 py-1 text-[11px] font-medium text-slate-500 rounded-lg transition-colors">S</button>
+          <button class="flex-1 py-1 text-[11px] font-medium text-slate-500 rounded-lg transition-colors">M</button>
+          <button class="flex-1 py-1 text-[11px] font-bold text-brand-600 bg-white shadow-subtle rounded-lg inner-highlight">Size L</button>
+          <button class="flex-1 py-1 text-[11px] font-medium text-slate-500 rounded-lg transition-colors">XL</button>
+          <button class="flex-1 py-1 text-[11px] font-medium text-slate-500 rounded-lg transition-colors">Motor</button>
+        </div>
+      </div>
+
+      <!-- Cart Items List (Scrollable) -->
+      <div class="flex-1 overflow-y-auto py-2.5 space-y-2.5 pr-1 custom-scroll">
+        
+        <!-- Cart Item 1 -->
+        <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-2 hover:bg-slate-100/70 transition-colors">
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-1.5">
+              <span class="text-xs font-bold text-slate-900 truncate">Nano Ceramic Coating 3L</span>
+              <span class="px-1.5 py-0.2 rounded bg-purple-100 text-purple-700 text-[9px] font-bold">L</span>
+            </div>
+            <span class="text-[11px] text-slate-500 block">Garansi 3 Tahun • Bay 01</span>
+            <span class="text-xs font-bold text-brand-600">Rp 3.500.000</span>
+          </div>
+
+          <div class="flex items-center gap-1.5 shrink-0">
+            <button class="w-6 h-6 rounded-md bg-white border border-slate-200 text-slate-600 flex items-center justify-center hover:bg-slate-100">
+              <span class="material-symbols-outlined text-[14px]">remove</span>
+            </button>
+            <span class="text-xs font-bold text-slate-800 w-4 text-center">1</span>
+            <button class="w-6 h-6 rounded-md bg-white border border-slate-200 text-slate-600 flex items-center justify-center hover:bg-slate-100">
+              <span class="material-symbols-outlined text-[14px]">add</span>
+            </button>
+            <button class="w-6 h-6 rounded-md text-red-500 hover:bg-red-50 flex items-center justify-center ml-1">
+              <span class="material-symbols-outlined text-[16px]">delete</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Cart Item 2 -->
+        <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-2 hover:bg-slate-100/70 transition-colors">
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-1.5">
+              <span class="text-xs font-bold text-slate-900 truncate">Deep Interior Steam Detailing</span>
+              <span class="px-1.5 py-0.2 rounded bg-amber-100 text-amber-700 text-[9px] font-bold">L</span>
+            </div>
+            <span class="text-[11px] text-slate-500 block">Paket Jok Kulit & Plafon</span>
+            <span class="text-xs font-bold text-brand-600">Rp 850.000</span>
+          </div>
+
+          <div class="flex items-center gap-1.5 shrink-0">
+            <button class="w-6 h-6 rounded-md bg-white border border-slate-200 text-slate-600 flex items-center justify-center hover:bg-slate-100">
+              <span class="material-symbols-outlined text-[14px]">remove</span>
+            </button>
+            <span class="text-xs font-bold text-slate-800 w-4 text-center">1</span>
+            <button class="w-6 h-6 rounded-md bg-white border border-slate-200 text-slate-600 flex items-center justify-center hover:bg-slate-100">
+              <span class="material-symbols-outlined text-[14px]">add</span>
+            </button>
+            <button class="w-6 h-6 rounded-md text-red-500 hover:bg-red-50 flex items-center justify-center ml-1">
+              <span class="material-symbols-outlined text-[16px]">delete</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Diskon / Tambah Catatan Manual -->
+        <div class="flex items-center justify-between text-[11px] px-1 text-slate-500">
+          <button class="hover:text-brand-600 flex items-center gap-1 font-semibold">
+            <span class="material-symbols-outlined text-[14px]">discount</span>
+            Tambah Voucher / Diskon
+          </button>
+          <button class="hover:text-brand-600 flex items-center gap-1 font-semibold">
+            <span class="material-symbols-outlined text-[14px]">edit_note</span>
+            Catatan SPK
+          </button>
+        </div>
+
+        <!-- TEAM ASSIGNMENT CHIPS (1-5 Karyawan) -->
+        <div class="bg-brand-50/50 p-2.5 rounded-xl border border-brand-100">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-[11px] font-bold text-slate-800 flex items-center gap-1">
+              <span class="material-symbols-outlined text-brand-600 text-[14px]">groups</span>
+              Penugasan Tim Teknisi
+            </span>
+            <span class="text-[10px] text-brand-600 font-semibold">2/5 Terpilih</span>
+          </div>
+
+          <div class="flex flex-wrap gap-1.5">
+            <!-- Chip 1: Dimas Prayoga (Selected Lead) -->
+            <button class="px-2.5 py-1 rounded-full primary-gradient text-white text-[10px] font-bold flex items-center gap-1 shadow-xs">
+              <span class="material-symbols-outlined text-[12px]">check</span>
+              Dimas (Lead)
+            </button>
+            <!-- Chip 2: Kevin (Selected) -->
+            <button class="px-2.5 py-1 rounded-full primary-gradient text-white text-[10px] font-bold flex items-center gap-1 shadow-xs">
+              <span class="material-symbols-outlined text-[12px]">check</span>
+              Kevin
+            </button>
+            <!-- Chip 3: Fajar -->
+            <button class="px-2.5 py-1 rounded-full bg-white hover:bg-brand-50 border border-slate-200 text-slate-600 text-[10px] font-medium flex items-center gap-1">
+              Fajar
+            </button>
+            <!-- Chip 4: Doni -->
+            <button class="px-2.5 py-1 rounded-full bg-white hover:bg-brand-50 border border-slate-200 text-slate-600 text-[10px] font-medium flex items-center gap-1">
+              Doni
+            </button>
+            <!-- Chip 5: Budi -->
+            <button class="px-2.5 py-1 rounded-full bg-white hover:bg-brand-50 border border-slate-200 text-slate-600 text-[10px] font-medium flex items-center gap-1">
+              Budi
+            </button>
+          </div>
+        </div>
+
+        <!-- PAYMENT METHOD SELECTOR -->
+        <div class="pt-1">
+          <span class="text-[11px] font-bold text-slate-800 block mb-1.5">Metode Pembayaran</span>
+          <div class="grid grid-cols-3 gap-1.5 mb-2">
+            <button class="py-2 px-1 rounded-xl primary-gradient text-white font-bold text-[11px] flex flex-col items-center gap-0.5 shadow-clay-glow">
+              <span class="material-symbols-outlined text-[16px]">qr_code_2</span>
+              <span>QRIS Instan</span>
+            </button>
+            <button class="py-2 px-1 rounded-xl bg-slate-100 hover:bg-brand-50 border border-slate-200 text-slate-700 font-semibold text-[11px] flex flex-col items-center gap-0.5">
+              <span class="material-symbols-outlined text-[16px]">payments</span>
+              <span>Tunai / Cash</span>
+            </button>
+            <button class="py-2 px-1 rounded-xl bg-slate-100 hover:bg-brand-50 border border-slate-200 text-slate-700 font-semibold text-[11px] flex flex-col items-center gap-0.5">
+              <span class="material-symbols-outlined text-[16px]">credit_card</span>
+              <span>Transfer Bank</span>
+            </button>
+          </div>
+
+          <!-- Toggle Kas Titipan Shift Pagi -->
+          <div class="flex items-center justify-between p-2 rounded-xl bg-amber-50/70 border border-amber-200/80">
+            <div class="flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-amber-700 text-[16px]">account_balance_wallet</span>
+              <div>
+                <span class="text-[10px] font-bold text-amber-900 block">Gunakan Kas Titipan Shift Pagi</span>
+                <span class="text-[9px] text-amber-700">Audit serah terima aktif: Rp 350.000</span>
+              </div>
+            </div>
+            <!-- Simple Toggle Switch -->
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" class="sr-only peer">
+              <div class="w-8 h-4 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-amber-600"></div>
+            </label>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- TOTAL CALCULATION FOOTER & CHECKOUT BUTTON -->
+      <div class="border-t border-slate-100 pt-3 shrink-0 space-y-2">
+        <div class="space-y-1 text-xs">
+          <div class="flex justify-between text-slate-500">
+            <span>Subtotal (2 Layanan)</span>
+            <span class="font-semibold text-slate-700">Rp 4.350.000</span>
+          </div>
+          <div class="flex justify-between text-slate-500">
+            <span>Pajak Restitusi / PB1 (0%)</span>
+            <span class="font-semibold text-emerald-600">Bebas Pajak</span>
+          </div>
+          <div class="flex justify-between items-baseline pt-1 border-t border-slate-100">
+            <span class="text-xs font-bold text-slate-900">Total Tagihan</span>
+            <span class="text-xl font-extrabold text-brand-600">Rp 4.350.000</span>
+          </div>
+        </div>
+
+        <!-- Primary Action Button -->
+        <button class="w-full h-12 primary-gradient hover:opacity-95 text-white font-bold text-xs tracking-wide rounded-full shadow-clay-glow flex items-center justify-center gap-2 active:scale-[0.98] transition-all">
+          <span class="material-symbols-outlined text-[18px]">receipt_long</span>
+          <span>PROSES PEMBAYARAN & CETAK STRUK</span>
+        </button>
+
+        <div class="flex items-center justify-center gap-1 text-[10px] text-slate-400 text-center">
+          <span class="material-symbols-outlined text-[12px] text-brand-500">lock</span>
+          <span>Transaksi tersinkronisasi instan ke server POS & log WhatsApp pelanggan</span>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+</body>
+</html>

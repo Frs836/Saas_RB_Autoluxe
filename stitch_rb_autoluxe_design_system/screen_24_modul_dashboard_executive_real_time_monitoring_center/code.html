@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      "colors": {
+        "inverse-on-surface": "#f0f0fb",
+        "tertiary-fixed": "#ffdbcd",
+        "on-tertiary-fixed-variant": "#7d2d00",
+        "surface-bright": "#faf8ff",
+        "surface-container-low": "#f3f3fe",
+        "tertiary": "#943700",
+        "on-error-container": "#93000a",
+        "inverse-surface": "#2e3039",
+        "danger-base": "#EF4444",
+        "surface-container-lowest": "#ffffff",
+        "text-primary": "#0F172A",
+        "secondary": "#1d4ed8",
+        "on-primary-fixed": "#00174b",
+        "surface-overlay": "#EBF2FA",
+        "on-secondary-fixed-variant": "#0039b5",
+        "primary-fixed-dim": "#b4c5ff",
+        "brand-100": "#DBEAFE",
+        "success-surface": "#ECFDF5",
+        "on-background": "#191b23",
+        "brand-600": "#1D4ED8",
+        "on-surface": "#191b23",
+        "surface-container-high": "#e7e7f3",
+        "on-surface-variant": "#434655",
+        "outline-variant": "#c3c6d7",
+        "on-primary": "#ffffff",
+        "warning-text": "#78350F",
+        "outline": "#737686",
+        "on-secondary-fixed": "#001551",
+        "primary": "#004ac6",
+        "on-tertiary-fixed": "#360f00",
+        "surface-dim": "#d9d9e5",
+        "on-primary-container": "#eeefff",
+        "primary-container": "#2563eb",
+        "on-secondary-container": "#fffbff",
+        "text-secondary": "#475569",
+        "canvas": "#F0F4FA",
+        "text-muted": "#94A3B8",
+        "tertiary-fixed-dim": "#ffb596",
+        "brand-400": "#60A5FA",
+        "surface-tint": "#0053db",
+        "inverse-primary": "#b4c5ff",
+        "surface": "#FFFFFF",
+        "on-primary-fixed-variant": "#003ea8",
+        "on-tertiary": "#ffffff",
+        "brand-700": "#1E40AF",
+        "secondary-fixed": "#dce1ff",
+        "danger-text": "#991B1B",
+        "brand-50": "#EFF6FF",
+        "tertiary-container": "#bc4800",
+        "brand-500": "#2563EB",
+        "on-tertiary-container": "#ffede6",
+        "error-container": "#ffdad6",
+        "brand-200": "#BFDBFE",
+        "warning-base": "#F59E0B",
+        "primary-fixed": "#dbe1ff",
+        "secondary-container": "#4069f2",
+        "on-secondary": "#ffffff",
+        "on-error": "#ffffff",
+        "success-text": "#065F46",
+        "secondary-fixed-dim": "#b7c4ff",
+        "border-subtle": "#E2E8F0",
+        "border-strong": "#CBD5E1",
+        "success-base": "#10B981",
+        "warning-surface": "#FEF3C7",
+        "surface-container-highest": "#e1e2ed",
+        "surface-container": "#ededf9",
+        "whatsapp": "#25D366",
+        "background": "#faf8ff",
+        "error": "#ba1a1a",
+        "surface-variant": "#e1e2ed",
+        "danger-surface": "#FEE2E2"
+      },
+      "borderRadius": {
+        "DEFAULT": "0.25rem",
+        "lg": "0.5rem",
+        "xl": "0.75rem",
+        "full": "9999px"
+      },
+      "spacing": {
+        "margin": "1.5rem",
+        "gutter": "1rem",
+        "space-md": "1rem",
+        "space-xs": "0.25rem",
+        "space-xl": "2rem",
+        "space-lg": "1.5rem",
+        "space-sm": "0.5rem"
+      },
+      "fontFamily": {
+        "headline-1": ["Plus Jakarta Sans"],
+        "body-bold": ["Plus Jakarta Sans"],
+        "body-regular": ["Plus Jakarta Sans"],
+        "headline-2": ["Plus Jakarta Sans"],
+        "micro-badge": ["Plus Jakarta Sans"],
+        "caption": ["Plus Jakarta Sans"],
+        "metric-display": ["Plus Jakarta Sans"]
+      },
+      "fontSize": {
+        "headline-1": ["20px", {"lineHeight": "26px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+        "body-bold": ["14px", {"lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "600"}],
+        "body-regular": ["14px", {"lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400"}],
+        "headline-2": ["16px", {"lineHeight": "22px", "letterSpacing": "0em", "fontWeight": "600"}],
+        "micro-badge": ["10px", {"lineHeight": "12px", "letterSpacing": "+0.02em", "fontWeight": "700"}],
+        "caption": ["12px", {"lineHeight": "16px", "letterSpacing": "+0.01em", "fontWeight": "500"}],
+        "metric-display": ["28px", {"lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+      }
+    }
+  }
+}</script></head><body class="bg-canvas font-body-regular text-text-primary antialiased selection:bg-brand-100"><header class="fixed top-0 left-0 right-0 z-50 h-16 bg-surface/90 backdrop-blur-xl shadow-[0_12px_28px_-6px_rgba(37,99,235,0.08),0_2px_4px_rgba(15,23,42,0.03)]"><div class="h-16 w-full px-margin flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-md shrink-0"><img alt="RB LOGO NEW.PNG" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1WlrwZaM2-D-fZsBos3T-x4ewp2MDZJvwv7BgDisQ1hnvnY-y6sQTDouFpgoavjKbeSsxxqCxnloE0PhFg_3g41XEkQUy6uJ7-SUmyZUunj9hXIoabKCmt_xY1ip2_TeVd6mf_SbIO-I0BXVYz314m0diiPr04laX5J_3BAvV4zLZ51EEUSceyQK5bqgHmGhNhFJY0ENYm-yoQMR4mohPnMu_BzZxSyIvjB0_mDtZZt3zW3r91HKikf1PqoPQQ3iWy3WVTIER2aUw"/><div class="flex flex-col"><span class="font-headline-1 text-headline-1 text-text-primary leading-tight tracking-tight">RB AUTOLUXE</span><span class="font-caption text-caption text-text-secondary leading-none">Executive Real-Time Command Center</span></div></div><div class="flex items-center gap-space-md"><div class="hidden md:flex items-center gap-space-xs px-space-md py-1.5 rounded-xl bg-surface-container-low shadow-[inset_0_2px_4px_rgba(255,255,255,0.95),inset_0_-2px_4px_rgba(37,99,235,0.05)] cursor-pointer hover:bg-surface-container transition-colors"><span class="material-symbols-outlined text-[18px] text-primary">store</span><span class="font-body-bold text-body-bold text-text-primary">Cabang: Depok Utama</span><span class="material-symbols-outlined text-[18px] text-text-secondary">expand_more</span></div><div class="hidden lg:flex items-center gap-space-xs px-space-md py-1.5 rounded-xl bg-surface shadow-[0_2px_4px_rgba(15,23,42,0.03)] text-text-secondary"><span class="material-symbols-outlined text-[16px] text-text-muted">schedule</span><span class="font-caption text-caption font-semibold text-text-primary">14:32:48 WIB</span><span class="font-caption text-caption text-text-muted">Live Ticker</span></div><div class="flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-success-surface shadow-[0_2px_4px_rgba(15,23,42,0.03)]"><span class="w-2 h-2 rounded-full bg-success-base animate-pulse"></span><span class="font-micro-badge text-micro-badge uppercase text-success-text">Supabase Realtime Syncing</span></div><div class="flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-brand-50 shadow-[0_2px_4px_rgba(15,23,42,0.03)]"><span class="material-symbols-outlined text-[14px] text-brand-600">verified_user</span><span class="font-micro-badge text-micro-badge uppercase text-brand-700">Owner Access</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-[0_10px_22px_rgba(37,99,235,0.32)] shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><aside class="fixed left-0 top-16 bottom-0 w-64 bg-surface/95 backdrop-blur-xl z-40 flex flex-col justify-between py-space-lg shadow-[0_12px_28px_-6px_rgba(37,99,235,0.06)]"><div class="flex flex-col gap-space-sm px-space-md"><div class="px-space-sm pb-space-xs"><span class="font-micro-badge text-micro-badge uppercase text-text-muted">Executive Navigation</span></div><nav class="flex flex-col gap-1.5" data-active-classes="bg-primary-container text-on-primary-container shadow-[0_10px_22px_rgba(37,99,235,0.32)] font-body-bold text-body-bold rounded-xl"><a aria-current="page" class="flex items-center gap-space-md px-space-md py-2.5 transition-all bg-primary-container text-on-primary-container shadow-[0_10px_22px_rgba(37,99,235,0.32)] font-body-bold text-body-bold rounded-xl" data-path="command-center" href="#"><span class="material-symbols-outlined text-[20px]">monitoring</span><span class="font-body-regular text-body-regular">Live Operations</span></a><a class="flex items-center gap-space-md px-space-md py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" data-path="workshop-status" href="#"><span class="material-symbols-outlined text-[20px]">car_repair</span><span class="font-body-regular text-body-regular">Pit &amp; Bay Status</span></a><a class="flex items-center gap-space-md px-space-md py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" data-path="revenue-analytics" href="#"><span class="material-symbols-outlined text-[20px]">payments</span><span class="font-body-regular text-body-regular">Revenue &amp; POS</span></a><a class="flex items-center gap-space-md px-space-md py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" data-path="inventory-alerts" href="#"><span class="material-symbols-outlined text-[20px]">inventory_2</span><span class="font-body-regular text-body-regular">Inventory &amp; Stocks</span></a><a class="flex items-center gap-space-md px-space-md py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" data-path="staff-performance" href="#"><span class="material-symbols-outlined text-[20px]">group</span><span class="font-body-regular text-body-regular">Technicians &amp; Bay</span></a></nav></div><div class="px-space-md"><div class="p-space-md rounded-xl bg-surface-container-low shadow-[inset_0_2px_4px_rgba(255,255,255,0.95)] flex flex-col gap-space-xs"><div class="flex items-center justify-between"><span class="font-caption text-caption font-semibold text-text-primary">Node Cluster</span><span class="font-micro-badge text-micro-badge uppercase text-success-text">ONLINE</span></div><span class="font-caption text-caption text-text-muted">Latency: 24ms • SSL Encrypted</span></div></div></aside><div class="pl-64"><main class="w-full pt-16 min-h-screen bg-canvas"><div class="flex flex-col w-full">
+<div class="w-full px-margin py-space-lg flex flex-col gap-space-lg">
+<!-- 1. TOP HEADER CONTEXT BAR -->
+<section class="w-full bg-surface rounded-2xl p-space-md shadow-[0_12px_28px_-6px_rgba(37,99,235,0.12),0_8px_12px_-4px_rgba(15,23,42,0.03)] [box-shadow:inset_0px_2px_4px_rgba(255,255,255,0.95),inset_0px_-2px_4px_rgba(37,99,235,0.05),0_12px_28px_-6px_rgba(37,99,235,0.12),0_8px_12px_-4px_rgba(15,23,42,0.03)] flex flex-wrap items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-md">
+<div class="w-9 h-9 rounded-xl bg-surface-container-low flex items-center justify-center overflow-hidden shadow-[inset_0_2px_4px_rgba(255,255,255,0.95)] shrink-0">
+<img alt="RB AUTOLUXE LOGO" class="w-9 h-9 object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCUpuUSSAU-PBPBW1IWa4IlVJAuysXHfR5l1WHB_bT4zRWGyICnF9F2SyRekgqyUWCpCRnCYv4QdtxDflASV15BFCmmxmwLycqgM3Ljvcc8sj3Tl2VL2077cYzUl_K4ME-mQxDiQonQTvYHiMuwlRePtF1KrrVFJw0iqHvP7i7vbS9a_ARHg8U4eDyB2hBtzfet8UQln8sbMhE3dkTt6FvlUodrvVj3TFmBeULyOQM7lN0_hBsh5b-K1M6LnqZGlqYB_g"/>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="font-headline-1 text-headline-1 text-text-primary">Executive Real-Time Command Center</span>
+<span class="font-micro-badge text-micro-badge uppercase px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 font-bold">V2.4 Live</span>
+</div>
+<div class="flex items-center gap-2 mt-0.5">
+<button class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-container-low text-text-secondary hover:text-text-primary hover:bg-surface-container transition-all">
+<span class="material-symbols-outlined text-[16px] text-primary">store</span>
+<span class="font-caption text-caption font-semibold">Cabang: Depok Utama</span>
+<span class="material-symbols-outlined text-[16px] text-text-muted">arrow_drop_down</span>
+</button>
+<span class="text-outline-variant font-caption">•</span>
+<span class="font-caption text-caption text-text-muted">Superadmin Control Matrix</span>
+</div>
+</div>
+</div>
+<!-- Right Metadata Indicators -->
+<div class="flex items-center gap-space-sm flex-wrap">
+<div class="flex items-center gap-space-xs px-3 py-1.5 rounded-xl bg-surface-container-low shadow-[inset_0_2px_4px_rgba(255,255,255,0.95)]">
+<span class="material-symbols-outlined text-[16px] text-text-muted">calendar_today</span>
+<span class="font-caption text-caption text-text-primary font-medium" id="realtimeClock">Minggu, 11 Okt 2026 • 15:12 WIB</span>
+</div>
+<div class="flex items-center gap-space-xs px-3 py-1.5 rounded-xl bg-success-surface shadow-[0_2px_4px_rgba(15,23,42,0.03)]">
+<span class="w-2 h-2 rounded-full bg-success-base animate-ping"></span>
+<span class="font-caption text-caption text-success-text font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px] text-success-base">cloud_sync</span>
+            Supabase Realtime Syncing
+          </span>
+</div>
+<div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand-50 text-brand-700 shadow-[0_2px_4px_rgba(15,23,42,0.03)]">
+<span class="material-symbols-outlined text-[16px] text-brand-600">shield_person</span>
+<span class="font-caption text-caption font-semibold">Owner Access</span>
+</div>
+<button class="w-9 h-9 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary hover:text-primary transition-colors shadow-[inset_0_2px_4px_rgba(255,255,255,0.95)]" title="Reload Feed">
+<span class="material-symbols-outlined text-[18px]">refresh</span>
+</button>
+</div>
+</section>
+<!-- 2. TOP METRICS BANNER (4-COLUMN BENTO GRID) -->
+<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-space-md">
+<!-- Metric 1: Omzet Hari Ini (Primary Smooth Gradient) -->
+<div class="rounded-2xl p-5 bg-gradient-to-br from-[#1D4ED8] via-[#3B82F6] to-[#60A5FA] text-on-primary shadow-[0_10px_22px_rgba(37,99,235,0.32)] [box-shadow:inset_0px_2px_4px_rgba(255,255,255,0.35),0_10px_22px_rgba(37,99,235,0.32)] flex flex-col justify-between relative overflow-hidden group">
+<div class="absolute -right-6 -bottom-6 w-28 h-28 rounded-full bg-surface-container-lowest/10 pointer-events-none transition-transform group-hover:scale-125 duration-500"></div>
+<div class="flex items-center justify-between mb-3">
+<span class="font-caption text-caption uppercase tracking-wider text-brand-100 font-semibold">Total Omzet Hari Ini</span>
+<div class="w-8 h-8 rounded-lg bg-surface-container-lowest/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px] text-on-primary">payments</span>
+</div>
+</div>
+<div>
+<span class="font-metric-display text-metric-display leading-tight tracking-tight block">Rp 8.250.000</span>
+<div class="flex items-center gap-1.5 mt-2">
+<span class="material-symbols-outlined text-[16px] text-brand-100">trending_up</span>
+<span class="font-caption text-caption text-brand-50 font-medium">12 Order Selesai • Target 85% (+18.4%)</span>
+</div>
+</div>
+</div>
+<!-- Metric 2: Unit Sedang Dikerjakan -->
+<div class="rounded-2xl p-5 bg-surface text-text-primary shadow-[0_12px_28px_-6px_rgba(37,99,235,0.12),0_8px_12px_-4px_rgba(15,23,42,0.03)] [box-shadow:inset_0px_2px_4px_rgba(255,255,255,0.95),inset_0px_-2px_4px_rgba(37,99,235,0.05),0_12px_28px_-6px_rgba(37,99,235,0.12),0_8px_12px_-4px_rgba(15,23,42,0.03)] flex flex-col justify-between">
+<div class="flex items-center justify-between mb-3">
+<span class="font-caption text-caption uppercase tracking-wider text-text-secondary font-semibold">Unit Sedang Dikerjakan</span>
+<div class="w-8 h-8 rounded-lg bg-brand-50 flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px] text-brand-600">directions_car</span>
+</div>
+</div>
+<div>
+<span class="font-metric-display text-metric-display text-text-primary block">6 Unit di Bay</span>
+<div class="flex items-center gap-1.5 mt-2 text-text-secondary">
+<span class="material-symbols-outlined text-[16px] text-brand-500">garage</span>
+<span class="font-caption text-caption font-medium">2 Wash • 3 Detailing • 1 Coating</span>
+</div>
+</div>
+</div>
+<!-- Metric 3: Status Teknisi On-Duty -->
+<div class="rounded-2xl p-5 bg-surface text-text-primary shadow-[0_12px_28px_-6px_rgba(37,99,235,0.12),0_8px_12px_-4px_rgba(15,23,42,0.03)] [box-shadow:inset_0px_2px_4px_rgba(255,255,255,0.95),inset_0px_-2px_4px_rgba(37,99,235,0.05),0_12px_28px_-6px_rgba(37,99,235,0.12),0_8px_12px_-4px_rgba(15,23,42,0.03)] flex flex-col justify-between">
+<div class="flex items-center justify-between mb-3">
+<span class="font-caption text-caption uppercase tracking-wider text-text-secondary font-semibold">Status Teknisi On-Duty</span>
+<div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px] text-secondary">group</span>
+</div>
+</div>
+<div>
+<span class="font-metric-display text-metric-display text-text-primary block">8/8 Staf Hadir</span>
+<div class="flex items-center gap-1.5 mt-2 text-text-secondary">
+<span class="material-symbols-outlined text-[16px] text-warning-base">speed</span>
+<span class="font-caption text-caption font-medium">Beban Kerja: 85% High (Shift Pagi)</span>
+</div>
+</div>
+</div>
+<!-- Metric 4: Ketersediaan Bay Operasional -->
+<div class="rounded-2xl p-5 bg-surface text-text-primary shadow-[0_12px_28px_-6px_rgba(37,99,235,0.12),0_8px_12px_-4px_rgba(15,23,42,0.03)] [box-shadow:inset_0px_2px_4px_rgba(255,255,255,0.95),inset_0px_-2px_4px_rgba(37,99,235,0.05),0_12px_28px_-6px_rgba(37,99,235,0.12),0_8px_12px_-4px_rgba(15,23,42,0.03)] flex flex-col justify-between">
+<div class="flex items-center justify-between mb-3">
+<span class="font-caption text-caption uppercase tracking-wider text-text-secondary font-semibold">Ketersediaan Bay</span>
+<div class="w-8 h-8 rounded-lg bg-success-surface flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px] text-success-base">check_circle</span>
+</div>
+</div>
+<div>
+<span class="font-metric-display text-metric-display text-success-base block">2 Bay Kosong</span>
+<div class="flex items-center gap-1.5 mt-2 text-text-secondary">
+<span class="material-symbols-outlined text-[16px] text-text-muted">grid_view</span>
+<span class="font-caption text-caption font-medium">Bay 1 - 4 Terisi Penuh (6 Total Bay)</span>
+</div>
+</div>
+</div>
+</section>
+<!-- 3. MAIN DASHBOARD CONTENT (2-COLUMN RESPONSIVE BENTO LAYOUT) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start">
+<!-- LEFT COLUMN: LIVE BAY PROGRESS & WORKFLOW BOARD (approx 62% -> 7 or 8 cols in 12-col grid) -->
+<div class="lg:col-span-7 xl:col-span-8 flex flex-col gap-space-md">
+<!-- Workflow Section Card -->
+<div class="bg-surface rounded-2xl p-space-lg shadow-[0_12px_28px_-6px_rgba(37,99,235,0.12),0_8px_12px_-4px_rgba(15,23,42,0.03)] [box-shadow:inset_0px_2px_4px_rgba(255,255,255,0.95),inset_0px_-2px_4px_rgba(37,99,235,0.05),0_12px_28px_-6px_rgba(37,99,235,0.12),0_8px_12px_-4px_rgba(15,23,42,0.03)]">
+<!-- Bay Board Header -->
+<div class="flex flex-wrap items-center justify-between gap-space-sm pb-space-md mb-space-md bg-surface">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-lg bg-brand-50 flex items-center justify-center text-brand-600">
+<span class="material-symbols-outlined text-[20px]">car_repair</span>
+</div>
+<div>
+<h2 class="font-headline-1 text-headline-1 text-text-primary">Live Monitoring Bay Pengerjaan</h2>
+<p class="font-caption text-caption text-text-muted">Pantau status pengerjaan, progress tahapan, dan SLA real-time</p>
+</div>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="px-3 py-1 rounded-full bg-success-surface text-success-text font-caption font-semibold flex items-center gap-1.5 shadow-[0_2px_4px_rgba(15,23,42,0.03)]">
+<span class="w-2 h-2 rounded-full bg-success-base animate-pulse"></span>
+                4 BAY AKTIF • 2 STANDBY
+              </span>
+<button class="p-1.5 rounded-lg bg-surface-container-low hover:bg-surface-container text-text-secondary hover:text-text-primary transition-colors">
+<span class="material-symbols-outlined text-[18px]">filter_list</span>
+</button>
+</div>
+</div>
+<!-- Bay Status Cards 2x2 Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+<!-- BAY 01: Coating Room -->
+<div class="bg-surface-bright rounded-2xl p-space-md shadow-[0_2px_4px_rgba(15,23,42,0.03)] [box-shadow:inset_0px_2px_4px_rgba(255,255,255,0.95),inset_0px_-2px_4px_rgba(37,99,235,0.03)] flex flex-col justify-between gap-space-md transition-all hover:shadow-[0_12px_28px_-6px_rgba(37,99,235,0.14)]">
+<div>
+<div class="flex items-center justify-between mb-2.5">
+<span class="font-micro-badge text-micro-badge uppercase px-2.5 py-1 rounded-lg bg-primary text-on-primary font-bold shadow-[0_2px_4px_rgba(0,74,198,0.2)]">
+                    BAY 01 - COATING ROOM
+                  </span>
+<div class="flex items-center gap-1 px-2 py-0.5 rounded-md bg-warning-surface text-warning-text font-caption font-semibold">
+<span class="material-symbols-outlined text-[14px]">timer</span>
+<span>01:45:12</span>
+</div>
+</div>
+<div class="flex items-start justify-between gap-2">
+<div>
+<h3 class="font-headline-2 text-headline-2 text-text-primary leading-tight">Porsche 718 Cayman</h3>
+<span class="font-caption text-caption text-brand-600 font-semibold bg-brand-50 px-2 py-0.5 rounded mt-1 inline-block">B 9999 LUX</span>
+</div>
+<span class="px-2 py-1 rounded bg-surface-container-high text-on-surface-variant font-micro-badge uppercase font-semibold">Stage 2</span>
+</div>
+<p class="font-body-regular text-body-regular text-text-secondary mt-2 flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-primary">auto_fix_high</span>
+                  Nano Ceramic Coating 3-Layers
+                </p>
+<!-- Progress Bar -->
+<div class="mt-3.5">
+<div class="flex justify-between items-center mb-1">
+<span class="font-caption text-caption font-semibold text-text-primary">Coating Layer 2</span>
+<span class="font-caption text-caption font-bold text-primary">80%</span>
+</div>
+<div class="w-full h-2 rounded-full bg-surface-container-highest overflow-hidden">
+<div class="h-full bg-primary rounded-full transition-all duration-500" style="width: 80%"></div>
+</div>
+</div>
+</div>
+<!-- Tech Lead & Actions -->
+<div class="pt-space-sm bg-surface-bright flex flex-col gap-2.5">
+<div class="flex items-center justify-between text-caption font-caption">
+<div class="flex items-center gap-1.5">
+<div class="w-6 h-6 rounded-full bg-brand-200 text-brand-700 flex items-center justify-center font-bold text-[10px]">RD</div>
+<span class="text-text-secondary">Lead: <strong class="text-text-primary font-semibold">Rian Dimas</strong></span>
+</div>
+<span class="font-micro-badge text-micro-badge uppercase text-primary font-bold">Curing Infra</span>
+</div>
+<div class="grid grid-cols-2 gap-2 pt-1">
+<button class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-surface-container-low hover:bg-surface-container text-text-primary font-caption font-semibold transition-colors shadow-[inset_0_1px_2px_rgba(255,255,255,0.95)]">
+<span class="material-symbols-outlined text-[16px] text-text-secondary">videocam</span>
+                    CCTV Bay
+                  </button>
+<button class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-brand-50 hover:bg-brand-100 text-primary font-caption font-semibold transition-colors shadow-[0_2px_4px_rgba(37,99,235,0.06)]">
+<span class="material-symbols-outlined text-[16px]">verified</span>
+                    QC Check
+                  </button>
+</div>
+</div>
+</div>
+<!-- BAY 02: Detailing Bay -->
+<div class="bg-surface-bright rounded-2xl p-space-md shadow-[0_2px_4px_rgba(15,23,42,0.03)] [box-shadow:inset_0px_2px_4px_rgba(255,255,255,0.95),inset_0px_-2px_4px_rgba(37,99,235,0.03)] flex flex-col justify-between gap-space-md transition-all hover:shadow-[0_12px_28px_-6px_rgba(37,99,235,0.14)]">
+<div>
+<div class="flex items-center justify-between mb-2.5">
+<span class="font-micro-badge text-micro-badge uppercase px-2.5 py-1 rounded-lg bg-secondary text-on-secondary font-bold shadow-[0_2px_4px_rgba(29,78,216,0.2)]">
+                    BAY 02 - DETAILING BAY
+                  </span>
+<div class="flex items-center gap-1 px-2 py-0.5 rounded-md bg-surface-container-high text-text-secondary font-caption font-semibold">
+<span class="material-symbols-outlined text-[14px]">timer</span>
+<span>00:35:40</span>
+</div>
+</div>
+<div class="flex items-start justify-between gap-2">
+<div>
+<h3 class="font-headline-2 text-headline-2 text-text-primary leading-tight">BMW M4 Coupe</h3>
+<span class="font-caption text-caption text-brand-600 font-semibold bg-brand-50 px-2 py-0.5 rounded mt-1 inline-block">B 8888 RBA</span>
+</div>
+<span class="px-2 py-1 rounded bg-surface-container-high text-on-surface-variant font-micro-badge uppercase font-semibold">Polish</span>
+</div>
+<p class="font-body-regular text-body-regular text-text-secondary mt-2 flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-secondary">cleaning_services</span>
+                  Interior Deep Cleaning &amp; Leather Care
+                </p>
+<!-- Progress Bar -->
+<div class="mt-3.5">
+<div class="flex justify-between items-center mb-1">
+<span class="font-caption text-caption font-semibold text-text-primary">Interior Polish</span>
+<span class="font-caption text-caption font-bold text-secondary">45%</span>
+</div>
+<div class="w-full h-2 rounded-full bg-surface-container-highest overflow-hidden">
+<div class="h-full bg-secondary rounded-full transition-all duration-500" style="width: 45%"></div>
+</div>
+</div>
+</div>
+<!-- Tech Lead & Actions -->
+<div class="pt-space-sm bg-surface-bright flex flex-col gap-2.5">
+<div class="flex items-center justify-between text-caption font-caption">
+<div class="flex items-center gap-1.5">
+<div class="w-6 h-6 rounded-full bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center font-bold text-[10px]">BS</div>
+<span class="text-text-secondary">Lead: <strong class="text-text-primary font-semibold">Budi Santoso</strong></span>
+</div>
+<span class="font-micro-badge text-micro-badge uppercase text-text-muted">On Schedule</span>
+</div>
+<div class="grid grid-cols-2 gap-2 pt-1">
+<button class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-surface-container-low hover:bg-surface-container text-text-primary font-caption font-semibold transition-colors shadow-[inset_0_1px_2px_rgba(255,255,255,0.95)]">
+<span class="material-symbols-outlined text-[16px] text-text-secondary">videocam</span>
+                    CCTV Bay
+                  </button>
+<button class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-surface-container-high hover:bg-outline-variant text-text-primary font-caption font-semibold transition-colors">
+<span class="material-symbols-outlined text-[16px]">edit_note</span>
+                    Update Progress
+                  </button>
+</div>
+</div>
+</div>
+<!-- BAY 03: Wash Bay 1 -->
+<div class="bg-surface-bright rounded-2xl p-space-md shadow-[0_2px_4px_rgba(15,23,42,0.03)] [box-shadow:inset_0px_2px_4px_rgba(255,255,255,0.95),inset_0px_-2px_4px_rgba(37,99,235,0.03)] flex flex-col justify-between gap-space-md transition-all hover:shadow-[0_12px_28px_-6px_rgba(37,99,235,0.14)]">
+<div>
+<div class="flex items-center justify-between mb-2.5">
+<span class="font-micro-badge text-micro-badge uppercase px-2.5 py-1 rounded-lg bg-surface-container-highest text-text-primary font-bold shadow-[0_2px_4px_rgba(15,23,42,0.03)]">
+                    BAY 03 - WASH BAY 1
+                  </span>
+<div class="flex items-center gap-1 px-2 py-0.5 rounded-md bg-surface-container-high text-text-secondary font-caption font-semibold">
+<span class="material-symbols-outlined text-[14px]">timer</span>
+<span>00:12:15</span>
+</div>
+</div>
+<div class="flex items-start justify-between gap-2">
+<div>
+<h3 class="font-headline-2 text-headline-2 text-text-primary leading-tight">Toyota Alphard</h3>
+<span class="font-caption text-caption text-brand-600 font-semibold bg-brand-50 px-2 py-0.5 rounded mt-1 inline-block">B 1234 DPK</span>
+</div>
+<span class="px-2 py-1 rounded bg-brand-50 text-brand-700 font-micro-badge uppercase font-semibold">Foam</span>
+</div>
+<p class="font-body-regular text-body-regular text-text-secondary mt-2 flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-brand-500">water_drop</span>
+                  Premium Foam Wash &amp; Undercarriage
+                </p>
+<!-- Progress Bar -->
+<div class="mt-3.5">
+<div class="flex justify-between items-center mb-1">
+<span class="font-caption text-caption font-semibold text-text-primary">Foam Wash &amp; Rinse</span>
+<span class="font-caption text-caption font-bold text-brand-600">20%</span>
+</div>
+<div class="w-full h-2 rounded-full bg-surface-container-highest overflow-hidden">
+<div class="h-full bg-brand-500 rounded-full transition-all duration-500" style="width: 20%"></div>
+</div>
+</div>
+</div>
+<!-- Tech Lead & Actions -->
+<div class="pt-space-sm bg-surface-bright flex flex-col gap-2.5">
+<div class="flex items-center justify-between text-caption font-caption">
+<div class="flex items-center gap-1.5">
+<div class="w-6 h-6 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center font-bold text-[10px]">SR</div>
+<span class="text-text-secondary">Lead: <strong class="text-text-primary font-semibold">Siti Rahma / Team C</strong></span>
+</div>
+<span class="font-micro-badge text-micro-badge uppercase text-success-text font-bold">Flowing</span>
+</div>
+<div class="grid grid-cols-2 gap-2 pt-1">
+<button class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-surface-container-low hover:bg-surface-container text-text-primary font-caption font-semibold transition-colors shadow-[inset_0_1px_2px_rgba(255,255,255,0.95)]">
+<span class="material-symbols-outlined text-[16px] text-text-secondary">videocam</span>
+                    CCTV Bay
+                  </button>
+<button class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-surface-container-high hover:bg-outline-variant text-text-primary font-caption font-semibold transition-colors">
+<span class="material-symbols-outlined text-[16px]">edit_note</span>
+                    Update Progress
+                  </button>
+</div>
+</div>
+</div>
+<!-- BAY 04: Wash Bay 2 -->
+<div class="bg-surface-bright rounded-2xl p-space-md shadow-[0_2px_4px_rgba(15,23,42,0.03)] [box-shadow:inset_0px_2px_4px_rgba(255,255,255,0.95),inset_0px_-2px_4px_rgba(37,99,235,0.03)] flex flex-col justify-between gap-space-md transition-all hover:shadow-[0_12px_28px_-6px_rgba(37,99,235,0.14)]">
+<div>
+<div class="flex items-center justify-between mb-2.5">
+<span class="font-micro-badge text-micro-badge uppercase px-2.5 py-1 rounded-lg bg-surface-container-high text-on-surface-variant font-bold shadow-[0_2px_4px_rgba(15,23,42,0.03)]">
+                    BAY 04 - WASH BAY 2
+                  </span>
+<div class="flex items-center gap-1 px-2 py-0.5 rounded-md bg-success-surface text-success-text font-caption font-semibold">
+<span class="material-symbols-outlined text-[14px]">timer</span>
+<span>00:42:00</span>
+</div>
+</div>
+<div class="flex items-start justify-between gap-2">
+<div>
+<h3 class="font-headline-2 text-headline-2 text-text-primary leading-tight">Toyota Fortuner 2.8 GR</h3>
+<span class="font-caption text-caption text-brand-600 font-semibold bg-brand-50 px-2 py-0.5 rounded mt-1 inline-block">B 5678 LUX</span>
+</div>
+<span class="px-2 py-1 rounded bg-success-surface text-success-text font-micro-badge uppercase font-semibold">Finishing</span>
+</div>
+<p class="font-body-regular text-body-regular text-text-secondary mt-2 flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-brand-600">flare</span>
+                  Express Wash &amp; Wax Gloss
+                </p>
+<!-- Progress Bar -->
+<div class="mt-3.5">
+<div class="flex justify-between items-center mb-1">
+<span class="font-caption text-caption font-semibold text-text-primary">Final Inspection / Drying</span>
+<span class="font-caption text-caption font-bold text-success-text">95%</span>
+</div>
+<div class="w-full h-2 rounded-full bg-surface-container-highest overflow-hidden">
+<div class="h-full bg-success-base rounded-full transition-all duration-500" style="width: 95%"></div>
+</div>
+</div>
+</div>
+<!-- Tech Lead & Actions -->
+<div class="pt-space-sm bg-surface-bright flex flex-col gap-2.5">
+<div class="flex items-center justify-between text-caption font-caption">
+<div class="flex items-center gap-1.5">
+<div class="w-6 h-6 rounded-full bg-surface-container-highest text-text-primary flex items-center justify-center font-bold text-[10px]">AK</div>
+<span class="text-text-secondary">Lead: <strong class="text-text-primary font-semibold">Aris Kurniawan</strong></span>
+</div>
+<span class="font-micro-badge text-micro-badge uppercase text-success-text font-bold">Near Done</span>
+</div>
+<div class="grid grid-cols-2 gap-2 pt-1">
+<button class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-surface-container-low hover:bg-surface-container text-text-primary font-caption font-semibold transition-colors shadow-[inset_0_1px_2px_rgba(255,255,255,0.95)]">
+<span class="material-symbols-outlined text-[16px] text-text-secondary">videocam</span>
+                    CCTV Bay
+                  </button>
+<button class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-success-base hover:bg-emerald-600 text-on-primary font-caption font-semibold transition-colors shadow-[0_8px_16px_rgba(16,185,129,0.25)]">
+<span class="material-symbols-outlined text-[16px]">check</span>
+                    Siap Serah Terima
+                  </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Quick Bay Summary Ticker Footer -->
+<div class="mt-space-md p-space-sm rounded-xl bg-surface-container-low flex flex-wrap items-center justify-between gap-space-sm text-caption font-caption text-text-secondary">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-success-base"></span>
+<span>Bay 05 (Express Wash): <strong class="text-text-primary">Available</strong></span>
+<span class="text-outline-variant font-caption">•</span>
+<span>Bay 06 (Prep &amp; Inspection): <strong class="text-text-primary">Available</strong></span>
+</div>
+<button class="text-primary font-body-bold hover:underline flex items-center gap-1">
+              Atur Alokasi Pit &amp; Bay
+              <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- RIGHT COLUMN: TRANSACTIONS & SYSTEM ALERTS (approx 38% -> 4 or 5 cols in 12-col grid) -->
+<div class="lg:col-span-5 xl:col-span-4 flex flex-col gap-space-lg">
+<!-- SECTION 1: Transaksi POS Terakhir -->
+<div class="bg-surface rounded-2xl p-space-lg shadow-[0_12px_28px_-6px_rgba(37,99,235,0.12),0_8px_12px_-4px_rgba(15,23,42,0.03)] [box-shadow:inset_0px_2px_4px_rgba(255,255,255,0.95),inset_0px_-2px_4px_rgba(37,99,235,0.05),0_12px_28px_-6px_rgba(37,99,235,0.12),0_8px_12px_-4px_rgba(15,23,42,0.03)] flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<div class="w-7 h-7 rounded-lg bg-brand-50 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]">receipt_long</span>
+</div>
+<h2 class="font-headline-2 text-headline-2 text-text-primary">Transaksi Kasir Terakhir</h2>
+</div>
+<a class="font-caption text-caption text-primary hover:text-brand-700 font-bold flex items-center gap-0.5" href="#">
+              Lihat Semua (POS)
+              <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</a>
+</div>
+<!-- Transaction List -->
+<div class="flex flex-col gap-space-sm">
+<!-- Order 1 -->
+<div class="p-space-sm rounded-xl bg-surface-container-low hover:bg-surface-container transition-all flex flex-col gap-1.5 shadow-[inset_0_1px_2px_rgba(255,255,255,0.95)]">
+<div class="flex items-center justify-between">
+<span class="font-caption text-caption font-bold text-text-primary">#RBA-20261011-008</span>
+<span class="font-body-bold text-body-bold text-primary">Rp 4.350.000</span>
+</div>
+<div class="flex items-center justify-between text-caption font-caption text-text-secondary">
+<span class="font-medium text-text-primary truncate max-w-[140px]">Porsche 718 Cayman</span>
+<span class="px-2 py-0.5 rounded-full bg-success-surface text-success-text font-micro-badge uppercase font-bold">QRIS BCA Lunas</span>
+</div>
+<div class="flex items-center justify-between text-caption font-caption text-text-muted pt-1">
+<span>10 mnt lalu</span>
+<span>Kasir: Siti Rahma</span>
+</div>
+</div>
+<!-- Order 2 -->
+<div class="p-space-sm rounded-xl bg-surface-container-low hover:bg-surface-container transition-all flex flex-col gap-1.5 shadow-[inset_0_1px_2px_rgba(255,255,255,0.95)]">
+<div class="flex items-center justify-between">
+<span class="font-caption text-caption font-bold text-text-primary">#RBA-20261011-007</span>
+<span class="font-body-bold text-body-bold text-primary">Rp 175.000</span>
+</div>
+<div class="flex items-center justify-between text-caption font-caption text-text-secondary">
+<span class="font-medium text-text-primary truncate max-w-[140px]">Fortuner GR</span>
+<span class="px-2 py-0.5 rounded-full bg-success-surface text-success-text font-micro-badge uppercase font-bold">Tunai Lunas</span>
+</div>
+<div class="flex items-center justify-between text-caption font-caption text-text-muted pt-1">
+<span>25 mnt lalu</span>
+<span>Kasir: Siti Rahma</span>
+</div>
+</div>
+<!-- Order 3 -->
+<div class="p-space-sm rounded-xl bg-surface-container-low hover:bg-surface-container transition-all flex flex-col gap-1.5 shadow-[inset_0_1px_2px_rgba(255,255,255,0.95)]">
+<div class="flex items-center justify-between">
+<span class="font-caption text-caption font-bold text-text-primary">#RBA-20261011-006</span>
+<span class="font-body-bold text-body-bold text-primary">Rp 850.000</span>
+</div>
+<div class="flex items-center justify-between text-caption font-caption text-text-secondary">
+<span class="font-medium text-text-primary truncate max-w-[140px]">Honda CR-V</span>
+<span class="px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 font-micro-badge uppercase font-bold">Transfer Bank</span>
+</div>
+<div class="flex items-center justify-between text-caption font-caption text-text-muted pt-1">
+<span>40 mnt lalu</span>
+<span>Kasir: Self-Kiosk 01</span>
+</div>
+</div>
+</div>
+</div>
+<!-- SECTION 2: Peringatan Sistem & Stok Obat Kritis -->
+<div class="bg-surface rounded-2xl p-space-lg shadow-[0_12px_28px_-6px_rgba(37,99,235,0.12),0_8px_12px_-4px_rgba(15,23,42,0.03)] [box-shadow:inset_0px_2px_4px_rgba(255,255,255,0.95),inset_0px_-2px_4px_rgba(37,99,235,0.05),0_12px_28px_-6px_rgba(37,99,235,0.12),0_8px_12px_-4px_rgba(15,23,42,0.03)] flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<div class="w-7 h-7 rounded-lg bg-error-container/40 flex items-center justify-center text-error">
+<span class="material-symbols-outlined text-[18px]">warning</span>
+</div>
+<h2 class="font-headline-2 text-headline-2 text-text-primary">Peringatan Sistem &amp; Inventaris</h2>
+</div>
+<span class="w-2.5 h-2.5 rounded-full bg-danger-base animate-pulse"></span>
+</div>
+<!-- Alert Cards -->
+<div class="flex flex-col gap-space-sm">
+<!-- Danger Alert: Stok Obat -->
+<div class="p-space-sm rounded-xl bg-danger-surface text-danger-text flex flex-col gap-2 shadow-[0_2px_4px_rgba(15,23,42,0.02)]">
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-1.5 font-caption font-bold">
+<span class="material-symbols-outlined text-[16px] text-danger-base">inventory_2</span>
+<span>Meguiars M21 Synthetic Sealant</span>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-danger-base text-on-primary font-micro-badge uppercase font-bold">Kritis</span>
+</div>
+<p class="font-caption text-caption text-text-secondary leading-snug">
+                Tersisa <strong class="text-danger-text">150ml</strong> (batas minimum aman: 250ml). Segera lakukan reorder untuk pengerjaan besok.
+              </p>
+<div class="flex items-center justify-end pt-1">
+<button class="px-3 py-1 rounded-lg bg-danger-base hover:bg-red-700 text-on-primary font-caption font-semibold flex items-center gap-1 transition-colors">
+<span class="material-symbols-outlined text-[14px]">shopping_cart</span>
+                  Restock Cepat
+                </button>
+</div>
+</div>
+<!-- Warning Alert: Keterlambatan Shift -->
+<div class="p-space-sm rounded-xl bg-warning-surface text-warning-text flex flex-col gap-2 shadow-[0_2px_4px_rgba(15,23,42,0.02)]">
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-1.5 font-caption font-bold">
+<span class="material-symbols-outlined text-[16px] text-warning-base">schedule</span>
+<span>Keterlambatan Shift Pagi</span>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-warning-base text-on-primary font-micro-badge uppercase font-bold">Absensi</span>
+</div>
+<p class="font-caption text-caption text-text-secondary leading-snug">
+<strong>Rian Dimas</strong> check-in pukul 07:42 WIB (Terlambat 12 menit dari batas waktu 07:30 WIB).
+              </p>
+<div class="flex items-center justify-end pt-1">
+<button class="px-3 py-1 rounded-lg bg-surface hover:bg-surface-container-low text-warning-text font-caption font-semibold flex items-center gap-1 transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[14px]">assignment_ind</span>
+                  Tinjau Absensi
+                </button>
+</div>
+</div>
+<!-- Info Alert: Suhu & Kelembaban Ruang Coating -->
+<div class="p-space-sm rounded-xl bg-surface-container-low flex flex-col gap-2 shadow-[inset_0_1px_2px_rgba(255,255,255,0.95)]">
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-1.5 font-caption font-bold text-text-primary">
+<span class="material-symbols-outlined text-[16px] text-primary">thermostat</span>
+<span>Klimatisasi Ruang Coating (Bay 01)</span>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-success-surface text-success-text font-micro-badge uppercase font-bold">Ideal</span>
+</div>
+<div class="flex items-center justify-between text-caption font-caption text-text-secondary pt-0.5">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-text-muted">device_thermostat</span>
+<span>Suhu: <strong class="text-text-primary">22.4°C</strong></span>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-text-muted">humidity_mid</span>
+<span>Kelembaban: <strong class="text-text-primary">48% RH</strong></span>
+</div>
+</div>
+<span class="font-micro-badge text-micro-badge text-text-muted">Parameter optimal untuk Nano Ceramic curing proses.</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+  // Simple micro-interaction for clock update simulation
+  (function() {
+    const clockEl = document.getElementById('realtimeClock');
+    if (!clockEl) return;
+    
+    function updateClock() {
+      const now = new Date();
+      const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+      
+      const day = days[now.getDay()];
+      const date = now.getDate();
+      const month = months[now.getMonth()];
+      const year = now.getFullYear();
+      
+      const hours = String(now.getHours()).padStart(2, '0');
+      const mins = String(now.getMinutes()).padStart(2, '0');
+      
+      clockEl.innerHTML = `${day}, ${date} ${month} ${year} &bull; ${hours}:${mins} WIB`;
+    }
+    
+    setInterval(updateClock, 30000);
+  })();
+</script></main></div></body></html>

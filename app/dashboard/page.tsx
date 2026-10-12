@@ -1,0 +1,456 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { DashboardHeader } from "@/components/dashboard/dashboard-header";
+import { BottomNav } from "@/components/dashboard/bottom-nav";
+import {
+  formatRupiah,
+  formatRupiahShort,
+  formatTimeWib,
+  todayWibIso,
+} from "@/lib/format";
+
+export const instant = false;
+
+const ROLE_LABELS: Record<string, string> = {
+  owner: "Pemilik / Owner",
+  admin_kasir: "Admin Kasir",
+  maintainer: "Maintainer",
+  karyawan: "Karyawan",
+};
+
+const ORDER_STAGE: Record<string, { label: string; progress: number }> = {
+  queued: { label: "Dalam Antrean", progress: 10 },
+  in_progress: { label: "Sedang Dikerjakan", progress: 60 },
+  qc_review: { label: "Review QC", progress: 85 },
+};
+
+function statusBadge(status: string) {
+  switch (status) {
+    case "hadir":
+      return { text: "Hadir", cls: "bg-success-surface text-success-text" };
+    case "izin":
+      return { text: "Izin", cls: "bg-warning-surface text-warning-text" };
+    case "sakit":
+      return { text: "Sakit", cls: "bg-danger-surface text-danger-text" };
+    case "libur_shift":
+      return { text: "Libur", cls: "bg-surface-container text-text-secondary" };
+    default:
+      return { text: "Belum Absen", cls: "bg-surface-container text-text-secondary" };
+  }
+}
+
+export default async function DashboardPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("id, full_name, role, branch_id, shift_id")
+    .eq("auth_id", user.id)
+    .maybeSingle();
+
+  if (!profile) {
+    return (
+      <main className="flex-1 flex items-center justify-center px-gutter">
+        <div className="max-w-[420px] bg-surface rounded-3xl p-6 clay-card text-center flex flex-col items-center gap-3">
+          <span className="material-symbols-outlined text-[40px] text-warning-base">
+            pending_actions
+          </span>
+          <h1 className="font-headline-1 text-headline-1 text-text-primary">
+            Akun Menunggu Verifikasi
+          </h1>
+          <p className="font-caption text-caption text-text-secondary leading-relaxed">
+            Profil operasional Anda belum terhubung. Hubungi Owner atau
+            Maintainer untuk mengikat akun ke cabang.
+          </p>
+          <form action="/auth/signout" method="post">
+            <button
+              type="submit"
+              className="h-11 px-5 rounded-xl bg-brand-50 text-brand-600 font-body-bold text-body-bold"
+            >
+              Keluar
+            </button>
+          </form>
+        </div>
+      </main>
+    );
+  }
+
+  const branchId = profile.branch_id as string | null;
+  const today = todayWibIso();
+
+  const [branchRes, shiftRes, attendanceRes, handoffRes, ordersRes, notifRes] =
+    await Promise.all([
+      branchId
+        ? supabase
+            .from("branches")
+            .select("branch_name, operating_open_time")
+            .eq("id", branchId)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+      profile.shift_id
+        ? supabase
+            .from("shifts")
+            .select("name, start_time")
+            .eq("id", profile.shift_id)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+      supabase
+        .from("attendance_logs")
+        .select("clock_in, clock_out, status")
+        .eq("profile_id", profile.id)
+        .eq("date", today)
+        .maybeSingle(),
+      branchId
+        ? supabase
+            .from("shift_handoffs")
+            .select("opening_cash, expected_cash, actual_cash, status")
+            .eq("branch_id", branchId)
+            .eq("shift_date", today)
+            .order("opened_at", { ascending: false })
+            .limit(1)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+      branchId
+        ? supabase
+            .from("orders")
+            .select(
+              "id, order_number, license_plate, vehicle_model, service_package, status, total_price, created_at, assigned_to",
+            )
+            .eq("branch_id", branchId)
+            .in("status", ["queued", "in_progress", "qc_review"])
+            .order("created_at", { ascending: false })
+            .limit(25)
+        : Promise.resolve({ data: [] }),
+      supabase
+        .from("notifications")
+        .select("title, body")
+        .eq("recipient_id", profile.id)
+        .eq("is_read", false)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
+
+  const branch = branchRes.data;
+  const shift = shiftRes.data;
+  const attendance = attendanceRes.data;
+  const handoff = handoffRes.data;
+  const activeOrders = ordersRes.data ?? [];
+  const note = notifRes.data;
+
+  const inProgress = activeOrders.filter((o) => o.status === "in_progress");
+  const queued = activeOrders.filter((o) => o.status === "queued");
+  const qcReview = activeOrders.filter((o) => o.status === "qc_review");
+
+  const liveOrder = inProgress[0] ?? queued[0] ?? null;
+
+  let liveAssignee: string | null = null;
+  if (liveOrder?.assigned_to) {
+    const { data: assignee } = await supabase
+      .from("profiles")
+      .select("full_name")
+      .eq("id", liveOrder.assigned_to)
+      .maybeSingle();
+    liveAssignee = assignee?.full_name ?? null;
+  }
+
+  const badge = statusBadge(attendance?.status ?? "");
+  const clockInTime = attendance?.clock_in
+    ? formatTimeWib(attendance.clock_in)
+    : null;
+
+  const openedTime = (branch?.operating_open_time ?? "07:30:00").slice(0, 5);
+
+  return (
+    <div className="flex flex-col w-full pb-10 min-h-screen">
+      <DashboardHeader
+        branchName={branch?.branch_name ?? "Cabang Utama"}
+        fullName={profile.full_name ?? user.email ?? "Staf"}
+        hasUnread={Boolean(note)}
+        profileId={profile.id}
+      />
+
+      <div className="px-gutter pt-space-md grid grid-cols-2 gap-space-md">
+        <section className="col-span-2 relative overflow-hidden rounded-[20px] p-5 primary-gradient text-on-primary clay-glow">
+          <div className="absolute -right-6 -bottom-6 opacity-10 pointer-events-none text-white">
+            <span className="material-symbols-outlined text-[130px]">
+              directions_car
+            </span>
+          </div>
+          <div className="relative z-10 flex flex-col gap-3">
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-caption text-caption text-brand-100 flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-[16px]">
+                  schedule
+                </span>
+                Jam Resmi: {openedTime} WIB
+              </span>
+              <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-md">
+                <span className="material-symbols-outlined text-[14px] text-white">
+                  {attendance?.status === "hadir" ? "verified" : "info"}
+                </span>
+                <span className="font-micro-badge text-micro-badge text-white tracking-wider uppercase">
+                  {badge.text}
+                </span>
+              </div>
+            </div>
+            <div className="flex flex-col">
+              <h2 className="font-metric-display text-metric-display text-white tracking-tight leading-none">
+                {clockInTime ?? "--:--"}{" "}
+                <span className="font-headline-2 text-headline-2 text-brand-100 font-normal">
+                  WIB
+                </span>
+              </h2>
+              <p className="font-caption text-caption text-brand-100 mt-1">
+                {shift?.name ?? "Shift belum diatur"} •{" "}
+                {ROLE_LABELS[profile.role] ?? profile.role}
+              </p>
+            </div>
+            <div className="pt-1">
+              <Link
+                href="/absensi"
+                className="w-full h-11 px-4 rounded-xl bg-white/20 flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
+              >
+                <span className="material-symbols-outlined text-[20px] text-white">
+                  {clockInTime ? "how_to_reg" : "face_retouching_natural"}
+                </span>
+                <span className="font-body-bold text-body-bold text-white">
+                  {clockInTime ? "Absensi Hari Ini Tercatat" : "Buka Scanner Face ID"}
+                </span>
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        <Link
+          href="/shift"
+          aria-label="Buka Kas Titipan Shift"
+          className="col-span-1 rounded-[20px] p-4 bg-surface flex flex-col justify-between clay-card active:scale-[0.98] transition-transform"
+        >
+          <div className="flex flex-col gap-2">
+            <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center text-brand-600 shadow-[inset_0px_1px_2px_rgba(255,255,255,0.9)]">
+              <span className="material-symbols-outlined text-[22px]">
+                payments
+              </span>
+            </div>
+            <div>
+              <span className="font-caption text-caption text-text-secondary line-clamp-1">
+                Kas Titipan Shift
+              </span>
+              <div className="font-headline-1 text-headline-1 text-text-primary mt-0.5 tracking-tight">
+                {handoff?.opening_cash != null
+                  ? formatRupiahShort(handoff.opening_cash)
+                  : "Belum ada"}
+              </div>
+            </div>
+          </div>
+          <div className="mt-3 pt-2">
+            <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-warning-surface text-warning-text w-full">
+              <span className="material-symbols-outlined text-[13px] shrink-0">
+                {handoff?.status === "closed" ? "task_alt" : "pending"}
+              </span>
+              <span className="font-micro-badge text-micro-badge truncate">
+                {handoff?.status === "closed"
+                  ? "Shift Sudah Ditutup"
+                  : "Audit Shift Berjalan"}
+              </span>
+            </div>
+          </div>
+        </Link>
+
+        <section className="col-span-1 rounded-[20px] p-4 bg-surface flex flex-col justify-between clay-card">
+          <div className="flex flex-col gap-2">
+            <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center text-brand-600 shadow-[inset_0px_1px_2px_rgba(255,255,255,0.9)]">
+              <span className="material-symbols-outlined text-[22px]">
+                garage
+              </span>
+            </div>
+            <div>
+              <span className="font-caption text-caption text-text-secondary line-clamp-1">
+                Order Dikerjakan
+              </span>
+              <div className="font-headline-1 text-headline-1 text-text-primary mt-0.5 tracking-tight flex items-baseline gap-1">
+                {inProgress.length}
+                <span className="font-caption text-caption text-text-muted">
+                  Unit
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="mt-3 pt-2">
+            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 w-full">
+              <span className="h-1.5 w-1.5 rounded-full bg-brand-500 animate-pulse shrink-0" />
+              <span className="font-micro-badge text-micro-badge truncate">
+                {queued.length} Antre • {qcReview.length} QC
+              </span>
+            </div>
+          </div>
+        </section>
+
+        <section className="col-span-2 rounded-[20px] p-4 bg-surface clay-card">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h3 className="font-headline-2 text-headline-2 text-text-primary leading-tight">
+                Aksi Cepat Operasional
+              </h3>
+              <p className="font-caption text-caption text-text-muted">
+                Pintasan teknisi &amp; kasir
+              </p>
+            </div>
+            <span className="material-symbols-outlined text-text-muted text-[18px]">
+              bolt
+            </span>
+          </div>
+          <div className="grid grid-cols-4 gap-2">
+            {[
+              { icon: "add_task", label: "Baru", primary: true, href: "/pos" },
+              { icon: "inventory_2", label: "Stok Obat", primary: false, href: "/stok" },
+            ].map((action) => (
+              <Link
+                key={action.label}
+                href={action.href}
+                className="group flex flex-col items-center gap-1.5 p-2 rounded-xl bg-surface-container-low text-center active:scale-95 transition-transform"
+              >
+                <div
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-[inset_0px_1px_2px_rgba(255,255,255,0.9)] ${
+                    action.primary
+                      ? "bg-brand-500 text-on-primary"
+                      : "bg-brand-50 text-brand-600"
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[20px]">
+                    {action.icon}
+                  </span>
+                </div>
+                <span className="font-micro-badge text-micro-badge text-text-primary leading-tight line-clamp-1">
+                  {action.label}
+                </span>
+              </Link>
+            ))}
+            {[
+              { icon: "add_a_photo", label: "SOP QC" },
+              { icon: "event_busy", label: "Izin Shift" },
+            ].map((action) => (
+              <button
+                key={action.label}
+                type="button"
+                aria-disabled="true"
+                title="Modul menyusul"
+                className="group flex flex-col items-center gap-1.5 p-2 rounded-xl bg-surface-container-low text-center cursor-not-allowed opacity-70"
+              >
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-[inset_0px_1px_2px_rgba(255,255,255,0.9)] bg-brand-50 text-brand-600">
+                  <span className="material-symbols-outlined text-[20px]">
+                    {action.icon}
+                  </span>
+                </div>
+                <span className="font-micro-badge text-micro-badge text-text-primary leading-tight line-clamp-1">
+                  {action.label}
+                </span>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {liveOrder && (
+          <section className="col-span-2 rounded-[20px] p-4 bg-surface clay-card">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success-base opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-success-base" />
+                </span>
+                <span className="font-caption text-caption text-text-primary font-semibold">
+                  {ORDER_STAGE[liveOrder.status]?.label ?? "Order Aktif"}
+                </span>
+              </div>
+              <span className="font-caption text-caption text-brand-600 font-medium font-mono">
+                {liveOrder.order_number}
+              </span>
+            </div>
+            <div className="flex gap-3 items-center">
+              <div className="w-16 h-16 rounded-xl bg-surface-container flex items-center justify-center shrink-0 text-brand-600 shadow-[inset_0px_1px_2px_rgba(0,0,0,0.05)]">
+                <span className="material-symbols-outlined text-[30px]">
+                  directions_car
+                </span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-1">
+                  <h4 className="font-body-bold text-body-bold text-text-primary truncate">
+                    {liveOrder.vehicle_model ?? "Kendaraan"}
+                  </h4>
+                  <span className="font-micro-badge text-micro-badge px-2 py-0.5 rounded bg-surface-container-high text-text-secondary font-mono shrink-0">
+                    {liveOrder.license_plate}
+                  </span>
+                </div>
+                <p className="font-caption text-caption text-brand-600 mt-0.5 truncate">
+                  {liveOrder.service_package ?? "Paket layanan"}
+                </p>
+                <div className="mt-2 flex items-center gap-2">
+                  <div className="w-full bg-surface-container rounded-full h-2 overflow-hidden">
+                    <div
+                      className="bg-gradient-to-r from-brand-600 to-brand-400 h-2 rounded-full"
+                      style={{
+                        width: `${ORDER_STAGE[liveOrder.status]?.progress ?? 0}%`,
+                      }}
+                    />
+                  </div>
+                  <span className="font-micro-badge text-micro-badge text-text-muted shrink-0">
+                    {ORDER_STAGE[liveOrder.status]?.progress ?? 0}%
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="mt-3 pt-3 flex items-center justify-between bg-surface-container-low px-3 py-2 rounded-xl">
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 rounded-full bg-brand-200 text-brand-700 flex items-center justify-center font-micro-badge text-micro-badge">
+                  {liveAssignee
+                    ? liveAssignee
+                        .split(/\s+/)
+                        .slice(0, 2)
+                        .map((p) => p[0])
+                        .join("")
+                        .toUpperCase()
+                    : "RB"}
+                </div>
+                <span className="font-caption text-caption text-text-secondary">
+                  {liveAssignee ? `Teknisi: ${liveAssignee}` : "Belum ada teknisi"}
+                </span>
+              </div>
+              <span className="font-caption text-caption text-success-text font-medium">
+                {formatRupiah(liveOrder.total_price)}
+              </span>
+            </div>
+          </section>
+        )}
+
+        {note && (
+          <section className="col-span-2 rounded-[20px] p-3.5 bg-brand-50 flex items-start gap-3 shadow-[0px_2px_4px_rgba(15,23,42,0.03)]">
+            <div className="w-8 h-8 rounded-lg bg-surface flex items-center justify-center text-brand-600 shrink-0 shadow-[0px_2px_4px_rgba(37,99,235,0.08)]">
+              <span className="material-symbols-outlined text-[18px]">
+                campaign
+              </span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <span className="font-caption text-caption text-text-primary font-semibold block">
+                {note.title}
+              </span>
+              <p className="font-caption text-caption text-text-secondary mt-0.5 line-clamp-2">
+                {note.body}
+              </p>
+            </div>
+          </section>
+        )}
+      </div>
+
+      <BottomNav />
+    </div>
+  );
+}

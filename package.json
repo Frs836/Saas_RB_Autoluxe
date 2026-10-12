@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run typecheck && npm run test:integration",
+    "test:integration": "node scripts/integration-check.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

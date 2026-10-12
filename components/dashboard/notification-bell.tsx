@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 type NotificationRow = {
@@ -50,7 +50,10 @@ export function NotificationBell({
   const [items, setItems] = useState<NotificationRow[]>([]);
   const [unread, setUnread] = useState(hasUnread);
 
-  const load = useCallback(async () => {
+  // Notifikasi diambil saat panel dibuka, bukan lewat efek yang langsung
+  // memanggil setState. Ambientasi: setState sinkron di dalam body efek
+  // memicu render berantai.
+  async function load() {
     setLoading(true);
     const { data } = await supabase
       .from("notifications")
@@ -62,12 +65,7 @@ export function NotificationBell({
     setItems(rows);
     setUnread(rows.some((row) => !row.is_read));
     setLoading(false);
-  }, [profileId, supabase]);
-
-  useEffect(() => {
-    if (!open) return;
-    void load();
-  }, [open, load]);
+  }
 
   async function markAllRead() {
     const unreadIds = items.filter((row) => !row.is_read).map((row) => row.id);
@@ -80,12 +78,18 @@ export function NotificationBell({
       .in("id", unreadIds);
   }
 
+  function toggle() {
+    const next = !open;
+    setOpen(next);
+    if (next) void load();
+  }
+
   return (
     <>
       <button
         type="button"
         aria-label="Notifikasi Operasional"
-        onClick={() => setOpen(true)}
+        onClick={toggle}
         className="relative w-9 h-9 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary shadow-[inset_0px_2px_4px_rgba(255,255,255,0.95)] active:scale-[0.98] transition-transform"
       >
         <span className="material-symbols-outlined text-[20px]">

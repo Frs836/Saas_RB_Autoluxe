@@ -43,9 +43,27 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  if (!user) return supabaseResponse;
+
+  // `profiles_select` bergantung pada current_profile_id() yang sudah
+  // menyaring is_active, sehingga RLS tidak bisa membedakan akun yang
+  // dinonaktifkan dari akun tanpa baris profile. current_profile_state()
+  // menjawab keduanya tanpa melewati RLS.
+  const { data: profileState } = await supabase.rpc("current_profile_state");
+
+  if (profileState === "inactive") {
+    await supabase.auth.signOut();
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    url.search = "";
+    url.searchParams.set("reason", "disabled");
+    return NextResponse.redirect(url);
+  }
+
   if (user && isAuthPage) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
+    url.search = "";
     return NextResponse.redirect(url);
   }
 

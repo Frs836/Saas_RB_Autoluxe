@@ -50,9 +50,10 @@ export default async function KasPage() {
             paymentMethod: row.payment_method,
             proofPhotoUrl: row.proof_photo_url,
           }))}
-          handoff={
+handoff={
             handoff
               ? {
+                  id: handoff.id,
                   opening: Number(handoff.opening_cash),
                   status: handoff.status,
                   expected: handoff.expected_cash ? Number(handoff.expected_cash) : null,

@@ -20,18 +20,33 @@ export default async function GaransiPage() {
 
   const { data: orders } = await supabase
     .from("orders")
-    .select("id, order_number, customer_name, vehicle_plate, total_price, completed_at")
+    .select("id, order_number, customer_name, license_plate, total_price, completed_at")
     .eq("branch_id", branchId ?? "")
     .eq("status", "completed")
     .order("completed_at", { ascending: false })
     .limit(30);
 
-  const { data: warranties } = await supabase
-    .from("warranties")
-    .select("id, warranty_code, start_date, end_date, status")
-    .eq("branch_id", branchId ?? "")
-    .order("start_date", { ascending: false })
-    .limit(50);
+  const orderRows = orders ?? [];
+  const orderIds = orderRows.map((o) => o.id as string);
+
+  // warranties tidak punya branch_id sendiri, jadi cakupan cabang diambil dari
+  // order induknya. Query langsung ke warranties dengan filter branch_id akan
+  // gagal dan membocorkan garansi cabang lain.
+  const { data: warranties } = orderIds.length
+    ? await supabase
+        .from("warranties")
+        .select("id, order_id, warranty_code, start_date, end_date, status")
+        .in("order_id", orderIds)
+        .order("start_date", { ascending: false })
+    : { data: [] as { id: string; order_id: string | null; warranty_code: string; start_date: string; end_date: string; status: string }[] };
+
+  const { data: claims } = orderIds.length
+    ? await supabase
+        .from("warranty_claims")
+        .select("order_id, claim_date, status, problem_description")
+        .in("order_id", orderIds)
+        .order("claim_date", { ascending: false })
+    : { data: [] as { order_id: string; claim_date: string; status: string; problem_description: string }[] };
 
   return (
     <>
@@ -39,20 +54,27 @@ export default async function GaransiPage() {
       <main className="flex-1">
         <GaransiConsole
           canManage={true}
-          orders={(orders ?? []).map((o) => ({
-            id: o.id,
-            orderNumber: o.order_number,
-            customerName: o.customer_name,
-            vehiclePlate: o.vehicle_plate,
+          orders={orderRows.map((o) => ({
+            id: o.id as string,
+            orderNumber: o.order_number as string,
+            customerName: o.customer_name as string,
+            vehiclePlate: (o.license_plate as string) ?? null,
             totalPrice: Number(o.total_price),
-            completedAt: o.completed_at,
+            completedAt: (o.completed_at as string) ?? null,
           }))}
           warranties={(warranties ?? []).map((w) => ({
-            id: w.id,
-            warrantyCode: w.warranty_code,
-            startDate: w.start_date,
-            endDate: w.end_date,
-            status: w.status,
+            id: w.id as string,
+            orderId: (w.order_id as string) ?? null,
+            warrantyCode: w.warranty_code as string,
+            startDate: w.start_date as string,
+            endDate: w.end_date as string,
+            status: w.status as string,
+          }))}
+          claims={(claims ?? []).map((c) => ({
+            orderId: c.order_id as string,
+            claimDate: c.claim_date as string,
+            status: c.status as string,
+            problemDescription: c.problem_description as string,
           }))}
         />
       </main>

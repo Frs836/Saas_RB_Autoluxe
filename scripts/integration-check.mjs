@@ -316,7 +316,7 @@ suite.check("klaim order yang belum selesai ditolak", Boolean(notCompleted.error
 
 const { data: warrantyRows } = await admin.client
   .from("warranties")
-  .select("order_id, status, end_date, warranty_code")
+  .select("order_id, status, end_date, warranty_code, orders!inner(id, status)")
   .eq("status", "active")
   .limit(30);
 
@@ -327,10 +327,19 @@ const { data: pendingOrders } = await admin.client
 
 const busyOrderIds = new Set((pendingOrders ?? []).map((c) => c.order_id));
 const todayIso = new Date().toISOString().slice(0, 10);
-const claimable = (warrantyRows ?? []).find(
-  (w) => String(w.end_date) >= todayIso && !busyOrderIds.has(w.order_id),
-);
-suite.check("ada garansi aktif yang bisa diklaim", Boolean(claimable), claimable?.warranty_code);
+
+// Garansi hanya bisa diklaim bila order-nya benar-benar selesai. Seed demo
+// sengaja memuat garansi untuk order yang masih qc_review, jadi status order
+// ikut diperiksa di sini.
+const claimable = (warrantyRows ?? []).find((w) => {
+  const parent = Array.isArray(w.orders) ? w.orders[0] : w.orders;
+  return (
+    String(w.end_date) >= todayIso &&
+    !busyOrderIds.has(w.order_id) &&
+    parent?.status === "completed"
+  );
+});
+suite.check("ada garansi aktif pada order selesai", Boolean(claimable), claimable?.warranty_code);
 
 if (claimable) {
   const valid = await admin.client.rpc("create_warranty_claim", {
@@ -579,16 +588,282 @@ const restored = await karyawan.client.rpc("current_profile_state");
 suite.check("akun aktif kembali setelah diaktifkan ulang", restored.data === "active", String(restored.data));
 
 /* -------------------------------------------------------------------------- */
-/* 11. Kebersihan                                                              */
+/* 11. Inspeksi foto & persetujuan QC                                         */
 /* -------------------------------------------------------------------------- */
 
-suite.section("11. Kebersihan data uji");
+suite.section("11. Inspeksi foto dan QC");
+
+const qcOrder = singleRow(
+  await admin.client.rpc("create_pos_order_with_hold", {
+    p_license_plate: `${TEST_PLATE} QC`,
+    p_vehicle_model: "Mobil QC",
+    p_vehicle_size: "M",
+    p_customer_name: `${TEST_MARKER} QC`,
+    p_customer_phone: "081200000011",
+    p_service_package: "Coating Nano Ceramic 1 Layer",
+    p_items: [{ name: `${TEST_MARKER} QC`, price: 1500000, qty: 1 }],
+    p_payment_method: "cash",
+    p_payment_state: "paid",
+    p_start_work: true,
+  }),
+);
+cleanupOrderIds.push(qcOrder?.id);
+
+const noPhoto = await admin.client.rpc("add_order_inspection", {
+  p_order_id: qcOrder?.id,
+  p_phase: "before",
+  p_photo_path: null,
+  p_notes: "kondisi awal kendaraan bersih",
+});
+suite.check("inspeksi tanpa foto ditolak", Boolean(noPhoto.error), noPhoto.error?.message);
+
+const shortNote = await admin.client.rpc("add_order_inspection", {
+  p_order_id: qcOrder?.id,
+  p_phase: "before",
+  p_photo_path: `${TEST_PLATE}/foto.webp`,
+  p_notes: "ok",
+});
+suite.check("catatan inspeksi terlalu pendek ditolak", Boolean(shortNote.error), shortNote.error?.message);
+
+const afterFirst = await admin.client.rpc("add_order_inspection", {
+  p_order_id: qcOrder?.id,
+  p_phase: "after",
+  p_photo_path: `${TEST_PLATE}/foto.webp`,
+  p_notes: "hasil akhir sudah bersih total",
+});
+suite.check("foto after tanpa foto before ditolak", Boolean(afterFirst.error), afterFirst.error?.message);
+
+const beforePhoto = await admin.client.rpc("add_order_inspection", {
+  p_order_id: qcOrder?.id,
+  p_phase: "before",
+  p_photo_path: `${TEST_PLATE}/before.webp`,
+  p_notes: "kondisi awal kendaraan tercatat baik",
+});
+suite.check("foto before diterima", !beforePhoto.error, beforePhoto.error?.message);
+
+const afterPhoto = await admin.client.rpc("add_order_inspection", {
+  p_order_id: qcOrder?.id,
+  p_phase: "after",
+  p_photo_path: `${TEST_PLATE}/after.webp`,
+  p_notes: "hasil akhir pekerjaan memuaskan",
+});
+suite.check("foto after diterima setelah before ada", !afterPhoto.error, afterPhoto.error?.message);
+
+const foreignInspection = await karyawan.client.rpc("add_order_inspection", {
+  p_order_id: qcOrder?.id,
+  p_phase: "process",
+  p_photo_path: `${TEST_PLATE}/proses.webp`,
+  p_notes: "mencoba mengunggah di luar tugas",
+});
+suite.check(
+  "karyawan tidak bisa mengunggah inspeksi order yang bukan tugasnya",
+  Boolean(foreignInspection.error),
+  foreignInspection.error?.message,
+);
+
+// QC hanya boleh diputuskan tim manajerial.
+await admin.client.rpc("apply_order_status", {
+  p_order_id: qcOrder?.id,
+  p_status: "qc_review",
+});
+const karyawanQc = await karyawan.client.rpc("apply_order_status", {
+  p_order_id: qcOrder?.id,
+  p_status: "completed",
+});
+suite.check(
+  "karyawan tidak bisa menyetujui QC",
+  Boolean(karyawanQc.error),
+  karyawanQc.error?.message,
+);
+
+const adminQc = await admin.client.rpc("apply_order_status", {
+  p_order_id: qcOrder?.id,
+  p_status: "completed",
+});
+suite.check("admin kasir bisa menyetujui QC", !adminQc.error, adminQc.error?.message);
+suite.check(
+  "garansi 180 hari terbit untuk layanan coating",
+  typeof adminQc.data === "string" && adminQc.data.startsWith("WRT-"),
+  String(adminQc.data),
+);
+
+const { data: issuedWarranty } = await adminClient
+  .from("warranties")
+  .select("start_date, end_date, status")
+  .eq("order_id", qcOrder?.id)
+  .maybeSingle();
+if (issuedWarranty) {
+  const days =
+    (new Date(issuedWarranty.end_date).getTime() -
+      new Date(issuedWarranty.start_date).getTime()) /
+    86400000;
+  suite.check("garansi berlaku 180 hari", days === 180, `${days} hari`);
+}
+
+const reopenCompleted = await admin.client.rpc("apply_order_status", {
+  p_order_id: qcOrder?.id,
+  p_status: "qc_review",
+});
+suite.check(
+  "order selesai tidak bisa dikembalikan ke QC",
+  Boolean(reopenCompleted.error),
+  reopenCompleted.error?.message ?? "TIDAK DITOLAK",
+);
+
+const skipQc = await admin.client.rpc("apply_order_status", {
+  p_order_id: qcOrder?.id,
+  p_status: "queued",
+});
+suite.check(
+  "transisi status yang tidak sah ditolak",
+  Boolean(skipQc.error),
+  skipQc.error?.message ?? "TIDAK DITOLAK",
+);
+
+/* -------------------------------------------------------------------------- */
+/* 12. Pengajuan izin lewat RPC                                                */
+/* -------------------------------------------------------------------------- */
+
+suite.section("12. Pengajuan izin, cuti, sakit");
+
+const iso = (offsetDays) =>
+  new Date(Date.now() + offsetDays * 86400000).toISOString().slice(0, 10);
+
+// Rentang yang dipakai seksi ini diturunkan dari stamp agar tidak pernah
+// bentrok dengan sisa pengajuan dari eksekusi sebelumnya.
+const runOffset = 30 + (stamp % 300);
+
+const shortReason = await karyawan.client.rpc("submit_time_off_request", {
+  p_type: "izin",
+  p_start_date: iso(2),
+  p_end_date: iso(2),
+  p_reason: "izin",
+  p_proof_path: null,
+});
+suite.check("alasan terlalu pendek ditolak", Boolean(shortReason.error), shortReason.error?.message);
+
+const reversedRange = await karyawan.client.rpc("submit_time_off_request", {
+  p_type: "izin",
+  p_start_date: iso(5),
+  p_end_date: iso(3),
+  p_reason: "urutan tanggal terbalik dan tidak valid",
+  p_proof_path: null,
+});
+suite.check("rentang tanggal terbalik ditolak", Boolean(reversedRange.error), reversedRange.error?.message);
+
+const pastDate = await karyawan.client.rpc("submit_time_off_request", {
+  p_type: "izin",
+  p_start_date: iso(-5),
+  p_end_date: iso(-3),
+  p_reason: "tanggal sudah lewat dan tidak boleh dipakai",
+  p_proof_path: null,
+});
+suite.check("tanggal di masa lalu ditolak", Boolean(pastDate.error), pastDate.error?.message);
+
+const tooLong = await karyawan.client.rpc("submit_time_off_request", {
+  p_type: "cuti",
+  p_start_date: iso(2),
+  p_end_date: iso(120),
+  p_reason: "cuti terlalu lama melebihi batas maksimal",
+  p_proof_path: null,
+});
+suite.check("durasi melebihi 90 hari ditolak", Boolean(tooLong.error), tooLong.error?.message);
+
+const sickNoProof = await karyawan.client.rpc("submit_time_off_request", {
+  p_type: "sakit",
+  p_start_date: iso(2),
+  p_end_date: iso(3),
+  p_reason: "demam dan tidak dapat bekerja selama dua hari",
+  p_proof_path: null,
+});
+suite.check("sakit tanpa surat dokter ditolak", Boolean(sickNoProof.error), sickNoProof.error?.message);
+
+const validRequest = singleRow(
+  await karyawan.client.rpc("submit_time_off_request", {
+    p_type: "cuti",
+    p_start_date: iso(runOffset),
+    p_end_date: iso(runOffset + 1),
+    // Alasan diberi penanda ZZTEST agar tercipta oleh skrip ini dan terhapus
+    // oleh blok pembersihan, bukan menyisakan pengajuan sungguhan.
+    p_reason: `${TEST_MARKER} acara keluarga yang jauh di luar kota`,
+    p_proof_path: null,
+  }),
+);
+suite.check("pengajuan cuti yang valid diterima", Boolean(validRequest), validRequest?.status);
+
+if (validRequest) {
+  const overlap = await karyawan.client.rpc("submit_time_off_request", {
+    p_type: "izin",
+    p_start_date: iso(runOffset + 1),
+    p_end_date: iso(runOffset + 2),
+    p_reason: `${TEST_MARKER} mencoba memakai rentang yang sama dengan pengajuan aktif`,
+    p_proof_path: null,
+  });
+  suite.check("rentang tanggal bertumpang tindih ditolak", Boolean(overlap.error), overlap.error?.message);
+
+  const adminDecide = await admin.client.rpc("decide_time_off_request", {
+    p_id: validRequest.id,
+    p_decision: "approved",
+  });
+  suite.check(
+    "admin kasir tidak bisa memutuskan pengajuan",
+    Boolean(adminDecide.error),
+    adminDecide.error?.message,
+  );
+
+  const karyawanDecide = await karyawan.client.rpc("decide_time_off_request", {
+    p_id: validRequest.id,
+    p_decision: "approved",
+  });
+  suite.check(
+    "pemohon tidak bisa memutuskan pengajuannya sendiri",
+    Boolean(karyawanDecide.error),
+    karyawanDecide.error?.message,
+  );
+
+  const ownerDecide = await owner.client.rpc("decide_time_off_request", {
+    p_id: validRequest.id,
+    p_decision: "approved",
+  });
+  suite.check("owner bisa menyetujui pengajuan", !ownerDecide.error, ownerDecide.error?.message);
+
+  const decided = singleRow(
+    await owner.client
+      .from("time_off_requests")
+      .select("status, approver_id, decided_at")
+      .eq("id", validRequest.id)
+      .maybeSingle(),
+  );
+  suite.check("status menjadi approved", decided?.status === "approved", decided?.status);
+  suite.check("approver_id terisi", Boolean(decided?.approver_id), String(decided?.approver_id));
+  suite.check("decided_at terisi", Boolean(decided?.decided_at), String(decided?.decided_at));
+
+  const twice = await owner.client.rpc("decide_time_off_request", {
+    p_id: validRequest.id,
+    p_decision: "rejected",
+  });
+  suite.check("pengajuan yang sudah diputuskan tidak bisa diputuskan lagi", Boolean(twice.error), twice.error?.message);
+
+  const { data: notif } = await karyawan.client
+    .from("notifications")
+    .select("id")
+    .eq("category", "attendance")
+    .limit(1);
+  suite.check("pemohon menerima notifikasi keputusan", (notif ?? []).length > 0, `${notif?.length ?? 0} notifikasi`);
+}
+
+/* -------------------------------------------------------------------------- */
+/* 13. Kebersihan                                                              */
+/* -------------------------------------------------------------------------- */
+
+suite.section("13. Kebersihan data uji");
 
 const ids = cleanupOrderIds.filter(Boolean);
 
 if (ids.length > 0) {
   await adminClient.from("order_team_members").delete().in("order_id", ids);
   await adminClient.from("order_inspections").delete().in("order_id", ids);
+  await adminClient.from("warranties").delete().in("order_id", ids);
   await adminClient.from("order_items").delete().in("order_id", ids);
   await adminClient.from("cash_flow").delete().ilike("description", `%${TEST_PLATE}%`);
   await adminClient.from("cash_flow").delete().eq("category", "ZZTEST Dengan Bukti");
@@ -597,6 +872,8 @@ if (ids.length > 0) {
   await adminClient.from("orders").delete().in("id", ids);
 }
 await adminClient.from("time_off_requests").delete().like("reason", `${TEST_REASON_PREFIX}%`);
+await adminClient.from("activity_logs").delete().eq("entity", "time_off_request");
+await adminClient.from("activity_logs").delete().eq("entity", "order");
 
 const { count: leftoverOrders } = await adminClient
   .from("orders")
@@ -606,9 +883,14 @@ const { count: leftoverRequests } = await adminClient
   .from("time_off_requests")
   .select("id", { count: "exact", head: true })
   .like("reason", `${TEST_REASON_PREFIX}%`);
+const { count: leftoverInspections } = await adminClient
+  .from("order_inspections")
+  .select("id", { count: "exact", head: true })
+  .like("photo_url", `%${TEST_PLATE}%`);
 
 suite.check("seluruh order uji terhapus", (leftoverOrders ?? 0) === 0, `${leftoverOrders ?? "err"} tersisa`);
 suite.check("seluruh pengajuan izin uji terhapus", (leftoverRequests ?? 0) === 0, `${leftoverRequests ?? "err"} tersisa`);
+suite.check("seluruh foto inspeksi uji terhapus", (leftoverInspections ?? 0) === 0, `${leftoverInspections ?? "err"} tersisa`);
 
 /* -------------------------------------------------------------------------- */
 

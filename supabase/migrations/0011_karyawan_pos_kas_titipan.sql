@@ -19,11 +19,11 @@
 --   1. Enum order_payment_state ('unpaid' | 'paid') + kolom pada orders:
 --        payment_state, cash_hold_profile_id, cash_hold_amount,
 --        cash_hold_payment_method, started_by.
---   2. create_pos_order_with_hold() — RPC POS yang menerima karyawan, mencatat
+--   2. create_pos_order_with_hold(): RPC POS yang menerima karyawan, mencatat
 --      kas titipan bila dibayar, dan bisa langsung menstatuskan in_progress.
---   3. start_order_work() — karyawan boleh memulai order yang ia buat atau
+--   3. start_order_work(): karyawan boleh memulai order yang ia buat atau
 --      menjadi anggota timnya; role manajerial bebas.
---   4. my_cash_hold_today() — agregat kas titipan milik pemanggil hari ini.
+--   4. my_cash_hold_today(): agregat kas titipan milik pemanggil hari ini.
 --   5. Index pendukung + REVOKE/GRANT yang konsisten dengan 0002.
 -- ============================================================================
 

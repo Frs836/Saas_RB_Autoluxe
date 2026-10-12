@@ -1,5 +1,5 @@
 /**
- * RBAC — Single Source of Truth hak akses RB AUTOLUXE.
+ * RBAC: Single Source of Truth hak akses RB AUTOLUXE.
  *
  * Modul ini MURNI (tidak meng-import next/* atau @supabase/*) supaya aman
  * dipakai oleh komponen client maupun server component. Untuk gerbang
@@ -44,6 +44,15 @@ export const PERMISSIONS = [
   "attendance.audit",
   "attendance.manage_location",
 
+  /* Izin / cuti / sakit */
+  "time_off.request",
+  "time_off.decide",
+
+  /* Inspeksi & QC */
+  "inspection.upload",
+  "inspection.delete_any",
+  "qc.review",
+
   /* POS & order */
   "pos.create",
   "order.manage_status",
@@ -79,7 +88,7 @@ export type Permission = (typeof PERMISSIONS)[number];
 /**
  * Matriks izin per role.
  *
- * karyawan  : hanya tugas kerjanya sendiri — absensi, order, klaim stok,
+ * karyawan  : hanya tugas kerjanya sendiri (absensi, order, klaim stok,
  *             dan kas titipan yang sedang dipegangnya sendiri.
  *             Tidak ada akses ke finansial, audit shift, atau laporan.
  * admin_kasir: operasional penuh 1 cabang, termasuk validasi kas titipan
@@ -90,17 +99,22 @@ export type Permission = (typeof PERMISSIONS)[number];
 export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
   karyawan: [
     "attendance.self",
+    "time_off.request",
     "pos.create",
     "order.start_work",
+    "inspection.upload",
     "stock.claim",
     "cash.view_own_hold",
   ],
   admin_kasir: [
     "attendance.self",
     "attendance.audit",
+    "time_off.request",
     "pos.create",
     "order.manage_status",
     "order.cancel",
+    "inspection.upload",
+    "qc.review",
     "stock.claim",
     "stock.approve",
     "cash.view_branch",
@@ -114,9 +128,14 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "attendance.self",
     "attendance.audit",
     "attendance.manage_location",
+    "time_off.request",
+    "time_off.decide",
     "pos.create",
     "order.manage_status",
     "order.cancel",
+    "inspection.upload",
+    "inspection.delete_any",
+    "qc.review",
     "stock.claim",
     "stock.approve",
     "cash.view_branch",
@@ -134,9 +153,14 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "attendance.self",
     "attendance.audit",
     "attendance.manage_location",
+    "time_off.request",
+    "time_off.decide",
     "pos.create",
     "order.manage_status",
     "order.cancel",
+    "inspection.upload",
+    "inspection.delete_any",
+    "qc.review",
     "stock.claim",
     "stock.approve",
     "cash.view_branch",
@@ -165,7 +189,7 @@ export function canViewAllBranches(role: unknown): boolean {
   return can(role, "branch.switch");
 }
 
-/** Selisih struktural antara dua role — dipakai audit UI. */
+/** Selisih struktural antara dua role, dipakai audit UI. */
 export function permissionDiff(role: unknown): Permission[] {
   const granted = new Set(ROLE_PERMISSIONS[toRole(role)]);
   return PERMISSIONS.filter((permission) => !granted.has(permission));
@@ -232,6 +256,13 @@ const NAV_REKAP: NavItem = {
   permission: "attendance.audit",
 };
 
+const NAV_IZIN: NavItem = {
+  label: "Izin",
+  icon: "event_busy",
+  href: "/izin",
+  permission: "time_off.request",
+};
+
 const NAV_PROFIL: NavItem = {
   label: "Profil",
   icon: "account_circle",
@@ -244,7 +275,7 @@ const NAV_PROFIL: NavItem = {
  * Tiga role pertama di kiri, item keempat di kanan.
  */
 export const BOTTOM_NAV_BY_ROLE: Record<Role, readonly NavItem[]> = {
-  karyawan: [NAV_BERANDA, NAV_ABSENSI, NAV_ANTREAN, NAV_PROFIL],
+  karyawan: [NAV_BERANDA, NAV_ABSENSI, NAV_ANTREAN, NAV_IZIN],
   admin_kasir: [NAV_BERANDA, NAV_ANTREAN, NAV_STOK, NAV_SHIFT],
   maintainer: [NAV_BERANDA, NAV_ANTREAN, NAV_STOK, NAV_REKAP],
   owner: [NAV_BERANDA, NAV_ANTREAN, NAV_LAPORAN, NAV_PROFIL],
@@ -284,8 +315,9 @@ const QUICK_ACTIONS: readonly QuickAction[] = [
   { icon: "assignment", label: "Antrean", href: "/pos/orders", permission: "pos.create" },
   { icon: "inventory_2", label: "Stok Obat", href: "/stok", permission: "stock.claim" },
   { icon: "how_to_reg", label: "Absensi", href: "/absensi", permission: "attendance.self" },
-  { icon: "add_a_photo", label: "SOP QC", href: "/pos/orders", permission: "pos.create", disabled: true, disabledTitle: "Modul menyusul" },
-  { icon: "event_busy", label: "Izin Shift", href: "/absensi", permission: "attendance.self", disabled: true, disabledTitle: "Modul menyusul" },
+  { icon: "event_busy", label: "Izin/Cuti", href: "/izin", permission: "time_off.request" },
+  { icon: "add_a_photo", label: "SOP QC", href: "/pos/orders", permission: "inspection.upload", disabled: true, disabledTitle: "Buka detail order untuk mulai inspeksi" },
+  { icon: "event_busy", label: "Izin Shift", href: "/izin", permission: "time_off.request" },
 ];
 
 export function quickActionsFor(role: unknown): QuickAction[] {
@@ -308,7 +340,9 @@ export type ProfileMenuItem = {
 
 export const PROFILE_MENU: readonly ProfileMenuItem[] = [
   { label: "Absensi Biometrik", caption: "Scan Face ID & GPS kehadiran", icon: "how_to_reg", href: "/absensi", permission: "attendance.self" },
+  { label: "Izin, Cuti & Sakit", caption: "Ajukan dan pantau pengajuan", icon: "event_busy", href: "/izin", permission: "time_off.request" },
   { label: "POS & Order", caption: "Buat order, bayar nanti, kerjakan", icon: "add_task", href: "/pos", permission: "pos.create" },
+  { label: "Antrean Order", caption: "Status pengerjaan dan inspeksi", icon: "assignment", href: "/pos/orders", permission: null },
   { label: "Klaim Stok", caption: "Ajukan & pantau stok obat", icon: "inventory_2", href: "/stok", permission: "stock.claim" },
   { label: "Kas Titipan Shift", caption: "Buka kas, rekap & tutup audit shift", icon: "payments", href: "/shift", permission: "cash.shift_manage" },
   { label: "Kas Keluar", caption: "Petty cash operasional + foto nota", icon: "receipt_long", href: "/kas", permission: "cash.petty_manage" },

@@ -67,3 +67,12 @@ export async function requirePermission(
 
   return profile;
 }
+
+/** Untuk halaman yang wajib login tanpa syarat izin tambahan. */
+export async function requireSession(): Promise<SessionProfile> {
+  const profile = await getSessionProfile();
+
+  if (!profile) redirect("/login");
+
+  return profile;
+}

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { formatRupiah, formatTimeWib, formatDateWib } from "@/lib/format";
 import { PAYMENT_LABELS, whatsappLink } from "@/lib/pos";
@@ -278,9 +279,12 @@ export function OrderQueue({
             return (
               <div key={order.id} className="clay-card p-4 flex flex-col gap-3">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="font-caption text-caption font-mono text-text-secondary">
+                  <Link
+                    href={`/pos/orders/${order.id}`}
+                    className="font-caption text-caption font-mono text-brand-600 font-semibold"
+                  >
                     {order.order_number}
-                  </span>
+                  </Link>
                   <span
                     className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-caption text-caption ${meta.cls}`}
                   >
@@ -435,6 +439,15 @@ export function OrderQueue({
                       Kerjakan Sekarang
                     </button>
                   ) : null}
+                  <Link
+                    href={`/pos/orders/${order.id}`}
+                    className="h-10 px-3 rounded-xl bg-surface-container text-text-secondary flex items-center gap-1 font-caption text-caption shrink-0"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">
+                      photo_camera
+                    </span>
+                    Inspeksi
+                  </Link>
                   {!canManage && !canStartWork ? (
                     <span className="font-caption text-caption text-text-muted flex-1 text-right">
                       Hanya lihat

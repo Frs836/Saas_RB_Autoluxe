@@ -1,33 +1,25 @@
-import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { BottomNav } from "@/components/dashboard/bottom-nav";
 import { SubPageHeader } from "@/components/pos/sub-page-header";
 import { AttendanceConsole } from "@/components/attendance/attendance-console";
-import { ATTENDANCE_MANAGER_ROLES, ATTENDANCE_ROLE_LABELS, LOCATION_MANAGER_ROLES, wibNow } from "@/lib/attendance";
+import { ATTENDANCE_ROLE_LABELS, wibNow } from "@/lib/attendance";
+import { can } from "@/lib/rbac";
+import { requirePermission } from "@/lib/rbac-guard";
 
 export const instant = false;
 
 export default async function AbsensiPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const session = await requirePermission("attendance.self");
 
-  if (!user) {
-    redirect("/login");
-  }
+  const supabase = await createClient();
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, full_name, role, branch_id, face_descriptor")
-    .eq("auth_id", user.id)
+    .select("face_descriptor")
+    .eq("id", session.id)
     .maybeSingle();
 
-  if (!profile) {
-    redirect("/dashboard");
-  }
-
-  const branchId = profile.branch_id as string | null;
+  const branchId = session.branchId;
   const today = wibNow().dateIso;
 
   const [branchRes, todayRes, historyRes, handoffRes] = await Promise.all([
@@ -43,13 +35,13 @@ export default async function AbsensiPage() {
     supabase
       .from("attendance_logs")
       .select("clock_in, clock_out, status, late_minutes, late_reason")
-      .eq("profile_id", profile.id)
+      .eq("profile_id", session.id)
       .eq("date", today)
       .maybeSingle(),
     supabase
       .from("attendance_logs")
       .select("date, clock_in, clock_out, status, late_minutes")
-      .eq("profile_id", profile.id)
+      .eq("profile_id", session.id)
       .order("date", { ascending: false })
       .limit(6),
     branchId
@@ -65,11 +57,11 @@ export default async function AbsensiPage() {
   ]);
 
   const branch = branchRes.data;
-  const role = profile.role as string;
-  const canManageLocation = LOCATION_MANAGER_ROLES.includes(role);
-  const canAudit = ATTENDANCE_MANAGER_ROLES.includes(role);
+  const role = session.role;
+  const canManageLocation = can(role, "attendance.manage_location");
+  const canAudit = can(role, "attendance.audit");
 
-  const rawDescriptor = profile.face_descriptor as number[] | null;
+  const rawDescriptor = profile?.face_descriptor as number[] | null;
   const faceDescriptor =
     Array.isArray(rawDescriptor) && rawDescriptor.length > 0
       ? rawDescriptor.map((v) => Number(v))
@@ -96,8 +88,8 @@ export default async function AbsensiPage() {
       />
       <AttendanceConsole
         profile={{
-          id: profile.id as string,
-          fullName: (profile.full_name as string) ?? "Staf",
+          id: session.id,
+          fullName: session.fullName,
           role,
           roleLabel: ATTENDANCE_ROLE_LABELS[role] ?? role,
           hasFace: faceDescriptor !== null,
@@ -148,7 +140,7 @@ export default async function AbsensiPage() {
         }
         canAudit={canAudit}
       />
-      <BottomNav />
+      <BottomNav role={session.role} />
     </div>
   );
 }

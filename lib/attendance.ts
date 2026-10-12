@@ -1,8 +1,13 @@
+import {
+  ATTENDANCE_MANAGER_ROLES,
+  LOCATION_MANAGER_ROLES,
+  ROLE_LABELS,
+} from "@/lib/rbac";
+
+export { ATTENDANCE_MANAGER_ROLES, LOCATION_MANAGER_ROLES };
+
 export const ATTENDANCE_ROLE_LABELS: Record<string, string> = {
-  owner: "Pemilik / Owner",
-  admin_kasir: "Admin Kasir",
-  maintainer: "Maintainer",
-  karyawan: "Karyawan",
+  ...ROLE_LABELS,
 };
 
 export const ATTENDANCE_STATUS_LABELS: Record<string, string> = {
@@ -19,11 +24,7 @@ export const ATTENDANCE_STATUS_STYLE: Record<string, string> = {
   sakit: "bg-danger-surface text-danger-text",
 };
 
-export const LOCATION_MANAGER_ROLES = ["owner", "maintainer"];
-
-export const ATTENDANCE_MANAGER_ROLES = ["owner", "admin_kasir", "maintainer"];
-
-/** Jarak dua koordinat dalam meter (haversine, radius bumi 6.371.000 m). */
+/** Jarik Dua koordinat dalam meter (haversine, radius bumi 6.371.000 m). */
 export function haversineMeters(
   lat1: number,
   lng1: number,

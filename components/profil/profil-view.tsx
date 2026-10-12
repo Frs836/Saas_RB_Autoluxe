@@ -2,19 +2,14 @@
 
 import Link from "next/link";
 import { initials } from "@/lib/format";
+import type { ProfileMenuItem } from "@/lib/rbac";
 
-type MenuItem = {
-  label: string;
-  caption: string;
-  icon: string;
-  href: string;
-  visible: boolean;
-};
+type MenuItem = ProfileMenuItem;
 
 export function ProfilView({
   profile,
   branch,
-  isPrivileged,
+  menu,
   canManageLocation,
 }: {
   profile: {
@@ -32,43 +27,11 @@ export function ProfilView({
     openTime: string;
     closeTime: string;
   };
-  isPrivileged: boolean;
+  menu: MenuItem[];
   canManageLocation: boolean;
 }) {
   const branchConfigured = branch.latitude !== null && branch.longitude !== null;
-
-  const menu: MenuItem[] = [
-    {
-      label: "Absensi Biometrik",
-      caption: "Scan Face ID & GPS kehadiran",
-      icon: "how_to_reg",
-      href: "/absensi",
-      visible: true,
-    },
-    {
-      label: "Kas Titipan Shift",
-      caption: "Buka kas, rekap & tutup audit shift",
-      icon: "payments",
-      href: "/shift",
-      visible: true,
-    },
-    {
-      label: "Rekap Kehadiran Staf",
-      caption: "Rekap harian, verifikasi selfie, ekspor CSV",
-      icon: "groups",
-      href: "/rekap",
-      visible: isPrivileged,
-    },
-    {
-      label: "Laporan Eksekutif",
-      caption: "Finansial, omzet cabang, komisi & stok",
-      icon: "insights",
-      href: "/laporan",
-      visible: isPrivileged,
-    },
-  ];
-
-  const visibleMenu = menu.filter((item) => item.visible);
+  const visibleMenu = menu;
   const initialsValue = initials(profile.fullName);
 
   return (

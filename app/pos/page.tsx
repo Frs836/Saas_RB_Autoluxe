@@ -2,54 +2,21 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { BottomNav } from "@/components/dashboard/bottom-nav";
 import { PosConsole } from "@/components/pos/pos-console";
+import { can, roleLabel } from "@/lib/rbac";
+import { getSessionProfile } from "@/lib/rbac-guard";
 import type { PosService } from "@/lib/pos";
 
 export const instant = false;
 
-const ROLE_LABELS: Record<string, string> = {
-  owner: "Pemilik / Owner",
-  admin_kasir: "Admin Kasir",
-  maintainer: "Maintainer",
-  karyawan: "Karyawan",
-};
-
-const PRIVILEGED = ["owner", "admin_kasir", "maintainer"];
-
 export default async function PosPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const profile = await getSessionProfile();
 
-  if (!user) {
+  if (!profile) {
     redirect("/login");
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id, role, branch_id")
-    .eq("auth_id", user.id)
-    .maybeSingle();
-
-  if (!profile) {
-    return (
-      <main className="flex-1 flex items-center justify-center px-gutter">
-        <div className="max-w-[420px] bg-surface rounded-3xl p-6 clay-card text-center flex flex-col items-center gap-3">
-          <span className="material-symbols-outlined text-[40px] text-warning-text">
-            pending_actions
-          </span>
-          <h1 className="font-headline-1 text-headline-1 text-text-primary">
-            Akun Menunggu Verifikasi
-          </h1>
-          <p className="font-caption text-caption text-text-secondary leading-relaxed">
-            Profil operasional Anda belum terhubung ke cabang.
-          </p>
-        </div>
-      </main>
-    );
-  }
-
-  const branchId = profile.branch_id as string | null;
+  const supabase = await createClient();
+  const branchId = profile.branchId;
 
   const [servicesRes, teamRes, branchRes] = await Promise.all([
     supabase
@@ -81,7 +48,6 @@ export default async function PosPage() {
   const services = (servicesRes.data ?? []) as PosService[];
   const teamOptions = teamRes.data ?? [];
   const branchName = branchRes.data?.branch_name ?? "Cabang Utama";
-  const canCreate = PRIVILEGED.includes(profile.role as string);
 
   return (
     <div className="flex flex-col w-full min-h-screen">
@@ -89,10 +55,11 @@ export default async function PosPage() {
         services={services}
         teamOptions={teamOptions}
         branchName={branchName}
-        canCreate={canCreate}
-        roleLabel={ROLE_LABELS[profile.role] ?? profile.role}
+        canCreate={can(profile.role, "pos.create")}
+        role={profile.role}
+        roleLabel={roleLabel(profile.role)}
       />
-      <BottomNav />
+      <BottomNav role={profile.role} />
     </div>
   );
 }

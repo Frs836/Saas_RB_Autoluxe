@@ -3,26 +3,32 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { BottomNav } from "@/components/dashboard/bottom-nav";
+import { PendingVerification } from "@/components/auth/pending-verification";
 import {
   formatRupiah,
   formatRupiahShort,
   formatTimeWib,
   todayWibIso,
 } from "@/lib/format";
+import { can, quickActionsFor, roleLabel } from "@/lib/rbac";
+import { getSessionProfile } from "@/lib/rbac-guard";
 
 export const instant = false;
-
-const ROLE_LABELS: Record<string, string> = {
-  owner: "Pemilik / Owner",
-  admin_kasir: "Admin Kasir",
-  maintainer: "Maintainer",
-  karyawan: "Karyawan",
-};
 
 const ORDER_STAGE: Record<string, { label: string; progress: number }> = {
   queued: { label: "Dalam Antrean", progress: 10 },
   in_progress: { label: "Sedang Dikerjakan", progress: 60 },
   qc_review: { label: "Review QC", progress: 85 },
+};
+
+type MyCashHold = {
+  cash_amount: number | null;
+  qris_amount: number | null;
+  transfer_amount: number | null;
+  held_total: number | null;
+  held_count: number | null;
+  unpaid_total: number | null;
+  unpaid_count: number | null;
 };
 
 function statusBadge(status: string) {
@@ -36,7 +42,10 @@ function statusBadge(status: string) {
     case "libur_shift":
       return { text: "Libur", cls: "bg-surface-container text-text-secondary" };
     default:
-      return { text: "Belum Absen", cls: "bg-surface-container text-text-secondary" };
+      return {
+        text: "Belum Absen",
+        cls: "bg-surface-container text-text-secondary",
+      };
   }
 }
 
@@ -50,26 +59,12 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id, full_name, role, branch_id, shift_id")
-    .eq("auth_id", user.id)
-    .maybeSingle();
+  const profile = await getSessionProfile();
 
   if (!profile) {
     return (
-      <main className="flex-1 flex items-center justify-center px-gutter">
-        <div className="max-w-[420px] bg-surface rounded-3xl p-6 clay-card text-center flex flex-col items-center gap-3">
-          <span className="material-symbols-outlined text-[40px] text-warning-base">
-            pending_actions
-          </span>
-          <h1 className="font-headline-1 text-headline-1 text-text-primary">
-            Akun Menunggu Verifikasi
-          </h1>
-          <p className="font-caption text-caption text-text-secondary leading-relaxed">
-            Profil operasional Anda belum terhubung. Hubungi Owner atau
-            Maintainer untuk mengikat akun ke cabang.
-          </p>
+      <PendingVerification
+        action={
           <form action="/auth/signout" method="post">
             <button
               type="submit"
@@ -78,15 +73,19 @@ export default async function DashboardPage() {
               Keluar
             </button>
           </form>
-        </div>
-      </main>
+        }
+      />
     );
   }
 
-  const branchId = profile.branch_id as string | null;
+  const role = profile.role;
+  const branchId = profile.branchId;
   const today = todayWibIso();
 
-  const [branchRes, shiftRes, attendanceRes, handoffRes, ordersRes, notifRes] =
+  const canSeeBranchCash = can(role, "cash.view_branch");
+  const canSeeOwnHold = can(role, "cash.view_own_hold");
+
+  const [branchRes, shiftRes, attendanceRes, handoffRes, ordersRes, notifRes, holdRes] =
     await Promise.all([
       branchId
         ? supabase
@@ -95,11 +94,11 @@ export default async function DashboardPage() {
             .eq("id", branchId)
             .maybeSingle()
         : Promise.resolve({ data: null }),
-      profile.shift_id
+      profile.shiftId
         ? supabase
             .from("shifts")
             .select("name, start_time")
-            .eq("id", profile.shift_id)
+            .eq("id", profile.shiftId)
             .maybeSingle()
         : Promise.resolve({ data: null }),
       supabase
@@ -108,7 +107,9 @@ export default async function DashboardPage() {
         .eq("profile_id", profile.id)
         .eq("date", today)
         .maybeSingle(),
-      branchId
+      // Handoff kas cabang HANYA untuk role berwenang. Karyawan tidak boleh
+      // menarik data ini sama sekali, bukan sekadar disembunyikan.
+      canSeeBranchCash && branchId
         ? supabase
             .from("shift_handoffs")
             .select("opening_cash, expected_cash, actual_cash, status")
@@ -137,14 +138,20 @@ export default async function DashboardPage() {
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle(),
+      canSeeOwnHold
+        ? supabase.rpc("my_cash_hold_today")
+        : Promise.resolve({ data: null }),
     ]);
 
   const branch = branchRes.data;
   const shift = shiftRes.data;
   const attendance = attendanceRes.data;
-  const handoff = handoffRes.data;
+  const handoff = canSeeBranchCash ? handoffRes.data : null;
   const activeOrders = ordersRes.data ?? [];
   const note = notifRes.data;
+  const myHold = (Array.isArray(holdRes.data) ? holdRes.data[0] : holdRes.data) as
+    | MyCashHold
+    | null;
 
   const inProgress = activeOrders.filter((o) => o.status === "in_progress");
   const queued = activeOrders.filter((o) => o.status === "queued");
@@ -168,12 +175,20 @@ export default async function DashboardPage() {
     : null;
 
   const openedTime = (branch?.operating_open_time ?? "07:30:00").slice(0, 5);
+  const quickActions = quickActionsFor(role);
+
+  const heldTotal = Number(myHold?.held_total ?? 0);
+  const heldCount = Number(myHold?.held_count ?? 0);
+  const heldCash = Number(myHold?.cash_amount ?? 0);
+  const heldDigital = Number(myHold?.qris_amount ?? 0) + Number(myHold?.transfer_amount ?? 0);
+  const unpaidCount = Number(myHold?.unpaid_count ?? 0);
+  const unpaidTotal = Number(myHold?.unpaid_total ?? 0);
 
   return (
     <div className="flex flex-col w-full pb-10 min-h-screen">
       <DashboardHeader
         branchName={branch?.branch_name ?? "Cabang Utama"}
-        fullName={profile.full_name ?? user.email ?? "Staf"}
+        fullName={profile.fullName}
         hasUnread={Boolean(note)}
         profileId={profile.id}
       />
@@ -204,14 +219,13 @@ export default async function DashboardPage() {
             </div>
             <div className="flex flex-col">
               <h2 className="font-metric-display text-metric-display text-white tracking-tight leading-none">
-                {clockInTime ?? "--:--"}{" "}
+                {clockInTime ?? "--:--"}&nbsp;
                 <span className="font-headline-2 text-headline-2 text-brand-100 font-normal">
                   WIB
                 </span>
               </h2>
               <p className="font-caption text-caption text-brand-100 mt-1">
-                {shift?.name ?? "Shift belum diatur"} •{" "}
-                {ROLE_LABELS[profile.role] ?? profile.role}
+                {shift?.name ?? "Shift belum diatur"} • {roleLabel(role)}
               </p>
             </div>
             <div className="pt-1">
@@ -230,41 +244,79 @@ export default async function DashboardPage() {
           </div>
         </section>
 
-        <Link
-          href="/shift"
-          aria-label="Buka Kas Titipan Shift"
-          className="col-span-1 rounded-[20px] p-4 bg-surface flex flex-col justify-between clay-card active:scale-[0.98] transition-transform"
-        >
-          <div className="flex flex-col gap-2">
-            <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center text-brand-600 shadow-[inset_0px_1px_2px_rgba(255,255,255,0.9)]">
-              <span className="material-symbols-outlined text-[22px]">
-                payments
-              </span>
-            </div>
-            <div>
-              <span className="font-caption text-caption text-text-secondary line-clamp-1">
-                Kas Titipan Shift
-              </span>
-              <div className="font-headline-1 text-headline-1 text-text-primary mt-0.5 tracking-tight">
-                {handoff?.opening_cash != null
-                  ? formatRupiahShort(handoff.opening_cash)
-                  : "Belum ada"}
+        {canSeeBranchCash ? (
+          <Link
+            href="/shift"
+            aria-label="Buka Audit Shift"
+            className="col-span-1 rounded-[20px] p-4 bg-surface flex flex-col justify-between clay-card active:scale-[0.98] transition-transform"
+          >
+            <div className="flex flex-col gap-2">
+              <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center text-brand-600 shadow-[inset_0px_1px_2px_rgba(255,255,255,0.9)]">
+                <span className="material-symbols-outlined text-[22px]">
+                  payments
+                </span>
+              </div>
+              <div>
+                <span className="font-caption text-caption text-text-secondary line-clamp-1">
+                  Kas Titipan Shift
+                </span>
+                <div className="font-headline-1 text-headline-1 text-text-primary mt-0.5 tracking-tight">
+                  {handoff?.opening_cash != null
+                    ? formatRupiahShort(handoff.opening_cash)
+                    : "Belum ada"}
+                </div>
               </div>
             </div>
-          </div>
-          <div className="mt-3 pt-2">
-            <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-warning-surface text-warning-text w-full">
-              <span className="material-symbols-outlined text-[13px] shrink-0">
-                {handoff?.status === "closed" ? "task_alt" : "pending"}
-              </span>
-              <span className="font-micro-badge text-micro-badge truncate">
-                {handoff?.status === "closed"
-                  ? "Shift Sudah Ditutup"
-                  : "Audit Shift Berjalan"}
-              </span>
+            <div className="mt-3 pt-2">
+              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-warning-surface text-warning-text w-full">
+                <span className="material-symbols-outlined text-[13px] shrink-0">
+                  {handoff?.status === "closed" ? "task_alt" : "pending"}
+                </span>
+                <span className="font-micro-badge text-micro-badge truncate">
+                  {handoff?.status === "closed"
+                    ? "Shift Sudah Ditutup"
+                    : "Audit Shift Berjalan"}
+                </span>
+              </div>
             </div>
-          </div>
-        </Link>
+          </Link>
+        ) : (
+          <section className="col-span-1 rounded-[20px] p-4 bg-surface flex flex-col justify-between clay-card">
+            <div className="flex flex-col gap-2">
+              <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center text-brand-600 shadow-[inset_0px_1px_2px_rgba(255,255,255,0.9)]">
+                <span className="material-symbols-outlined text-[22px]">
+                  savings
+                </span>
+              </div>
+              <div>
+                <span className="font-caption text-caption text-text-secondary line-clamp-1">
+                  Kas Titipan Saya
+                </span>
+                <div className="font-headline-1 text-headline-1 text-text-primary mt-0.5 tracking-tight">
+                  {heldTotal > 0 ? formatRupiahShort(heldTotal) : "Rp 0"}
+                </div>
+              </div>
+            </div>
+            <div className="mt-3 pt-2 flex flex-col gap-1">
+              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 w-full">
+                <span className="material-symbols-outlined text-[13px] shrink-0">
+                  account_balance_wallet
+                </span>
+                <span className="font-micro-badge text-micro-badge truncate">
+                  Tunai {formatRupiahShort(heldCash)}
+                </span>
+              </div>
+              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container text-text-secondary w-full">
+                <span className="material-symbols-outlined text-[13px] shrink-0">
+                  qr_code_scanner
+                </span>
+                <span className="font-micro-badge text-micro-badge truncate">
+                  QRIS/Transfer {formatRupiahShort(heldDigital)}
+                </span>
+              </div>
+            </div>
+          </section>
+        )}
 
         <section className="col-span-1 rounded-[20px] p-4 bg-surface flex flex-col justify-between clay-card">
           <div className="flex flex-col gap-2">
@@ -295,6 +347,25 @@ export default async function DashboardPage() {
           </div>
         </section>
 
+        {!canSeeBranchCash && unpaidCount > 0 ? (
+          <Link
+            href="/pos/orders"
+            className="col-span-2 rounded-[16px] p-3.5 bg-warning-surface flex items-center gap-3 active:scale-[0.98] transition-transform"
+          >
+            <span className="material-symbols-outlined text-[22px] text-warning-text shrink-0">
+              hourglass_top
+            </span>
+            <div className="min-w-0">
+              <p className="font-caption text-caption text-warning-text font-semibold">
+                {unpaidCount} order menunggu pembayaran kasir
+              </p>
+              <p className="font-micro-badge text-micro-badge text-warning-text opacity-80">
+                Total tagihan {formatRupiah(unpaidTotal)}
+              </p>
+            </div>
+          </Link>
+        ) : null}
+
         <section className="col-span-2 rounded-[20px] p-4 bg-surface clay-card">
           <div className="flex items-center justify-between mb-3">
             <div>
@@ -302,7 +373,7 @@ export default async function DashboardPage() {
                 Aksi Cepat Operasional
               </h3>
               <p className="font-caption text-caption text-text-muted">
-                Pintasan teknisi &amp; kasir
+                Pintasan sesuai hak akses {roleLabel(role)}
               </p>
             </div>
             <span className="material-symbols-outlined text-text-muted text-[18px]">
@@ -310,53 +381,54 @@ export default async function DashboardPage() {
             </span>
           </div>
           <div className="grid grid-cols-4 gap-2">
-            {[
-              { icon: "add_task", label: "Baru", primary: true, href: "/pos" },
-              { icon: "inventory_2", label: "Stok Obat", primary: false, href: "/stok" },
-            ].map((action) => (
-              <Link
-                key={action.label}
-                href={action.href}
-                className="group flex flex-col items-center gap-1.5 p-2 rounded-xl bg-surface-container-low text-center active:scale-95 transition-transform"
-              >
-                <div
-                  className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-[inset_0px_1px_2px_rgba(255,255,255,0.9)] ${
-                    action.primary
-                      ? "bg-brand-500 text-on-primary"
-                      : "bg-brand-50 text-brand-600"
-                  }`}
+            {quickActions.map((action) =>
+              action.disabled ? (
+                <button
+                  key={action.label}
+                  type="button"
+                  aria-disabled="true"
+                  title={action.disabledTitle ?? "Modul menyusul"}
+                  className="group flex flex-col items-center gap-1.5 p-2 rounded-xl bg-surface-container-low text-center cursor-not-allowed opacity-70"
                 >
-                  <span className="material-symbols-outlined text-[20px]">
-                    {action.icon}
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-[inset_0px_1px_2px_rgba(255,255,255,0.9)] bg-brand-50 text-brand-600">
+                    <span className="material-symbols-outlined text-[20px]">
+                      {action.icon}
+                    </span>
+                  </div>
+                  <span className="font-micro-badge text-micro-badge text-text-primary leading-tight line-clamp-1">
+                    {action.label}
                   </span>
-                </div>
-                <span className="font-micro-badge text-micro-badge text-text-primary leading-tight line-clamp-1">
-                  {action.label}
-                </span>
-              </Link>
-            ))}
-            {[
-              { icon: "add_a_photo", label: "SOP QC" },
-              { icon: "event_busy", label: "Izin Shift" },
-            ].map((action) => (
-              <button
-                key={action.label}
-                type="button"
-                aria-disabled="true"
-                title="Modul menyusul"
-                className="group flex flex-col items-center gap-1.5 p-2 rounded-xl bg-surface-container-low text-center cursor-not-allowed opacity-70"
-              >
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-[inset_0px_1px_2px_rgba(255,255,255,0.9)] bg-brand-50 text-brand-600">
-                  <span className="material-symbols-outlined text-[20px]">
-                    {action.icon}
+                </button>
+              ) : (
+                <Link
+                  key={action.label}
+                  href={action.href}
+                  className="group flex flex-col items-center gap-1.5 p-2 rounded-xl bg-surface-container-low text-center active:scale-95 transition-transform"
+                >
+                  <div
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-[inset_0px_1px_2px_rgba(255,255,255,0.9)] ${
+                      action.primary
+                        ? "bg-brand-500 text-on-primary"
+                        : "bg-brand-50 text-brand-600"
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-[20px]">
+                      {action.icon}
+                    </span>
+                  </div>
+                  <span className="font-micro-badge text-micro-badge text-text-primary leading-tight line-clamp-1">
+                    {action.label}
                   </span>
-                </div>
-                <span className="font-micro-badge text-micro-badge text-text-primary leading-tight line-clamp-1">
-                  {action.label}
-                </span>
-              </button>
-            ))}
+                </Link>
+              ),
+            )}
           </div>
+          {heldCount > 0 ? (
+            <p className="mt-3 font-caption text-caption text-text-muted">
+              Anda memegang {heldCount} kas titipan hari ini. Serahkan ke Admin
+              Kasir saat shift dibuka.
+            </p>
+          ) : null}
         </section>
 
         {liveOrder && (
@@ -450,7 +522,7 @@ export default async function DashboardPage() {
         )}
       </div>
 
-      <BottomNav />
+      <BottomNav role={role} />
     </div>
   );
 }

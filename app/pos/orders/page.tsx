@@ -7,32 +7,20 @@ import {
   type QueueOrder,
   type TeamMember,
 } from "@/components/pos/order-queue";
+import { can } from "@/lib/rbac";
+import { getSessionProfile } from "@/lib/rbac-guard";
 
 export const instant = false;
 
-const PRIVILEGED = ["owner", "admin_kasir", "maintainer"];
-
 export default async function OrderQueuePage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const session = await getSessionProfile();
 
-  if (!user) {
+  if (!session) {
     redirect("/login");
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id, role, branch_id")
-    .eq("auth_id", user.id)
-    .maybeSingle();
-
-  if (!profile) {
-    redirect("/dashboard");
-  }
-
-  const branchId = profile.branch_id as string | null;
+  const supabase = await createClient();
+  const branchId = session.branchId;
 
   const [branchRes, ordersRes] = await Promise.all([
     branchId
@@ -46,7 +34,7 @@ export default async function OrderQueuePage() {
       ? supabase
           .from("orders")
           .select(
-            "id, order_number, license_plate, vehicle_model, vehicle_size, customer_name, customer_phone, service_package, status, total_price, payment_method, created_at, completed_at, assigned_to, cancellation_reason",
+            "id, order_number, license_plate, vehicle_model, vehicle_size, customer_name, customer_phone, service_package, status, total_price, payment_method, payment_state, created_at, completed_at, assigned_to, cancellation_reason",
           )
           .eq("branch_id", branchId)
           .order("created_at", { ascending: false })
@@ -97,7 +85,7 @@ export default async function OrderQueuePage() {
     team: teamByOrder[o.id] ?? [],
   })) as QueueOrder[];
 
-  const canManage = PRIVILEGED.includes(profile.role as string);
+  const canManage = can(session.role, "order.manage_status");
 
   return (
     <div className="flex flex-col w-full min-h-screen">
@@ -106,8 +94,12 @@ export default async function OrderQueuePage() {
         branchName={branchRes.data?.branch_name ?? "Cabang Utama"}
         backHref="/dashboard"
       />
-      <OrderQueue orders={queueOrders} canManage={canManage} />
-      <BottomNav />
+      <OrderQueue
+        orders={queueOrders}
+        canManage={canManage}
+        canStartWork={can(session.role, "order.start_work")}
+      />
+      <BottomNav role={session.role} />
     </div>
   );
 }

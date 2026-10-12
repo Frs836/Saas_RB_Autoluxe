@@ -1,9 +1,10 @@
-import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { BottomNav } from "@/components/dashboard/bottom-nav";
 import { SubPageHeader } from "@/components/pos/sub-page-header";
 import { LaporanView } from "@/components/laporan/laporan-view";
-import { ATTENDANCE_MANAGER_ROLES, ATTENDANCE_ROLE_LABELS } from "@/lib/attendance";
+import { ATTENDANCE_ROLE_LABELS } from "@/lib/attendance";
+import { canViewAllBranches } from "@/lib/rbac";
+import { requirePermission } from "@/lib/rbac-guard";
 
 export const instant = false;
 
@@ -62,85 +63,72 @@ function monthLabel(offset: number) {
 }
 
 export default async function LaporanPage() {
+  const session = await requirePermission("reports.branch");
+
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const role = session.role;
+  const branchId = session.branchId;
 
-  if (!user) redirect("/login");
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id, full_name, role, branch_id")
-    .eq("auth_id", user.id)
-    .maybeSingle();
-
-  const role = (profile?.role as string) ?? "";
-  const canReport = ATTENDANCE_MANAGER_ROLES.includes(role);
-
-  const restricted = (
-    <main className="flex-1 flex items-center justify-center px-gutter">
-      <div className="w-full max-w-[420px] bg-surface rounded-3xl p-6 clay-card text-center flex flex-col items-center gap-3">
-        <span className="material-symbols-outlined text-[40px] text-warning-base">
-          insights
-        </span>
-        <h1 className="font-headline-1 text-headline-1 text-text-primary">
-          Akses Terbatas
-        </h1>
-        <p className="font-caption text-caption text-text-secondary leading-relaxed">
-          Laporan Eksekutif dikhususkan untuk Owner, Admin Kasir, dan Maintainer.
-        </p>
-        <a
-          href="/dashboard"
-          className="h-11 px-5 rounded-xl primary-gradient text-white font-body-bold text-body-bold flex items-center gap-2"
-        >
-          <span className="material-symbols-outlined text-[18px]">home</span>
-          Kembali ke Beranda
-        </a>
-      </div>
-    </main>
-  );
-
-  if (!profile || !canReport) {
-    return (
-      <div className="flex flex-col w-full min-h-screen">
-        <SubPageHeader
-          title="Laporan Eksekutif"
-          branchName="Cabang Utama"
-          backHref="/dashboard"
-        />
-        {restricted}
-        <BottomNav />
-      </div>
-    );
-  }
-
-  const [branchRes, ordersRes, cashRes, stockRes, commissionRes, staffRes] =
-    await Promise.all([
-      supabase.from("branches").select("id, branch_name"),
-      supabase
+  // Admin kasir hanya berhak atas cabangnya sendiri. Owner & Maintainer
+  // melihat seluruh cabang karena mempunyai izin branch.switch.
+  const globalScope = canViewAllBranches(role);
+  const scopedOrders = globalScope
+    ? supabase
         .from("orders")
         .select(
           "id, branch_id, total_price, status, assigned_to, completed_at, created_at",
         )
-        .eq("status", "completed"),
-      supabase
+        .eq("status", "completed")
+    : supabase
+        .from("orders")
+        .select(
+          "id, branch_id, total_price, status, assigned_to, completed_at, created_at",
+        )
+        .eq("status", "completed")
+        .eq("branch_id", branchId ?? "");
+
+  const scopedCash = globalScope
+    ? supabase
         .from("cash_flow")
-        .select("id, type, amount, category, branch_id, created_at"),
-      supabase
+        .select("id, type, amount, category, branch_id, created_at")
+    : supabase
+        .from("cash_flow")
+        .select("id, type, amount, category, branch_id, created_at")
+        .eq("branch_id", branchId ?? "");
+
+  const scopedStock = globalScope
+    ? supabase
         .from("inventory_items")
-        .select("id, branch_id, item_name, current_stock, unit, min_stock_alert"),
+        .select("id, branch_id, item_name, current_stock, unit, min_stock_alert")
+    : supabase
+        .from("inventory_items")
+        .select("id, branch_id, item_name, current_stock, unit, min_stock_alert")
+        .eq("branch_id", branchId ?? "");
+
+  const [branchRes, ordersRes, cashRes, stockRes, commissionRes, staffRes] =
+    await Promise.all([
+      globalScope
+        ? supabase.from("branches").select("id, branch_name")
+        : supabase
+            .from("branches")
+            .select("id, branch_name")
+            .eq("id", branchId ?? ""),
+      scopedOrders,
+      scopedCash,
+      scopedStock,
       supabase
         .from("commission_settings")
         .select("profile_id, commission_type, value, is_active"),
-      supabase.from("profiles").select("id, full_name, role"),
+      globalScope
+        ? supabase.from("profiles").select("id, full_name, role")
+        : supabase
+            .from("profiles")
+            .select("id, full_name, role")
+            .eq("branch_id", branchId ?? ""),
     ]);
 
   const branchMap = new Map(
     (branchRes.data ?? []).map((b) => [b.id, b.branch_name]),
-  );
-  const staffMap = new Map(
-    (staffRes.data ?? []).map((s) => [s.id, { name: s.full_name, role: s.role }]),
   );
 
   const completedOrders = ordersRes.data ?? [];
@@ -237,11 +225,11 @@ export default async function LaporanPage() {
     <div className="flex flex-col w-full min-h-screen">
       <SubPageHeader
         title="Laporan Eksekutif"
-        branchName={branchMap.get(profile.branch_id ?? "") ?? "Cabang Utama"}
+        branchName={branchMap.get(session.branchId ?? "") ?? "Cabang Utama"}
         backHref="/dashboard"
       />
       <LaporanView data={data} />
-      <BottomNav />
+      <BottomNav role={session.role} />
     </div>
   );
 }

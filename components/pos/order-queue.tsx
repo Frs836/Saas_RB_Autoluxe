@@ -95,9 +95,11 @@ function initials(name: string | null) {
 export function OrderQueue({
   orders: initialOrders,
   canManage,
+  canStartWork,
 }: {
   orders: QueueOrder[];
   canManage: boolean;
+  canStartWork?: boolean;
 }) {
   const router = useRouter();
 
@@ -142,6 +144,21 @@ export function OrderQueue({
     const { error: rpcError } = await supabase.rpc("apply_order_status", {
       p_order_id: order.id,
       p_status: status,
+    });
+    setBusyId(null);
+    if (rpcError) {
+      setError(rpcError.message);
+      return;
+    }
+    router.refresh();
+  }
+
+  async function startWork(order: QueueOrder) {
+    setBusyId(order.id);
+    setError(null);
+    const supabase = createClient();
+    const { error: rpcError } = await supabase.rpc("start_order_work", {
+      p_order_id: order.id,
     });
     setBusyId(null);
     if (rpcError) {
@@ -405,7 +422,20 @@ export function OrderQueue({
                       </span>
                     </button>
                   ) : null}
-                  {!canManage && actions.length === 0 ? (
+                  {!canManage && canStartWork && order.status === "queued" ? (
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => startWork(order)}
+                      className="flex-1 py-2.5 rounded-xl bg-primary text-white font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform disabled:opacity-60"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">
+                        engineering
+                      </span>
+                      Kerjakan Sekarang
+                    </button>
+                  ) : null}
+                  {!canManage && !canStartWork ? (
                     <span className="font-caption text-caption text-text-muted flex-1 text-right">
                       Hanya lihat
                     </span>

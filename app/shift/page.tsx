@@ -1,9 +1,9 @@
-import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { BottomNav } from "@/components/dashboard/bottom-nav";
 import { SubPageHeader } from "@/components/pos/sub-page-header";
 import { ShiftConsole } from "@/components/shift/shift-console";
-import { ATTENDANCE_MANAGER_ROLES, ATTENDANCE_ROLE_LABELS, wibNow } from "@/lib/attendance";
+import { ATTENDANCE_ROLE_LABELS, wibNow } from "@/lib/attendance";
+import { requirePermission } from "@/lib/rbac-guard";
 
 export const instant = false;
 
@@ -28,50 +28,14 @@ function cashBreakdown(rows: { type: string; amount: number; payment_method: str
 }
 
 export default async function ShiftPage() {
+  // Gerbang keras: karyawan di-redirect ke beranda sebelum data kas ditarik.
+  const session = await requirePermission("cash.shift_manage");
+
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const branchId = session.branchId;
+  const role = session.role;
 
-  if (!user) {
-    redirect("/login");
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id, full_name, role, branch_id")
-    .eq("auth_id", user.id)
-    .maybeSingle();
-
-  const branchId = profile?.branch_id as string | null;
-  const role = (profile?.role as string) ?? "";
-  const canAudit = ATTENDANCE_MANAGER_ROLES.includes(role);
-
-  const restricted = (
-    <main className="flex-1 flex items-center justify-center px-gutter">
-      <div className="w-full max-w-[420px] bg-surface rounded-3xl p-6 clay-card text-center flex flex-col items-center gap-3">
-        <span className="material-symbols-outlined text-[40px] text-warning-base">
-          admin_panel_settings
-        </span>
-        <h1 className="font-headline-1 text-headline-1 text-text-primary">
-          Akses Terbatas
-        </h1>
-        <p className="font-caption text-caption text-text-secondary leading-relaxed">
-          Audit Shift &amp; Kas dikhususkan untuk Owner, Admin Kasir, dan
-          Maintainer.
-        </p>
-        <a
-          href="/dashboard"
-          className="h-11 px-5 rounded-xl primary-gradient text-white font-body-bold text-body-bold flex items-center gap-2"
-        >
-          <span className="material-symbols-outlined text-[18px]">home</span>
-          Kembali ke Beranda
-        </a>
-      </div>
-    </main>
-  );
-
-  if (!profile || !branchId || !canAudit) {
+  if (!branchId) {
     return (
       <div className="flex flex-col w-full min-h-screen">
         <SubPageHeader
@@ -79,8 +43,28 @@ export default async function ShiftPage() {
           branchName="Cabang Utama"
           backHref="/dashboard"
         />
-        {restricted}
-        <BottomNav />
+        <main className="flex-1 flex items-center justify-center px-gutter">
+          <div className="w-full max-w-[420px] bg-surface rounded-3xl p-6 clay-card text-center flex flex-col items-center gap-3">
+            <span className="material-symbols-outlined text-[40px] text-warning-base">
+              account_tree
+            </span>
+            <h1 className="font-headline-1 text-headline-1 text-text-primary">
+              Cabang Belum Ditugaskan
+            </h1>
+            <p className="font-caption text-caption text-text-secondary leading-relaxed">
+              Akun Anda belum terikat pada cabang. Hubungi Owner atau
+              Maintainer.
+            </p>
+            <a
+              href="/dashboard"
+              className="h-11 px-5 rounded-xl primary-gradient text-white font-body-bold text-body-bold flex items-center gap-2"
+            >
+              <span className="material-symbols-outlined text-[18px]">home</span>
+              Kembali ke Beranda
+            </a>
+          </div>
+        </main>
+        <BottomNav role={session.role} />
       </div>
     );
   }
@@ -138,8 +122,8 @@ export default async function ShiftPage() {
       />
       <ShiftConsole
         profile={{
-          id: profile.id as string,
-          fullName: (profile.full_name as string) ?? "Staf",
+          id: session.id,
+          fullName: session.fullName,
           role,
           roleLabel: ATTENDANCE_ROLE_LABELS[role] ?? role,
         }}
@@ -180,7 +164,7 @@ export default async function ShiftPage() {
         cash={cashBreakdown((cashRes.data ?? []) as never[])}
         userNames={userNames}
       />
-      <BottomNav />
+      <BottomNav role={session.role} />
     </div>
   );
 }

@@ -1,35 +1,16 @@
-import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { BottomNav } from "@/components/dashboard/bottom-nav";
 import { SubPageHeader } from "@/components/pos/sub-page-header";
 import { GaransiConsole } from "@/components/garansi/garansi-console";
-import { ATTENDANCE_MANAGER_ROLES } from "@/lib/attendance";
+import { requirePermission } from "@/lib/rbac-guard";
 
 export const instant = false;
 
 export default async function GaransiPage() {
+  const session = await requirePermission("warranty.manage");
+
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/login");
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id, role, branch_id")
-    .eq("auth_id", user.id)
-    .maybeSingle();
-
-  if (!profile) {
-    redirect("/dashboard");
-  }
-
-  const role = (profile.role as string) ?? "";
-  const branchId = profile.branch_id as string | null;
-  const canManage = ATTENDANCE_MANAGER_ROLES.includes(role);
+  const branchId = session.branchId;
 
   const { data: branch } = await supabase
     .from("branches")
@@ -57,7 +38,7 @@ export default async function GaransiPage() {
       <SubPageHeader title="Klaim Garansi" subtitle={branch?.branch_name} backHref="/dashboard" />
       <main className="flex-1">
         <GaransiConsole
-          canManage={canManage}
+          canManage={true}
           orders={(orders ?? []).map((o) => ({
             id: o.id,
             orderNumber: o.order_number,
@@ -75,7 +56,7 @@ export default async function GaransiPage() {
           }))}
         />
       </main>
-      <BottomNav />
+      <BottomNav role={session.role} />
     </>
   );
 }

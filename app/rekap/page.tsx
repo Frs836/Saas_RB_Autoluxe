@@ -1,57 +1,20 @@
-import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { BottomNav } from "@/components/dashboard/bottom-nav";
 import { SubPageHeader } from "@/components/pos/sub-page-header";
 import { RekapConsole } from "@/components/attendance/rekap-console";
-import { ATTENDANCE_MANAGER_ROLES, ATTENDANCE_ROLE_LABELS, wibNow } from "@/lib/attendance";
+import { ATTENDANCE_ROLE_LABELS, wibNow } from "@/lib/attendance";
+import { requirePermission } from "@/lib/rbac-guard";
 
 export const instant = false;
 
 export default async function RekapPage() {
+  const session = await requirePermission("attendance.audit");
+
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const branchId = session.branchId;
+  const role = session.role;
 
-  if (!user) {
-    redirect("/login");
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id, full_name, role, branch_id")
-    .eq("auth_id", user.id)
-    .maybeSingle();
-
-  const branchId = profile?.branch_id as string | null;
-  const role = (profile?.role as string) ?? "";
-  const canRekap = ATTENDANCE_MANAGER_ROLES.includes(role);
-
-  const restricted = (
-    <main className="flex-1 flex items-center justify-center px-gutter">
-      <div className="w-full max-w-[420px] bg-surface rounded-3xl p-6 clay-card text-center flex flex-col items-center gap-3">
-        <span className="material-symbols-outlined text-[40px] text-warning-base">
-          admin_panel_settings
-        </span>
-        <h1 className="font-headline-1 text-headline-1 text-text-primary">
-          Akses Terbatas
-        </h1>
-        <p className="font-caption text-caption text-text-secondary leading-relaxed">
-          Rekap Kehadiran Staf dikhususkan untuk Owner, Admin Kasir, dan
-          Maintainer.
-        </p>
-        <a
-          href="/dashboard"
-          className="h-11 px-5 rounded-xl primary-gradient text-white font-body-bold text-body-bold flex items-center gap-2"
-        >
-          <span className="material-symbols-outlined text-[18px]">home</span>
-          Kembali ke Beranda
-        </a>
-      </div>
-    </main>
-  );
-
-  if (!profile || !branchId || !canRekap) {
+  if (!branchId) {
     return (
       <div className="flex flex-col w-full min-h-screen">
         <SubPageHeader
@@ -59,15 +22,35 @@ export default async function RekapPage() {
           branchName="Cabang Utama"
           backHref="/dashboard"
         />
-        {restricted}
-        <BottomNav />
+        <main className="flex-1 flex items-center justify-center px-gutter">
+          <div className="w-full max-w-[420px] bg-surface rounded-3xl p-6 clay-card text-center flex flex-col items-center gap-3">
+            <span className="material-symbols-outlined text-[40px] text-warning-base">
+              account_tree
+            </span>
+            <h1 className="font-headline-1 text-headline-1 text-text-primary">
+              Cabang Belum Ditugaskan
+            </h1>
+            <p className="font-caption text-caption text-text-secondary leading-relaxed">
+              Akun Anda belum terikat pada cabang. Hubungi Owner atau
+              Maintainer.
+            </p>
+            <a
+              href="/dashboard"
+              className="h-11 px-5 rounded-xl primary-gradient text-white font-body-bold text-body-bold flex items-center gap-2"
+            >
+              <span className="material-symbols-outlined text-[18px]">home</span>
+              Kembali ke Beranda
+            </a>
+          </div>
+        </main>
+        <BottomNav role={session.role} />
       </div>
     );
   }
 
   const today = wibNow().dateIso;
 
-  const [branchRes, staffRes, todayLogsRes, handoffRes] = await Promise.all([
+  const [branchRes, staffRes, handoffRes] = await Promise.all([
     supabase
       .from("branches")
       .select(
@@ -82,12 +65,6 @@ export default async function RekapPage() {
       .eq("is_active", true)
       .order("full_name"),
     supabase
-      .from("attendance_logs")
-      .select(
-        "id, profile_id, date, clock_in, clock_out, status, late_minutes, late_reason, face_similarity_score, gps_lat, gps_lng, gps_accuracy_meters, face_photo_url, clock_out_photo_url, notes, validation_score",
-      )
-      .eq("date", today),
-    supabase
       .from("shift_handoffs")
       .select("opening_cash, status")
       .eq("branch_id", branchId)
@@ -96,6 +73,19 @@ export default async function RekapPage() {
       .limit(1)
       .maybeSingle(),
   ]);
+
+  // attendance_logs tidak punya branch_id, jadi cakupan cabang dijaga lewat
+  // daftar profile_id staf pada cabang ini. Tanpa filter ini rekap ikut
+  // menyertakan log seluruh cabang.
+  const branchProfileIds = (staffRes.data ?? []).map((row) => row.id as string);
+
+  const todayLogsRes = await supabase
+    .from("attendance_logs")
+    .select(
+      "id, profile_id, date, clock_in, clock_out, status, late_minutes, late_reason, face_similarity_score, gps_lat, gps_lng, gps_accuracy_meters, face_photo_url, clock_out_photo_url, notes, validation_score",
+    )
+    .eq("date", today)
+    .in("profile_id", branchProfileIds.length > 0 ? branchProfileIds : ["00000000-0000-0000-0000-000000000000"]);
 
   const branch = branchRes.data;
 
@@ -136,8 +126,8 @@ export default async function RekapPage() {
       />
       <RekapConsole
         profile={{
-          id: profile.id as string,
-          fullName: (profile.full_name as string) ?? "Staf",
+          id: session.id,
+          fullName: session.fullName,
           role,
           roleLabel: ATTENDANCE_ROLE_LABELS[role] ?? role,
         }}
@@ -169,7 +159,7 @@ export default async function RekapPage() {
             : null
         }
       />
-      <BottomNav />
+      <BottomNav role={session.role} />
     </div>
   );
 }

@@ -7,32 +7,20 @@ import {
   type InventoryItem,
   type StockClaim,
 } from "@/components/pos/stock-manager";
+import { can } from "@/lib/rbac";
+import { getSessionProfile } from "@/lib/rbac-guard";
 
 export const instant = false;
 
-const PRIVILEGED = ["owner", "admin_kasir", "maintainer"];
-
 export default async function StockPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const session = await getSessionProfile();
 
-  if (!user) {
+  if (!session) {
     redirect("/login");
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id, role, branch_id")
-    .eq("auth_id", user.id)
-    .maybeSingle();
-
-  if (!profile) {
-    redirect("/dashboard");
-  }
-
-  const branchId = profile.branch_id as string | null;
+  const supabase = await createClient();
+  const branchId = session.branchId;
 
   const [branchRes, itemsRes, claimsRes] = await Promise.all([
     branchId
@@ -100,7 +88,7 @@ export default async function StockPage() {
     confirmed_at: c.confirmed_at,
   }));
 
-  const canManage = PRIVILEGED.includes(profile.role as string);
+  const canManage = can(session.role, "stock.approve");
 
   return (
     <div className="flex flex-col w-full min-h-screen">
@@ -114,7 +102,7 @@ export default async function StockPage() {
         claims={claims}
         canManage={canManage}
       />
-      <BottomNav />
+      <BottomNav role={session.role} />
     </div>
   );
 }

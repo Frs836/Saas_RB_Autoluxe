@@ -20,16 +20,20 @@ import {
   type VehicleSize,
   type VehicleType,
 } from "@/lib/pos";
+import type { Role } from "@/lib/rbac";
 
 type CartLine = { serviceId: string; qty: number };
 
 type TeamOption = { id: string; full_name: string };
+
+type PaymentState = "paid" | "unpaid";
 
 type Props = {
   services: PosService[];
   teamOptions: TeamOption[];
   branchName: string;
   canCreate: boolean;
+  role: Role;
   roleLabel: string;
 };
 
@@ -37,6 +41,8 @@ type OrderResult = {
   orderNumber: string;
   trackingToken: string;
   total: number;
+  paymentState: PaymentState;
+  startedImmediately: boolean;
   waHref: string | null;
   receipt: string;
 };
@@ -46,8 +52,10 @@ export function PosConsole({
   teamOptions,
   branchName,
   canCreate,
+  role,
   roleLabel,
 }: Props) {
+  const isEmployee = role === "karyawan";
   const [step, setStep] = useState<"catalog" | "checkout" | "done">("catalog");
   const [vehicleType, setVehicleType] = useState<VehicleType>("mobil");
   const [size, setSize] = useState<VehicleSize>("M");
@@ -60,6 +68,8 @@ export function PosConsole({
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("cash");
+  const [paymentState, setPaymentState] = useState<PaymentState>("paid");
+  const [startWork, setStartWork] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState<string[]>([]);
 
   const [submitting, setSubmitting] = useState(false);
@@ -87,6 +97,11 @@ export function PosConsole({
 
   const total = resolved.reduce((sum, line) => sum + line.price * line.qty, 0);
   const itemCount = resolved.reduce((sum, line) => sum + line.qty, 0);
+
+  // Hanya karyawan yang boleh menahan pembayaran; kasir wajib mencatat settled.
+  const effectivePaymentState: PaymentState = isEmployee
+    ? paymentState
+    : "paid";
 
   const availableServices = useMemo(
     () => services.filter((s) => isAvailableForSize(s, effSize)),
@@ -144,6 +159,8 @@ export function PosConsole({
     setCustomerName("");
     setCustomerPhone("");
     setPaymentMethod("cash");
+    setPaymentState("paid");
+    setStartWork(false);
     setSelectedTeam([]);
     setResult(null);
     setError(null);
@@ -184,7 +201,7 @@ export function PosConsole({
           .trim() || "Layanan POS";
 
       const { data: orderRow, error: createError } = await supabase.rpc(
-        "create_pos_order",
+        "create_pos_order_with_hold",
         {
           p_license_plate: licensePlate.trim().toUpperCase(),
           p_vehicle_model: vehicleModel.trim(),
@@ -194,6 +211,8 @@ export function PosConsole({
           p_service_package: servicePackage,
           p_items: items,
           p_payment_method: paymentMethod,
+          p_payment_state: effectivePaymentState,
+          p_start_work: startWork,
         },
       );
       if (createError) throw new Error(createError.message);
@@ -211,6 +230,9 @@ export function PosConsole({
         });
         if (teamError) throw new Error(teamError.message);
       }
+
+      const recordedState: PaymentState =
+        (order.payment_state as PaymentState | null) ?? effectivePaymentState;
 
       const receipt = buildReceiptText({
         orderNumber: order.order_number,
@@ -233,6 +255,8 @@ export function PosConsole({
         orderNumber: order.order_number,
         trackingToken: order.tracking_token,
         total: Number(order.total_price ?? total),
+        paymentState: recordedState,
+        startedImmediately: startWork,
         receipt,
         waHref:
           customerPhone.trim() === ""
@@ -310,6 +334,33 @@ export function PosConsole({
             <span className="font-headline-2 text-headline-2 text-primary">
               {formatRupiah(result.total)}
             </span>
+            <span className="font-caption text-caption text-text-muted mt-2">
+              Status Pembayaran
+            </span>
+            <span className="font-body-bold text-body-bold text-text-primary">
+              {result.paymentState === "paid"
+                ? "Sudah Dibayar"
+                : "Belum Dibayar (Bayar Nanti)"}
+            </span>
+            {isEmployee && result.paymentState === "paid" ? (
+              <div className="mt-3 p-3 rounded-xl bg-warning-surface text-warning-text font-caption text-caption flex items-start gap-2">
+                <span className="material-symbols-outlined text-[18px] shrink-0">
+                  savings
+                </span>
+                <span>
+                  Rp {formatRupiah(result.total)} tercatat sebagai kas titipan
+                  atas nama Anda. Serahkan ke Admin Kasir saat shift dibuka.
+                </span>
+              </div>
+            ) : null}
+            {result.startedImmediately ? (
+              <div className="mt-2 p-3 rounded-xl bg-success-surface text-success-text font-caption text-caption flex items-start gap-2">
+                <span className="material-symbols-outlined text-[18px] shrink-0">
+                  engineering
+                </span>
+                <span>Order sudah berstatus &ldquo;Sedang Dikerjakan&rdquo;.</span>
+              </div>
+            ) : null}
           </div>
         </div>
 
@@ -528,6 +579,99 @@ export function PosConsole({
                 );
               })}
             </div>
+
+            {isEmployee ? (
+              <>
+                <div className="h-px bg-outline-variant" />
+                <p className="font-caption text-caption text-text-muted">
+                  Uang pelanggan yang Anda terima dicatat sebagai{" "}
+                  <b className="text-text-primary">kas titipan</b> atas nama
+                  Anda dan hanya divalidasi oleh Admin Kasir saat shift dibuka.
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentState("unpaid")}
+                    aria-pressed={paymentState === "unpaid"}
+                    className={`px-3 py-3 rounded-xl flex flex-col items-center gap-1 active:scale-95 transition-transform ${
+                      paymentState === "unpaid"
+                        ? "bg-warning-surface text-warning-text"
+                        : "bg-surface-container-low text-text-secondary"
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-[20px]">
+                      schedule
+                    </span>
+                    <span className="font-caption text-caption">Bayar Nanti</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentState("paid")}
+                    aria-pressed={paymentState === "paid"}
+                    className={`px-3 py-3 rounded-xl flex flex-col items-center gap-1 active:scale-95 transition-transform ${
+                      paymentState === "paid"
+                        ? "bg-primary text-white"
+                        : "bg-surface-container-low text-text-secondary"
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-[20px]">
+                      paid
+                    </span>
+                    <span className="font-caption text-caption">
+                      Bayar Sekarang
+                    </span>
+                  </button>
+                </div>
+                <div className="flex items-start gap-2 p-3 rounded-xl bg-surface-container-low">
+                  <span className="material-symbols-outlined text-[18px] text-brand-600 mt-0.5">
+                    {effectivePaymentState === "paid"
+                      ? "savings"
+                      : "hourglass_empty"}
+                  </span>
+                  <p className="font-caption text-caption text-text-secondary">
+                    {effectivePaymentState === "paid" ? (
+                      <>
+                        Anda memegang{" "}
+                        <b className="text-text-primary">
+                          {formatRupiah(total)} {PAYMENT_LABELS[paymentMethod]}
+                        </b>{" "}
+                        milik pelanggan.
+                      </>
+                    ) : (
+                      <>
+                        Belum ada uang masuk. Tagihan Rp
+                        {formatRupiah(total)} tetap tercatat dan menjadi
+                        tanggung jawab kasir saat serah terima shift.
+                      </>
+                    )}
+                  </p>
+                </div>
+              </>
+            ) : null}
+
+            <div className="h-px bg-outline-variant" />
+            <button
+              type="button"
+              onClick={() => setStartWork((prev) => !prev)}
+              aria-pressed={startWork}
+              className={`px-3 py-3 rounded-xl flex items-center gap-3 active:scale-95 transition-transform ${
+                startWork
+                  ? "bg-success-surface text-success-text"
+                  : "bg-surface-container-low text-text-secondary"
+              }`}
+            >
+              <span className="material-symbols-outlined text-[20px]">
+                {startWork ? "check_box" : "check_box_outline_blank"}
+              </span>
+              <span className="flex flex-col items-start">
+                <span className="font-caption text-caption">
+                  Kerjakan Sekarang
+                </span>
+                <span className="font-micro-badge text-micro-badge opacity-80">
+                  Langsung berstatus &ldquo;Sedang Dikerjakan&rdquo;
+                </span>
+              </span>
+            </button>
           </section>
 
           <section className="clay-card p-4 flex flex-col gap-2">
@@ -578,7 +722,9 @@ export function PosConsole({
             <span className="material-symbols-outlined text-[22px]">
               {submitting ? "hourglass_top" : "check_circle"}
             </span>
-            {submitting ? "Memproses..." : `Buat Order - ${formatRupiah(total)}`}
+            {submitting
+              ? "Memproses..."
+              : `${startWork ? "Simpan & Kerjakan" : "Buat Order"} - ${formatRupiah(total)}`}
           </button>
         </div>
       </div>

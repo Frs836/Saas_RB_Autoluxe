@@ -274,14 +274,16 @@ export type QuickAction = {
   disabledTitle?: string;
 };
 
+// Urutan menentukan: quickActionsFor mengambil 4 izin pertama yang cocok, jadi
+// pintasan manajerial diletakkan lebih dulu.
 const QUICK_ACTIONS: readonly QuickAction[] = [
+  { icon: "payments", label: "Shift Kas", href: "/shift", permission: "cash.shift_manage" },
+  { icon: "insights", label: "Laporan", href: "/laporan", permission: "reports.branch" },
+  { icon: "groups", label: "Rekap Staf", href: "/rekap", permission: "attendance.audit" },
   { icon: "add_task", label: "Order Baru", href: "/pos", permission: "pos.create", primary: true },
   { icon: "assignment", label: "Antrean", href: "/pos/orders", permission: "pos.create" },
-  { icon: "how_to_reg", label: "Absensi", href: "/absensi", permission: "attendance.self" },
   { icon: "inventory_2", label: "Stok Obat", href: "/stok", permission: "stock.claim" },
-  { icon: "payments", label: "Shift Kas", href: "/shift", permission: "cash.shift_manage" },
-  { icon: "groups", label: "Rekap Staf", href: "/rekap", permission: "attendance.audit" },
-  { icon: "insights", label: "Laporan", href: "/laporan", permission: "reports.branch" },
+  { icon: "how_to_reg", label: "Absensi", href: "/absensi", permission: "attendance.self" },
   { icon: "add_a_photo", label: "SOP QC", href: "/pos/orders", permission: "pos.create", disabled: true, disabledTitle: "Modul menyusul" },
   { icon: "event_busy", label: "Izin Shift", href: "/absensi", permission: "attendance.self", disabled: true, disabledTitle: "Modul menyusul" },
 ];

@@ -4,7 +4,7 @@ import { SubPageHeader } from "@/components/pos/sub-page-header";
 import { AttendanceConsole } from "@/components/attendance/attendance-console";
 import { ATTENDANCE_ROLE_LABELS, wibNow } from "@/lib/attendance";
 import { can } from "@/lib/rbac";
-import { requirePermission } from "@/lib/rbac-guard";
+import { requirePermission, scopedBranchId } from "@/lib/rbac-guard";
 
 export const instant = false;
 
@@ -19,7 +19,10 @@ export default async function AbsensiPage() {
     .eq("id", session.id)
     .maybeSingle();
 
-  const branchId = session.branchId;
+  // Geofence absensi harus milik cabang penempatan orang itu sendiri. Kalau
+  // memakai branch switcher, Owner yang sedang meninjau cabang lain akan
+  // ditolak absen karenalokasinya dibandingkan terhadap koordinat yang salah.
+  const branchId = session.homeBranchId ?? scopedBranchId(session);
   const today = wibNow().dateIso;
 
   const [branchRes, todayRes, historyRes, handoffRes] = await Promise.all([

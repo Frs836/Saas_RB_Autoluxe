@@ -2,7 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { BottomNav } from "@/components/dashboard/bottom-nav";
 import { SubPageHeader } from "@/components/pos/sub-page-header";
 import { KasConsole } from "@/components/kas/kas-console";
-import { requirePermission } from "@/lib/rbac-guard";
+import { requirePermission, scopedBranchId } from "@/lib/rbac-guard";
+import { scopeBranchQuery } from "@/lib/branch";
 
 export const instant = false;
 
@@ -10,33 +11,50 @@ export default async function KasPage() {
   const session = await requirePermission("cash.petty_manage");
 
   const supabase = await createClient();
-  const branchId = session.branchId;
+  const branchId = scopedBranchId(session);
 
-  const { data: branch } = await supabase
-    .from("branches")
-    .select("branch_name")
-    .eq("id", branchId ?? "")
-    .maybeSingle();
+  const { data: branch } = branchId
+    ? await supabase
+        .from("branches")
+        .select("branch_name")
+        .eq("id", branchId)
+        .maybeSingle()
+    : { data: null };
 
-  const { data: pettyCash } = await supabase
-    .from("petty_cash")
-    .select("id, created_at, amount, category, description, proof_photo_url, payment_method")
-    .eq("branch_id", branchId ?? "")
+  const { data: pettyCash } = await scopeBranchQuery(
+    supabase
+      .from("petty_cash")
+      .select(
+        "id, created_at, amount, category, description, proof_photo_url, payment_method",
+      ),
+    branchId,
+  )
     .order("created_at", { ascending: false })
     .limit(50);
 
-  const { data: handoff } = await supabase
-    .from("shift_handoffs")
-    .select("id, status, opening_cash, expected_cash, actual_cash")
-    .eq("branch_id", branchId ?? "")
-    .eq("status", "open")
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  // Handoff adalah satu catatan aktif per cabang, jadi tidak ada makna saat
+  // manajer sedang melihat seluruh cabang sekaligus.
+  const { data: handoff } = branchId
+    ? await supabase
+        .from("shift_handoffs")
+        .select("id, status, opening_cash, expected_cash, actual_cash")
+        .eq("branch_id", branchId)
+        .eq("status", "open")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+    : { data: null };
 
   return (
     <>
-      <SubPageHeader title="Arus Kas & Petty Cash" subtitle={branch?.branch_name} backHref="/dashboard" />
+      <SubPageHeader
+        title="Arus Kas & Petty Cash"
+        subtitle={
+          branch?.branch_name ??
+          (session.branchScope === "all" ? "Seluruh Cabang" : undefined)
+        }
+        backHref="/dashboard"
+      />
       <main className="flex-1">
         <KasConsole
           branchName={branch?.branch_name ?? "RB AUTOLUXE"}
@@ -50,7 +68,7 @@ export default async function KasPage() {
             paymentMethod: row.payment_method,
             proofPhotoUrl: row.proof_photo_url,
           }))}
-handoff={
+          handoff={
             handoff
               ? {
                   id: handoff.id,

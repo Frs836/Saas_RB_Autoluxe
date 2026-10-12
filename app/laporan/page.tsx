@@ -3,8 +3,8 @@ import { BottomNav } from "@/components/dashboard/bottom-nav";
 import { SubPageHeader } from "@/components/pos/sub-page-header";
 import { LaporanView } from "@/components/laporan/laporan-view";
 import { ATTENDANCE_ROLE_LABELS } from "@/lib/attendance";
-import { canViewAllBranches } from "@/lib/rbac";
-import { requirePermission } from "@/lib/rbac-guard";
+import { requirePermission, scopedBranchId } from "@/lib/rbac-guard";
+import { scopeBranchQuery } from "@/lib/branch";
 
 export const instant = false;
 
@@ -67,64 +67,44 @@ export default async function LaporanPage() {
 
   const supabase = await createClient();
   const role = session.role;
-  const branchId = session.branchId;
+  const branchId = scopedBranchId(session);
 
-  // Admin kasir hanya berhak atas cabangnya sendiri. Owner & Maintainer
-  // melihat seluruh cabang karena mempunyai izin branch.switch.
-  const globalScope = canViewAllBranches(role);
-  const scopedOrders = globalScope
-    ? supabase
-        .from("orders")
-        .select(
-          "id, branch_id, total_price, status, assigned_to, completed_at, created_at",
-        )
-        .eq("status", "completed")
-    : supabase
-        .from("orders")
-        .select(
-          "id, branch_id, total_price, status, assigned_to, completed_at, created_at",
-        )
-        .eq("status", "completed")
-        .eq("branch_id", branchId ?? "");
-
-  const scopedCash = globalScope
-    ? supabase
-        .from("cash_flow")
-        .select("id, type, amount, category, branch_id, created_at")
-    : supabase
-        .from("cash_flow")
-        .select("id, type, amount, category, branch_id, created_at")
-        .eq("branch_id", branchId ?? "");
-
-  const scopedStock = globalScope
-    ? supabase
-        .from("inventory_items")
-        .select("id, branch_id, item_name, current_stock, unit, min_stock_alert")
-    : supabase
-        .from("inventory_items")
-        .select("id, branch_id, item_name, current_stock, unit, min_stock_alert")
-        .eq("branch_id", branchId ?? "");
-
+  // Admin kasir tidak punya izin branch.switch, jadi scopedBranchId selalu
+  // mengembalikan cabangnya sendiri. Owner dan Maintainer mengikuti cabang yang
+  // sedang dipilih lewat switcher, dan "all" berarti seluruh cabang.
   const [branchRes, ordersRes, cashRes, stockRes, commissionRes, staffRes] =
     await Promise.all([
-      globalScope
-        ? supabase.from("branches").select("id, branch_name")
-        : supabase
-            .from("branches")
-            .select("id, branch_name")
-            .eq("id", branchId ?? ""),
-      scopedOrders,
-      scopedCash,
-      scopedStock,
+      scopeBranchQuery(
+        supabase.from("branches").select("id, branch_name"),
+        branchId,
+      ),
+      scopeBranchQuery(
+        supabase
+          .from("orders")
+          .select(
+            "id, branch_id, total_price, status, assigned_to, completed_at, created_at",
+          ),
+        branchId,
+      ).eq("status", "completed"),
+      scopeBranchQuery(
+        supabase
+          .from("cash_flow")
+          .select("id, type, amount, category, branch_id, created_at"),
+        branchId,
+      ),
+      scopeBranchQuery(
+        supabase
+          .from("inventory_items")
+          .select("id, branch_id, item_name, current_stock, unit, min_stock_alert"),
+        branchId,
+      ),
       supabase
         .from("commission_settings")
         .select("profile_id, commission_type, value, is_active"),
-      globalScope
-        ? supabase.from("profiles").select("id, full_name, role")
-        : supabase
-            .from("profiles")
-            .select("id, full_name, role")
-            .eq("branch_id", branchId ?? ""),
+      scopeBranchQuery(
+        supabase.from("profiles").select("id, full_name, role"),
+        branchId,
+      ),
     ]);
 
   const branchMap = new Map(
@@ -225,7 +205,9 @@ export default async function LaporanPage() {
     <div className="flex flex-col w-full min-h-screen">
       <SubPageHeader
         title="Laporan Eksekutif"
-        branchName={branchMap.get(session.branchId ?? "") ?? "Cabang Utama"}
+        branchName={
+          branchId ? (branchMap.get(branchId) ?? "Cabang Utama") : "Seluruh Cabang"
+        }
         backHref="/dashboard"
       />
       <LaporanView data={data} />

@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { BottomNav } from "@/components/dashboard/bottom-nav";
 import { PosConsole } from "@/components/pos/pos-console";
 import { can, roleLabel } from "@/lib/rbac";
-import { getSessionProfile } from "@/lib/rbac-guard";
+import { getSessionProfile, scopedBranchId } from "@/lib/rbac-guard";
 import type { PosService } from "@/lib/pos";
 
 export const instant = false;
@@ -16,7 +16,10 @@ export default async function PosPage() {
   }
 
   const supabase = await createClient();
-  const branchId = profile.branchId;
+  const branchId = scopedBranchId(profile);
+  // Baris order selalu mengikuti cabang penempatan teknisi, bukan cabang yang
+  // sedang dipilih manajer, supaya kas titipan tidak masuk ke cabang lain.
+  const staffBranchId = profile.homeBranchId;
 
   const [servicesRes, teamRes, branchRes] = await Promise.all([
     supabase
@@ -27,13 +30,13 @@ export default async function PosPage() {
       .eq("is_active", true)
       .order("category", { ascending: true })
       .order("name", { ascending: true }),
-    branchId
+    staffBranchId
       ? supabase
           .from("profiles")
           .select("id, full_name")
           .eq("role", "karyawan")
           .eq("is_active", true)
-          .eq("branch_id", branchId)
+          .eq("branch_id", staffBranchId)
           .order("full_name", { ascending: true })
       : Promise.resolve({ data: [] }),
     branchId
@@ -47,7 +50,9 @@ export default async function PosPage() {
 
   const services = (servicesRes.data ?? []) as PosService[];
   const teamOptions = teamRes.data ?? [];
-  const branchName = branchRes.data?.branch_name ?? "Cabang Utama";
+  const branchName =
+    branchRes.data?.branch_name ??
+    (profile.branchScope === "all" ? "Seluruh Cabang" : "Cabang Utama");
 
   return (
     <div className="flex flex-col w-full min-h-screen">

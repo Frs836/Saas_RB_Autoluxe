@@ -853,10 +853,156 @@ if (validRequest) {
 }
 
 /* -------------------------------------------------------------------------- */
-/* 13. Kebersihan                                                              */
+/* 13. Konfigurasi cabang dan geofence                                        */
 /* -------------------------------------------------------------------------- */
 
-suite.section("13. Kebersihan data uji");
+suite.section("13. Konfigurasi cabang dan geofence");
+
+// Pengujian ini mengubah cabang sungguhan lalu memulihkannya, jadi nilai
+// awal wajib dibaca lebih dulu dan ditulis kembali apa adanya.
+// Perhatikan: makeAdminClient membungkus hasil dalam { success, data, error },
+// jadi barisnya diambil dari `.data`, bukan langsung dari objek respons.
+const { data: targetBranch, error: targetBranchError } = await adminClient
+  .from("branches")
+  .select("id, branch_name, address, latitude, longitude, geofence_radius_meters, operating_open_time, operating_close_time, is_active")
+  .eq("is_active", true)
+  .order("branch_name", { ascending: true })
+  .limit(1)
+  .maybeSingle();
+
+if (!targetBranch) {
+  suite.check(
+    "cabang aktif tersedia sebagai target uji",
+    false,
+    targetBranchError?.message ?? "tidak ada cabang aktif",
+  );
+} else {
+  const branchId = targetBranch.id;
+  const original = {
+    branch_name: targetBranch.branch_name,
+    address: targetBranch.address,
+    latitude: targetBranch.latitude,
+    longitude: targetBranch.longitude,
+    geofence_radius_meters: targetBranch.geofence_radius_meters,
+    operating_open_time: targetBranch.operating_open_time,
+    operating_close_time: targetBranch.operating_close_time,
+    is_active: targetBranch.is_active,
+  };
+
+  const TEST_BRANCH_NAME = `ZZTEST Cabang Uji ${Date.now()}`;
+
+  const restore = async () => {
+    await adminClient
+      .from("branches")
+      .update({
+        branch_name: original.branch_name,
+        address: original.address,
+        latitude: original.latitude,
+        longitude: original.longitude,
+        geofence_radius_meters: original.geofence_radius_meters,
+        operating_open_time: original.operating_open_time,
+        operating_close_time: original.operating_close_time,
+        is_active: original.is_active,
+      })
+      .eq("id", branchId);
+  };
+
+  // radially: radius di bawah batas bawah harus ditolak
+  const tooSmall = await maintainer.client.rpc("update_branch_settings", {
+    p_branch_id: branchId,
+    p_branch_name: original.branch_name,
+    p_address: original.address,
+    p_latitude: original.latitude,
+    p_longitude: original.longitude,
+    p_radius_meters: 2,
+    p_open_time: "07:30:00",
+    p_close_time: "21:00:00",
+    p_set_coordinates: true,
+    p_is_active: original.is_active,
+  });
+  suite.check("radius di bawah 5 meter ditolak", Boolean(tooSmall.error), tooSmall.error?.message);
+
+  const badWindow = await maintainer.client.rpc("update_branch_settings", {
+    p_branch_id: branchId,
+    p_branch_name: original.branch_name,
+    p_address: original.address,
+    p_latitude: original.latitude,
+    p_longitude: original.longitude,
+    p_radius_meters: 50,
+    p_open_time: "21:00:00",
+    p_close_time: "07:30:00",
+    p_set_coordinates: true,
+    p_is_active: original.is_active,
+  });
+  suite.check("jam tutup sebelum jam buka ditolak", Boolean(badWindow.error), badWindow.error?.message);
+
+  const duplicateName = await maintainer.client.rpc("update_branch_settings", {
+    p_branch_id: branchId,
+    p_branch_name: TEST_BRANCH_NAME,
+    p_address: original.address,
+    p_latitude: original.latitude,
+    p_longitude: original.longitude,
+    p_radius_meters: 50,
+    p_open_time: "07:30:00",
+    p_close_time: "21:00:00",
+    p_set_coordinates: true,
+    p_is_active: original.is_active,
+  });
+  suite.check("perubahan nama cabang yang valid diterima", !duplicateName.error, duplicateName.error?.message);
+
+  const { data: renamedBranch } = await adminClient
+    .from("branches")
+    .select("branch_name")
+    .eq("id", branchId)
+    .maybeSingle();
+  suite.check(
+    "nama cabang tersimpan di database",
+    renamedBranch?.branch_name === TEST_BRANCH_NAME,
+    renamedBranch?.branch_name ?? "null",
+  );
+
+  const karyawanWrite = await karyawan.client.rpc("update_branch_settings", {
+    p_branch_id: branchId,
+    p_branch_name: TEST_BRANCH_NAME,
+    p_address: original.address,
+    p_latitude: original.latitude,
+    p_longitude: original.longitude,
+    p_radius_meters: 50,
+    p_open_time: "07:30:00",
+    p_close_time: "21:00:00",
+    p_set_coordinates: true,
+    p_is_active: original.is_active,
+  });
+  suite.check(
+    "karyawan tidak bisa mengubah konfigurasi cabang",
+    Boolean(karyawanWrite.error),
+    karyawanWrite.error?.message ?? "tidak ada error",
+  );
+
+  const geofence = await karyawan.client.rpc("get_branch_geofence", {
+    p_branch_id: branchId,
+  });
+  suite.check("karyawan bisa membaca geofence cabangnya sendiri", !geofence.error, geofence.error?.message);
+
+  await restore();
+  const { data: restoredBranch } = await adminClient
+    .from("branches")
+    .select("branch_name, geofence_radius_meters")
+    .eq("id", branchId)
+    .maybeSingle();
+  suite.check(
+    "kondisi cabang asli dipulihkan",
+    restoredBranch?.branch_name === original.branch_name &&
+      Number(restoredBranch?.geofence_radius_meters) === Number(original.geofence_radius_meters),
+    `${restoredBranch?.branch_name ?? "null"} / ${restoredBranch?.geofence_radius_meters ?? "null"}`,
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* 14. Kebersihan data uji                                                     */
+/* -------------------------------------------------------------------------- */
+
+suite.section("14. Kebersihan data uji");
 
 const ids = cleanupOrderIds.filter(Boolean);
 

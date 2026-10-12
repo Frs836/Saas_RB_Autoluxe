@@ -8,7 +8,8 @@ import {
   type StockClaim,
 } from "@/components/pos/stock-manager";
 import { can } from "@/lib/rbac";
-import { getSessionProfile } from "@/lib/rbac-guard";
+import { getSessionProfile, scopedBranchId } from "@/lib/rbac-guard";
+import { scopeBranchQuery } from "@/lib/branch";
 
 export const instant = false;
 
@@ -20,7 +21,7 @@ export default async function StockPage() {
   }
 
   const supabase = await createClient();
-  const branchId = session.branchId;
+  const branchId = scopedBranchId(session);
 
   const [branchRes, itemsRes, claimsRes] = await Promise.all([
     branchId
@@ -30,23 +31,22 @@ export default async function StockPage() {
           .eq("id", branchId)
           .maybeSingle()
       : Promise.resolve({ data: null }),
-    branchId
-      ? supabase
-          .from("inventory_items")
-          .select("id, item_name, current_stock, unit, min_stock_alert")
-          .eq("branch_id", branchId)
-          .order("item_name", { ascending: true })
-      : Promise.resolve({ data: [] }),
-    branchId
-      ? supabase
-          .from("stock_claims")
-          .select(
-            "id, item_id, quantity, unit, note, status, claimed_by, confirmed_by, created_at, confirmed_at",
-          )
-          .eq("branch_id", branchId)
-          .order("created_at", { ascending: false })
-          .limit(60)
-      : Promise.resolve({ data: [] }),
+    scopeBranchQuery(
+      supabase
+        .from("inventory_items")
+        .select("id, item_name, current_stock, unit, min_stock_alert"),
+      branchId,
+    ).order("item_name", { ascending: true }),
+    scopeBranchQuery(
+      supabase
+        .from("stock_claims")
+        .select(
+          "id, item_id, quantity, unit, note, status, claimed_by, confirmed_by, created_at, confirmed_at",
+        ),
+      branchId,
+    )
+      .order("created_at", { ascending: false })
+      .limit(60),
   ]);
 
   const items = itemsRes.data ?? [];

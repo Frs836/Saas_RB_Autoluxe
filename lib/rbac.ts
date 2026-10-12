@@ -81,6 +81,7 @@ export const PERMISSIONS = [
   "staff.manage",
   "services.manage",
   "branch.switch",
+  "branch.manage",
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];
@@ -148,6 +149,7 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "staff.manage",
     "services.manage",
     "branch.switch",
+    "branch.manage",
   ],
   owner: [
     "attendance.self",
@@ -173,6 +175,7 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "staff.manage",
     "services.manage",
     "branch.switch",
+    "branch.manage",
   ],
 };
 
@@ -182,11 +185,6 @@ export function can(role: unknown, permission: Permission): boolean {
 
 export function canAny(role: unknown, permissions: readonly Permission[]): boolean {
   return permissions.some((permission) => can(role, permission));
-}
-
-/** Cakupan data: lintas cabang hanya untuk owner & maintainer. */
-export function canViewAllBranches(role: unknown): boolean {
-  return can(role, "branch.switch");
 }
 
 /** Selisih struktural antara dua role, dipakai audit UI. */
@@ -349,6 +347,7 @@ export const PROFILE_MENU: readonly ProfileMenuItem[] = [
   { label: "Klaim Garansi", caption: "Cek masa garansi & proses klaim", icon: "verified_user", href: "/garansi", permission: "warranty.manage" },
   { label: "Rekap Kehadiran Staf", caption: "Rekap harian, verifikasi selfie, ekspor CSV", icon: "groups", href: "/rekap", permission: "attendance.audit" },
   { label: "Laporan Cabang", caption: "Finansial, omzet, komisi & stok", icon: "insights", href: "/laporan", permission: "reports.branch" },
+  { label: "Pengaturan Cabang", caption: "Alamat, titik GPS & jam operasional", icon: "tune", href: "/pengaturan/cabang", permission: "branch.manage" },
   { label: "Pesanan WhatsApp", caption: "Siapkan pesan nota pelanggan", icon: "chat", href: "/whatsapp", permission: "whatsapp.draft" },
 ];
 

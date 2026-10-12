@@ -2,7 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { BottomNav } from "@/components/dashboard/bottom-nav";
 import { SubPageHeader } from "@/components/pos/sub-page-header";
 import { GaransiConsole } from "@/components/garansi/garansi-console";
-import { requirePermission } from "@/lib/rbac-guard";
+import { requirePermission, scopedBranchId } from "@/lib/rbac-guard";
+import { scopeBranchQuery } from "@/lib/branch";
 
 export const instant = false;
 
@@ -10,18 +11,22 @@ export default async function GaransiPage() {
   const session = await requirePermission("warranty.manage");
 
   const supabase = await createClient();
-  const branchId = session.branchId;
+  const branchId = scopedBranchId(session);
 
-  const { data: branch } = await supabase
-    .from("branches")
-    .select("branch_name")
-    .eq("id", branchId ?? "")
-    .maybeSingle();
+  const { data: branch } = branchId
+    ? await supabase
+        .from("branches")
+        .select("branch_name")
+        .eq("id", branchId)
+        .maybeSingle()
+    : { data: null };
 
-  const { data: orders } = await supabase
-    .from("orders")
-    .select("id, order_number, customer_name, license_plate, total_price, completed_at")
-    .eq("branch_id", branchId ?? "")
+  const { data: orders } = await scopeBranchQuery(
+    supabase
+      .from("orders")
+      .select("id, order_number, customer_name, license_plate, total_price, completed_at"),
+    branchId,
+  )
     .eq("status", "completed")
     .order("completed_at", { ascending: false })
     .limit(30);
@@ -50,7 +55,14 @@ export default async function GaransiPage() {
 
   return (
     <>
-      <SubPageHeader title="Klaim Garansi" subtitle={branch?.branch_name} backHref="/dashboard" />
+      <SubPageHeader
+        title="Klaim Garansi"
+        subtitle={
+          branch?.branch_name ??
+          (session.branchScope === "all" ? "Seluruh Cabang" : undefined)
+        }
+        backHref="/dashboard"
+      />
       <main className="flex-1">
         <GaransiConsole
           canManage={true}

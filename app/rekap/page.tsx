@@ -3,7 +3,8 @@ import { BottomNav } from "@/components/dashboard/bottom-nav";
 import { SubPageHeader } from "@/components/pos/sub-page-header";
 import { RekapConsole } from "@/components/attendance/rekap-console";
 import { ATTENDANCE_ROLE_LABELS, wibNow } from "@/lib/attendance";
-import { requirePermission } from "@/lib/rbac-guard";
+import { requirePermission, scopedBranchId } from "@/lib/rbac-guard";
+import { scopeBranchQuery } from "@/lib/branch";
 
 export const instant = false;
 
@@ -11,10 +12,12 @@ export default async function RekapPage() {
   const session = await requirePermission("attendance.audit");
 
   const supabase = await createClient();
-  const branchId = session.branchId;
+  // null berarti sedang viewing seluruh cabang, dan rekap memang mendukung
+  // itu karena daftar stafnya diambil per cabang.
+  const branchId = scopedBranchId(session);
   const role = session.role;
 
-  if (!branchId) {
+  if (!branchId && session.branchScope !== "all") {
     return (
       <div className="flex flex-col w-full min-h-screen">
         <SubPageHeader
@@ -51,27 +54,33 @@ export default async function RekapPage() {
   const today = wibNow().dateIso;
 
   const [branchRes, staffRes, handoffRes] = await Promise.all([
-    supabase
-      .from("branches")
-      .select(
-        "branch_name, latitude, longitude, geofence_radius_meters, operating_open_time, operating_close_time",
-      )
-      .eq("id", branchId)
-      .maybeSingle(),
-    supabase
-      .from("profiles")
-      .select("id, full_name, role, default_off_day")
-      .eq("branch_id", branchId)
+    branchId
+      ? supabase
+          .from("branches")
+          .select(
+            "branch_name, latitude, longitude, geofence_radius_meters, operating_open_time, operating_close_time",
+          )
+          .eq("id", branchId)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    scopeBranchQuery(
+      supabase
+        .from("profiles")
+        .select("id, full_name, role, default_off_day"),
+      branchId,
+    )
       .eq("is_active", true)
       .order("full_name"),
-    supabase
-      .from("shift_handoffs")
-      .select("opening_cash, status")
-      .eq("branch_id", branchId)
-      .eq("shift_date", today)
-      .order("opened_at", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
+    branchId
+      ? supabase
+          .from("shift_handoffs")
+          .select("opening_cash, status")
+          .eq("branch_id", branchId)
+          .eq("shift_date", today)
+          .order("opened_at", { ascending: false })
+          .limit(1)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
   ]);
 
   // attendance_logs tidak punya branch_id, jadi cakupan cabang dijaga lewat
@@ -121,7 +130,10 @@ export default async function RekapPage() {
     <div className="flex flex-col w-full min-h-screen">
       <SubPageHeader
         title="Rekap Kehadiran Staf"
-        branchName={(branch?.branch_name as string) ?? "Cabang Utama"}
+        branchName={
+          (branch?.branch_name as string) ??
+          (session.branchScope === "all" ? "Seluruh Cabang" : "Cabang Utama")
+        }
         backHref="/dashboard"
       />
       <RekapConsole
@@ -132,8 +144,10 @@ export default async function RekapPage() {
           roleLabel: ATTENDANCE_ROLE_LABELS[role] ?? role,
         }}
         branch={{
-          id: branchId as string,
-          name: (branch?.branch_name as string) ?? "Cabang Utama",
+          id: branchId ?? session.homeBranchId ?? "",
+          name:
+            (branch?.branch_name as string) ??
+            (session.branchScope === "all" ? "Seluruh Cabang" : "Cabang Utama"),
           latitude:
             branch?.latitude === null || branch?.latitude === undefined
               ? null

@@ -6,7 +6,7 @@ import {
   OrderDetailView,
   type InspectionPhoto,
 } from "@/components/orders/order-detail-view";
-import { can, canViewAllBranches } from "@/lib/rbac";
+import { can } from "@/lib/rbac";
 import { requireSession } from "@/lib/rbac-guard";
 
 export const instant = false;
@@ -41,7 +41,12 @@ export default async function OrderDetailPage({ params }: { params: Params }) {
     notFound();
   }
 
-  if (!canViewAllBranches(session.role) && order.branch_id !== session.branchId) {
+  //.scopedBranchId null berarti "Seluruh Cabang" sehingga semua order boleh
+  // dibuka. Kalau cabang tertentu dipilih, order di luar itu tidak boleh
+  // dimasuki lewat URL langsung.
+  const scopedBranchId = session.branchScope === "all" ? null : session.branchId;
+
+  if (scopedBranchId && order.branch_id !== scopedBranchId) {
     redirect("/pos/orders");
   }
 

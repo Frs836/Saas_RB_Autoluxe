@@ -7,8 +7,8 @@ import {
   type WaClaim,
   type WaOrder,
 } from "@/components/whatsapp/whatsapp-console";
-import { canViewAllBranches } from "@/lib/rbac";
-import { requirePermission } from "@/lib/rbac-guard";
+import { requirePermission, scopedBranchId } from "@/lib/rbac-guard";
+import { scopeBranchQuery } from "@/lib/branch";
 
 export const instant = false;
 
@@ -16,11 +16,8 @@ export default async function WhatsappPage() {
   const session = await requirePermission("whatsapp.draft");
 
   const supabase = await createClient();
-  const branchId = session.branchId;
-
-  // Admin kasir hanya;message untuk pelanggan cabangnya sendiri. Owner dan
-  // Maintainer boleh melihat seluruh cabang.
-  const globalScope = canViewAllBranches(session.role);
+  // null berarti seluruh cabang, sesuai pilihan pada branch switcher.
+  const branchId = scopedBranchId(session);
 
   const [branchRes, ordersRes] = await Promise.all([
     branchId
@@ -30,24 +27,25 @@ export default async function WhatsappPage() {
           .eq("id", branchId)
           .maybeSingle()
       : Promise.resolve({ data: null }),
-    supabase
-      .from("orders")
-      .select(
-        "id, order_number, customer_name, customer_phone, license_plate, vehicle_model, vehicle_size, service_package, status, total_price, payment_method, payment_state, tracking_token, created_at, completed_at, branch_id",
-      )
+    scopeBranchQuery(
+      supabase
+        .from("orders")
+        .select(
+          "id, order_number, customer_name, customer_phone, license_plate, vehicle_model, vehicle_size, service_package, status, total_price, payment_method, payment_state, tracking_token, created_at, completed_at, branch_id",
+        ),
+      branchId,
+    )
       .order("created_at", { ascending: false })
       .limit(100),
   ]);
 
-  // RLS sudah membatasi karyawan pada order miliknya; untuk role
-  // manajerial filter cabang tetap ditegakkan di sini.
+  // RLS sudah membatasi karyawan pada order miliknya; filter cabang di sini
+  // berlaku untuk role manajerial.
   const branchName =
     branchRes.data?.branch_name ??
-    (globalScope ? "RB AUTOLUXE" : "Cabang Utama");
+    (session.branchScope === "all" ? "Seluruh Cabang" : "Cabang Utama");
 
-  const orderRows = (ordersRes.data ?? []).filter((row) =>
-    globalScope ? true : row.branch_id === branchId,
-  );
+  const orderRows = ordersRes.data ?? [];
 
   const orderIds = orderRows.map((row) => row.id as string);
 

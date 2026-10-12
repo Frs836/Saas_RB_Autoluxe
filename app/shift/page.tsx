@@ -3,7 +3,7 @@ import { BottomNav } from "@/components/dashboard/bottom-nav";
 import { SubPageHeader } from "@/components/pos/sub-page-header";
 import { ShiftConsole } from "@/components/shift/shift-console";
 import { ATTENDANCE_ROLE_LABELS, wibNow } from "@/lib/attendance";
-import { requirePermission } from "@/lib/rbac-guard";
+import { requirePermission, scopedBranchId } from "@/lib/rbac-guard";
 
 export const instant = false;
 
@@ -32,28 +32,31 @@ export default async function ShiftPage() {
   const session = await requirePermission("cash.shift_manage");
 
   const supabase = await createClient();
-  const branchId = session.branchId;
+  // null berarti sedang viewing seluruh cabang lewat branch switcher.
+  const branchId = scopedBranchId(session);
   const role = session.role;
 
   if (!branchId) {
+    const viewingAll = session.branchScope === "all";
     return (
       <div className="flex flex-col w-full min-h-screen">
         <SubPageHeader
           title="Audit Shift & Kas"
-          branchName="Cabang Utama"
+          branchName={viewingAll ? "Seluruh Cabang" : "Cabang Utama"}
           backHref="/dashboard"
         />
         <main className="flex-1 flex items-center justify-center px-gutter">
           <div className="w-full max-w-[420px] bg-surface rounded-3xl p-6 clay-card text-center flex flex-col items-center gap-3">
             <span className="material-symbols-outlined text-[40px] text-warning-base">
-              account_tree
+              {viewingAll ? "domain_disabled" : "account_tree"}
             </span>
             <h1 className="font-headline-1 text-headline-1 text-text-primary">
-              Cabang Belum Ditugaskan
+              {viewingAll ? "Pilih Satu Cabang" : "Cabang Belum Ditugaskan"}
             </h1>
             <p className="font-caption text-caption text-text-secondary leading-relaxed">
-              Akun Anda belum terikat pada cabang. Hubungi Owner atau
-              Maintainer.
+              {viewingAll
+                ? "Shift dan kas hanya tercatat per cabang. Pilih satu cabang pada switcher di bagian atas untuk membuka atau menutup shift."
+                : "Akun Anda belum terikat pada cabang. Hubungi Owner atau Maintainer."}
             </p>
             <a
               href="/dashboard"
@@ -107,10 +110,13 @@ export default async function ShiftPage() {
       .from("profiles")
       .select("id, full_name")
       .in("id", personIds);
-    const typed = (people ?? []) as Array<{ id?: string | null; full_name?: string | null }>;
-  for (const p of typed) {
-    if (p.id) userNames[p.id] = p.full_name ?? "Staf";
-  }
+    const typed = (people ?? []) as Array<{
+      id?: string | null;
+      full_name?: string | null;
+    }>;
+    for (const p of typed) {
+      if (p.id) userNames[p.id] = p.full_name ?? "Staf";
+    }
   }
 
   return (
@@ -128,7 +134,7 @@ export default async function ShiftPage() {
           roleLabel: ATTENDANCE_ROLE_LABELS[role] ?? role,
         }}
         branch={{
-          id: branchId as string,
+          id: branchId,
           name: (branch?.branch_name as string) ?? "Cabang Utama",
           openTime: (branch?.operating_open_time as string) ?? "07:30:00",
           closeTime: (branch?.operating_close_time as string) ?? "21:00:00",

@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -6,6 +7,13 @@ import {
   type Permission,
   type Role,
 } from "@/lib/rbac";
+import {
+  ALL_BRANCHES,
+  ACTIVE_BRANCH_COOKIE,
+  isBranchUuid,
+  type BranchOption,
+  type BranchScope,
+} from "@/lib/branch";
 
 export type SessionProfile = {
   id: string;
@@ -13,13 +21,23 @@ export type SessionProfile = {
   email: string;
   fullName: string;
   role: Role;
+  /** Cabang yang sedang aktif. null ketika cakupan "seluruh cabang". */
   branchId: string | null;
+  /** Cabang penempatan tetap milik pengguna ini. */
+  homeBranchId: string | null;
+  branchScope: BranchScope;
+  canSwitchBranch: boolean;
+  branches: BranchOption[];
   shiftId: string | null;
 };
 
 /**
  * Sumber tunggal untuk data sesi di server component.
- * Menggantikan query `profiles` yang disalin ke setiap halaman.
+ *
+ * Cabang aktif dibaca dari cookie sehingga seluruh halaman otomatis mengikuti
+ * pilihan terakhir dari branch switcher. Nilai cookie selalu diverifikasi
+ * ulang terhadap daftar cabang aktif, jadi cookie basi atau UUID yang
+ * dipalsukan tidak dapat membuat pengguna membaca cabang yang tidak berwenang.
  */
 export async function getSessionProfile(): Promise<SessionProfile | null> {
   const supabase = await createClient();
@@ -37,13 +55,51 @@ export async function getSessionProfile(): Promise<SessionProfile | null> {
 
   if (!data) return null;
 
+  const role = toRole(data.role);
+  const canSwitchBranch = can(role, "branch.switch");
+  const homeBranchId = (data.branch_id as string | null) ?? null;
+
+  let branchId = homeBranchId;
+  let branchScope: BranchScope = "branch";
+  let branches: BranchOption[] = [];
+
+  if (canSwitchBranch) {
+    const { data: branchRows } = await supabase
+      .from("branches")
+      .select("id, branch_name, is_active")
+      .order("branch_name", { ascending: true });
+
+    branches = (branchRows ?? []).map((row) => ({
+      id: row.id as string,
+      name: (row.branch_name as string) ?? "Cabang",
+      isActive: Boolean(row.is_active),
+    }));
+
+    const store = await cookies();
+    const selected = store.get(ACTIVE_BRANCH_COOKIE)?.value;
+
+    if (selected === ALL_BRANCHES) {
+      branchScope = "all";
+      branchId = null;
+    } else if (isBranchUuid(selected)) {
+      const match = branches.find((branch) => branch.id === selected && branch.isActive);
+      // Cookie yang tidak lagi menunjuk cabang aktif diabaikan diam-diam agar
+      // pengguna tidak terjebak pada halaman kosong.
+      if (match) branchId = match.id;
+    }
+  }
+
   return {
     id: data.id,
     authId: data.auth_id,
     email: user.email ?? "",
     fullName: data.full_name ?? user.email ?? "Staf",
-    role: toRole(data.role),
-    branchId: (data.branch_id as string | null) ?? null,
+    role,
+    branchId,
+    homeBranchId,
+    branchScope,
+    canSwitchBranch,
+    branches,
     shiftId: (data.shift_id as string | null) ?? null,
   };
 }
@@ -51,9 +107,6 @@ export async function getSessionProfile(): Promise<SessionProfile | null> {
 /**
  * Gerbang halaman: redirect ke /login bila belum masuk, ke /dashboard bila
  * role tidak punya izin, sebelum halaman menjalankan query apa pun.
- *
- * Dipakai sebagai ganti gate inline `PRIVILEGED.includes(role)` yang
- * tersebar di app/pos, app/stok, app/laporan, dan seterusnya.
  */
 export async function requirePermission(
   permission: Permission,
@@ -75,4 +128,21 @@ export async function requireSession(): Promise<SessionProfile> {
   if (!profile) redirect("/login");
 
   return profile;
+}
+
+/**
+ * Cabang yang harus dipakai filter kueri.
+ *
+ * Mengembalikan null ketika pengguna memilih "Seluruh Cabang" sehingga
+ * pemanggil cukup melakukan `branchId ? query.eq(...) : query`.
+ */
+export function scopedBranchId(session: SessionProfile): string | null {
+  return session.branchScope === "all" ? null : session.branchId;
+}
+
+/** Nama cabang aktif untuk ditampilkan di header. */
+export function activeBranchName(session: SessionProfile): string {
+  if (session.branchScope === "all") return "Seluruh Cabang";
+  const match = session.branches.find((branch) => branch.id === session.branchId);
+  return match?.name ?? "Cabang Utama";
 }

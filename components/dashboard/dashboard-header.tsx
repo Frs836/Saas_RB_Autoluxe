@@ -1,17 +1,27 @@
 import Link from "next/link";
 import { initials } from "@/lib/format";
 import { NotificationBell } from "@/components/dashboard/notification-bell";
+import { BranchSwitcher } from "@/components/branch/branch-switcher";
+import type { BranchOption, BranchScope } from "@/lib/branch";
 
 export function DashboardHeader({
   branchName,
   fullName,
   hasUnread,
   profileId,
+  canSwitchBranch,
+  branches = [],
+  activeBranchId = null,
+  branchScope = "branch",
 }: {
   branchName: string;
   fullName: string;
   hasUnread: boolean;
   profileId: string;
+  canSwitchBranch: boolean;
+  branches?: BranchOption[];
+  activeBranchId?: string | null;
+  branchScope?: BranchScope;
 }) {
   return (
     <header className="sticky top-0 z-40 bg-surface/90 backdrop-blur-md shadow-[0_2px_4px_rgba(15,23,42,0.03)] px-gutter py-3">
@@ -29,14 +39,23 @@ export function DashboardHeader({
             <span className="font-headline-2 text-headline-2 text-text-primary tracking-tight truncate leading-tight">
               RB AUTOLUXE
             </span>
-            <span className="flex items-center gap-1 px-2 py-0.5 mt-0.5 rounded-full bg-brand-50 w-fit">
-              <span className="material-symbols-outlined text-[13px] text-brand-600">
-                storefront
+            {canSwitchBranch ? (
+              <BranchSwitcher
+                branches={branches}
+                activeBranchId={activeBranchId}
+                scope={branchScope}
+                variant="header"
+              />
+            ) : (
+              <span className="flex items-center gap-1 px-2 py-0.5 mt-0.5 rounded-full bg-brand-50 w-fit">
+                <span className="material-symbols-outlined text-[13px] text-brand-600">
+                  storefront
+                </span>
+                <span className="font-caption text-caption text-brand-700 truncate max-w-[140px]">
+                  {branchName}
+                </span>
               </span>
-              <span className="font-caption text-caption text-brand-700 truncate max-w-[140px]">
-                {branchName}
-              </span>
-            </span>
+            )}
           </div>
         </div>
 

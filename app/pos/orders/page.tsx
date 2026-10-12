@@ -8,7 +8,8 @@ import {
   type TeamMember,
 } from "@/components/pos/order-queue";
 import { can } from "@/lib/rbac";
-import { getSessionProfile } from "@/lib/rbac-guard";
+import { getSessionProfile, scopedBranchId } from "@/lib/rbac-guard";
+import { scopeBranchQuery } from "@/lib/branch";
 
 export const instant = false;
 
@@ -20,7 +21,7 @@ export default async function OrderQueuePage() {
   }
 
   const supabase = await createClient();
-  const branchId = session.branchId;
+  const branchId = scopedBranchId(session);
 
   const [branchRes, ordersRes] = await Promise.all([
     branchId
@@ -30,16 +31,16 @@ export default async function OrderQueuePage() {
           .eq("id", branchId)
           .maybeSingle()
       : Promise.resolve({ data: null }),
-    branchId
-      ? supabase
-          .from("orders")
-          .select(
-            "id, order_number, license_plate, vehicle_model, vehicle_size, customer_name, customer_phone, service_package, status, total_price, payment_method, payment_state, created_at, completed_at, assigned_to, cancellation_reason",
-          )
-          .eq("branch_id", branchId)
-          .order("created_at", { ascending: false })
-          .limit(60)
-      : Promise.resolve({ data: [] }),
+    scopeBranchQuery(
+      supabase
+        .from("orders")
+        .select(
+          "id, order_number, license_plate, vehicle_model, vehicle_size, customer_name, customer_phone, service_package, status, total_price, payment_method, payment_state, created_at, completed_at, assigned_to, cancellation_reason",
+        ),
+      branchId,
+    )
+      .order("created_at", { ascending: false })
+      .limit(60),
   ]);
 
   const orders = ordersRes.data ?? [];
@@ -91,7 +92,10 @@ export default async function OrderQueuePage() {
     <div className="flex flex-col w-full min-h-screen">
       <SubPageHeader
         title="Antrean Order"
-        branchName={branchRes.data?.branch_name ?? "Cabang Utama"}
+        branchName={
+          branchRes.data?.branch_name ??
+          (session.branchScope === "all" ? "Seluruh Cabang" : "Cabang Utama")
+        }
         backHref="/dashboard"
       />
       <OrderQueue

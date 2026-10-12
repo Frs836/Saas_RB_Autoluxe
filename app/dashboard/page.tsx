@@ -11,7 +11,8 @@ import {
   todayWibIso,
 } from "@/lib/format";
 import { can, quickActionsFor, roleLabel } from "@/lib/rbac";
-import { getSessionProfile } from "@/lib/rbac-guard";
+import { getSessionProfile, scopedBranchId } from "@/lib/rbac-guard";
+import { scopeBranchQuery } from "@/lib/branch";
 
 export const instant = false;
 
@@ -79,7 +80,8 @@ export default async function DashboardPage() {
   }
 
   const role = profile.role;
-  const branchId = profile.branchId;
+  // null berarti pengguna memilih "Seluruh Cabang" lewat branch switcher.
+  const branchId = scopedBranchId(profile);
   const today = todayWibIso();
 
   const canSeeBranchCash = can(role, "cash.view_branch");
@@ -109,27 +111,29 @@ export default async function DashboardPage() {
         .maybeSingle(),
       // Handoff kas cabang HANYA untuk role berwenang. Karyawan tidak boleh
       // menarik data ini sama sekali, bukan sekadar disembunyikan.
-      canSeeBranchCash && branchId
-        ? supabase
-            .from("shift_handoffs")
-            .select("opening_cash, expected_cash, actual_cash, status")
-            .eq("branch_id", branchId)
+      canSeeBranchCash
+        ? scopeBranchQuery(
+            supabase
+              .from("shift_handoffs")
+              .select("opening_cash, expected_cash, actual_cash, status"),
+            branchId,
+          )
             .eq("shift_date", today)
             .order("opened_at", { ascending: false })
             .limit(1)
             .maybeSingle()
         : Promise.resolve({ data: null }),
-      branchId
-        ? supabase
-            .from("orders")
-            .select(
-              "id, order_number, license_plate, vehicle_model, service_package, status, total_price, created_at, assigned_to",
-            )
-            .eq("branch_id", branchId)
-            .in("status", ["queued", "in_progress", "qc_review"])
-            .order("created_at", { ascending: false })
-            .limit(25)
-        : Promise.resolve({ data: [] }),
+      scopeBranchQuery(
+        supabase
+          .from("orders")
+          .select(
+            "id, order_number, license_plate, vehicle_model, service_package, status, total_price, created_at, assigned_to",
+          ),
+        branchId,
+      )
+        .in("status", ["queued", "in_progress", "qc_review"])
+        .order("created_at", { ascending: false })
+        .limit(25),
       supabase
         .from("notifications")
         .select("title, body")
@@ -191,6 +195,10 @@ export default async function DashboardPage() {
         fullName={profile.fullName}
         hasUnread={Boolean(note)}
         profileId={profile.id}
+        canSwitchBranch={profile.canSwitchBranch}
+        branches={profile.branches}
+        activeBranchId={profile.branchId}
+        branchScope={profile.branchScope}
       />
 
       <div className="px-gutter pt-space-md grid grid-cols-2 gap-space-md">

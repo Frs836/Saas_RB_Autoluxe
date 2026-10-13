@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { formatRupiah } from "@/lib/format";
@@ -59,6 +60,11 @@ export function AttendanceConsole({
     roleLabel: string;
     hasFace: boolean;
     faceDescriptor: number[] | null;
+    /**
+     * Status verifikasi wajah master oleh maintainer. null berarti sampel wajah
+     * belum pernah didaftarkan.
+     */
+    faceStatus?: "pending" | "approved" | "rejected" | null;
   };
   branch: {
     id: string;
@@ -95,6 +101,7 @@ export function AttendanceConsole({
   });
 
   const [hasFace, setHasFace] = useState(profile.hasFace);
+  const faceStatus = profile.faceStatus ?? null;
   const [faceDescriptor, setFaceDescriptor] = useState<number[] | null>(
     profile.faceDescriptor,
   );
@@ -105,6 +112,7 @@ export function AttendanceConsole({
   const [lateReason, setLateReason] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
+  const router = useRouter();
   const [busy, setBusy] = useState<null | "capture" | "register" | "submit">(
     null,
   );
@@ -304,7 +312,12 @@ export function AttendanceConsole({
       if (rpcErr) throw new Error(rpcErr.message);
       setHasFace(true);
       setFaceDescriptor(capturedDescriptor);
-      setInfo("Sampel wajah berhasil didaftarkan. Face ID siap digunakan.");
+      // Pendaftaran baru mengembalikan status ke menunggu, jadi info harus
+      // menyatakan itu dan bukan menyatakan Face ID siap dipakai.
+      setInfo(
+        "Sampel wajah terkirim dan menunggu verifikasi maintainer. Absensi dibuka setelah disetujui.",
+      );
+      router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Gagal mendaftarkan Face ID.");
     } finally {
@@ -918,6 +931,42 @@ export function AttendanceConsole({
 
       {/* Aksi utama */}
       <section className="px-gutter pt-4 space-y-2.5">
+        {hasFace && faceStatus !== null && faceStatus !== "approved" ? (
+          <div
+            className={`rounded-2xl p-3.5 font-caption text-caption leading-relaxed ${
+              faceStatus === "rejected"
+                ? "bg-danger-surface text-danger-text"
+                : "bg-warning-surface text-warning-text"
+            }`}
+          >
+            <span className="font-body-bold text-body-bold flex items-center gap-1.5 mb-1">
+              <span className="material-symbols-outlined text-[18px]">
+                {faceStatus === "rejected" ? "block" : "hourglass_top"}
+              </span>
+              {faceStatus === "rejected"
+                ? "Wajah ditolak maintainer"
+                : "Wajah menunggu verifikasi"}
+            </span>
+            {faceStatus === "rejected"
+              ? "Daftarkan ulang sampel wajah Anda, lalu minta maintainer meninjaunya lagi."
+              : "Sampel wajah Anda sudah terkirim dan ditunggu tinjauan maintainer. Absensi dibuka setelah disetujui."}
+          </div>
+        ) : null}
+
+        {hasFace && faceStatus === "rejected" ? (
+          <button
+            type="button"
+            onClick={handleRegisterFace}
+            disabled={busy !== null || !capturedBlob}
+            className="w-full h-[50px] rounded-full bg-surface border border-brand-200 text-brand-700 font-body-bold text-body-bold flex items-center justify-center gap-2.5 active:scale-[0.98] transition-all disabled:opacity-60"
+          >
+            <span className="material-symbols-outlined text-[22px]">
+              face_retouching_natural
+            </span>
+            {busy === "register" ? "Mendaftarkan..." : "Daftarkan Ulang Face ID"}
+          </button>
+        ) : null}
+
         {!hasFace ? (
           <button
             type="button"

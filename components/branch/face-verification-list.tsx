@@ -1,0 +1,214 @@
+"use client";
+
+import { useCallback, useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+
+export type FaceRegistration = {
+  profile_id: string;
+  full_name: string;
+  role: string;
+  branch_name: string | null;
+  face_verification: "pending" | "approved" | "rejected";
+  face_review_note: string | null;
+  registered_at: string | null;
+};
+
+const STATUS_META: Record<
+  FaceRegistration["face_verification"],
+  { label: string; cls: string }
+> = {
+  pending: {
+    label: "Menunggu tinjauan",
+    cls: "bg-warning-surface text-warning-text",
+  },
+  approved: {
+    label: "Disetujui",
+    cls: "bg-success-surface text-success-text",
+  },
+  rejected: {
+    label: "Ditolak",
+    cls: "bg-danger-surface text-danger-text",
+  },
+};
+
+/**
+ * Peninjauan sampel wajah master oleh Maintainer.
+ *
+ * Daftar hanya memuat profil yang sudah mendaftarkan sampel wajah. Staf tanpa
+ * sampel tidak muncul karena tidak ada yang perlu dinilai.
+ */
+export function FaceVerificationList({
+  registrations,
+}: {
+  registrations: FaceRegistration[];
+}) {
+  const router = useRouter();
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [note, setNote] = useState<Record<string, string>>({});
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  const review = useCallback(
+    async (profileId: string, approved: boolean) => {
+      setError(null);
+      setSuccess(null);
+
+      if (!approved) {
+        const reason = (note[profileId] ?? "").trim();
+        if (reason.length < 5) {
+          setError("Penolakan wajib disertai alasan minimal 5 karakter.");
+          return;
+        }
+      }
+
+      setBusyId(profileId);
+      const supabase = createClient();
+      const { error: rpcError } = await supabase.rpc("review_staff_face", {
+        p_profile_id: profileId,
+        p_approved: approved,
+        p_note: note[profileId]?.trim() ? note[profileId].trim() : null,
+      });
+      setBusyId(null);
+
+      if (rpcError) {
+        setError(rpcError.message);
+        return;
+      }
+
+      setSuccess(approved ? "Wajah disetujui." : "Wajah ditolak dan staf diberi tahu.");
+      router.refresh();
+    },
+    [note, router],
+  );
+
+  if (registrations.length === 0) {
+    return (
+      <div className="px-gutter py-6">
+        <div className="clay-card p-6 flex flex-col items-center gap-3 text-center">
+          <span className="material-symbols-outlined text-[40px] text-success-base">
+            verified_user
+          </span>
+          <h2 className="font-headline-2 text-headline-2 text-text-primary">
+            Belum Ada Pendaftaran Wajah
+          </h2>
+          <p className="font-caption text-caption text-text-secondary">
+            Daftar ini terisi otomatis saat staf mendaftarkan sampel wajahnya di
+            halaman absensi.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const pendingCount = registrations.filter(
+    (row) => row.face_verification === "pending",
+  ).length;
+
+  return (
+    <div className="px-gutter py-4 flex flex-col gap-3">
+      <section className="clay-card p-4 flex items-center justify-between gap-3">
+        <div>
+          <h1 className="font-headline-2 text-headline-2 text-text-primary">
+            Verifikasi Wajah Master
+          </h1>
+          <p className="font-caption text-caption text-text-muted">
+            {pendingCount > 0
+              ? `${pendingCount} menunggu tinjauan`
+              : "Semua sampel sudah ditinjau."}
+          </p>
+        </div>
+        <span className="material-symbols-outlined text-[28px] text-brand-600">
+          face_retouching_natural
+        </span>
+      </section>
+
+      {pendingCount > 0 ? (
+        <p className="rounded-xl bg-warning-surface text-warning-text p-3 font-caption text-caption leading-relaxed">
+          Staf dengan sampel berstatus menunggu tidak dapat melakukan absensi
+          sampai Anda meninjaunya. Mendaftarkan ulang wajah akan mengembalikan
+          status ke menunggu.
+        </p>
+      ) : null}
+
+      {error ? (
+        <p className="rounded-xl bg-danger-surface text-danger-text p-3 font-caption text-caption">
+          {error}
+        </p>
+      ) : null}
+      {success ? (
+        <p className="rounded-xl bg-success-surface text-success-text p-3 font-caption text-caption">
+          {success}
+        </p>
+      ) : null}
+
+      {registrations.map((row) => {
+        const meta = STATUS_META[row.face_verification];
+        const busy = busyId === row.profile_id;
+
+        return (
+          <section key={row.profile_id} className="clay-card p-4 flex flex-col gap-2.5">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex flex-col gap-0.5">
+                <span className="font-body-bold text-body-bold text-text-primary">
+                  {row.full_name}
+                </span>
+                <span className="font-micro-badge text-micro-badge text-text-muted">
+                  {row.role} - {row.branch_name ?? "Belum ditugaskan"}
+                </span>
+              </div>
+              <span
+                className={`px-2 py-0.5 rounded-full font-micro-badge text-micro-badge ${meta.cls}`}
+              >
+                {meta.label}
+              </span>
+            </div>
+
+            {row.face_review_note ? (
+              <p className="font-caption text-caption text-text-secondary bg-surface-container-low rounded-lg px-2.5 py-2">
+                Catatan: {row.face_review_note}
+              </p>
+            ) : null}
+
+            <label className="flex flex-col gap-1">
+              <span className="font-micro-badge text-micro-badge text-text-muted">
+                Catatan maintainer
+              </span>
+              <input
+                value={note[row.profile_id] ?? ""}
+                onChange={(e) =>
+                  setNote((prev) => ({ ...prev, [row.profile_id]: e.target.value }))
+                }
+                placeholder="Wajib bila menolak, contoh: wajah kurang terang"
+                className="h-11 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+              />
+            </label>
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => review(row.profile_id, true)}
+                className="flex-1 h-11 rounded-xl bg-success-base text-white font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform disabled:opacity-60"
+              >
+                <span className="material-symbols-outlined text-[18px]">
+                  {busy ? "hourglass_top" : "check"}
+                </span>
+                Setujui
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => review(row.profile_id, false)}
+                className="flex-1 h-11 rounded-xl bg-danger-base text-white font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform disabled:opacity-60"
+              >
+                <span className="material-symbols-outlined text-[18px]">close</span>
+                Tolak
+              </button>
+            </div>
+          </section>
+        );
+      })}
+    </div>
+  );
+}

@@ -999,10 +999,477 @@ if (!targetBranch) {
 }
 
 /* -------------------------------------------------------------------------- */
-/* 14. Jalur tulis langsung ke tabel                                          */
+/* 14. Verifikasi wajah master                                                 */
 /* -------------------------------------------------------------------------- */
 
-suite.section("14. Jalur tulis langsung ke tabel");
+suite.section("14. Verifikasi wajah master");
+
+const { data: faceStaff } = await karyawan.client
+  .from("profiles")
+  .select("id, face_descriptor, face_verification")
+  .eq("auth_id", karyawan.userId)
+  .maybeSingle();
+
+const { data: maintainerProfile } = await maintainer.client
+  .from("profiles")
+  .select("id")
+  .eq("auth_id", maintainer.userId)
+  .maybeSingle();
+
+if (!faceStaff) {
+  suite.check("profil karyawan uji terbaca", false, "tidak ditemukan");
+} else {
+  const staffId = faceStaff.id;
+
+  // Daftarkan sampel wajah dummy supaya ada yang bisa ditinjau. Pendaftaran
+  // wajib mengembalikan status ke pending.
+  const dummyDescriptor = Array.from({ length: 64 }, (_, i) =>
+    Math.sin(i / 3) * 0.5,
+  );
+  const registered = await karyawan.client.rpc("set_face_descriptor", {
+    p_descriptor: dummyDescriptor,
+  });
+  suite.check("staf bisa mendaftarkan sampel wajah", !registered.error, registered.error?.message);
+
+  const { data: afterRegister } = await adminClient
+    .from("profiles")
+    .select("face_verification, face_reviewed_by")
+    .eq("id", staffId)
+    .maybeSingle();
+  suite.check(
+    "pendaftaran wajah baru mengembalikan status ke pending",
+    afterRegister?.face_verification === "pending",
+    String(afterRegister?.face_verification),
+  );
+  suite.check(
+    "peninjau masih kosong setelah pendaftaran",
+    afterRegister?.face_reviewed_by === null,
+    String(afterRegister?.face_reviewed_by),
+  );
+
+  // Karyawan tidak boleh menilai wajahnya sendiri.
+  const selfReview = await karyawan.client.rpc("review_staff_face", {
+    p_profile_id: staffId,
+    p_approved: true,
+    p_note: null,
+  });
+  suite.check(
+    "karyawan tidak bisa menyetujui wajah",
+    Boolean(selfReview.error),
+    selfReview.error?.message ?? "tidak ada error",
+  );
+
+  // Admin kasir bukan maintainer.
+  const adminReview = await admin.client.rpc("review_staff_face", {
+    p_profile_id: staffId,
+    p_approved: true,
+    p_note: null,
+  });
+  suite.check(
+    "admin kasir tidak bisa menyetujui wajah",
+    Boolean(adminReview.error),
+    adminReview.error?.message ?? "tidak ada error",
+  );
+
+  // Penolakan wajib beralasan.
+  const noReason = await maintainer.client.rpc("review_staff_face", {
+    p_profile_id: staffId,
+    p_approved: false,
+    p_note: null,
+  });
+  suite.check(
+    "penolakan tanpa alasan ditolak",
+    Boolean(noReason.error),
+    noReason.error?.message ?? "tidak ada error",
+  );
+
+  // Maintainer harus bisa menyetujui.
+  const approve = await maintainer.client.rpc("review_staff_face", {
+    p_profile_id: staffId,
+    p_approved: true,
+    p_note: null,
+  });
+  suite.check("maintainer bisa menyetujui wajah", !approve.error, approve.error?.message);
+
+  const { data: afterApprove } = await adminClient
+    .from("profiles")
+    .select("face_verification, face_reviewed_by")
+    .eq("id", staffId)
+    .maybeSingle();
+  suite.check(
+    "status menjadi approved",
+    afterApprove?.face_verification === "approved",
+    String(afterApprove?.face_verification),
+  );
+  suite.check(
+    "penreviewed_by terisi",
+    Boolean(afterApprove?.face_reviewed_by),
+    String(afterApprove?.face_reviewed_by),
+  );
+
+  // Daftar hanya bisa dibaca maintainer.
+  const karyawanList = await karyawan.client.rpc("pending_face_registrations");
+  suite.check(
+    "karyawan tidak bisa membaca daftar verifikasi",
+    Boolean(karyawanList.error),
+    karyawanList.error?.message ?? "tidak ada error",
+  );
+
+  const maintainerList = await maintainer.client.rpc("pending_face_registrations");
+  suite.check(
+    "maintainer bisa membaca daftar verifikasi",
+    !maintainerList.error,
+    maintainerList.error?.message,
+  );
+  suite.check(
+    "daftar memuat staf yang ditinjau",
+    (maintainerList.data ?? []).some((row) => row.profile_id === staffId),
+    `${(maintainerList.data ?? []).length} baris`,
+  );
+
+  // Wajah yang disetujui harus kembali ke pending saat didaftarkan ulang.
+  await karyawan.client.rpc("set_face_descriptor", { p_descriptor: dummyDescriptor });
+  const { data: afterReRegister } = await adminClient
+    .from("profiles")
+    .select("face_verification")
+    .eq("id", staffId)
+    .maybeSingle();
+  suite.check(
+    "pendaftaran ulang membatalkan persetujuan sebelumnya",
+    afterReRegister?.face_verification === "pending",
+    String(afterReRegister?.face_verification),
+  );
+
+  // Bersihkan sampel wajah uji agar akun uji kembali seperti semula.
+  await adminClient
+    .from("profiles")
+    .update({
+      face_descriptor: null,
+      face_verification: null,
+      face_reviewed_by: null,
+      face_reviewed_at: null,
+      face_review_note: null,
+    })
+    .eq("id", staffId);
+  await adminClient.from("notifications").delete().eq("category", "account");
+  await adminClient.from("activity_logs").delete().eq("entity", "profiles");
+}
+
+/* -------------------------------------------------------------------------- */
+/* 15. Resep bahan dan pemotongan stok otomatis                                 */
+/* -------------------------------------------------------------------------- */
+
+suite.section("15. Resep bahan dan pemotongan stok otomatis");
+
+const { data: recipeItem } = await adminClient
+  .from("inventory_items")
+  .select("id, item_name, branch_id, current_stock")
+  .eq("branch_id", karyawanProfile?.branch_id ?? null)
+  .limit(1)
+  .maybeSingle();
+
+const { data: recipeService } = await adminClient
+  .from("services")
+  .select("id, name")
+  .limit(1)
+  .maybeSingle();
+
+if (!recipeItem || !recipeService) {
+  suite.check("bahan dan layanan tersedia untuk uji resep", false, "data kurang");
+} else {
+  const karyawanSetRecipe = await karyawan.client.rpc("set_service_recipe", {
+    p_branch_id: recipeItem.branch_id,
+    p_service_id: recipeService.id,
+    p_item_id: recipeItem.id,
+    p_quantity: 1,
+    p_remove: false,
+  });
+  suite.check(
+    "karyawan tidak bisa membuat resep bahan",
+    Boolean(karyawanSetRecipe.error),
+    karyawanSetRecipe.error?.message ?? "tidak ada error",
+  );
+
+  const adminSetRecipe = await admin.client.rpc("set_service_recipe", {
+    p_branch_id: recipeItem.branch_id,
+    p_service_id: recipeService.id,
+    p_item_id: recipeItem.id,
+    p_quantity: 2,
+    p_remove: false,
+  });
+  suite.check("admin kasir bisa membuat resep bahan", !adminSetRecipe.error, adminSetRecipe.error?.message);
+
+  const badQuantity = await admin.client.rpc("set_service_recipe", {
+    p_branch_id: recipeItem.branch_id,
+    p_service_id: recipeService.id,
+    p_item_id: recipeItem.id,
+    p_quantity: 0,
+    p_remove: false,
+  });
+  suite.check("kuantitas resep nol ditolak", Boolean(badQuantity.error), badQuantity.error?.message);
+
+  // Pemotongan manual lewat fungsi yang sama, supaya tidak perlu membuat
+  // order utuh hanya untuk menguji resep.
+  const { data: stockBefore } = await adminClient
+    .from("inventory_items")
+    .select("current_stock")
+    .eq("id", recipeItem.id)
+    .maybeSingle();
+  const before = Number(stockBefore?.current_stock ?? 0);
+
+  // Buat order uji dengan satu baris layanan yang memakai resep di atas.
+  const orderForRecipe = await adminClient
+    .from("orders")
+    .insert({
+      license_plate: `${TEST_PLATE}RESEP`,
+      vehicle_model: "Uji Resep",
+      customer_name: TEST_MARKER,
+      service_package: "Cuci Reguler",
+      status: "in_progress",
+      total_price: 1000,
+      branch_id: recipeItem.branch_id,
+    })
+    .select("id, order_number")
+    .maybeSingle();
+
+  if (orderForRecipe?.id) {
+    cleanupOrderIds.push(orderForRecipe.id);
+
+    await adminClient.from("order_items").insert({
+      order_id: orderForRecipe.id,
+      service_id: recipeService.id,
+      item_name: recipeService.name,
+      price: 1000,
+      quantity: 3,
+    });
+
+    const consumed = await admin.client.rpc("consume_order_materials", {
+      p_order_id: orderForRecipe.id,
+    });
+    suite.check("pemotongan bahan berjalan", !consumed.error, consumed.error?.message);
+    suite.check("jumlah bahan terpotong sesuai resep", Number(consumed.data) === 1, String(consumed.data));
+
+    const { data: stockAfter } = await adminClient
+      .from("inventory_items")
+      .select("current_stock")
+      .eq("id", recipeItem.id)
+      .maybeSingle();
+    suite.check(
+      "saldo berkurang sesuai resep dikali jumlah layanan",
+      Number(stockAfter?.current_stock) === before - 2 * 3,
+      `${before} -> ${stockAfter?.current_stock}`,
+    );
+
+    const repeat = await admin.client.rpc("consume_order_materials", {
+      p_order_id: orderForRecipe.id,
+    });
+    suite.check("pemotongan tidak dilakukan dua kali", Number(repeat.data) === 0, String(repeat.data));
+
+    const { data: autoLog } = await adminClient
+      .from("stock_logs")
+      .select("log_type, quantity, note, reference_id")
+      .eq("reference_id", orderForRecipe.id)
+      .limit(1)
+      .maybeSingle();
+    suite.check(
+      "pemotongan tercatat di stock_logs",
+      autoLog?.log_type === "out" && Number(autoLog?.quantity) === 6,
+      `${autoLog?.log_type} ${autoLog?.quantity}`,
+    );
+
+    await adminClient.from("stock_logs").delete().eq("reference_id", orderForRecipe.id);
+  }
+
+  await admin.client.rpc("set_service_recipe", {
+    p_branch_id: recipeItem.branch_id,
+    p_service_id: recipeService.id,
+    p_item_id: recipeItem.id,
+    p_quantity: 1,
+    p_remove: true,
+  });
+}
+
+/* -------------------------------------------------------------------------- */
+/* 16. Opname fisik bulanan                                                    */
+/* -------------------------------------------------------------------------- */
+
+suite.section("16. Opname fisik bulanan");
+
+const opnameBranch = karyawanProfile?.branch_id ?? null;
+
+if (!opnameBranch) {
+  suite.check("cabang tersedia untuk uji opname", false, "cabang tidak ditemukan");
+} else {
+  const { count: duplicateCount } = await adminClient
+    .from("stock_opnames")
+    .select("id", { count: "exact", head: true })
+    .eq("branch_id", opnameBranch);
+
+  // Gunakan periode yang tidak bentrok dengan opname lama agar test
+  // dapat dijalankan berulang kali.
+  const period = new Date(Date.now() + 1000 * 60 * 60 * 24 * 365 * 3)
+    .toISOString()
+    .slice(0, 7);
+
+  const karyawanOpen = await karyawan.client.rpc("open_stock_opname", {
+    p_branch_id: opnameBranch,
+    p_period_month: `${period}-01`,
+    p_notes: null,
+  });
+  suite.check(
+    "karyawan tidak bisa membuka opname",
+    Boolean(karyawanOpen.error),
+    karyawanOpen.error?.message ?? "tidak ada error",
+  );
+
+  const opened = await admin.client.rpc("open_stock_opname", {
+    p_branch_id: opnameBranch,
+    p_period_month: `${period}-01`,
+    p_notes: `${TEST_MARKER} opname uji`,
+  });
+  suite.check("admin kasir bisa membuka opname", !opened.error, opened.error?.message);
+
+  const opnameId = opened.data?.id;
+
+  if (opnameId) {
+    const { data: opItems } = await adminClient
+      .from("inventory_items")
+      .select("id, current_stock")
+      .eq("branch_id", opnameBranch)
+      .order("item_name");
+
+    if ((opItems ?? []).length === 0) {
+      suite.check("item tersedia untuk diopname", false, "tidak ada item");
+    } else {
+      const { data: opLines } = await adminClient
+        .from("stock_opname_lines")
+        .select("item_id, system_qty")
+        .eq("opname_id", opnameId);
+      suite.check(
+        "baris opname terisi otomatis untuk setiap item",
+        (opLines ?? []).length === (opItems ?? []).length,
+        `${(opLines ?? []).length} baris untuk ${(opItems ?? []).length} item`,
+      );
+
+      // Semua item harus dihitung fisik sebelum opname boleh dikirim.
+      const partial = await admin.client.rpc("save_stock_opname_lines", {
+        p_opname_id: opnameId,
+        p_lines: [
+          {
+            item_id: opItems[0].id,
+            physical_qty: Number(opItems[0].current_stock) - 4,
+            note: `${TEST_MARKER} kurang`,
+          },
+        ],
+      });
+      suite.check("hitungan sebagian tersimpan", !partial.error, partial.error?.message);
+
+      const tooEarly = await admin.client.rpc("submit_stock_opname", {
+        p_opname_id: opnameId,
+        p_apply_adjustment: true,
+      });
+      suite.check(
+        "opname belum lengkap ditolak",
+        Boolean(tooEarly.error),
+        tooEarly.error?.message ?? "tidak ada error",
+      );
+
+      const payload = opItems.map((item, index) => ({
+        item_id: item.id,
+        physical_qty:
+          index === 0 ? Number(item.current_stock) - 4 : Number(item.current_stock),
+        note: index === 0 ? `${TEST_MARKER} kurang` : null,
+      }));
+
+      const saved = await admin.client.rpc("save_stock_opname_lines", {
+        p_opname_id: opnameId,
+        p_lines: payload,
+      });
+      suite.check("hitungan fisik tersimpan", Number(saved.data) === payload.length, String(saved.data));
+
+      const negative = await admin.client.rpc("save_stock_opname_lines", {
+        p_opname_id: opnameId,
+        p_lines: [{ item_id: opItems[0].id, physical_qty: -5, note: null }],
+      });
+      suite.check("jumlah fisik negatif ditolak", Boolean(negative.error), negative.error?.message);
+
+      const submitted = await admin.client.rpc("submit_stock_opname", {
+        p_opname_id: opnameId,
+        p_apply_adjustment: true,
+      });
+      suite.check("opname berhasil dikirim", !submitted.error, submitted.error?.message);
+      suite.check(
+        "status menjadi submitted",
+        submitted.data?.status === "submitted",
+        String(submitted.data?.status),
+      );
+
+      const { data: adjusted } = await adminClient
+        .from("inventory_items")
+        .select("current_stock")
+        .eq("id", opItems[0].id)
+        .maybeSingle();
+      suite.check(
+        "saldo sistem dikoreksi ke angka fisik",
+        Number(adjusted?.current_stock) === Number(opItems[0].current_stock) - 4,
+        `${opItems[0].current_stock} -> ${adjusted?.current_stock}`,
+      );
+
+      // Selisih pada item lain harus nol, karena jumlah fisik sama dengan sistem.
+      const { data: untouched } = await adminClient
+        .from("inventory_items")
+        .select("current_stock")
+        .eq("id", opItems[1].id)
+        .maybeSingle();
+      suite.check(
+        "item tanpa selisih tidak digerakkan",
+        Number(untouched?.current_stock) === Number(opItems[1].current_stock),
+        `${opItems[1].current_stock} -> ${untouched?.current_stock}`,
+      );
+
+      const { data: opnameLog } = await adminClient
+        .from("stock_logs")
+        .select("log_type, quantity, note")
+        .eq("reference_id", opnameId)
+        .limit(1)
+        .maybeSingle();
+      suite.check(
+        "koreksi opname tercatat di stock_logs",
+        Boolean(opnameLog) && Number(opnameLog?.quantity) === 4,
+        `${opnameLog?.log_type} ${opnameLog?.quantity}`,
+      );
+
+      const resubmit = await admin.client.rpc("submit_stock_opname", {
+        p_opname_id: opnameId,
+        p_apply_adjustment: true,
+      });
+      suite.check("opname tidak bisa dikirim dua kali", Boolean(resubmit.error), resubmit.error?.message);
+
+      // Kembalikan saldo dan bersihkan jejak uji.
+      for (const item of opItems) {
+        await adminClient
+          .from("inventory_items")
+          .update({ current_stock: item.current_stock })
+          .eq("id", item.id);
+      }
+      await adminClient.from("stock_logs").delete().eq("reference_id", opnameId);
+    }
+
+    await adminClient.from("stock_opnames").delete().eq("id", opnameId);
+  }
+
+  suite.check(
+    "opname uji dibersihkan",
+    true,
+    `sebelumnya ada ${duplicateCount ?? 0} opname`,
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* 17. Jalur tulis langsung ke tabel                                          */
+/* -------------------------------------------------------------------------- */
+
+suite.section("17. Jalur tulis langsung ke tabel");
 
 // Suite ini sebelumnya hanya menguji RPC. Pola itu membiarkan celah status
 // order lolos, karena karyawan bisa PATCH baris order secara langsung lewat
@@ -1143,10 +1610,10 @@ if (claimableItem) {
 }
 
 /* -------------------------------------------------------------------------- */
-/* 15. Kebersihan data uji                                                     */
+/* 18. Kebersihan data uji                                                     */
 /* -------------------------------------------------------------------------- */
 
-suite.section("15. Kebersihan data uji");
+suite.section("18. Kebersihan data uji");
 
 const ids = cleanupOrderIds.filter(Boolean);
 

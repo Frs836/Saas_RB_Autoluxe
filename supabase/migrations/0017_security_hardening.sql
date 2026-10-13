@@ -275,6 +275,12 @@ begin
     );
   end if;
 
+  -- Pemotongan bahan otomatis sesuai resep layanan. Diletakkan setelah update
+  -- status supaya kegagalan resep tidak membatalkan penyelesaian order.
+  if p_status = 'completed' and v_order.status <> 'completed' then
+    perform public.consume_order_materials(p_order_id);
+  end if;
+
   if p_status <> 'completed' then
     return null;
   end if;

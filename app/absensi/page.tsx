@@ -15,13 +15,13 @@ export default async function AbsensiPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("face_descriptor")
+    .select("face_descriptor, face_verification")
     .eq("id", session.id)
     .maybeSingle();
 
   // Geofence absensi harus milik cabang penempatan orang itu sendiri. Kalau
-  // memakai branch switcher, Owner yang sedang meninjau cabang lain akan
-  // ditolak absen karenalokasinya dibandingkan terhadap koordinat yang salah.
+  // branch switcher, Owner yang sedang meninjau cabang lain akan
+  // ditolak absen karena lokasinya dibandingkan terhadap koordinat yang salah.
   const branchId = session.homeBranchId ?? scopedBranchId(session);
   const today = wibNow().dateIso;
 
@@ -70,6 +70,15 @@ export default async function AbsensiPage() {
       ? rawDescriptor.map((v) => Number(v))
       : null;
 
+  // Status verifikasi wajah master. Tanpa ini karyawan hanya melihat tombol
+  // check-in yang ditolak server tanpa tahu penyebabnya.
+  const faceStatus = (
+    faceDescriptor === null
+      ? null
+      : ((profile?.face_verification as "pending" | "approved" | "rejected" | null) ??
+        "pending")
+  ) as "pending" | "approved" | "rejected" | null;
+
   const todayRow = todayRes.data;
   const history = (historyRes.data ?? [])
     .filter((row) => row.date !== today)
@@ -97,6 +106,7 @@ export default async function AbsensiPage() {
           roleLabel: ATTENDANCE_ROLE_LABELS[role] ?? role,
           hasFace: faceDescriptor !== null,
           faceDescriptor,
+          faceStatus,
         }}
         branch={{
           id: (branch?.id as string) ?? branchId ?? "",

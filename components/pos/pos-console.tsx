@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { formatRupiah } from "@/lib/format";
+import { ThermalPrintButton } from "@/components/pos/thermal-print-button";
+import type { ThermalReceipt } from "@/lib/thermal";
 import {
   CATEGORY_ICONS,
   CATEGORY_LABELS,
@@ -45,6 +47,7 @@ type OrderResult = {
   startedImmediately: boolean;
   waHref: string | null;
   receipt: string;
+  thermal: ThermalReceipt;
 };
 
 export function PosConsole({
@@ -264,6 +267,22 @@ export function PosConsole({
         paymentState: recordedState,
         startedImmediately: startWork,
         receipt,
+        thermal: {
+          branchName,
+          orderNumber: order.order_number,
+          vehicleModel: vehicleModel.trim(),
+          licensePlate: licensePlate.trim().toUpperCase(),
+          customerName: customerName.trim(),
+          items: resolved.map((l) => ({
+            name: l.service.name,
+            quantity: l.qty,
+            total: l.price * l.qty,
+          })),
+          total: Number(order.total_price ?? total),
+          paymentMethod,
+          paid: recordedState === "paid",
+          trackingUrl: `${window.location.origin}/track/${order.tracking_token}`,
+        },
         waHref:
           customerPhone.trim() === ""
             ? null
@@ -384,6 +403,18 @@ export function PosConsole({
               </span>
               Kirim Nota ke WhatsApp Pelanggan
             </a>
+          ) : null}
+
+          {!isEmployee ? (
+            <details className="rounded-2xl bg-surface-container-low p-3">
+              <summary className="font-caption text-caption text-text-secondary cursor-pointer select-none flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-[18px]">print</span>
+                Cetak struk ke printer thermal
+              </summary>
+              <div className="mt-3">
+                <ThermalPrintButton receipt={result.thermal} />
+              </div>
+            </details>
           ) : null}
           <Link
             href="/pos/orders"

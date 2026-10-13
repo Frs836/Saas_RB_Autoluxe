@@ -15,6 +15,22 @@ type Staff = {
   fullName: string;
   role: string;
   roleLabel: string;
+  branchId: string | null;
+};
+
+/**
+ * Konfigurasi cabang yang dipakai untuk menilai satu orang. Dalam mode seluruh
+ * cabang, setiap staf dinilai terhadap cabang penempatannya sendiri, bukan
+ * terhadap satu cabang yang dipilih manajer.
+ */
+export type BranchConfig = {
+  id: string;
+  name: string;
+  latitude: number | null;
+  longitude: number | null;
+  radius: number;
+  openTime: string;
+  closeTime: string;
 };
 
 type Log = {
@@ -63,21 +79,22 @@ function mapLog(row: Record<string, unknown>): Log {
 export function RekapConsole({
   profile,
   branch,
+  branchConfigs,
+  crossBranch,
   today,
   staff,
   todayLogs,
   kasStatus,
 }: {
   profile: { id: string; fullName: string; role: string; roleLabel: string };
-  branch: {
-    id: string;
-    name: string;
-    latitude: number | null;
-    longitude: number | null;
-    radius: number;
-    openTime: string;
-    closeTime: string;
-  };
+  branch: BranchConfig;
+  /**
+   * Konfigurasi semua cabang yang tampil, memakai id cabang sebagai kunci.
+   * Kosong saat pengguna memilih satu cabang saja.
+   */
+  branchConfigs: Record<string, BranchConfig>;
+  /** true saat pengguna sedang melihat seluruh cabang sekaligus. */
+  crossBranch: boolean;
   today: string;
   staff: Staff[];
   todayLogs: Log[];
@@ -93,6 +110,21 @@ export function RekapConsole({
   const [modal, setModal] = useState<{ staff: Staff; log: Log } | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [photoPending, setPhotoPending] = useState(false);
+
+  // Konfigurasi cabang yang relevan untuk satu orang. Saat satu cabang
+  // dipilih semua orang memakai config itu; saat lintas cabang, tiap orang
+  // memakai cabang penempatannya dan null bila config-nya tidak tersedia,
+  // supaya UI tidak pernah memvonis geofence memakai koordinat cabang lain.
+  const configFor = useCallback(
+    (person: Staff): BranchConfig | null => {
+      if (!crossBranch) return branch;
+      if (person.branchId && branchConfigs[person.branchId]) {
+        return branchConfigs[person.branchId];
+      }
+      return null;
+    },
+    [branch, branchConfigs, crossBranch],
+  );
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const hasLoaded = useRef(false);
@@ -231,6 +263,7 @@ export function RekapConsole({
       "Tanggal",
       "Staf",
       "Peran",
+      "Cabang",
       "Status",
       "Masuk",
       "Pulang",
@@ -241,17 +274,18 @@ export function RekapConsole({
     ].join(",");
     const rows = staff.map((person) => {
       const log = logByProfile.get(person.id);
+      const config = configFor(person);
       const distance =
         log?.gpsLat !== null &&
         log?.gpsLat !== undefined &&
         log?.gpsLng !== null &&
         log?.gpsLng !== undefined &&
-        branch.latitude !== null &&
-        branch.longitude !== null
+        config?.latitude != null &&
+        config?.longitude != null
           ? Math.round(
               haversineMeters(
-                branch.latitude,
-                branch.longitude,
+                config.latitude,
+                config.longitude,
                 log.gpsLat,
                 log.gpsLng,
               ),
@@ -261,6 +295,7 @@ export function RekapConsole({
         escape(dateLabel),
         escape(person.fullName),
         escape(person.roleLabel),
+        escape(config?.name ?? branch.name),
         escape(log ? ATTENDANCE_STATUS_LABELS[log.status] ?? log.status : "Belum absen"),
         escape(log?.clockIn ? formatTimeWib(log.clockIn) : ""),
         escape(log?.clockOut ? formatTimeWib(log.clockOut) : ""),
@@ -280,7 +315,7 @@ export function RekapConsole({
     anchor.click();
     anchor.remove();
     URL.revokeObjectURL(url);
-  }, [branch.latitude, branch.longitude, date, dateLabel, logByProfile, staff]);
+  }, [branch.name, configFor, date, dateLabel, logByProfile, staff]);
 
   const filterPills: { key: Filter; label: string; count: number }[] = [
     { key: "all", label: "Semua Staf", count: staff.length },
@@ -296,7 +331,9 @@ export function RekapConsole({
         <div className="bg-clay-overlay rounded-xl px-3 py-2.5 flex items-center justify-between border border-border-subtle">
           <span className="font-caption text-caption text-success-text flex items-center gap-1.5">
             <span className="material-symbols-outlined text-[15px]">radar</span>
-            Geofence {Math.round(branch.radius)}m Aktif
+            {crossBranch
+              ? "Geofence mengikuti cabang tiap staf"
+              : `Geofence ${Math.round(branch.radius)}m Aktif`}
           </span>
           <button
             type="button"
@@ -440,16 +477,17 @@ export function RekapConsole({
         ) : (
           visibleStaff.map((person) => {
             const log = logByProfile.get(person.id);
+            const config = configFor(person);
             const distance =
               log?.gpsLat !== null &&
               log?.gpsLat !== undefined &&
               log?.gpsLng !== null &&
               log?.gpsLng !== undefined &&
-              branch.latitude !== null &&
-              branch.longitude !== null
+              config?.latitude != null &&
+              config?.longitude != null
                 ? haversineMeters(
-                    branch.latitude,
-                    branch.longitude,
+                    config.latitude,
+                    config.longitude,
                     log.gpsLat,
                     log.gpsLng,
                   )
@@ -460,11 +498,17 @@ export function RekapConsole({
             let clockInLine: string | null = null;
             if (log?.clockIn) {
               const text = `Masuk: ${formatTimeWib(log.clockIn)} WIB`;
-              const openMin = parseTimeToMinutes(branch.openTime);
-              const clockInMin = parseTimeToMinutes(formatTimeWib(log.clockIn));
-              const early = openMin - clockInMin;
-              clockInLine =
-                early > 0 ? `${text} (${early}m awal)` : text;
+              // "m awal" hanya boleh dihitung terhadap jam buka cabang orang
+              // itu. Tanpa config, teksnya ditampilkan polos supaya tidak
+              // muncul angka yang berasal dari cabang lain.
+              if (config) {
+                const openMin = parseTimeToMinutes(config.openTime);
+                const clockInMin = parseTimeToMinutes(formatTimeWib(log.clockIn));
+                const early = openMin - clockInMin;
+                clockInLine = early > 0 ? `${text} (${early}m awal)` : text;
+              } else {
+                clockInLine = text;
+              }
             }
 
             return (
@@ -535,8 +579,8 @@ export function RekapConsole({
                             <span className="material-symbols-outlined text-[13px]">
                               running_with_errors
                             </span>
-                            Terlambat {log.lateMinutes} menit (Batas Shift{" "}
-                            {branch.openTime.slice(0, 5)}) WIB
+                            Terlambat {log.lateMinutes} menit
+                            {config ? ` (Batas Shift ${config.openTime.slice(0, 5)} WIB)` : ""}
                           </span>
                         ) : null}
 
@@ -594,7 +638,7 @@ export function RekapConsole({
           modal={modal}
           photoUrl={photoUrl}
           photoPending={photoPending}
-          branch={branch}
+          branch={configFor(modal.staff) ?? branch}
           onClose={() => {
             setModal(null);
             setPhotoUrl(null);

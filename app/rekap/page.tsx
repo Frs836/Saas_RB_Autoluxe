@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { BottomNav } from "@/components/dashboard/bottom-nav";
 import { SubPageHeader } from "@/components/pos/sub-page-header";
-import { RekapConsole } from "@/components/attendance/rekap-console";
+import { RekapConsole, type BranchConfig } from "@/components/attendance/rekap-console";
 import { ATTENDANCE_ROLE_LABELS, wibNow } from "@/lib/attendance";
 import { requirePermission, scopedBranchId } from "@/lib/rbac-guard";
 import { scopeBranchQuery } from "@/lib/branch";
@@ -53,20 +53,26 @@ export default async function RekapPage() {
 
   const today = wibNow().dateIso;
 
-  const [branchRes, staffRes, handoffRes] = await Promise.all([
+  const BRANCH_FIELDS =
+    "id, branch_name, latitude, longitude, geofence_radius_meters, operating_open_time, operating_close_time";
+
+  const [branchRes, allBranchesRes, staffRes, handoffRes] = await Promise.all([
     branchId
       ? supabase
           .from("branches")
-          .select(
-            "branch_name, latitude, longitude, geofence_radius_meters, operating_open_time, operating_close_time",
-          )
+          .select(BRANCH_FIELDS)
           .eq("id", branchId)
           .maybeSingle()
       : Promise.resolve({ data: null }),
+    // Saat lintas cabang, tiap staf dinilai terhadap geofence cabangnya
+    // sendiri. Config itu tidak bisa disimpulkan dari satu cabang terpilih.
+    branchId
+      ? Promise.resolve({ data: null })
+      : supabase.from("branches").select(BRANCH_FIELDS),
     scopeBranchQuery(
       supabase
         .from("profiles")
-        .select("id, full_name, role, default_off_day"),
+        .select("id, full_name, role, default_off_day, branch_id"),
       branchId,
     )
       .eq("is_active", true)
@@ -98,6 +104,22 @@ export default async function RekapPage() {
 
   const branch = branchRes.data;
 
+  const toConfig = (row: Record<string, unknown>) => ({
+    id: row.id as string,
+    name: (row.branch_name as string) ?? "Cabang",
+    latitude: row.latitude === null ? null : Number(row.latitude),
+    longitude: row.longitude === null ? null : Number(row.longitude),
+    radius: Number(row.geofence_radius_meters ?? 30),
+    openTime: (row.operating_open_time as string) ?? "07:30:00",
+    closeTime: (row.operating_close_time as string) ?? "21:00:00",
+  });
+
+  const branchConfigs: Record<string, BranchConfig> = {};
+  for (const row of (allBranchesRes.data ?? []) as Record<string, unknown>[]) {
+    const config = toConfig(row);
+    branchConfigs[config.id] = config;
+  }
+
   const staff = (staffRes.data ?? [])
     .filter((row) => row.role !== "maintainer")
     .map((row) => ({
@@ -105,6 +127,7 @@ export default async function RekapPage() {
       fullName: (row.full_name as string) ?? "Staf",
       role: row.role as string,
       roleLabel: ATTENDANCE_ROLE_LABELS[(row.role as string) ?? ""] ?? (row.role as string),
+      branchId: (row.branch_id as string | null) ?? null,
     }));
 
   const todayLogs = (todayLogsRes.data ?? []).map((row) => ({
@@ -143,27 +166,24 @@ export default async function RekapPage() {
           role,
           roleLabel: ATTENDANCE_ROLE_LABELS[role] ?? role,
         }}
-        branch={{
-          id: branchId ?? session.homeBranchId ?? "",
-          name:
-            (branch?.branch_name as string) ??
-            (session.branchScope === "all" ? "Seluruh Cabang" : "Cabang Utama"),
-          latitude:
-            branch?.latitude === null || branch?.latitude === undefined
-              ? null
-              : Number(branch.latitude),
-          longitude:
-            branch?.longitude === null || branch?.longitude === undefined
-              ? null
-              : Number(branch.longitude),
-          radius:
-            branch?.geofence_radius_meters === null ||
-            branch?.geofence_radius_meters === undefined
-              ? 30
-              : Number(branch.geofence_radius_meters),
-          openTime: (branch?.operating_open_time as string) ?? "07:30:00",
-          closeTime: (branch?.operating_close_time as string) ?? "21:00:00",
-        }}
+        branch={
+          branch
+            ? toConfig(branch)
+            : {
+                id: branchId ?? session.homeBranchId ?? "",
+                // Tanpa cabang terpilih, nama tampilan bukan config nyata dan
+                // tidak boleh dipakai untuk menilai geofence.
+                name:
+                  session.branchScope === "all" ? "Seluruh Cabang" : "Cabang Utama",
+                latitude: null,
+                longitude: null,
+                radius: 30,
+                openTime: "07:30:00",
+                closeTime: "21:00:00",
+              }
+        }
+        branchConfigs={branchConfigs}
+        crossBranch={session.branchScope === "all"}
         today={today}
         staff={staff}
         todayLogs={todayLogs}

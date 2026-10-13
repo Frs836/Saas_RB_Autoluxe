@@ -234,7 +234,10 @@ export function OrderQueue({
             key={item.key}
             type="button"
             onClick={() => setFilter(item.key)}
-            className={`shrink-0 px-4 py-2 rounded-full font-caption text-caption active:scale-95 transition-transform ${
+            // min-h-11 karena py-2 saja hanya menghasilkan 32px, terlalu pendek untuk
+            // ibu jari. Filter ini dipakai berulang sepanjang hari jadi sering
+            // ditekan dengan satu tangan sambil memegang unit.
+            className={`shrink-0 px-4 min-h-11 rounded-full font-caption text-caption flex items-center active:scale-95 transition-transform ${
               filter === item.key
                 ? "bg-primary text-white"
                 : "bg-surface-container-low text-text-secondary"
@@ -281,7 +284,10 @@ export function OrderQueue({
                 <div className="flex items-center justify-between gap-2">
                   <Link
                     href={`/pos/orders/${order.id}`}
-                    className="font-caption text-caption font-mono text-brand-600 font-semibold"
+                    // min-h-11 dan inline-flex supaya tautan nomor order, yang
+                    // adalah jalan utama masuk ke detail order, punya tinggi
+                    // target sentuh yang layak dan bukan sekadar tinggi teks.
+                    className="font-caption text-caption font-mono text-brand-600 font-semibold inline-flex items-center min-h-11 self-start -my-2.5"
                   >
                     {order.order_number}
                   </Link>
@@ -384,7 +390,7 @@ export function OrderQueue({
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label="Hubungi pelanggan via WhatsApp"
-                      className="w-10 h-10 rounded-xl bg-whatsapp/10 text-whatsapp flex items-center justify-center shrink-0 active:scale-95 transition-transform"
+                      className="w-11 h-11 rounded-xl bg-whatsapp/10 text-whatsapp flex items-center justify-center shrink-0 active:scale-95 transition-transform"
                     >
                       <span className="material-symbols-outlined text-[20px]">
                         chat
@@ -441,7 +447,7 @@ export function OrderQueue({
                   ) : null}
                   <Link
                     href={`/pos/orders/${order.id}`}
-                    className="h-10 px-3 rounded-xl bg-surface-container text-text-secondary flex items-center gap-1 font-caption text-caption shrink-0"
+                    className="min-h-11 px-3 rounded-xl bg-surface-container text-text-secondary flex items-center gap-1 font-caption text-caption shrink-0"
                   >
                     <span className="material-symbols-outlined text-[18px]">
                       photo_camera

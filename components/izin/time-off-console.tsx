@@ -66,7 +66,12 @@ export function TimeOffConsole({ requests, canDecide, todayIso }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [filter, setFilter] = useState<"all" | "mine" | "pending">("mine");
+  // Maintainer dan Owner membuka halaman ini untuk memutuskan, bukan untuk
+  // melihat pengajuan sendiri. Membuka tab "Milik Saya" untuk mereka hanya
+  // menampilkan daftar kosong dan menyembunyikan antrean yang harus mereka tangani.
+  const [filter, setFilter] = useState<"all" | "mine" | "pending">(
+    canDecide ? "pending" : "mine",
+  );
 
   const needsProof = type === "sakit";
   const duration = dayCount(startDate, endDate);
@@ -388,7 +393,9 @@ export function TimeOffConsole({ requests, canDecide, todayIso }: Props) {
                 key={f.key}
                 type="button"
                 onClick={() => setFilter(f.key)}
-                className={`px-3 py-1.5 rounded-xl font-caption text-caption ${
+                // min-h-11 agar tinggi target sentuh mencapai 44px. Versi sebelumnya
+                // py-1.5 hanya menghasilkan 28px, terlalu kecil untuk ibu jari.
+                className={`px-3 min-h-11 rounded-xl font-caption text-caption flex items-center ${
                   filter === f.key
                     ? "bg-brand-50 text-brand-700"
                     : "bg-surface-container-low text-text-secondary"

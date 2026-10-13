@@ -405,16 +405,17 @@ export function PosConsole({
             </a>
           ) : null}
 
+          // Tidak lagi disembunyikan di dalam details. Kontrol cetak thermal adalah
+          // salah satu dari tiga aksi utama setelah transaksi, dan kasir baru
+          // tidak akan menemukannya di balik elemen yang tertutup.
           {!isEmployee ? (
-            <details className="rounded-2xl bg-surface-container-low p-3">
-              <summary className="font-caption text-caption text-text-secondary cursor-pointer select-none flex items-center gap-1.5">
+            <div className="rounded-2xl bg-surface-container-low p-3 flex flex-col gap-2">
+              <span className="font-caption text-caption text-text-secondary flex items-center gap-1.5">
                 <span className="material-symbols-outlined text-[18px]">print</span>
                 Cetak struk ke printer thermal
-              </summary>
-              <div className="mt-3">
-                <ThermalPrintButton receipt={result.thermal} />
-              </div>
-            </details>
+              </span>
+              <ThermalPrintButton receipt={result.thermal} />
+            </div>
           ) : null}
           <Link
             href="/pos/orders"
@@ -439,7 +440,10 @@ export function PosConsole({
 
   if (step === "checkout") {
     return (
-      <div className="pb-40">
+// Ruang bawah mencadangkan navigasi (68px) ditambah bilah checkout yang
+    // menempel (~108px). Nilai sebelumnya 160px, jadi kartu layanan terakhir
+    // tertutup sebagian oleh bilah checkout ketika keranjang berisi.
+    <div className="pb-[calc(11rem+env(safe-area-inset-bottom))]">
         <div className="sticky top-0 z-40 bg-surface/90 backdrop-blur-md pt-safe shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
           <div className="h-16 px-gutter flex items-center gap-3">
             <button
@@ -449,7 +453,7 @@ export function PosConsole({
                 setStep("catalog");
               }}
               aria-label="Kembali ke katalog"
-              className="w-10 h-10 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary active:scale-95 transition-transform"
+              className="w-11 h-11 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary active:scale-95 transition-transform"
             >
               <span className="material-symbols-outlined text-[22px]">
                 arrow_back
@@ -562,7 +566,7 @@ export function PosConsole({
                       key={member.id}
                       type="button"
                       onClick={() => toggleMember(member.id)}
-                      className={`px-3 py-2 rounded-full font-caption text-caption flex items-center gap-1 active:scale-95 transition-transform ${
+                      className={`px-3 min-h-11 rounded-full font-caption text-caption flex items-center gap-1 active:scale-95 transition-transform ${
                         selected
                           ? "bg-primary text-white"
                           : "bg-surface-container-low text-text-secondary"
@@ -798,7 +802,7 @@ export function PosConsole({
           <Link
             href="/pos/orders"
             aria-label="Antrean order"
-            className="w-10 h-10 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary active:scale-95 transition-transform"
+            className="w-11 h-11 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary active:scale-95 transition-transform"
           >
             <span className="material-symbols-outlined text-[22px]">
               list_alt
@@ -840,7 +844,10 @@ export function PosConsole({
                   key={option}
                   type="button"
                   onClick={() => setSize(option)}
-                  className={`flex-1 py-2.5 rounded-xl font-body-bold text-body-bold active:scale-95 transition-transform ${
+                  // min-h-11 karena py-2.5 hanya menghasilkan 40px. Tombol ukuran kendaraan
+                  // ditekan di awal transaksi, sering dengan satu tangan sambil
+                  // memegang kunci unit.
+                  className={`flex-1 min-h-11 rounded-xl font-body-bold text-body-bold flex items-center justify-center active:scale-95 transition-transform ${
                     active
                       ? "bg-brand-600 text-white"
                       : "bg-surface-container-low text-text-secondary"
@@ -876,7 +883,7 @@ export function PosConsole({
           <button
             type="button"
             onClick={() => setActiveCategory("all")}
-            className={`shrink-0 px-4 py-2 rounded-full font-caption text-caption active:scale-95 transition-transform ${
+            className={`shrink-0 px-4 min-h-11 rounded-full font-caption text-caption flex items-center active:scale-95 transition-transform ${
               activeCategory === "all"
                 ? "bg-primary text-white"
                 : "bg-surface-container-low text-text-secondary"
@@ -889,7 +896,7 @@ export function PosConsole({
               key={category}
               type="button"
               onClick={() => setActiveCategory(category)}
-              className={`shrink-0 px-4 py-2 rounded-full font-caption text-caption active:scale-95 transition-transform ${
+              className={`shrink-0 px-4 min-h-11 rounded-full font-caption text-caption flex items-center active:scale-95 transition-transform ${
                 activeCategory === category
                   ? "bg-primary text-white"
                   : "bg-surface-container-low text-text-secondary"
@@ -935,7 +942,7 @@ export function PosConsole({
                         <button
                           type="button"
                           onClick={() => changeQty(service.id, -1)}
-                          className="w-8 h-8 rounded-lg bg-surface flex items-center justify-center active:scale-95"
+                          className="w-11 h-11 rounded-lg bg-surface flex items-center justify-center active:scale-95"
                         >
                           <span className="material-symbols-outlined text-[18px] text-text-secondary">
                             remove
@@ -947,7 +954,7 @@ export function PosConsole({
                         <button
                           type="button"
                           onClick={() => changeQty(service.id, 1)}
-                          className="w-8 h-8 rounded-lg bg-primary text-white flex items-center justify-center active:scale-95"
+                          className="w-11 h-11 rounded-lg bg-primary text-white flex items-center justify-center active:scale-95"
                         >
                           <span className="material-symbols-outlined text-[18px]">
                             add
@@ -958,7 +965,7 @@ export function PosConsole({
                       <button
                         type="button"
                         onClick={() => addToCart(service.id)}
-                        className="py-2 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform"
+                        className="min-h-11 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform"
                       >
                         <span className="material-symbols-outlined text-[16px]">
                           add
@@ -1004,7 +1011,7 @@ export function PosConsole({
                         <button
                           type="button"
                           onClick={() => changeQty(service.id, -1)}
-                          className="w-8 h-8 rounded-lg bg-surface-container-low flex items-center justify-center active:scale-95"
+                          className="w-11 h-11 rounded-lg bg-surface-container-low flex items-center justify-center active:scale-95"
                         >
                           <span className="material-symbols-outlined text-[18px] text-text-secondary">
                             remove
@@ -1016,7 +1023,7 @@ export function PosConsole({
                         <button
                           type="button"
                           onClick={() => changeQty(service.id, 1)}
-                          className="w-8 h-8 rounded-lg bg-primary text-white flex items-center justify-center active:scale-95"
+                          className="w-11 h-11 rounded-lg bg-primary text-white flex items-center justify-center active:scale-95"
                         >
                           <span className="material-symbols-outlined text-[18px]">
                             add
@@ -1028,7 +1035,7 @@ export function PosConsole({
                         type="button"
                         onClick={() => addToCart(service.id)}
                         aria-label={`Tambah ${service.name}`}
-                        className="w-9 h-9 rounded-xl bg-brand-50 text-brand-700 flex items-center justify-center active:scale-95 transition-transform"
+                        className="w-11 h-11 rounded-xl bg-brand-50 text-brand-700 flex items-center justify-center active:scale-95 transition-transform"
                       >
                         <span className="material-symbols-outlined text-[20px]">
                           add

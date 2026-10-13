@@ -281,7 +281,7 @@ export function ShiftConsole({
             if (!showHistory) void fetchHistory();
             setShowHistory((v) => !v);
           }}
-          className="w-full h-10 rounded-xl bg-surface text-text-secondary font-caption text-caption flex items-center justify-center gap-1.5 clay-card active:scale-95 transition-transform"
+          className="w-full min-h-11 rounded-xl bg-surface text-text-secondary font-caption text-caption flex items-center justify-center gap-1.5 clay-card active:scale-95 transition-transform"
         >
           <span className="material-symbols-outlined text-[16px]">history</span>
           {showHistory ? "Tutup Riwayat Tutup Kas" : "Riwayat Penutupan Kas"}
@@ -408,7 +408,7 @@ export function ShiftConsole({
           </div>
           <Link
             href="/rekap"
-            className="h-10 px-3.5 rounded-xl primary-gradient text-white font-caption text-caption flex items-center gap-1.5 shrink-0 active:scale-95 transition-transform"
+            className="min-h-11 px-3.5 rounded-xl primary-gradient text-white font-caption text-caption flex items-center gap-1.5 shrink-0 active:scale-95 transition-transform"
           >
             <span className="material-symbols-outlined text-[16px]">groups</span>
             Buka Rekap

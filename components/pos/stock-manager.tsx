@@ -58,10 +58,9 @@ export function StockManager({
 }) {
   const router = useRouter();
 
-  const items = initialItems;
-  const claims = initialClaims;
-  const inItem = items.find((i) => i.id === inItemId) ?? null;
-  const [tab, setTab] = useState<"items" | "claims">("items");
+const items = initialItems;
+const claims = initialClaims;
+const [tab, setTab] = useState<"items" | "claims">("items");
   const [selected, setSelected] = useState<InventoryItem | null>(null);
   const [qty, setQty] = useState("1");
   const [note, setNote] = useState("");
@@ -76,6 +75,11 @@ export function StockManager({
   const [inQty, setInQty] = useState("1");
   const [inCost, setInCost] = useState("");
   const [inNote, setInNote] = useState("");
+
+// Diturunkan setelah seluruh state dideklarasikan. Barisnya sebelumnya diletakkan
+// di atas deklarasi state sehingga memicu zona mati temporal dan membuat seluruh
+// halaman gagal render dengan galat 500 untuk semua peran.
+const inItem = items.find((item) => item.id === inItemId) ?? null;
 
   const lowStock = items.filter(
     (item) => Number(item.current_stock) <= Number(item.min_stock_alert),
@@ -215,7 +219,7 @@ export function StockManager({
             key={item.key}
             type="button"
             onClick={() => setTab(item.key as "items" | "claims")}
-            className={`flex-1 py-2.5 rounded-xl font-body-bold text-body-bold active:scale-95 transition-transform ${
+            className={`flex-1 min-h-11 rounded-xl font-body-bold text-body-bold flex items-center justify-center active:scale-95 transition-transform ${
               tab === item.key
                 ? "bg-surface text-text-primary shadow-[0_1px_4px_rgba(15,23,42,0.08)]"
                 : "text-text-secondary"
@@ -314,7 +318,7 @@ export function StockManager({
                     <button
                       type="button"
                       onClick={() => openClaim(item)}
-                      className="px-3 py-2 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center gap-1 active:scale-95 transition-transform"
+                      className="px-3 min-h-11 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center gap-1 active:scale-95 transition-transform"
                     >
                       <span className="material-symbols-outlined text-[16px]">
                         shopping_cart_checkout

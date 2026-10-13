@@ -342,7 +342,7 @@ export function RekapConsole({
           <button
             type="button"
             onClick={exportCsv}
-            className="h-8 px-3 rounded-lg bg-brand-50 text-brand-700 font-caption text-caption flex items-center gap-1.5 active:scale-95 transition-transform"
+            className="min-h-11 px-3 rounded-lg bg-brand-50 text-brand-700 font-caption text-caption flex items-center gap-1.5 active:scale-95 transition-transform"
           >
             <span className="material-symbols-outlined text-[15px]">download</span>
             Laporan
@@ -409,7 +409,7 @@ export function RekapConsole({
             onClick={() => setDate(shiftDate(-1))}
             disabled={loading}
             aria-label="Hari sebelumnya"
-            className="w-10 h-10 rounded-xl bg-surface-container-low text-text-secondary flex items-center justify-center active:scale-95 transition-transform disabled:opacity-50"
+            className="w-11 h-11 rounded-xl bg-surface-container-low text-text-secondary flex items-center justify-center active:scale-95 transition-transform disabled:opacity-50"
           >
             <span className="material-symbols-outlined text-[20px]">chevron_left</span>
           </button>
@@ -434,7 +434,7 @@ export function RekapConsole({
             onClick={() => setDate(shiftDate(1))}
             disabled={loading || isToday}
             aria-label="Hari berikutnya"
-            className="w-10 h-10 rounded-xl bg-surface-container-low text-text-secondary flex items-center justify-center active:scale-95 transition-transform disabled:opacity-50"
+            className="w-11 h-11 rounded-xl bg-surface-container-low text-text-secondary flex items-center justify-center active:scale-95 transition-transform disabled:opacity-50"
           >
             <span className="material-symbols-outlined text-[20px]">chevron_right</span>
           </button>
@@ -449,7 +449,7 @@ export function RekapConsole({
               key={pill.key}
               type="button"
               onClick={() => setFilter(pill.key)}
-              className={`h-9 px-3.5 rounded-full font-caption text-caption shrink-0 flex items-center gap-1.5 active:scale-95 transition-transform ${
+              className={`min-h-11 px-3.5 rounded-full font-caption text-caption shrink-0 flex items-center gap-1.5 active:scale-95 transition-transform ${
                 filter === pill.key
                   ? "primary-gradient text-white"
                   : "bg-surface text-text-secondary clay-card"

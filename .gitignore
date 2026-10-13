@@ -48,3 +48,9 @@ dev-users.json
 opencode.json
 .playwright-mcp/
 .kombai/
+
+# audit E2E
+/test-results/
+/e2e-report.json
+/playwright-report/
+temp-next-start.log

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 type NotificationRow = {
@@ -50,6 +50,27 @@ export function NotificationBell({
   const [items, setItems] = useState<NotificationRow[]>([]);
   const [unread, setUnread] = useState(hasUnread);
 
+  // Panel notifikasi adalah dialog, jadi harus bisa ditutup dengan Escape dan
+  // latar Belakang harus berhenti bergulir agar halaman di bawahnya tidak ikut
+  // bergerak saat panel terbuka. Tanpa keduanya, pengguna kehilangan posisi
+  // gulir dan tidak bisa menutup panel tanpa tetikus.
+  useEffect(() => {
+    if (!open) return;
+
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+
+    const overflowAwal = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKey);
+
+    return () => {
+      document.body.style.overflow = overflowAwal;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
   // Notifikasi diambil saat panel dibuka, bukan lewat efek yang langsung
   // memanggil setState. Ambientasi: setState sinkron di dalam body efek
   // memicu render berantai.
@@ -90,7 +111,7 @@ export function NotificationBell({
         type="button"
         aria-label="Notifikasi Operasional"
         onClick={toggle}
-        className="relative w-9 h-9 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary shadow-[inset_0px_2px_4px_rgba(255,255,255,0.95)] active:scale-[0.98] transition-transform"
+        className="relative w-11 h-11 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary shadow-[inset_0px_2px_4px_rgba(255,255,255,0.95)] active:scale-[0.98] transition-transform"
       >
         <span className="material-symbols-outlined text-[20px]">
           notifications
@@ -111,8 +132,11 @@ export function NotificationBell({
           onClick={() => setOpen(false)}
         >
           <div
-            className="w-full max-w-[460px] max-h-[80vh] bg-surface rounded-t-[24px] sm:rounded-[24px] flex flex-col clay-card overflow-hidden"
+            // dvh, bukan vh. vh menghitung bilah alamat peramban sehingga panel bisa
+            // menjulur ke area yang tertutup chrome dan tepinya tidak terjangkau.
+            className="w-full max-w-[460px] max-h-[80dvh] bg-surface rounded-t-[24px] sm:rounded-[24px] flex flex-col clay-card overflow-hidden"
             onClick={(event) => event.stopPropagation()}
+            role="document"
           >
             <div className="flex items-center justify-between px-5 py-4 border-b border-surface-container">
               <div className="flex items-center gap-2">
@@ -137,7 +161,8 @@ export function NotificationBell({
                   type="button"
                   aria-label="Tutup"
                   onClick={() => setOpen(false)}
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-text-secondary hover:bg-surface-container transition-colors"
+                  // min-h agar target sentuh mencapai 44px walau ikonnya sendiri lebih kecil.
+                  className="min-h-11 px-3 rounded-lg flex items-center justify-center text-text-secondary hover:bg-surface-container transition-colors"
                 >
                   <span className="material-symbols-outlined text-[20px]">
                     close

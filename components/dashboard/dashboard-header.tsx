@@ -64,7 +64,7 @@ export function DashboardHeader({
           <Link
             href="/profil"
             aria-label="Buka profil"
-            className="w-9 h-9 rounded-xl bg-brand-50 shadow-[inset_0px_2px_4px_rgba(255,255,255,0.95)] flex items-center justify-center active:scale-[0.98] transition-transform"
+            className="w-11 h-11 rounded-xl bg-brand-50 shadow-[inset_0px_2px_4px_rgba(255,255,255,0.95)] flex items-center justify-center active:scale-[0.98] transition-transform"
           >
             <span className="font-body-bold text-body-bold text-brand-600">
               {initials(fullName)}

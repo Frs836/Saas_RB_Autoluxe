@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
+import { InspectionPhoto } from "@/components/track/inspection-photo";
 
 export const instant = false;
 
@@ -45,6 +46,25 @@ type TrackingPayload = {
   warranty: Warranty | null;
   claims: Claim[];
 };
+
+/**
+ * Mengubah path objek di bucket publik menjadi URL yang bisa dimuat peramban.
+ *
+ * Nilai di database adalah path relatif. Nilai yang sudah berupa URL lengkap
+ * dikembalikan apa adanya supaya data lama tidak ikut rusak.
+ */
+function storageObjectUrl(path: string | null): string | null {
+  if (!path) return null;
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!base) return null;
+
+  return `${base}/storage/v1/object/public/inspection-photos/${path
+    .split("/")
+    .map((segment) => encodeURIComponent(segment))
+    .join("/")}`;
+}
 
 const STEPS: { key: string; label: string; icon: string }[] = [
   { key: "queued", label: "Antre", icon: "schedule" },
@@ -102,9 +122,17 @@ export default async function TrackPage({
   if (!payload?.order) return notFound();
 
   const order = payload.order;
-  const inspections = payload.inspections ?? [];
   const warranty = payload.warranty ?? null;
   const claims = payload.claims ?? [];
+
+  // photo_url disimpan sebagai path relatif di bucket publik, misalnya
+  // demo/unit-002-before.webp. Dipakai langsung sebagai src, browser
+  // mencarinya relatif terhadap /track/[token] sehingga gambarnya tidak pernah
+  // termuat. Pathnya harus diubah menjadi URL objek publik lebih dulu.
+  const inspections = (payload.inspections ?? []).map((item) => ({
+    ...item,
+    photo_url: storageObjectUrl(item.photo_url),
+  }));
 
   const isCancelled = order.status === "cancelled";
   const currentIndex = STEPS.findIndex((step) => step.key === order.status);
@@ -308,12 +336,9 @@ export default async function TrackPage({
                           className="rounded-2xl overflow-hidden bg-surface-container/60"
                         >
                           {item.photo_url ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
+                            <InspectionPhoto
                               src={item.photo_url}
                               alt={PHASE_LABEL[phase]}
-                              className="w-full h-32 object-cover"
-                              loading="lazy"
                             />
                           ) : (
                             <div className="w-full h-32 flex items-center justify-center text-text-muted">

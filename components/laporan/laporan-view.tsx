@@ -159,7 +159,7 @@ export function LaporanView({ data }: { data: LaporanData }) {
             type="button"
             onClick={handleExport}
             disabled={exporting}
-            className="inline-flex items-center gap-1.5 h-9 px-3 rounded-full primary-gradient text-white font-body-bold text-caption active:scale-[0.98] transition-transform disabled:opacity-70"
+            className="inline-flex items-center gap-1.5 min-h-11 px-3 rounded-full primary-gradient text-white font-body-bold text-caption active:scale-[0.98] transition-transform disabled:opacity-70"
           >
             <span className="material-symbols-outlined text-[18px]">
               download

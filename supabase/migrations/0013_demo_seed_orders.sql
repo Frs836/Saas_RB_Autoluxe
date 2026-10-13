@@ -279,26 +279,31 @@ BEGIN
      );
 
   ---------------------------------------------------------------------------
-  -- 6. Foto inspeksi before / process / after
+  -- 6. Catatan inspeksi before / process / after
   ---------------------------------------------------------------------------
+  -- photo_url sengaja NULL. Seed ini semula menunjuk berkas seperti
+  -- demo/coatm-002-before.webp, tetapi berkasnya tidak pernah diunggah ke
+  -- bucket inspection-photos, sehingga halaman lacak publik menampilkan gambar
+  -- rusak. Catatan inspeksi tetap dibuat karena nilainya informatif, sementara
+  -- foto tidak boleh menjanjikan apa yang tidak ada.
   INSERT INTO public.order_inspections (order_id, phase, photo_url, notes, inspector_id, created_at)
   SELECT x.order_id, x.phase, x.photo_url, x.notes, v_karyawan, x.created_at
     FROM (
       VALUES
-        (o_coat_exp, 'before'::public.inspection_phase, 'demo/coatinga-001-before.webp', 'Cat lama tebal, perlu pretreatment.',      timestamptz '2026-09-01 01:05:00+00'),
-        (o_coat_exp, 'after'::public.inspection_phase,  'demo/coatinga-001-after.webp',  'Hydrophobic terpasang, garansi 180 hari.', timestamptz '2026-09-01 09:55:00+00'),
-        (o_coat_b,   'before'::public.inspection_phase, 'demo/coatingb-001-before.webp', 'Bodi tanpa goresan, cat masih tebal.',    timestamptz '2026-10-08 02:05:00+00'),
-        (o_coat_b,   'process'::public.inspection_phase,'demo/coatingb-001-process.webp','Lapisan pertama sudah masuk.',            timestamptz '2026-10-08 05:40:00+00'),
-        (o_coat_b,   'after'::public.inspection_phase,  'demo/coatingb-001-after.webp',  'Hydrophobic aktif, garansi 180 hari.',     timestamptz '2026-10-08 09:25:00+00'),
-        (o_poles,    'before'::public.inspection_phase, 'demo/poles-001-before.webp',    'Ada swirl mark halus pada pintu depan.',  timestamptz '2026-10-10 01:08:00+00'),
-        (o_poles,    'after'::public.inspection_phase,  'demo/poles-001-after.webp',     'Kilap optimal, garansi aktif.',             timestamptz '2026-10-10 02:15:00+00'),
-        (o_wash_a,   'before'::public.inspection_phase, 'demo/wash-003-before.webp',     'Bodi bersih, tanpa goresan baru.',         timestamptz '2026-10-10 05:02:00+00'),
-        (o_wash_a,   'after'::public.inspection_phase,  'demo/wash-003-after.webp',      'Hasil akhir memuaskan pelanggan.',        timestamptz '2026-10-10 05:20:00+00'),
-        (o_wash_b,   'before'::public.inspection_phase, 'demo/snow-004-before.webp',     'Motor kotor berat, perlu snow wash.',      timestamptz '2026-10-10 06:12:00+00'),
-        (o_wash_b,   'after'::public.inspection_phase,  'demo/snow-004-after.webp',      'Bersih dan licin.',                        timestamptz '2026-10-10 06:23:00+00'),
-        (o_motor,    'before'::public.inspection_phase, 'demo/interior-001-before.webp', 'Kursi Etern penuh debu.',                  timestamptz '2026-10-13 01:00:00+00'),
-        (o_qc,       'before'::public.inspection_phase, 'demo/coatm-002-before.webp',    'Cat penutup tidak rata di kap depan.',    timestamptz '2026-10-13 01:35:00+00'),
-        (o_qc,       'after'::public.inspection_phase,  'demo/coatm-002-after.webp',     'Menunggu pemeriksaan QC.',                 timestamptz '2026-10-13 03:40:00+00')
+        (o_coat_exp, 'before'::public.inspection_phase, NULL::text, 'Cat lama tebal, perlu pretreatment.',      timestamptz '2026-09-01 01:05:00+00'),
+        (o_coat_exp, 'after'::public.inspection_phase,  NULL::text,  'Hydrophobic terpasang, garansi 180 hari.', timestamptz '2026-09-01 09:55:00+00'),
+        (o_coat_b,   'before'::public.inspection_phase, NULL::text, 'Bodi tanpa goresan, cat masih tebal.',    timestamptz '2026-10-08 02:05:00+00'),
+        (o_coat_b,   'process'::public.inspection_phase,NULL::text,'Lapisan pertama sudah masuk.',            timestamptz '2026-10-08 05:40:00+00'),
+        (o_coat_b,   'after'::public.inspection_phase,  NULL::text,  'Hydrophobic aktif, garansi 180 hari.',     timestamptz '2026-10-08 09:25:00+00'),
+        (o_poles,    'before'::public.inspection_phase, NULL::text,    'Ada swirl mark halus pada pintu depan.',  timestamptz '2026-10-10 01:08:00+00'),
+        (o_poles,    'after'::public.inspection_phase,  NULL::text,     'Kilap optimal, garansi aktif.',             timestamptz '2026-10-10 02:15:00+00'),
+        (o_wash_a,   'before'::public.inspection_phase, NULL::text,     'Bodi bersih, tanpa goresan baru.',         timestamptz '2026-10-10 05:02:00+00'),
+        (o_wash_a,   'after'::public.inspection_phase,  NULL::text,      'Hasil akhir memuaskan pelanggan.',        timestamptz '2026-10-10 05:20:00+00'),
+        (o_wash_b,   'before'::public.inspection_phase, NULL::text,     'Motor kotor berat, perlu snow wash.',      timestamptz '2026-10-10 06:12:00+00'),
+        (o_wash_b,   'after'::public.inspection_phase,  NULL::text,      'Bersih dan licin.',                        timestamptz '2026-10-10 06:23:00+00'),
+        (o_motor,    'before'::public.inspection_phase, NULL::text, 'Kursi Etern penuh debu.',                  timestamptz '2026-10-13 01:00:00+00'),
+        (o_qc,       'before'::public.inspection_phase, NULL::text,    'Cat penutup tidak rata di kap depan.',    timestamptz '2026-10-13 01:35:00+00'),
+        (o_qc,       'after'::public.inspection_phase,  NULL::text,     'Menunggu pemeriksaan QC.',                 timestamptz '2026-10-13 03:40:00+00')
     ) AS x(order_id, phase, photo_url, notes, created_at)
    WHERE x.order_id IS NOT NULL
      AND NOT EXISTS (
@@ -345,12 +350,15 @@ BEGIN
     SELECT 1 FROM public.warranty_claims
      WHERE problem_description = 'Demo: noda masih ada di panel pintu setelah 2 minggu'
   ) AND o_coat_b IS NOT NULL THEN
+    -- proof_photo_url NULL, sama seperti foto inspeksi di atas. Berkas demo
+    -- tidak pernah ada, sedangkan klaim ini sendiri tetap bernilai karena
+    -- memuat kronologi keluhan pelanggan.
     INSERT INTO public.warranty_claims (
       order_id, claim_date, problem_description, proof_photo_url, status, created_by
     ) VALUES (
       o_coat_b, now() - interval '3 days',
       'Demo: noda masih ada di panel pintu setelah 2 minggu',
-      'demo/claim-coatb.webp', 'pending'::public.warranty_claim_status, v_kasir
+      NULL::text, 'pending'::public.warranty_claim_status, v_kasir
     );
   END IF;
 

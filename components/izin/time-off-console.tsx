@@ -55,9 +55,14 @@ export function TimeOffConsole({ requests, canDecide, todayIso }: Props) {
   const [startDate, setStartDate] = useState(todayIso);
   const [endDate, setEndDate] = useState(todayIso);
   const [reason, setReason] = useState("");
-  const [proofPath, setProofPath] = useState<string | null>(null);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [proofPreview, setProofPreview] = useState<string | null>(null);
+  /**
+   * Blob bukti yang sudah diambil. Disimpan sebagai blob, bukan path, karena
+   * <video> di-unmount begitu preview tampil. Submit memakai blob ini, bukan
+   * membaca ulang elemen video yang sudah tidak ada.
+   */
+  const [proofBlob, setProofBlob] = useState<Blob | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -74,7 +79,7 @@ export function TimeOffConsole({ requests, canDecide, todayIso }: Props) {
     if (startDate < todayIso) return "Tanggal mulai tidak boleh di masa lalu.";
     if (duration > 90) return "Durasi maksimal 90 hari.";
     if (reasonLength < 10) return `Alasan minimal 10 karakter (${reasonLength}/10).`;
-    if (needsProof && !proofPath) return "Pengajuan sakit wajib melampirkan foto surat dokter.";
+    if (needsProof && !proofBlob) return "Pengajuan sakit wajib melampirkan foto surat dokter.";
     return null;
   })();
 
@@ -110,6 +115,7 @@ export function TimeOffConsole({ requests, canDecide, todayIso }: Props) {
     try {
       if (!videoRef.current) throw new Error("Kamera belum siap.");
       const blob = await canvasToWebp(captureSquareCanvas(videoRef.current, 1024), 0.82);
+      setProofBlob(blob);
       setProofPreview(URL.createObjectURL(blob));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Gagal mengambil foto.");
@@ -128,16 +134,13 @@ export function TimeOffConsole({ requests, canDecide, todayIso }: Props) {
       } = await supabase.auth.getUser();
       if (!user) throw new Error("Sesi berakhir. Silakan masuk kembali.");
 
-      let path: string | null = proofPath;
+      let path: string | null = null;
       if (needsProof) {
-        const blob = await canvasToWebp(
-          captureSquareCanvas(videoRef.current as HTMLVideoElement, 1024),
-          0.82,
-        );
+        if (!proofBlob) throw new Error("Lampirkan foto surat dokter terlebih dahulu.");
         path = `${user.id}/${Date.now()}.webp`;
         const { error: upErr } = await supabase.storage
           .from("timeoff-proofs")
-          .upload(path, blob, { contentType: "image/webp", upsert: false });
+          .upload(path, proofBlob, { contentType: "image/webp", upsert: false });
         if (upErr) throw new Error(`Gagal mengunggah bukti: ${upErr.message}`);
       }
 
@@ -155,7 +158,7 @@ export function TimeOffConsole({ requests, canDecide, todayIso }: Props) {
       }
 
       setReason("");
-      setProofPath(null);
+      setProofBlob(null);
       closeCamera();
       setSuccess("Pengajuan terkirim dan menunggu peninjauan.");
       router.refresh();
@@ -164,7 +167,7 @@ export function TimeOffConsole({ requests, canDecide, todayIso }: Props) {
     } finally {
       setBusy(false);
     }
-  }, [closeCamera, endDate, needsProof, proofPath, reason, router, startDate, type]);
+  }, [closeCamera, endDate, needsProof, proofBlob, reason, router, startDate, type]);
 
   async function decide(id: string, decision: "approved" | "rejected") {
     setBusy(true);
@@ -308,7 +311,7 @@ export function TimeOffConsole({ requests, canDecide, todayIso }: Props) {
               <span className="font-caption text-caption text-text-muted">
                 Surat dokter (wajib)
               </span>
-              {proofPath ? (
+              {proofBlob ? (
                 <div className="flex items-center justify-between rounded-xl bg-success-surface text-success-text px-3 py-2.5">
                   <span className="flex items-center gap-2 font-caption text-caption">
                     <span className="material-symbols-outlined text-[18px]">
@@ -318,7 +321,10 @@ export function TimeOffConsole({ requests, canDecide, todayIso }: Props) {
                   </span>
                   <button
                     type="button"
-                    onClick={() => setProofPath(null)}
+                    onClick={() => {
+                      setProofBlob(null);
+                      setProofPreview(null);
+                    }}
                     className="font-micro-badge text-micro-badge font-semibold uppercase"
                   >
                     Ganti

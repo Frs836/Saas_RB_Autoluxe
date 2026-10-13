@@ -89,6 +89,11 @@ export function OrderDetailView({
 }: Props) {
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  /**
+   * Blob foto yang sudah diambil. <video> di-unmount begitu preview tampil,
+   * jadi submit harus memakai blob ini, bukan videoRef yang sudah null.
+   */
+  const photoBlobRef = useRef<Blob | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
   const [phase, setPhase] = useState<PhaseKey>("before");
@@ -120,6 +125,9 @@ export function OrderDetailView({
     streamRef.current = null;
     setCameraOpen(false);
     setPreview(null);
+    // Blob ikut dibuang supaya foto fase sebelumnya tidak ikut terkirim saat
+    // teknisi berganti fase atau mengambil ulang foto.
+    photoBlobRef.current = null;
   }, []);
 
   const openCamera = useCallback(async () => {
@@ -147,6 +155,7 @@ export function OrderDetailView({
     try {
       if (!videoRef.current) throw new Error("Kamera belum siap.");
       const blob = await canvasToWebp(captureSquareCanvas(videoRef.current, 1024), 0.8);
+      photoBlobRef.current = blob;
       setPreview(URL.createObjectURL(blob));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Gagal mengambil foto.");
@@ -169,8 +178,11 @@ export function OrderDetailView({
       } = await supabase.auth.getUser();
       if (!user) throw new Error("Sesi berakhir. Silakan masuk kembali.");
 
-      const canvas = videoRef.current;
-      const blob = await canvasToWebp(captureSquareCanvas(canvas as HTMLVideoElement, 1024), 0.8);
+      // Foto sudah berupa webp persegi sejak capture, jadi blob itu langsung
+      // diunggah. Membaca ulang videoRef tidak akan berhasil karena <video>
+      // sudah di-unmount begitu preview tampil.
+      const blob = photoBlobRef.current;
+      if (!blob) throw new Error("Ambil foto inspeksi terlebih dahulu.");
 
       // Path memuat tracking_token supaya bucket publik tidak bisa ditebak
       // tanpa mengetahui token order tersebut.
@@ -580,7 +592,11 @@ export function OrderDetailView({
               <button
                 key={p.key}
                 type="button"
-                onClick={() => setPhase(p.key)}
+                onClick={() => {
+                  photoBlobRef.current = null;
+                  setPreview(null);
+                  setPhase(p.key);
+                }}
                 disabled={p.key === "after" && !hasBefore}
                 className={`flex-1 py-2 rounded-xl font-caption text-caption flex items-center justify-center gap-1 disabled:opacity-40 ${
                   phase === p.key

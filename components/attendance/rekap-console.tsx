@@ -268,6 +268,9 @@ export function RekapConsole({
       "Masuk",
       "Pulang",
       "Terlambat (menit)",
+      // PRD 5.1 mewajibkan kolom ini di laporan audit keterlambatan. Data
+      // lateReason sudah diambil dari DB, hanya belum pernah diekspor.
+      "Alasan Terlambat",
       "Jarak ke Cabang (m)",
       "Kemiripan Wajah (%)",
       "Catatan",
@@ -300,6 +303,7 @@ export function RekapConsole({
         escape(log?.clockIn ? formatTimeWib(log.clockIn) : ""),
         escape(log?.clockOut ? formatTimeWib(log.clockOut) : ""),
         escape(log?.lateMinutes ?? ""),
+        escape(log?.lateReason ?? ""),
         escape(distance),
         escape(log?.faceScore !== null && log?.faceScore !== undefined ? Math.round(log.faceScore * 100) : ""),
         escape(log?.notes ?? ""),

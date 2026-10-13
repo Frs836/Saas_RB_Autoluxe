@@ -1,0 +1,49 @@
+{
+  "name": "RB AUTOLUXE POS & Operasional",
+  "short_name": "RB AUTOLUXE",
+  "description": "Sistem POS, kas, absensi, dan operasional workshop multi-cabang RB AUTOLUXE.",
+  "id": "/dashboard",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f7f5f2",
+  "theme_color": "#0f172a",
+  "lang": "id-ID",
+  "dir": "ltr",
+  "categories": ["business", "productivity"],
+  "icons": [
+    {
+      "src": "/rb-logo-new.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/rb-logo-new.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Absensi",
+      "short_name": "Absensi",
+      "url": "/absensi",
+      "icons": [{ "src": "/rb-logo-new.png", "sizes": "512x512" }]
+    },
+    {
+      "name": "Antrean Order",
+      "short_name": "Order",
+      "url": "/pos/orders",
+      "icons": [{ "src": "/rb-logo-new.png", "sizes": "512x512" }]
+    },
+    {
+      "name": "Kas",
+      "short_name": "Kas",
+      "url": "/kas",
+      "icons": [{ "src": "/rb-logo-new.png", "sizes": "512x512" }]
+    }
+  ]
+}

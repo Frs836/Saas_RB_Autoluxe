@@ -60,6 +60,7 @@ export function StockManager({
 
   const items = initialItems;
   const claims = initialClaims;
+  const inItem = items.find((i) => i.id === inItemId) ?? null;
   const [tab, setTab] = useState<"items" | "claims">("items");
   const [selected, setSelected] = useState<InventoryItem | null>(null);
   const [qty, setQty] = useState("1");
@@ -67,6 +68,14 @@ export function StockManager({
   const [submitting, setSubmitting] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  // Formulir stok masuk memakai state terpisah agar tidak bentrok dengan modal
+  // klaim dan angka pengajuan tidak tertimpa.
+  const [inOpen, setInOpen] = useState(false);
+  const [inItemId, setInItemId] = useState("");
+  const [inQty, setInQty] = useState("1");
+  const [inCost, setInCost] = useState("");
+  const [inNote, setInNote] = useState("");
 
   const lowStock = items.filter(
     (item) => Number(item.current_stock) <= Number(item.min_stock_alert),
@@ -101,6 +110,40 @@ export function StockManager({
       return;
     }
     setSelected(null);
+    router.refresh();
+  }
+
+  async function submitStockIn() {
+    if (!inItem) return;
+    const quantity = Number(inQty);
+    if (!Number.isFinite(quantity) || quantity <= 0) {
+      setError("Jumlah stok masuk harus lebih dari 0.");
+      return;
+    }
+    const cost = inCost.trim() === "" ? null : Number(inCost);
+    if (cost !== null && (!Number.isFinite(cost) || cost < 0)) {
+      setError("Harga beli harus berupa angka positif.");
+      return;
+    }
+    setSubmitting(true);
+    setError(null);
+    setSuccess(null);
+    const supabase = createClient();
+    const { error: rpcError } = await supabase.rpc("record_stock_in", {
+      p_item_id: inItem.id,
+      p_quantity: quantity,
+      p_unit_cost: cost,
+      p_note: inNote.trim() === "" ? null : inNote.trim(),
+    });
+    setSubmitting(false);
+    if (rpcError) {
+      setError(rpcError.message);
+      return;
+    }
+    setInQty("1");
+    setInCost("");
+    setInNote("");
+    setSuccess(`Stok ${inItem.item_name} bertambah ${quantity} ${inItem.unit}.`);
     router.refresh();
   }
 
@@ -430,6 +473,94 @@ export function StockManager({
             </button>
           </div>
         </div>
+      ) : null}
+
+      {/* Stok masuk dari supplier */}
+      {canManage ? (
+        <section className="px-gutter pt-4">
+          <button
+            type="button"
+            onClick={() => setInOpen((v) => !v)}
+            className="w-full h-11 rounded-2xl bg-success-surface text-success-text font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+          >
+            <span className="material-symbols-outlined text-[18px]">move_to_inbox</span>
+            {inOpen ? "Tutup formulir stok masuk" : "Catat stok masuk supplier"}
+          </button>
+
+          {inOpen ? (
+            <div className="mt-2 rounded-2xl bg-surface-container-low p-3 flex flex-col gap-2">
+              <label className="flex flex-col gap-1">
+                <span className="font-caption text-caption text-text-muted">
+                  Barang
+                </span>
+                <select
+                  value={inItemId}
+                  onChange={(e) => setInItemId(e.target.value)}
+                  className="h-12 px-3 rounded-xl bg-surface font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+                >
+                  <option value="">Pilih barang...</option>
+                  {items.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.item_name} (sisa {formatAngka(item.current_stock)} {item.unit})
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              {inItem ? (
+                <>
+                  <div className="grid grid-cols-2 gap-2">
+                    <label className="flex flex-col gap-1">
+                      <span className="font-micro-badge text-micro-badge text-text-muted">
+                        Jumlah ({inItem.unit})
+                      </span>
+                      <input
+                        value={inQty}
+                        onChange={(e) => setInQty(e.target.value)}
+                        inputMode="decimal"
+                        className="h-11 px-3 rounded-xl bg-surface font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+                      />
+                    </label>
+                    <label className="flex flex-col gap-1">
+                      <span className="font-micro-badge text-micro-badge text-text-muted">
+                        Harga beli / {inItem.unit}
+                      </span>
+                      <input
+                        value={inCost}
+                        onChange={(e) => setInCost(e.target.value)}
+                        inputMode="numeric"
+                        placeholder="opsional"
+                        className="h-11 px-3 rounded-xl bg-surface font-body-mono text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+                      />
+                    </label>
+                  </div>
+                  <input
+                    value={inNote}
+                    onChange={(e) => setInNote(e.target.value)}
+                    placeholder="Nama supplier / nomor nota"
+                    className="h-11 px-3 rounded-xl bg-surface font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+                  />
+                  {success ? (
+                    <p className="font-caption text-caption text-success-text">
+                      {success}
+                    </p>
+                  ) : null}
+                  <button
+                    type="button"
+                    disabled={submitting}
+                    onClick={submitStockIn}
+                    className="w-full py-3 rounded-xl bg-success-base text-white font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-60"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">
+                      {submitting ? "hourglass_top" : "inventory_2"}
+                    </span>
+                    {submitting ? "Mencatat..." : "Catat Stok Masuk"}
+                  </button>
+                </>
+              ) : null}
+            </div>
+          ) : null}
+        </section>
       ) : null}
     </div>
   );

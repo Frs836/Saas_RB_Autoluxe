@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { formatDateWib } from "@/lib/format";
+import { formatDateWib, todayWibIso } from "@/lib/format";
 import { createClient } from "@/lib/supabase/client";
 
 type Order = {
@@ -47,11 +47,13 @@ export function GaransiConsole({
   warranties,
   claims,
   canManage,
+  search,
 }: {
   orders: Order[];
   warranties: Warranty[];
   claims: ExistingClaim[];
   canManage: boolean;
+  search: string | null;
 }) {
   const router = useRouter();
   const [selectedOrderId, setSelectedOrderId] = useState<string>("");
@@ -79,7 +81,10 @@ export function GaransiConsole({
     [orders, selectedOrderId],
   );
 
-  const today = new Date().toISOString().slice(0, 10);
+  // toISOString memakai UTC, sehingga antara 00:00 dan 07:00 WIB tanggalnya
+  // masih kemarin. RPC create_warranty_claim memakai tanggal WIB, jadi kedua
+  // sisi harus memakai basis yang sama.
+  const today = todayWibIso();
   const selectedWarranty = selectedOrder
     ? (warrantyByOrderId.get(selectedOrder.id) ?? null)
     : null;
@@ -162,6 +167,37 @@ export function GaransiConsole({
           <form onSubmit={onSubmit} className="flex flex-col gap-space-md">
             <div className="flex flex-col gap-space-xs">
               <label className="font-caption text-caption text-text-secondary">
+                Cari order (plat atau nomor order)
+              </label>
+              <form action="/garansi" method="get" className="flex gap-2">
+                <input
+                  type="search"
+                  name="q"
+                  defaultValue={search ?? ""}
+                  placeholder="B 1234 XYZ atau RBA-2026..."
+                  className="flex-1 h-11 px-3 rounded-xl bg-surface-container-low font-body-regular text-body-regular text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+                />
+                <button
+                  type="submit"
+                  className="h-11 px-4 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center gap-1 active:scale-95 transition-transform"
+                >
+                  <span className="material-symbols-outlined text-[16px]">search</span>
+                  Cari
+                </button>
+              </form>
+              {search ? (
+                <button
+                  type="button"
+                  onClick={() => router.push("/garansi")}
+                  className="self-start font-micro-badge text-micro-badge text-brand-700"
+                >
+                  Bersihkan pencarian
+                </button>
+              ) : null}
+            </div>
+
+            <div className="flex flex-col gap-space-xs">
+              <label className="font-caption text-caption text-text-secondary">
                 Pilih Order (Completed)
               </label>
               <select
@@ -176,10 +212,17 @@ export function GaransiConsole({
                 <option value="">Pilih order...</option>
                 {orders.map((order) => (
                   <option key={order.id} value={order.id}>
-                    {order.orderNumber} - {order.customerName}
+                    {order.orderNumber} - {order.vehiclePlate} - {order.customerName}
                   </option>
                 ))}
               </select>
+              {orders.length === 0 ? (
+                <span className="font-micro-badge text-micro-badge text-text-muted">
+                  {search
+                    ? "Tidak ada order yang cocok dengan pencarian."
+                    : "Belum ada order selesai."}
+                </span>
+              ) : null}
             </div>
 
             {selectedOrder && selectedWarranty ? (

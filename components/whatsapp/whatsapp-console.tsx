@@ -2,7 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { formatDateWib, formatRupiah, formatTimeWib } from "@/lib/format";
-import { PAYMENT_LABELS, normalizeWaNumber, whatsappLink } from "@/lib/pos";
+import {
+  PAYMENT_LABELS,
+  formatAngka,
+  normalizeWaNumber,
+  whatsappLink,
+} from "@/lib/pos";
 
 export type WaOrderItem = {
   name: string;
@@ -125,11 +130,11 @@ export function WhatsappConsole({
         `Layanan    : ${selected.servicePackage}`,
         "",
         "*Rincian*",
+        // Harga per baris harus dikalikan jumlah, sama seperti struk POS di
+        // lib/pos.ts. Tanpa itu rincian tidak menjumlah ke TOTAL.
         ...selected.items.map(
           (item) =>
-            `${item.quantity}x ${item.name} - Rp ${item.price
-              .toLocaleString("id-ID")
-              .replace(/,/g, ".")}`,
+            `${item.quantity}x ${item.name} - Rp ${formatAngka(item.price * item.quantity).replace(/,/g, ".")}`,
         ),
         "",
         `*TOTAL: ${formatRupiah(selected.totalPrice)}*`,

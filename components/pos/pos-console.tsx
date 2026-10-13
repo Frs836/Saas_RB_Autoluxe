@@ -222,13 +222,19 @@ export function PosConsole({
         throw new Error("Order tidak dapat dibuat.");
       }
 
+      // Order sudah tersimpan pada titik ini. Kegagalan set tim tidak boleh
+// dilempar sebagai error, karena kasir akan menekan ulang dan membuat order
+      // ganda. Tim teknisi bisa diperbaiki dari antrean order.
+      let teamWarning: string | null = null;
       if (selectedTeam.length > 0) {
         const { error: teamError } = await supabase.rpc("set_order_team", {
           p_order_id: order.id,
           p_member_ids: selectedTeam,
           p_lead_id: selectedTeam[0],
         });
-        if (teamError) throw new Error(teamError.message);
+        if (teamError) {
+          teamWarning = `Order ${order.order_number} tersimpan, tetapi tim teknisi gagal ditugaskan: ${teamError.message}`;
+        }
       }
 
       const recordedState: PaymentState =
@@ -264,6 +270,7 @@ export function PosConsole({
             : whatsappLink(customerPhone.trim(), receipt),
       });
       setStep("done");
+      if (teamWarning) setError(teamWarning);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Terjadi kesalahan, coba lagi.",

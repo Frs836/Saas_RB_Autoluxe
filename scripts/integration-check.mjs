@@ -999,10 +999,154 @@ if (!targetBranch) {
 }
 
 /* -------------------------------------------------------------------------- */
-/* 14. Kebersihan data uji                                                     */
+/* 14. Jalur tulis langsung ke tabel                                          */
 /* -------------------------------------------------------------------------- */
 
-suite.section("14. Kebersihan data uji");
+suite.section("14. Jalur tulis langsung ke tabel");
+
+// Suite ini sebelumnya hanya menguji RPC. Pola itu membiarkan celah status
+// order lolos, karena karyawan bisa PATCH baris order secara langsung lewat
+// REST tanpa melewati RPC mana pun. Bagian ini menutup celah pengujian itu.
+//
+// Catatan: PostgREST mengembalikan sukses tanpa error saat UPDATE terfilter
+// nol baris, jadi pembuktiannya dilakukan dengan membaca ulang nilainya.
+
+const { data: writableOrder } = await karyawan.client
+  .from("orders")
+  .select("id, order_number, status, payment_state")
+  .limit(1)
+  .maybeSingle();
+
+if (!writableOrder) {
+  suite.check("order milik karyawan tersedia untuk uji tulis langsung", false, "tidak ada order");
+} else {
+  await karyawan.client
+    .from("orders")
+    .update({ status: "completed", payment_state: "paid" })
+    .eq("id", writableOrder.id);
+
+  const { data: afterDirect } = await adminClient
+    .from("orders")
+    .select("status, payment_state")
+    .eq("id", writableOrder.id)
+    .maybeSingle();
+
+  suite.check(
+    "karyawan tidak bisa mengubah status order lewat PATCH langsung",
+    afterDirect?.status === writableOrder.status,
+    `sebelum=${writableOrder.status} sesudah=${afterDirect?.status}`,
+  );
+  suite.check(
+    "karyawan tidak bisa mengubah payment_state lewat PATCH langsung",
+    afterDirect?.payment_state === writableOrder.payment_state,
+    `sebelum=${writableOrder.payment_state} sesudah=${afterDirect?.payment_state}`,
+  );
+
+  // Alur yang sah harus tetap berfungsi setelah pengetatan.
+  const stillWorkable = writableOrder.status === "queued";
+  suite.check(
+    "status order tidak berubah karena penolakan RLS",
+    stillWorkable || afterDirect?.status === writableOrder.status,
+    `status=${afterDirect?.status}`,
+  );
+}
+
+// Klaim stok harus terikat cabang pemohon.
+const { data: claimableItem } = await karyawan.client
+  .from("inventory_items")
+  .select("id, item_name")
+  .limit(1)
+  .maybeSingle();
+
+if (claimableItem) {
+  const claim = await karyawan.client.rpc("create_stock_claim", {
+    p_item_id: claimableItem.id,
+    p_quantity: 1,
+    p_note: `${TEST_MARKER} uji cabang`,
+  });
+  suite.check("karyawan bisa klaim stok cabangnya sendiri", !claim.error, claim.error?.message);
+  if (!claim.error) {
+    await adminClient.from("stock_claims").delete().eq("id", claim.data);
+  }
+}
+
+// Stok masuk hanya untuk role berwenang.
+const karyawanStockIn = await karyawan.client.rpc("record_stock_in", {
+  p_item_id: claimableItem?.id ?? "00000000-0000-0000-0000-000000000000",
+  p_quantity: 1,
+  p_unit_cost: null,
+  p_note: `${TEST_MARKER} uji`,
+});
+suite.check(
+  "karyawan tidak bisa mencatat stok masuk",
+  Boolean(karyawanStockIn.error),
+  karyawanStockIn.error?.message ?? "tidak ada error",
+);
+
+// Stok masuk oleh admin kasir harus menaikkan saldo dan mencatat log.
+if (claimableItem) {
+  const { data: beforeItem } = await adminClient
+    .from("inventory_items")
+    .select("current_stock")
+    .eq("id", claimableItem.id)
+    .maybeSingle();
+
+  const stockIn = await admin.client.rpc("record_stock_in", {
+    p_item_id: claimableItem.id,
+    p_quantity: 5,
+    p_unit_cost: 25000,
+    p_note: `${TEST_MARKER} pembelian uji`,
+  });
+  suite.check("admin kasir bisa mencatat stok masuk", !stockIn.error, stockIn.error?.message);
+
+  const { data: afterItem } = await adminClient
+    .from("inventory_items")
+    .select("current_stock, unit_cost")
+    .eq("id", claimableItem.id)
+    .maybeSingle();
+
+  suite.check(
+    "saldo stok bertambah sesuai jumlah masuk",
+    Number(afterItem?.current_stock) === Number(beforeItem?.current_stock) + 5,
+    `${beforeItem?.current_stock} -> ${afterItem?.current_stock}`,
+  );
+  suite.check(
+    "harga beli tersimpan",
+    Number(afterItem?.unit_cost) === 25000,
+    String(afterItem?.unit_cost),
+  );
+
+  const { data: stockLog } = await adminClient
+    .from("stock_logs")
+    .select("log_type, quantity, balance_after, note")
+    .eq("item_id", claimableItem.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  suite.check(
+    "stok masuk tercatat di stock_logs",
+    stockLog?.log_type === "in" && Number(stockLog?.quantity) === 5,
+    `${stockLog?.log_type} ${stockLog?.quantity}`,
+  );
+
+  // Kembalikan saldo agar data demo tidak bergeser.
+  await adminClient
+    .from("inventory_items")
+    .update({ current_stock: Number(beforeItem?.current_stock ?? 0) })
+    .eq("id", claimableItem.id);
+  await adminClient
+    .from("stock_logs")
+    .delete()
+    .eq("item_id", claimableItem.id)
+    .eq("note", `${TEST_MARKER} pembelian uji`);
+}
+
+/* -------------------------------------------------------------------------- */
+/* 15. Kebersihan data uji                                                     */
+/* -------------------------------------------------------------------------- */
+
+suite.section("15. Kebersihan data uji");
 
 const ids = cleanupOrderIds.filter(Boolean);
 

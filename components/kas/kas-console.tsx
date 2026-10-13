@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { formatRupiah } from "@/lib/format";
+import { formatRupiah, formatTimeWib } from "@/lib/format";
 import { canvasToWebp, captureSquareCanvas } from "@/lib/attendance";
 import { createClient } from "@/lib/supabase/client";
 
@@ -407,7 +407,9 @@ export function KasConsole({
                   </div>
                   <div className="text-right">
                     <p className="font-body-bold text-body-bold text-danger-text">{formatRupiah(row.amount)}</p>
-                    <p className="font-caption text-caption text-text-muted">{row.createdAt.slice(11, 16)} WIB</p>
+                    <p className="font-caption text-caption text-text-muted">
+                      {formatTimeWib(row.createdAt)} WIB
+                    </p>
                   </div>
                 </div>
               ))

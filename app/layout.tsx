@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { ServiceWorkerRegistrar } from "@/components/mobile/service-worker-registrar";
+import { ToastProvider } from "@/components/toast";
 import "./globals.css";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -44,8 +45,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         />
       </head>
       <body className="min-h-screen flex flex-col antialiased">
-        <ServiceWorkerRegistrar />
-        {children}
+        <ToastProvider>
+          <ServiceWorkerRegistrar />
+          {children}
+        </ToastProvider>
       </body>
     </html>
   );

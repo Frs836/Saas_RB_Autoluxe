@@ -322,7 +322,7 @@ export function OrderDetailView({
         </div>
       </div>
 
-      <div className="px-gutter pt-4 pb-32 flex flex-col gap-4">
+      <div className="px-gutter pt-[calc(env(safe-area-inset-top)+5.5rem)] pb-32 flex flex-col gap-4">
         <section className="clay-card p-4 flex flex-col gap-3">
           <div className="flex items-start gap-3">
             <div className="w-12 h-12 rounded-xl bg-surface-container flex items-center justify-center shrink-0 text-brand-600">
@@ -541,7 +541,7 @@ export function OrderDetailView({
       </div>
 
       {primaryActions.length > 0 || canUpload ? (
-        <div className="fixed bottom-0 left-0 right-0 z-40 px-gutter pb-[calc(68px+env(safe-area-inset-bottom)+0.75rem)] pt-3 bg-surface/95 backdrop-blur-md border-t border-outline-variant">
+        <div className="fixed top-0 left-0 right-0 z-40 px-gutter pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-3 bg-surface/95 backdrop-blur-md border-b border-outline-variant">
           {error ? (
             <p className="mb-2 p-2 rounded-xl bg-danger-surface text-danger-text font-caption text-caption">
               {error}

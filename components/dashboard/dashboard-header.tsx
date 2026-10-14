@@ -60,7 +60,7 @@ export function DashboardHeader({
         </div>
 
         <div className="flex items-center gap-space-sm shrink-0">
-          <NotificationBell profileId={profileId} hasUnread={hasUnread} />
+          <NotificationBell />
           <Link
             href="/profil"
             aria-label="Buka profil"

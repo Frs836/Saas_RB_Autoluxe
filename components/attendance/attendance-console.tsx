@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { formatRupiah } from "@/lib/format";
+import { SyaratBelumTerpenuhi, type Syarat } from "@/components/submit-requirements";
 import {
   LABEL_TAHAP,
   URUTAN_TAHAP,
@@ -557,16 +558,52 @@ export function AttendanceConsole({
         ? "text-rose-300"
         : "text-amber-200";
 
-  const canSubmit =
-    !!capturedBlob &&
-    gps.status === "success" &&
-    branchConfigured &&
-    insideRadius &&
-    // Check-in butuh bukti liveness. Check-out tidak, karena sudah tercatat
-    // pada check-in pagi itu.
-    (mode === "checkout" || liveSelesai) &&
-    (mode === "checkout" || lateReasonValid) &&
-    mode !== "done";
+  /*
+   * Setiap syarat yang mengunci tombol, ditulis supaya bisa dibaca orang.
+   * Sebelumnya tombol hanya diam-diam tidak aktif ketika salah satu syarat
+   * belum terpenuhi, sehingga yang sudah mengisi alasan dan memindai wajah
+   * tetap bingung kenapa tombolnya tidak bisa ditekan.
+   */
+  const syaratSubmit: Syarat[] = [
+    {
+      terpenuhi: mode !== "done",
+      label: "Sesi absensi sudah selesai",
+    },
+    {
+      terpenuhi: !!capturedBlob,
+      label: "Ambil foto wajah",
+    },
+    {
+      terpenuhi: gps.status === "success",
+      label:
+        gps.status === "error"
+          ? "Izin lokasi GPS belum diberikan"
+          : "Tunggu lokasi GPS terdeteksi",
+    },
+    {
+      terpenuhi: branchConfigured,
+      label: "Koordinat cabang belum diatur oleh maintainer",
+    },
+    {
+      terpenuhi: insideRadius,
+      label: `Dekati cabang, maksimal ${formatDistance(branch.radius)} dari titik cabang`,
+    },
+    {
+      terpenuhi: mode === "checkout" || liveSelesai,
+      label:
+        mode === "checkout"
+          ? "Liveness hanya diperlukan saat check-in"
+          : "Selesaikan semua tahap liveness",
+    },
+    {
+      terpenuhi: mode === "checkout" || lateReasonValid,
+      label: `Isi alasan keterlambatan, minimal 5 karakter${
+        lateReason.trim().length > 0 ? ` (sekarang ${lateReason.trim().length} karakter)` : ""
+      }`,
+    },
+  ];
+
+  const canSubmit = syaratSubmit.every((s) => s.terpenuhi);
 
   return (
     <div className="flex flex-col w-full pb-[calc(68px+env(safe-area-inset-bottom)+24px)]">
@@ -1113,6 +1150,12 @@ export function AttendanceConsole({
 
       {/* Aksi utama */}
       <section className="px-gutter pt-4 space-y-2.5">
+        {mode !== "done" ? (
+          <SyaratBelumTerpenuhi
+            syarat={syaratSubmit}
+            judul="Sisa langkah sebelum absen bisa dikirim"
+          />
+        ) : null}
         {hasFace && faceStatus !== null && faceStatus !== "approved" ? (
           <div
             className={`rounded-2xl p-3.5 font-caption text-caption leading-relaxed ${

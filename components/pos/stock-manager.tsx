@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { useToast } from "@/components/toast";
+import { SyaratBelumTerpenuhi } from "@/components/submit-requirements";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { formatTimeWib, formatDateWib } from "@/lib/format";
@@ -61,6 +63,7 @@ export function StockManager({
 const items = initialItems;
 const claims = initialClaims;
 const [tab, setTab] = useState<"items" | "claims">("items");
+  const toast = useToast();
   const [selected, setSelected] = useState<InventoryItem | null>(null);
   const [qty, setQty] = useState("1");
   const [note, setNote] = useState("");
@@ -72,6 +75,11 @@ const [tab, setTab] = useState<"items" | "claims">("items");
   // klaim dan angka pengajuan tidak tertimpa.
   const [inOpen, setInOpen] = useState(false);
   const [inItemId, setInItemId] = useState("");
+  const [cariBarang, setCariBarang] = useState("");
+  // Penahan sinkron untuk 防 double-klik. State submitting baru berlaku
+  // setelah React selesai merender, jadi dua klik cepat bisa sama-sama lolos
+  // sebelum tombol terlihat mati.
+  const kirimSedangJalan = useRef(false);
   const [inQty, setInQty] = useState("1");
   const [inCost, setInCost] = useState("");
   const [inNote, setInNote] = useState("");
@@ -80,6 +88,14 @@ const [tab, setTab] = useState<"items" | "claims">("items");
 // di atas deklarasi state sehingga memicu zona mati temporal dan membuat seluruh
 // halaman gagal render dengan galat 500 untuk semua peran.
 const inItem = items.find((item) => item.id === inItemId) ?? null;
+
+  const barangTersaring = useMemo(() => {
+    const q = cariBarang.trim().toLowerCase();
+    if (!q) return items;
+    return items.filter((item) =>
+      item.item_name.toLowerCase().includes(q),
+    );
+  }, [items, cariBarang]);
 
   const lowStock = items.filter(
     (item) => Number(item.current_stock) <= Number(item.min_stock_alert),
@@ -118,37 +134,84 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
   }
 
   async function submitStockIn() {
-    if (!inItem) return;
+    // Pengaman pertama: penahan disetel sebelum awaits apa pun, jadi klik
+    // kedua yang datang secepat apa pun akan berhenti di sini.
+    if (kirimSedangJalan.current) return;
+
+    if (!inItem) {
+      toast.gagal(
+        "Barang belum dipilih",
+        "Cari dan pilih barang lebih dulu pada kolom Barang di atas.",
+      );
+      return;
+    }
+
     const quantity = Number(inQty);
     if (!Number.isFinite(quantity) || quantity <= 0) {
-      setError("Jumlah stok masuk harus lebih dari 0.");
+      toast.gagal(
+        "Jumlah stok masuk tidak valid",
+        "Isi jumlah dengan angka lebih dari 0, contoh: 12",
+      );
       return;
     }
+
     const cost = inCost.trim() === "" ? null : Number(inCost);
     if (cost !== null && (!Number.isFinite(cost) || cost < 0)) {
-      setError("Harga beli harus berupa angka positif.");
+      toast.gagal(
+        "Harga beli tidak valid",
+        "Isi harga beli dengan angka nol atau lebih, contoh: 25000. Kosongkan bila tidak ada harga.",
+      );
       return;
     }
+
+    kirimSedangJalan.current = true;
     setSubmitting(true);
     setError(null);
     setSuccess(null);
-    const supabase = createClient();
-    const { error: rpcError } = await supabase.rpc("record_stock_in", {
-      p_item_id: inItem.id,
-      p_quantity: quantity,
-      p_unit_cost: cost,
-      p_note: inNote.trim() === "" ? null : inNote.trim(),
-    });
-    setSubmitting(false);
-    if (rpcError) {
-      setError(rpcError.message);
-      return;
+    toast.info(
+      "Mencatat stok masuk",
+      `Menyimpan ${formatAngka(quantity)} ${inItem.unit} untuk ${inItem.item_name}.`,
+    );
+
+    try {
+      const supabase = createClient();
+      const { error: rpcError } = await supabase.rpc("record_stock_in", {
+        p_item_id: inItem.id,
+        p_quantity: quantity,
+        p_unit_cost: cost,
+        p_note: inNote.trim() === "" ? null : inNote.trim(),
+      });
+
+      if (rpcError) {
+        toast.gagal(
+          "Stok masuk gagal dicatat",
+          `Penyebab: ${rpcError.message}. Data tidak tersimpan, periksa jumlah, harga, dan hak akses Anda lalu coba lagi.`,
+        );
+        return;
+      }
+
+      setInItemId("");
+      setCariBarang("");
+      setInQty("1");
+      setInCost("");
+      setInNote("");
+      setSuccess(
+        `Stok ${inItem.item_name} bertambah ${formatAngka(quantity)} ${inItem.unit}.`,
+      );
+      toast.sukses(
+        "Stok masuk berhasil dicatat",
+        `Saldo ${inItem.item_name} bertambah ${formatAngka(quantity)} ${inItem.unit}.`,
+      );
+      router.refresh();
+    } catch (e) {
+      toast.gagal(
+        "Stok masuk gagal dikirim",
+        `Penyebab: ${e instanceof Error ? e.message : "koneksi ke server terputus"}. Data tidak tersimpan, coba lagi.`,
+      );
+    } finally {
+      kirimSedangJalan.current = false;
+      setSubmitting(false);
     }
-    setInQty("1");
-    setInCost("");
-    setInNote("");
-    setSuccess(`Stok ${inItem.item_name} bertambah ${quantity} ${inItem.unit}.`);
-    router.refresh();
   }
 
   async function confirmClaim(claim: StockClaim) {
@@ -495,20 +558,44 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
             <div className="mt-2 rounded-2xl bg-surface-container-low p-3 flex flex-col gap-2">
               <label className="flex flex-col gap-1">
                 <span className="font-caption text-caption text-text-muted">
+                  Cari barang
+                </span>
+                <input
+                  value={cariBarang}
+                  onChange={(e) => setCariBarang(e.target.value)}
+                  type="search"
+                  placeholder="Ketik nama obat atau bahan..."
+                  className="h-11 px-3 rounded-xl bg-surface font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+                />
+              </label>
+
+              <label className="flex flex-col gap-1">
+                <span className="font-caption text-caption text-text-muted">
                   Barang
                 </span>
                 <select
                   value={inItemId}
                   onChange={(e) => setInItemId(e.target.value)}
+                  size={barangTersaring.length > 6 ? 6 : undefined}
                   className="h-12 px-3 rounded-xl bg-surface font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
                 >
                   <option value="">Pilih barang...</option>
-                  {items.map((item) => (
+                  {barangTersaring.map((item) => (
                     <option key={item.id} value={item.id}>
                       {item.item_name} (sisa {formatAngka(item.current_stock)} {item.unit})
                     </option>
                   ))}
                 </select>
+                {cariBarang.trim() !== "" && barangTersaring.length === 0 ? (
+                  <p className="font-micro-badge text-micro-badge text-danger-text">
+                    Tidak ada barang bernama {cariBarang.trim()}. Periksa ejaan atau
+                    hapus kata kunci.
+                  </p>
+                ) : (
+                  <p className="font-micro-badge text-micro-badge text-text-muted">
+                    {barangTersaring.length} dari {items.length} barang ditampilkan
+                  </p>
+                )}
               </label>
 
               {inItem ? (
@@ -549,6 +636,26 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
                       {success}
                     </p>
                   ) : null}
+                  <SyaratBelumTerpenuhi
+                    syarat={[
+                      {
+                        terpenuhi: Boolean(inItem),
+                        label: "Pilih barang lebih dulu pada kolom Barang",
+                      },
+                      {
+                        terpenuhi: Number(inQty) > 0,
+                        label: "Isi jumlah lebih dari 0",
+                      },
+                      {
+                        terpenuhi:
+                          inCost.trim() === "" ||
+                          (Number.isFinite(Number(inCost)) && Number(inCost) >= 0),
+                        label: "Harga beli harus angka nol atau lebih, boleh dikosongkan",
+                      },
+                    ]}
+                    judul="Sisa langkah sebelum stok masuk bisa dicatat"
+                  />
+
                   <button
                     type="button"
                     disabled={submitting}

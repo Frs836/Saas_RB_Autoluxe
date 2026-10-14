@@ -29,6 +29,8 @@ export default async function FaceVerificationPage() {
           face_verification: FaceRegistration["face_verification"] | null;
           face_review_note: string | null;
           registered_at: string | null;
+          reference_photo_url: string | null;
+          has_descriptor: boolean;
         }>
       ).map((row) => ({
         profile_id: row.profile_id,
@@ -38,6 +40,8 @@ export default async function FaceVerificationPage() {
         face_verification: row.face_verification ?? "pending",
         face_review_note: row.face_review_note ?? null,
         registered_at: row.registered_at ?? null,
+        reference_photo_url: row.reference_photo_url ?? null,
+        has_descriptor: row.has_descriptor,
       }));
 
   return (

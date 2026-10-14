@@ -304,10 +304,14 @@ export function AttendanceConsole({
     }
     try {
       setBusy("register");
-      await uploadPhoto(capturedBlob);
+      // Foto ini disimpan sekali sebagai referensi. Maintainer melihatnya di
+      // halaman verifikasi, jadi keputusan terima atau tolak tidak diambil
+      // dari nama saja.
+      const referencePath = await uploadPhoto(capturedBlob);
       const supabase = createClient();
       const { error: rpcErr } = await supabase.rpc("set_face_descriptor", {
         p_descriptor: capturedDescriptor,
+        p_photo_url: referencePath,
       });
       if (rpcErr) throw new Error(rpcErr.message);
       setHasFace(true);
@@ -359,8 +363,12 @@ export function AttendanceConsole({
       setBusy("submit");
       const photoPath = await uploadPhoto(capturedBlob);
       const supabase = createClient();
-      const faceScore =
-        similarity === null ? null : Number(similarity.toFixed(4));
+
+      // Yang dikirim adalah vektor hasil pindai, bukan angka kemiripan.
+      // Server yang membandingkan dengan sampel yang tersimpan dan
+      // memutuskan lulus atau tidak, sehingga angka di laporan tidak lagi
+      // bisa datang dari perangkat yang mengarang.
+      const scanWajah = capturedDescriptor;
 
       if (mode === "checkin") {
         const { error: rpcErr } = await supabase.rpc("attendance_check_in", {
@@ -368,7 +376,7 @@ export function AttendanceConsole({
           p_longitude: gps.lng,
           p_accuracy_meters: gps.accuracy,
           p_photo_url: photoPath,
-          p_face_similarity_score: faceScore,
+          p_face_descriptor: scanWajah,
           p_late_reason: isLate ? lateReason.trim() : null,
         });
         if (rpcErr) throw new Error(rpcErr.message);
@@ -379,7 +387,8 @@ export function AttendanceConsole({
           p_longitude: gps.lng,
           p_accuracy_meters: gps.accuracy,
           p_photo_url: photoPath,
-          p_face_similarity_score: faceScore,
+          p_face_similarity_score:
+            similarity === null ? null : Number(similarity.toFixed(4)),
         });
         if (rpcErr) throw new Error(rpcErr.message);
         setInfo("Check-out berhasil dicatat.");

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -12,6 +12,8 @@ export type FaceRegistration = {
   face_verification: "pending" | "approved" | "rejected";
   face_review_note: string | null;
   registered_at: string | null;
+  reference_photo_url: string | null;
+  has_descriptor: boolean;
 };
 
 const STATUS_META: Record<
@@ -38,6 +40,88 @@ const STATUS_META: Record<
  * Daftar hanya memuat profil yang sudah mendaftarkan sampel wajah. Staf tanpa
  * sampel tidak muncul karena tidak ada yang perlu dinilai.
  */
+/**
+ * Foto referensi wajah untuk diverifikasi.
+ *
+ * Tanpa ini, maintainer hanya melihat nama, peran, dan cabang, lalu diminta
+ * memutuskan apakah wajah itu benar. Wajahnya sendiri tidak pernah tampil.
+ *
+ * Bucket attendance-photos privat, jadi foto diambil lewat createSignedUrl
+ * yang berlaku singkat. URL langsung tidak dipakai karena tidak kedaluwarsa
+ * dan bisa dibagikan.
+ */
+function FaceReferencePhoto({
+  path,
+  name,
+}: {
+  path: string | null;
+  name: string;
+}) {
+  const [url, setUrl] = useState<string | null>(null);
+  const [gagal, setGagal] = useState(!path);
+
+  useEffect(() => {
+    let batal = false;
+
+    if (!path) return;
+
+    createClient()
+      .storage.from("attendance-photos")
+      .createSignedUrl(path, 60 * 30)
+      .then(({ data, error }) => {
+        if (batal) return;
+        if (error || !data?.signedUrl) setGagal(true);
+        else setUrl(data.signedUrl);
+      })
+      .catch(() => {
+        if (!batal) setGagal(true);
+      });
+
+    return () => {
+      batal = true;
+    };
+  }, [path]);
+
+  if (!path || gagal) {
+    return (
+      <div className="rounded-xl bg-surface-container-low p-4 flex flex-col items-center gap-1.5 text-center">
+        <span className="material-symbols-outlined text-[22px] text-text-muted">
+          no_photography
+        </span>
+        <p className="font-caption text-caption text-text-secondary">
+          {path
+            ? "Foto referensi tidak bisa dimuat. Minta staf mendaftar ulang."
+            : "Staff ini mendaftar tanpa foto referensi. Minta pendaftaran ulang."}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <figure className="flex flex-col gap-1.5">
+      <div className="rounded-xl overflow-hidden bg-[#0F172A] aspect-[4/3]">
+        {url ? (
+          <img
+            src={url}
+            alt={`Foto referensi wajah ${name}`}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <span className="material-symbols-outlined text-[26px] text-white/60 animate-pulse">
+              image
+            </span>
+          </div>
+        )}
+      </div>
+      <figcaption className="font-micro-badge text-micro-badge text-text-muted">
+        Foto referensi untuk {name}. Bandingkan dengan wajah staf saat absensi
+        harian.
+      </figcaption>
+    </figure>
+  );
+}
+
 export function FaceVerificationList({
   registrations,
 }: {
@@ -171,6 +255,8 @@ export function FaceVerificationList({
                 Catatan: {row.face_review_note}
               </p>
             ) : null}
+
+            <FaceReferencePhoto path={row.reference_photo_url} name={row.full_name} />
 
             <label className="flex flex-col gap-1">
               <span className="font-micro-badge text-micro-badge text-text-muted">

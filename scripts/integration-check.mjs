@@ -1085,8 +1085,10 @@ if (!faceStaff) {
   const dummyDescriptor = Array.from({ length: 64 }, (_, i) =>
     Math.sin(i / 3) * 0.5,
   );
+  // Foto referensi wajib ada supaya maintainer punya wajah yang bisa dinilai.
   const registered = await karyawan.client.rpc("set_face_descriptor", {
     p_descriptor: dummyDescriptor,
+    p_photo_url: `${TEST_MARKER}/wajah-referensi.webp`,
   });
   suite.check("staf bisa mendaftarkan sampel wajah", !registered.error, registered.error?.message);
 
@@ -1187,7 +1189,10 @@ if (!faceStaff) {
   );
 
   // Wajah yang disetujui harus kembali ke pending saat didaftarkan ulang.
-  await karyawan.client.rpc("set_face_descriptor", { p_descriptor: dummyDescriptor });
+  await karyawan.client.rpc("set_face_descriptor", {
+    p_descriptor: dummyDescriptor,
+    p_photo_url: `${TEST_MARKER}/wajah-referensi.webp`,
+  });
   const { data: afterReRegister } = await adminClient
     .from("profiles")
     .select("face_verification")
@@ -1669,10 +1674,133 @@ if (claimableItem) {
 }
 
 /* -------------------------------------------------------------------------- */
-/* 18. Kebersihan data uji                                                     */
+/* 18. Pencocokan wajah di server                                              */
 /* -------------------------------------------------------------------------- */
 
-suite.section("18. Kebersihan data uji");
+suite.section("18. Pencocokan wajah di server");
+
+/*
+ * Absensi harus menolak apa pun yang bukan hasil pindai. Sebelumnya
+ * p_face_similarity_score dikirim perangkat dan disimpan apa adanya, sehingga
+ * angka "wajah cocok" di laporan bisa dikarang dan absensi tanpa scan wajah
+ * tetap diterima karena skornya null.
+ */
+
+const { data: cabangUntukAbsen } = await adminClient
+  .from("branches")
+  .select("latitude, longitude")
+  .not("latitude", "is", null)
+  .limit(1)
+  .maybeSingle();
+
+/*
+ * Sampel dipasang di sini juga, bukan mengandalkan bagian 14, supaya bagian
+ * ini tetap berarti dijalankan sendiri.
+ */
+const vektorSampel = Array.from({ length: 256 }, (_, i) => Number((Math.sin(i * 0.37) * 0.5 + 0.5).toFixed(6)));
+
+const { data: karyawanProfil } = await karyawan.client
+  .from("profiles")
+  .select("id")
+  .eq("auth_id", karyawan.userId)
+  .maybeSingle();
+
+const daftarUji = await karyawan.client.rpc("set_face_descriptor", {
+  p_descriptor: vektorSampel,
+  p_photo_url: `${TEST_MARKER}/wajah-absen.webp`,
+});
+suite.check("sampel wajah uji terdaftar", !daftarUji.error, daftarUji.error?.message);
+
+await maintainer.client.rpc("review_staff_face", {
+  p_profile_id: karyawanProfil?.id,
+  p_approved: true,
+  p_note: "Persetujuan otomatis untuk pengujian integrasi",
+});
+
+if (!cabangUntukAbsen || !karyawanProfil) {
+  suite.check("pencocokan wajah diuji", false, "data cabang atau profil karyawan tidak lengkap");
+} else {
+
+  const hariIni = new Date().toISOString().slice(0, 10);
+  await adminClient
+    .from("attendance_logs")
+    .delete()
+    .eq("profile_id", karyawanProfil?.id)
+    .eq("date", hariIni);
+
+  const absen = (descriptor) =>
+    karyawan.client.rpc("attendance_check_in", {
+      p_latitude: Number(cabangUntukAbsen.latitude),
+      p_longitude: Number(cabangUntukAbsen.longitude),
+      p_accuracy_meters: 8,
+      p_photo_url: `${TEST_MARKER}/scan.webp`,
+      p_face_descriptor: descriptor,
+      p_late_reason: "Uji pencocokan wajah",
+    });
+
+  // Skor diklaim tangan, tanpa scan.
+  const skorPalsu = await karyawan.client.rpc("attendance_check_in", {
+    p_latitude: Number(cabangUntukAbsen.latitude),
+    p_longitude: Number(cabangUntukAbsen.longitude),
+    p_accuracy_meters: 8,
+    p_photo_url: `${TEST_MARKER}/scan.webp`,
+    p_face_similarity_score: 0.99,
+    p_late_reason: "Uji skor dikarang",
+  });
+  suite.check(
+    "overload lama yang menerima skor dari klien sudah ditutup",
+    Boolean(skorPalsu.error),
+    skorPalsu.error ? "ditolak" : "LOLOS",
+  );
+
+  const tanpaScan = await absen(null);
+  suite.check(
+    "absen tanpa scan wajah ditolak",
+    Boolean(tanpaScan.error),
+    tanpaScan.error?.message,
+  );
+
+  const vektorAsli = vektorSampel;
+  const salahPanjang = await absen(vektorAsli.slice(0, 64));
+  suite.check(
+    "vektor dengan panjang berbeda ditolak",
+    Boolean(salahPanjang.error),
+    salahPanjang.error?.message,
+  );
+
+  const wajahLain = vektorAsli.map((v, i) =>
+    Number((v * Math.cos(i * 0.4) - vektorAsli[(i + 11) % vektorAsli.length] * Math.sin(i * 0.2)).toFixed(6)),
+  );
+  const tidakCocok = await absen(wajahLain);
+  suite.check(
+    "wajah yang tidak cocok ditolak",
+    Boolean(tidakCocok.error),
+    tidakCocok.error?.message,
+  );
+
+  const benar = await absen(vektorAsli);
+  suite.check("wajah yang cocok diterima", !benar.error, benar.error?.message);
+  suite.check(
+    "skor pada log dihitung server, bukan kiriman klien",
+    benar.error ? null : Number(benar.data?.face_similarity_score) > 0.9,
+    benar.error ? null : String(benar.data?.face_similarity_score),
+  );
+
+  if (!benar.error) {
+    await adminClient.from("attendance_logs").delete().eq("id", benar.data.id);
+  }
+  await adminClient
+    .from("attendance_logs")
+    .delete()
+    .eq("profile_id", karyawanProfil?.id)
+    .eq("date", hariIni);
+}
+
+/* -------------------------------------------------------------------------- */
+/* 19. Kebersihan data uji                                                     */
+/* -------------------------------------------------------------------------- */
+
+suite.section("19. Kebersihan data uji");
 
 const ids = cleanupOrderIds.filter(Boolean);
 

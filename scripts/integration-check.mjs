@@ -40,6 +40,62 @@ const accountBy = (role) => accounts.find((a) => a.role === role);
 
 const suite = createSuite("RB AUTOLUXE - pengujian integrasi");
 
+/**
+ * Layanan katalog untuk pesanan uji.
+ *
+--desde 0022 harga dihitung server dari katalog, jadi item wajib punya
+ * service_id. Test memakai layanan nyata agar total yang diharapkan bisa
+ * dibandingkan dengan angka yang benar-benar dihitung database.
+ */
+let KATALOG = null;
+async function ambilKatalog(client) {
+  if (KATALOG) return KATALOG;
+  const { data, error } = await client
+    .from("services")
+    .select("id, name, price_s, price_m, price_l")
+    .eq("is_active", true)
+    .not("price_m", "is", null)
+    .limit(1)
+    .maybeSingle();
+  if (error || !data) throw new Error(`Tidak bisa membaca katalog layanan: ${error?.message}`);
+  if (Number(data.price_m) <= 0) throw new Error("Layanan uji tidak punya harga M yang bisa dipakai");
+  KATALOG = data;
+  return KATALOG;
+}
+
+/**
+ * Layanan coating untuk uji garansi.
+ *
+ * Sertifikat garansi terbit bila nama paket layanan memuat kata coating,
+ * ceramic, liquid glass, atau nano. Server menyusun nama paket dari katalog,
+ * jadi uji ini harus memakai layanan coating yang sungguhan ada, bukan hanya
+ * menulis "Coating" di kolom paket.
+ */
+async function katalogCoating(client) {
+  const { data, error } = await client
+    .from("services")
+    .select("id, name, price_m")
+    .eq("is_active", true)
+    .ilike("name", "%Coating%")
+    .limit(1)
+    .maybeSingle();
+  if (error || !data) throw new Error(`Tidak ada layanan coating untuk diuji: ${error?.message}`);
+  if (Number(data.price_m) <= 0) throw new Error("Layanan coating uji tidak punya harga M");
+  return data;
+}
+
+/** Satu item POS yang sah, lengkap dengan harga katalognya. */
+async function itemUji(client, qty = 1) {
+  const s = await ambilKatalog(client);
+  return { service_id: s.id, name: s.name, price: Number(s.price_m), qty };
+}
+
+/** Harga yang seharusnya terimpan untuk item uji dengan qty tertentu. */
+async function hargaUji(client, qty = 1) {
+  const s = await ambilKatalog(client);
+  return Number(s.price_m) * qty;
+}
+
 /* -------------------------------------------------------------------------- */
 /* Setup                                                                       */
 /* -------------------------------------------------------------------------- */
@@ -103,7 +159,7 @@ const unpaidOrder = singleRow(
     p_customer_name: "ZZTEST Unpaid",
     p_customer_phone: "081200000001",
     p_service_package: "ZZTEST Unpaid",
-    p_items: [{ name: "ZZTEST Unpaid", price: 100000, qty: 1 }],
+    p_items: [await itemUji(karyawan.client)],
     p_payment_method: "cash",
     p_payment_state: "unpaid",
     p_start_work: false,
@@ -135,7 +191,7 @@ const paidOrder = singleRow(
     p_customer_name: "ZZTEST Paid",
     p_customer_phone: "081200000002",
     p_service_package: "ZZTEST Paid",
-    p_items: [{ name: "ZZTEST Paid", price: 150000, qty: 1 }],
+    p_items: [await itemUji(karyawan.client)],
     p_payment_method: "cash",
     p_payment_state: "paid",
     p_start_work: true,
@@ -145,7 +201,8 @@ cleanupOrderIds.push(paidOrder?.id);
 
 suite.check("karyawan membuat order 'Bayar Sekarang'", Boolean(paidOrder), paidOrder?.order_number);
 suite.check("langsung berstatus in_progress", paidOrder?.status === "in_progress", paidOrder?.status);
-suite.check("cash_hold_amount = 150000", Number(paidOrder?.cash_hold_amount) === 150000, String(paidOrder?.cash_hold_amount));
+const hargaPaid = await hargaUji(karyawan.client);
+suite.check(`cash_hold_amount = ${hargaPaid}`, Number(paidOrder?.cash_hold_amount) === hargaPaid, String(paidOrder?.cash_hold_amount));
 
 const holdRows = await admin.client
   .from("cash_flow")
@@ -159,13 +216,13 @@ suite.check(
 
 const holdAfter = singleRow(await karyawan.client.rpc("my_cash_hold_today"));
 suite.check(
-  "Kas Titipan Saya bertambah tepat 150000",
-  Number(holdAfter?.cash_amount) === baseCash + 150000,
+  `Kas Titipan Saya bertambah tepat ${hargaPaid}`,
+  Number(holdAfter?.cash_amount) === baseCash + hargaPaid,
   `${baseCash} -> ${holdAfter?.cash_amount}`,
 );
 suite.check(
-  "total kas dititipkan bertambah tepat 150000",
-  Number(holdAfter?.held_total) === baseHeld + 150000,
+  `total kas dititipkan bertambah tepat ${hargaPaid}`,
+  Number(holdAfter?.held_total) === baseHeld + hargaPaid,
   `${baseHeld} -> ${holdAfter?.held_total}`,
 );
 suite.check(
@@ -222,7 +279,7 @@ const foreignOrder = singleRow(
     p_customer_name: "ZZTEST Milik Admin",
     p_customer_phone: "081200000003",
     p_service_package: "ZZTEST Asing",
-    p_items: [{ name: "ZZTEST Asing", price: 10000, qty: 1 }],
+    p_items: [await itemUji(admin.client)],
     p_payment_method: "cash",
     p_payment_state: "paid",
     p_start_work: false,
@@ -574,7 +631,7 @@ try {
     p_customer_name: "ZZTEST Nonaktif",
     p_customer_phone: "081200000009",
     p_service_package: "ZZTEST Nonaktif",
-    p_items: [{ name: "ZZTEST Nonaktif", price: 1000, qty: 1 }],
+    p_items: [await itemUji(admin.client)],
     p_payment_method: "cash",
     p_payment_state: "paid",
     p_start_work: false,
@@ -593,6 +650,8 @@ suite.check("akun aktif kembali setelah diaktifkan ulang", restored.data === "ac
 
 suite.section("11. Inspeksi foto dan QC");
 
+const coatingUji = await katalogCoating(admin.client);
+
 const qcOrder = singleRow(
   await admin.client.rpc("create_pos_order_with_hold", {
     p_license_plate: `${TEST_PLATE} QC`,
@@ -601,7 +660,7 @@ const qcOrder = singleRow(
     p_customer_name: `${TEST_MARKER} QC`,
     p_customer_phone: "081200000011",
     p_service_package: "Coating Nano Ceramic 1 Layer",
-    p_items: [{ name: `${TEST_MARKER} QC`, price: 1500000, qty: 1 }],
+    p_items: [{ service_id: coatingUji.id, name: coatingUji.name, price: Number(coatingUji.price_m), qty: 1 }],
     p_payment_method: "cash",
     p_payment_state: "paid",
     p_start_work: true,

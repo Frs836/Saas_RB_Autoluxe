@@ -87,7 +87,7 @@ BEGIN
     END IF;
   END IF;
 
-  PERFORM public.set_config('app.trusted_order_write', 'on', true);
+  PERFORM pg_catalog.set_config('app.trusted_order_write', 'on', true);
 
   UPDATE public.orders
      SET status = p_status,
@@ -98,7 +98,7 @@ BEGIN
          END
    WHERE id = p_order_id;
 
-  PERFORM public.set_config('app.trusted_order_write', 'off', true);
+  PERFORM pg_catalog.set_config('app.trusted_order_write', 'off', true);
 
   IF p_status <> v_order.status THEN
     INSERT INTO public.activity_logs (actor_id, action, entity, entity_id, metadata)
@@ -178,7 +178,7 @@ BEGIN
     RAISE EXCEPTION 'Hanya order berstatus antre atau dikerjakan yang bisa dibatalkan.';
   END IF;
 
-  PERFORM public.set_config('app.trusted_order_write', 'on', true);
+  PERFORM pg_catalog.set_config('app.trusted_order_write', 'on', true);
 
   -- Pembatalan melepas uang titipan dan menandai order belum dibayar, supaya
   -- saldo kas dan status pembayaran tidak lagi menyebut nominal yang sudah
@@ -194,7 +194,7 @@ BEGIN
          updated_at = now()
    WHERE id = p_order_id;
 
-  PERFORM public.set_config('app.trusted_order_write', 'off', true);
+  PERFORM pg_catalog.set_config('app.trusted_order_write', 'off', true);
 
   -- Koreksi kas hanya untuk order yang benar-benar mencatat pemasukan.
   IF v_order.payment_state = 'paid'::public.order_payment_state THEN
@@ -307,13 +307,13 @@ BEGIN
   FROM unnest(COALESCE(p_profile_ids, ARRAY[]::uuid[])) AS v_target
   ON CONFLICT DO NOTHING;
 
-  PERFORM public.set_config('app.trusted_order_write', 'on', true);
+  PERFORM pg_catalog.set_config('app.trusted_order_write', 'on', true);
   UPDATE public.orders
      SET assigned_to = COALESCE(
        (array_agg(profile_id ORDER BY profile_id))[1], NULL
      )
    WHERE id = p_order_id;
-  PERFORM public.set_config('app.trusted_order_write', 'off', true);
+  PERFORM pg_catalog.set_config('app.trusted_order_write', 'off', true);
 
   INSERT INTO public.activity_logs (actor_id, action, entity, entity_id, metadata)
   VALUES (

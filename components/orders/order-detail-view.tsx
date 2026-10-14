@@ -541,7 +541,7 @@ export function OrderDetailView({
       </div>
 
       {primaryActions.length > 0 || canUpload ? (
-        <div className="fixed bottom-0 left-0 right-0 z-40 px-gutter pb-3 pt-3 bg-surface/95 backdrop-blur-md border-t border-outline-variant">
+        <div className="fixed bottom-0 left-0 right-0 z-40 px-gutter pb-[calc(68px+env(safe-area-inset-bottom)+0.75rem)] pt-3 bg-surface/95 backdrop-blur-md border-t border-outline-variant">
           {error ? (
             <p className="mb-2 p-2 rounded-xl bg-danger-surface text-danger-text font-caption text-caption">
               {error}

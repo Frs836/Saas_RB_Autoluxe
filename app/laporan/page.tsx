@@ -1,10 +1,10 @@
-import { createClient } from "@/lib/supabase/server";
+﻿import { createClient } from "@/lib/supabase/server";
 import { BottomNav } from "@/components/dashboard/bottom-nav";
 import { SubPageHeader } from "@/components/pos/sub-page-header";
 import { LaporanView } from "@/components/laporan/laporan-view";
 import { ATTENDANCE_ROLE_LABELS } from "@/lib/attendance";
 import { requirePermission, scopedBranchId } from "@/lib/rbac-guard";
-import { scopeBranchQuery } from "@/lib/branch";
+import { queryError, scopeBranchQuery } from "@/lib/branch";
 
 export const instant = false;
 
@@ -74,10 +74,11 @@ export default async function LaporanPage() {
   // sedang dipilih lewat switcher, dan "all" berarti seluruh cabang.
   const [branchRes, ordersRes, cashRes, stockRes, commissionRes, staffRes] =
     await Promise.all([
-      scopeBranchQuery(
-        supabase.from("branches").select("id, branch_name"),
-        branchId,
-      ),
+      // branches tidak punya kolom branch_id. Daftar cabang tidak boleh
+      // ikut difilter, dan dulu pemanggilan di sini membuat PostgREST
+      // mengembalikan error yang tidak pernah dibaca, sehingga seluruh peta
+      // cabang kosong tanpa ada tanda kegagalan.
+      supabase.from("branches").select("id, branch_name"),
       scopeBranchQuery(
         supabase
           .from("orders")
@@ -85,18 +86,21 @@ export default async function LaporanPage() {
             "id, branch_id, total_price, status, assigned_to, completed_at, created_at",
           ),
         branchId,
+        "orders",
       ).eq("status", "completed"),
       scopeBranchQuery(
         supabase
           .from("cash_flow")
           .select("id, type, amount, category, branch_id, created_at"),
         branchId,
+        "cash_flow",
       ),
       scopeBranchQuery(
         supabase
           .from("inventory_items")
           .select("id, branch_id, item_name, current_stock, unit, min_stock_alert"),
         branchId,
+        "inventory_items",
       ),
       supabase
         .from("commission_settings")
@@ -104,8 +108,19 @@ export default async function LaporanPage() {
       scopeBranchQuery(
         supabase.from("profiles").select("id, full_name, role"),
         branchId,
+        "profiles",
       ),
     ]);
+
+  // Kegagalan di sini berarti angka di layar tidak boleh dipercaya. Tanpa
+  // penanda, layar menampilkan nol dan kosong, yang terbaca seperti bisnis
+  // sedang tidak berputar.
+  queryError(branchRes, "laporan.branches");
+  queryError(ordersRes, "laporan.orders");
+  queryError(cashRes, "laporan.cash_flow");
+  queryError(stockRes, "laporan.inventory_items");
+  queryError(commissionRes, "laporan.commission_settings");
+  queryError(staffRes, "laporan.profiles");
 
   const branchMap = new Map(
     (branchRes.data ?? []).map((b) => [b.id, b.branch_name]),
@@ -215,3 +230,4 @@ export default async function LaporanPage() {
     </div>
   );
 }
+

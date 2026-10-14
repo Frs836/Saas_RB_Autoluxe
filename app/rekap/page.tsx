@@ -74,6 +74,7 @@ export default async function RekapPage() {
         .from("profiles")
         .select("id, full_name, role, default_off_day, branch_id"),
       branchId,
+      "profiles",
     )
       .eq("is_active", true)
       .order("full_name"),

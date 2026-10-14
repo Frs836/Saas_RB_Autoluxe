@@ -105,8 +105,10 @@ export function FaceVerificationList({
     (row) => row.face_verification === "pending",
   ).length;
 
+  // Padding bawah memperhitungkan bilah navigasi dan safe area, supaya tombol
+  // Setujui dan Tolak pada kartu terakhir tidak tertutup.
   return (
-    <div className="px-gutter py-4 flex flex-col gap-3">
+      <div className="px-gutter pt-4 pb-[calc(68px+env(safe-area-inset-bottom)+1rem)] flex flex-col gap-3">
       <section className="clay-card p-4 flex items-center justify-between gap-3">
         <div>
           <h1 className="font-headline-2 text-headline-2 text-text-primary">

@@ -189,6 +189,11 @@ export function PosConsole({
     setSubmitting(true);
     try {
       const supabase = createClient();
+      // service_id, name, dan price dikirim bersama karena server belum
+      // semuanya土地使用权 harga dari katalog: server lama memakai name dan
+      // price, server baru mengabaikannya dan menghitung sendiri dari
+      // service_id. Setelah migrasi 0022 terpasang, name dan price di sini
+      // bisa dihapus.
       const items = resolved.map((line) => ({
         service_id: line.serviceId,
         name: line.service.name,
@@ -198,6 +203,8 @@ export function PosConsole({
       const mainNames = resolved
         .filter((l) => !l.service.is_addon)
         .map((l) => l.service.name);
+      // Dikirim untuk memenuhi signature, tetapi server menyusun ulang paket
+      // dari katalog karena nama paket menentukan penerbitan garansi.
       const servicePackage =
         (mainNames.length > 0 ? mainNames : resolved.map((l) => l.service.name))
           .join(", ")
@@ -405,9 +412,9 @@ export function PosConsole({
             </a>
           ) : null}
 
-          // Tidak lagi disembunyikan di dalam details. Kontrol cetak thermal adalah
-          // salah satu dari tiga aksi utama setelah transaksi, dan kasir baru
-          // tidak akan menemukannya di balik elemen yang tertutup.
+          {/* Kontrol cetak thermal adalah salah satu dari tiga aksi utama
+              setelah transaksi, dan kasir baru tidak akan menemukannya di
+              balik elemen yang tertutup. */}
           {!isEmployee ? (
             <div className="rounded-2xl bg-surface-container-low p-3 flex flex-col gap-2">
               <span className="font-caption text-caption text-text-secondary flex items-center gap-1.5">

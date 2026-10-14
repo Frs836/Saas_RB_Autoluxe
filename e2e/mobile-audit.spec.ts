@@ -1,4 +1,4 @@
-import { test, devices } from "@playwright/test";
+import { test, devices, expect } from "@playwright/test";
 import { account } from "./helpers";
 
 /**
@@ -26,6 +26,16 @@ async function ukur(
 ): Promise<Laporan> {
   await page.goto(path, { waitUntil: "domcontentloaded", timeout: 90_000 });
   await page.waitForTimeout(2500);
+
+  // Gulir sampai bawah dulu. Elemen yang berada di area navbar saat posisi
+  // scroll paling atas bukan berarti tertutup: konten itu masih bisa dijangkau
+  // dengan menggulir. Yang benar-benar cacat adalah elemen yang masih berada di
+  // area navbar setelah halaman digulir sampai mentok, karena itu baru benar
+  // tidak terjangkau.
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await page.waitForTimeout(600);
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await page.waitForTimeout(400);
 
   const hasil = await page.evaluate(() => {
     const lebarViewport = document.documentElement.clientWidth;
@@ -195,5 +205,18 @@ test.describe("Audit layout mobile", () => {
     for (const r of adaKecil) console.log(`  ${r.role} ${r.path} (${r.targetKecil.length})`);
     console.log(`Halaman dengan elemen tertutup nav: ${adaTertutup.length}`);
     for (const r of adaTertutup) console.log(`  ${r.role} ${r.path} -> ${r.tertutupNav.join(" / ")}`);
+
+    // Sebelumnya semua angka di atas hanya dicetak. Audit yang tidak pernah
+    // gagalkan build membuat temuannya tidak pernah diperbaiki. Tiga hal ini
+    // yang paling merusak dipakai sehari-hari, jadi sekarang jadi syarat lulus.
+    expect(
+      adaOverflow.map((r) => `${r.role} ${r.path} = ${r.overflowX}px`),
+      "halaman melebar melewati viewport di layar ponsel",
+    ).toEqual([]);
+
+    expect(
+      adaTertutup.map((r) => `${r.role} ${r.path} -> ${r.tertutupNav.join(" / ")}`),
+      "tombol tidak terjangkau karena tertutup bilah navigasi bawah",
+    ).toEqual([]);
   });
 });

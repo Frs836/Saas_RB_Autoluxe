@@ -736,7 +736,6 @@ function VerificationModal({
                 Memuat foto verifikasi...
               </p>
             ) : photoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={photoUrl}
                 alt={`Foto verifikasi ${modal.staff.fullName}`}

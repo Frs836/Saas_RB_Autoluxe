@@ -53,6 +53,7 @@ export default async function GaransiPage({
       scopeBranchQuery(
         supabase.from("orders").select(ORDER_FIELDS),
         branchId,
+        "orders",
       )
         .eq("status", "completed")
         .ilike("license_plate", `%${search}%`)
@@ -61,6 +62,7 @@ export default async function GaransiPage({
       scopeBranchQuery(
         supabase.from("orders").select(ORDER_FIELDS),
         branchId,
+        "orders",
       )
         .eq("status", "completed")
         .ilike("order_number", `%${search}%`)
@@ -80,6 +82,7 @@ export default async function GaransiPage({
     const recent = await scopeBranchQuery(
       supabase.from("orders").select(ORDER_FIELDS),
       branchId,
+      "orders",
     )
       .eq("status", "completed")
       .order("completed_at", { ascending: false })

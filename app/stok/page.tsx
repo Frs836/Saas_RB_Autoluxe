@@ -36,6 +36,7 @@ export default async function StockPage() {
         .from("inventory_items")
         .select("id, item_name, current_stock, unit, min_stock_alert"),
       branchId,
+      "inventory_items",
     ).order("item_name", { ascending: true }),
     scopeBranchQuery(
       supabase
@@ -44,6 +45,7 @@ export default async function StockPage() {
           "id, item_id, quantity, unit, note, status, claimed_by, confirmed_by, created_at, confirmed_at",
         ),
       branchId,
+      "stock_claims",
     )
       .order("created_at", { ascending: false })
       .limit(60),

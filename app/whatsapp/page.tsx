@@ -31,10 +31,11 @@ export default async function WhatsappPage() {
       supabase
         .from("orders")
         .select(
-          "id, order_number, customer_name, customer_phone, license_plate, vehicle_model, vehicle_size, service_package, status, total_price, payment_method, payment_state, tracking_token, created_at, completed_at, branch_id",
+"id, order_number, customer_name, customer_phone, license_plate, vehicle_model, vehicle_size, service_package, status, total_price, payment_method, payment_state, tracking_token, created_at, completed_at, branch_id",
         ),
-      branchId,
-    )
+        branchId,
+        "orders",
+      )
       .order("created_at", { ascending: false })
       .limit(100),
   ]);

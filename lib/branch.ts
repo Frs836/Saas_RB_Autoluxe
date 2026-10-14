@@ -141,8 +141,33 @@ export function toTimeInput(value: string | null): string {
 }
 
 /**
+ * Tabel yang punya kolom branch_id sendiri.
+ *
+ * Daftar ini disengaja eksplisit. Postgres mengembalikan error 42703 kalau
+ * kolom yang difilter tidak ada, dan error itu pernah hilang diam-diam karena
+ * pemanggil hanya membaca `.data`. Memberi tahu nama tabel sebagai argumen
+ * membuat kesalahan jenis ini muncul di TypeScript, bukan di produksi.
+ */
+const BRANCH_SCOPED_TABLES = new Set([
+  "cash_flow",
+  "commission_settings",
+  "inventory_items",
+  "orders",
+  "profiles",
+  "service_material_recipes",
+  "shift_handoffs",
+  "stock_claims",
+  "stock_logs",
+  "stock_opnames",
+]);
+
+/**
  * Membatasi kueri ke cabang tertentu, atau membiarkannya terbuka bila
  * pengguna memilih "Seluruh Cabang".
+ *
+ * Nama tabel wajib diberikan. Tabel yang tidak punya branch_id, seperti
+ * branches, diabaikan; untuk tabel itu penyaringannya lewat relasi, bukan
+ * kolom langsung.
  *
  * Bentuk parameternya disengaja tidak memakai constraint generik. Pada
  * PostgrestFilterBuilder milik supabase-js, constrain `T extends { eq(...) }`
@@ -152,10 +177,27 @@ export function toTimeInput(value: string | null): string {
 export function scopeBranchQuery<T>(
   builder: T,
   branchId: string | null,
+  table: string,
 ): T {
-  if (!branchId) return builder;
+  if (!branchId || !BRANCH_SCOPED_TABLES.has(table)) return builder;
   return (builder as { eq: (column: string, value: unknown) => T }).eq(
     "branch_id",
     branchId,
   );
+}
+
+/**
+ * Menandai kueri yang gagal.
+ *
+ * Halaman yang hanya membaca `.data` akan menampilkan "kosong" untuk error
+ * database. Untuk kueri yang jadi dasar angka keuangan atau pemFilteringan,
+ * kegagalan harus terasa, bukan disamarkan jadi daftar kosong.
+ */
+export function queryError(
+  result: { error: { message: string } | null },
+  label: string,
+): void {
+  if (result.error) {
+    console.error(`[${label}] ${result.error.message}`);
+  }
 }

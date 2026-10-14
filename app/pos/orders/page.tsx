@@ -38,6 +38,7 @@ export default async function OrderQueuePage() {
           "id, order_number, license_plate, vehicle_model, vehicle_size, customer_name, customer_phone, service_package, status, total_price, payment_method, payment_state, created_at, completed_at, assigned_to, cancellation_reason",
         ),
       branchId,
+      "orders",
     )
       .order("created_at", { ascending: false })
       .limit(60),

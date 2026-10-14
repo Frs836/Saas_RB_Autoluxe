@@ -702,7 +702,6 @@ export function AttendanceConsole({
 
           <div className="w-full max-w-[360px] mx-auto aspect-square rounded-[20px] bg-[#0F172A] relative overflow-hidden shadow-inner border border-slate-800">
             {capturedDataUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={capturedDataUrl}
                 alt="Pratinjau selfie absensi"

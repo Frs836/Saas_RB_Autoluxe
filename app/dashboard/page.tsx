@@ -117,6 +117,7 @@ export default async function DashboardPage() {
               .from("shift_handoffs")
               .select("opening_cash, expected_cash, actual_cash, status"),
             branchId,
+            "shift_handoffs",
           )
             .eq("shift_date", today)
             .order("opened_at", { ascending: false })
@@ -130,6 +131,7 @@ export default async function DashboardPage() {
             "id, order_number, license_plate, vehicle_model, service_package, status, total_price, created_at, assigned_to",
           ),
         branchId,
+        "orders",
       )
         .in("status", ["queued", "in_progress", "qc_review"])
         .order("created_at", { ascending: false })
@@ -188,8 +190,10 @@ export default async function DashboardPage() {
   const unpaidCount = Number(myHold?.unpaid_count ?? 0);
   const unpaidTotal = Number(myHold?.unpaid_total ?? 0);
 
+  // Padding bawah memperhitungkan bilah navigasi dan safe area iPhone,
+  // supaya kartu terakhir tidak tertutup menu.
   return (
-    <div className="flex flex-col w-full pb-10 min-h-screen">
+      <div className="flex flex-col w-full pb-[calc(68px+env(safe-area-inset-bottom)+1.5rem)] min-h-screen">
       <DashboardHeader
         branchName={branch?.branch_name ?? "Cabang Utama"}
         fullName={profile.fullName}

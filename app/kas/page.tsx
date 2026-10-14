@@ -25,10 +25,11 @@ export default async function KasPage() {
     supabase
       .from("petty_cash")
       .select(
-        "id, created_at, amount, category, description, proof_photo_url, payment_method",
-      ),
-    branchId,
-  )
+"id, created_at, amount, category, description, proof_photo_url, payment_method",
+        ),
+        branchId,
+        "petty_cash",
+      )
     .order("created_at", { ascending: false })
     .limit(50);
 

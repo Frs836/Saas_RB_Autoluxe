@@ -3,6 +3,18 @@ import { loadEnv, requireEnv } from "./config.mjs";
 const env = requireEnv(loadEnv(), ["SUPABASE_ACCESS_TOKEN", "SUPABASE_PROJECT_REF"]);
 const url = `https://api.supabase.com/v1/projects/${env.SUPABASE_PROJECT_REF}/database/query`;
 
+/**
+ * Menjalankan SQL lewat Management API.
+ *
+ * CATATAN PENTING: fungsi ini TIDAK dibungkus transaksi. Management API
+ * mengabaikan begin/commit, sehingga pernyataan sebelum error tetap terpasang.
+ * Terverifikasi pada migrasi 0029: ALTER TABLE dan CREATE FUNCTION di awal
+ * berkas sudah ada di database meski REVOKE berikutnya gagal.
+ *
+ * Karena itu setiap migrasi wajib idempoten penuh: DROP IF EXISTS,
+ * CREATE OR REPLACE, atau ADD COLUMN dengan pemeriksaan. Berkas yang gagal di
+ * tengah aman dipasang ulang.
+ */
 export async function sql(query) {
   const r = await fetch(url, {
     method: "POST",
@@ -15,12 +27,6 @@ export async function sql(query) {
   const teks = await r.text();
   if (!r.ok) throw new Error(`HTTP ${r.status}: ${teks.slice(0, 400)}`);
   return JSON.parse(teks);
-}
-
-/** Menjalankan SQL di dalam transaksi supaya kegagalan tidak meninggalkan
- *  perubahan separuh jalan. */
-export async function sqlTx(query) {
-  return sql(`begin;\n${query}\ncommit;`);
 }
 
 if (import.meta.url === `file:///${process.argv[1].replace(/\\/g, "/")}`) {

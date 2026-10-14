@@ -1683,6 +1683,19 @@ if (claimableItem) {
 suite.section("18. Pencocokan wajah di server");
 
 /*
+ * Tanggal absensi memakai zona waktu Asia/Jakarta, sama seperti database.
+ * Mengambil tanggal UTC membuat baris uji tidak terhapus kalau pengujian
+ * dijalankan setelah pukul 17:00 WIB. Ditaruh di luar blok pengujian supaya
+ * bagian Kebersihan Data juga memakainya.
+ */
+const hariIniAbsen = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Asia/Jakarta",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+}).format(new Date());
+
+/*
  * Absensi harus menolak apa pun yang bukan hasil pindai. Sebelumnya
  * p_face_similarity_score dikirim perangkat dan disimpan apa adanya, sehingga
  * angka "wajah cocok" di laporan bisa dikarang dan absensi tanpa scan wajah
@@ -1708,6 +1721,14 @@ const { data: karyawanProfil } = await karyawan.client
   .eq("auth_id", karyawan.userId)
   .maybeSingle();
 
+if (!karyawanProfil?.id) {
+  suite.check(
+    "pencocokan wajah diuji",
+    false,
+    "profil karyawan tidak ditemukan, bagian ini dilewati",
+  );
+}
+
 const daftarUji = await karyawan.client.rpc("set_face_descriptor", {
   p_descriptor: vektorSampel,
   p_photo_url: `${TEST_MARKER}/wajah-absen.webp`,
@@ -1720,29 +1741,69 @@ await maintainer.client.rpc("review_staff_face", {
   p_note: "Persetujuan otomatis untuk pengujian integrasi",
 });
 
-if (!cabangUntukAbsen || !karyawanProfil) {
+if (!cabangUntukAbsen || !karyawanProfil?.id) {
   suite.check("pencocokan wajah diuji", false, "data cabang atau profil karyawan tidak lengkap");
 } else {
 
-  const hariIni = new Date().toISOString().slice(0, 10);
+  // Tanggal absensi dihitung di zona waktu Asia/Jakarta, sama seperti yang
+  // dipakai database. Mengambil tanggal UTC membuat baris uji tidak terhapus
+  // kalau pengujian dijalankan setelah pukul 17:00 WIB.
+  const hariIni = hariIniAbsen;
   await adminClient
     .from("attendance_logs")
     .delete()
     .eq("profile_id", karyawanProfil?.id)
     .eq("date", hariIni);
 
-  const absen = (descriptor, lv = true) =>
+  /*
+   * Jejak liveness yang sah: lima tahap, kepala benar-benar bergerak.
+   *
+   * Vektor tiap tahap dibangkitkan dari vektor netral dengan pergeseran supaya
+   * tahap kiri dan kanan berbeda dari netral. Tanpa itu server akan menolaknya
+   * sebagai usaha memakai foto.
+   */
+  const geser = (k) =>
+    vektorSampel.map((v, i) =>
+      Number((v + Math.sin(i * 3.7) * k + Math.cos(i * 1.3) * k * 0.4).toFixed(5)),
+    );
+
+  const jejakBenar = {
+    versi: 1,
+    selesai: true,
+    tahap: [
+      { tahap: "center", descriptor: vektorSampel, yaw: 0 },
+      { tahap: "blink", descriptor: vektorSampel, yaw: 0 },
+      { tahap: "mouth", descriptor: vektorSampel, yaw: 0 },
+      { tahap: "left", descriptor: geser(0.6), yaw: -18 },
+      { tahap: "right", descriptor: geser(0.6), yaw: 18 },
+    ],
+  };
+
+  /* Foto yang dipegang di depan kamera: vektornya tidak pernah berubah. */
+  const jejakFoto = {
+    versi: 1,
+    selesai: true,
+    tahap: jejakBenar.tahap.map((t) => ({ ...t, descriptor: vektorSampel, yaw: 0 })),
+  };
+
+  const bersihkanAbsen = () =>
+    adminClient
+      .from("attendance_logs")
+      .delete()
+      .eq("profile_id", karyawanProfil?.id)
+      .eq("date", hariIni);
+
+  const absen = (descriptor, trace = jejakBenar) =>
     karyawan.client.rpc("attendance_check_in", {
       p_latitude: Number(cabangUntukAbsen.latitude),
       p_longitude: Number(cabangUntukAbsen.longitude),
       p_accuracy_meters: 8,
       p_photo_url: `${TEST_MARKER}/scan.webp`,
       p_face_descriptor: descriptor,
-      p_liveness_passed: lv,
+      p_liveness_trace: trace,
       p_late_reason: "Uji pencocokan wajah",
     });
-
-  // Skor diklaim tangan, tanpa scan.
+  // Skor diklaim tangan, tanpa scan.
   const skorPalsu = await karyawan.client.rpc("attendance_check_in", {
     p_latitude: Number(cabangUntukAbsen.latitude),
     p_longitude: Number(cabangUntukAbsen.longitude),
@@ -1757,44 +1818,61 @@ if (!cabangUntukAbsen || !karyawanProfil) {
     skorPalsu.error ? "ditolak" : "LOLOS",
   );
 
-  const tanpaLiveness = await absen(vektorSampel, false);
-  suite.check(
-    "absen tanpa liveness ditolak",
-    Boolean(tanpaLiveness.error),
-    tanpaLiveness.error?.message,
-  );
+  const jejakKosong = await absen(vektorSampel, null);
+  suite.check("jejak liveness kosong ditolak", Boolean(jejakKosong.error), jejakKosong.error?.message);
 
-  const tanpaScan = await absen(null);
-  suite.check(
-    "absen tanpa scan wajah ditolak",
-    Boolean(tanpaScan.error),
-    tanpaScan.error?.message,
-  );
+  const belumSelesai = await absen(vektorSampel, { ...jejakBenar, selesai: false });
+  suite.check("tantangan belum selesai ditolak", Boolean(belumSelesai.error), belumSelesai.error?.message);
 
-  const vektorAsli = vektorSampel;
-  const salahPanjang = await absen(vektorAsli.slice(0, 64));
-  suite.check(
-    "vektor dengan panjang berbeda ditolak",
-    Boolean(salahPanjang.error),
-    salahPanjang.error?.message,
-  );
+  const kurang = await absen(vektorSampel, { versi: 1, selesai: true, tahap: jejakBenar.tahap.slice(0, 4) });
+  suite.check("tahap yang kurang ditolak", Boolean(kurang.error), kurang.error?.message);
 
-  // Ambang 80 persen: vektor yang digeser sedikit harus tertahan.
-  const setengah = await absen(
-    vektorAsli.map((v, i) => Number((v * Math.cos(i * 0.4) - vektorAsli[(i + 11) % vektorAsli.length] * Math.sin(i * 0.2)).toFixed(6))),
-  );
-  suite.check(
-    "wajah yang tidak cocok ditolak",
-    Boolean(setengah.error),
-    setengah.error?.message,
-  );
+  const berantakan = await absen(vektorSampel, {
+    versi: 1,
+    selesai: true,
+    tahap: [jejakBenar.tahap[0], jejakBenar.tahap[1], jejakBenar.tahap[2], jejakBenar.tahap[4], jejakBenar.tahap[3]],
+  });
+  suite.check("urutan tahap yang salah ditolak", Boolean(berantakan.error), berantakan.error?.message);
 
-  const benar = await absen(vektorAsli);
-  suite.check("wajah yang cocok dengan liveness diterima", !benar.error, benar.error?.message);
+  const berulang = await absen(vektorSampel, {
+    versi: 1,
+    selesai: true,
+    tahap: [...jejakBenar.tahap, jejakBenar.tahap[3]],
+  });
+  suite.check("tahap yang berulang ditolak", Boolean(berulang.error), berulang.error?.message);
+
+  /*
+   * Yang paling penting: foto yang dipegang di depan kamera menghasilkan
+   * descriptor yang sama setiap kali diminta memaling kepala. Server menolak
+   * karena selisihnya tidak bergerak.
+   */
+  const foto = await absen(vektorSampel, jejakFoto);
+  suite.check("foto dipegang di depan kamera ditolak", Boolean(foto.error), foto.error?.message);
+
+  const salah = await absen(vektorSampel, {
+    ...jejakBenar,
+    tahap: jejakBenar.tahap.map((t) => (t.tahap === "left" ? { ...t, yaw: 20 } : t)),
+  });
+  suite.check("arah putaran yang terbalik ditolak", Boolean(salah.error), salah.error?.message);
+
+  const tanpaScan = await absen(null, jejakBenar);
+  suite.check("absen tanpa scan wajah ditolak", Boolean(tanpaScan.error), tanpaScan.error?.message);
+
+  const salahPanjang = await absen(vektorSampel.slice(0, 64), jejakBenar);
+  suite.check("vektor dengan panjang berbeda ditolak", Boolean(salahPanjang.error), salahPanjang.error?.message);
+
+  await bersihkanAbsen();
+  const benar = await absen(vektorSampel, jejakBenar);
+  suite.check("lima tahap liveness yang benar diterima", !benar.error, benar.error?.message);
   suite.check(
     "skor pada log dihitung server, bukan kiriman klien",
     benar.error ? null : Number(benar.data?.face_similarity_score) > 0.9,
     benar.error ? null : String(benar.data?.face_similarity_score),
+  );
+  suite.check(
+    "jejak liveness tersimpan di catatan absensi",
+    benar.error ? null : Boolean(benar.data?.liveness_trace),
+    benar.error ? "dilewati" : "tersimpan",
   );
 
   if (!benar.error) {
@@ -1842,6 +1920,14 @@ const { count: leftoverInspections } = await adminClient
   .from("order_inspections")
   .select("id", { count: "exact", head: true })
   .like("photo_url", `%${TEST_PLATE}%`);
+
+const { count: leftoverAbsensi } = await adminClient
+  .from("attendance_logs")
+  .select("id", { count: "exact", head: true })
+  .eq("profile_id", karyawanProfile.id)
+  .eq("date", hariIniAbsen);
+
+suite.check("seluruh absensi uji terhapus", (leftoverAbsensi ?? 0) === 0, `${leftoverAbsensi ?? "err"} tersisa`);
 
 suite.check("seluruh order uji terhapus", (leftoverOrders ?? 0) === 0, `${leftoverOrders ?? "err"} tersisa`);
 suite.check("seluruh pengajuan izin uji terhapus", (leftoverRequests ?? 0) === 0, `${leftoverRequests ?? "err"} tersisa`);

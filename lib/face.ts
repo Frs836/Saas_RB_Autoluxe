@@ -33,6 +33,11 @@ export type FaceDetection = {
   box: { x: number; y: number; width: number; height: number };
   /** Nilai eyeBlinkLeft atau eyeBlinkRight yang lebih tinggi, 0 sampai 1. */
   eyeBlink: number;
+  /** Gerak rahang, 0 sampai 1. */
+  jawOpen: number;
+  /** Sudut kepala terhadap kamera, dalam derajat. */
+  yaw: number;
+  pitch: number;
   faceCount: number;
 };
 
@@ -42,7 +47,7 @@ export function loadFaceLandmarker(): Promise<FaceLandmarker> {
   if (!pending) {
     pending = (async () => {
       // Minta service worker menyimpan berkas mesin sekali saja, supaya
-      // pemuatan berikutnya tidak mengunduh ulang 16 MB.
+      // pemuatan berikut tidak mengunduh ulang 16 MB.
       navigator.serviceWorker?.controller?.postMessage({ type: "precache-face-engine" });
 
       const fileset = await FilesetResolver.forVisionTasks(WASM_PATH);
@@ -51,7 +56,7 @@ export function loadFaceLandmarker(): Promise<FaceLandmarker> {
         runningMode: "VIDEO",
         numFaces: 1,
         outputFaceBlendshapes: true,
-        outputFacialTransformationMatrixes: false,
+        outputFacialTransformationMatrixes: true,
       });
     })().catch((e) => {
       pending = null;
@@ -164,77 +169,244 @@ export async function detectFaceInVideo(
 
   const shapes = result.faceBlendshapes?.[0]?.categories;
   let eyeBlink = 0;
+  let jawOpen = 0;
   if (shapes) {
     const kiri = shapes.find((c) => c.categoryName === "eyeBlinkLeft");
     const kanan = shapes.find((c) => c.categoryName === "eyeBlinkRight");
+    const rahang = shapes.find((c) => c.categoryName === "jawOpen");
     eyeBlink = Math.max(kiri?.score ?? 0, kanan?.score ?? 0);
+    jawOpen = rahang?.score ?? 0;
   }
 
   return {
     descriptor: Array.from(descriptor),
     box: { x: minX, y: minY, width, height },
     eyeBlink,
+    jawOpen,
+    ...sudutKepala(result.facialTransformationMatrixes?.[0]),
     faceCount: result.faceLandmarks.length,
   };
 }
 
 /**
- * Tantangan liveness sederhana: satu kedip lengkap.
+ * Sudut kepala dari matriks transformasi.
  *
- * Kedip dianggap selesai ketika mata tertutup melewati ambang, lalu kembali
- * terbuka, dan keadaan tertutup bertahan cukup lama. Satu puncak sesaat tidak
- * dihitung, karena kedip parsial atau gerakan kepala cepat bisa memunculkan angka
- * itu sesaat saja.
+ * Matriks MediaPipe berukuran 4x4 dan disimpan berurutan kolom. Tiga kolom
+ * terakhir adalah translasi, jadi bagian rotasi hanya diambil dari indeks 0-2,
+ * 4-6, dan 8-10.
+ *
+ * Sudut dihitung relatif terhadap kamera, bukan relatif terhadap angka tetap.
+ * Threshold yang dipakai nanti membandingkan selisih terhadap posisi netral
+ * orang itu sendiri, sehingga orang dengan bentuk wajah berbeda tidak
+ * tertolak karena sudut puncaknya tidak sama.
  */
-export class BlinkChallenge {
+function sudutKepala(m: { data: number[] } | undefined): {
+  yaw: number;
+  pitch: number;
+} {
+  const fallback = { yaw: 0, pitch: 0 };
+  if (!m?.data || m.data.length < 12) return fallback;
+
+  const d = m.data;
+  // R adalah bagian rotasi 3x3, dibaca berurutan kolom.
+  const r00 = d[0];
+  const r10 = d[1];
+  const r20 = d[2];
+  const r01 = d[4];
+  const r21 = d[5];
+  const r02 = d[8];
+  const r22 = d[10];
+
+  const yaw = Math.atan2(r10, r00);
+  const pitch = Math.asin(Math.max(-1, Math.min(1, r21)));
+
+  if (!Number.isFinite(yaw) || !Number.isFinite(pitch)) return fallback;
+  return { yaw: (yaw * 180) / Math.PI, pitch: (pitch * 180) / Math.PI };
+}
+
+export type Tahap = "center" | "blink" | "mouth" | "left" | "right";
+
+export const URUTAN_TAHAP: Tahap[] = [
+  "center",
+  "blink",
+  "mouth",
+  "left",
+  "right",
+];
+
+export const LABEL_TAHAP: Record<Tahap, string> = {
+  center: "Hadap lurus ke kamera",
+  blink: "Kedipkan mata",
+  mouth: "Buka mulut",
+  left: "Tengok ke kiri",
+  right: "Tengok ke kanan",
+};
+
+export type CatatanTahap = {
+  tahap: Tahap;
+  descriptor: number[];
+  yaw: number;
+};
+
+export type JejakLiveness = {
+  versi: number;
+  selesai: boolean;
+  tahap: CatatanTahap[];
+};
+
+/**
+ * Tantangan liveness bertahap.
+ *
+ * Yang diperiksa bukan angka mutlak, melainkan perubahan terhadap posisi
+ * netral orang itu sendiri. Dua orang dengan bentuk wajah berbeda punya
+ * sudut kepala dan tinggi rahang yang berbeda, jadi angka tetap akan menolak
+ * sebagian orang tanpa alasan yang jelas.
+ *
+ * Untuk tahap putaran kepala, syaratnya bukan sudut tertentu, melainkan
+ * descriptor yang sudah berubah cukup jauh dari posisi netral. Inilah yang
+ * menutup celah foto: foto yang dipegang di depan kamera menghasilkan vektor
+ * yang tetap sama berapa kali pun diminta memaling kepala.
+ */
+export class LivenessSession {
+  private netral: { descriptor: number[]; yaw: number } | null = null;
+  private readonly catatan: CatatanTahap[] = [];
+  private readonly sudah: Set<Tahap> = new Set();
   private sedangTertutup = false;
   private mulaiTutupMs = 0;
-  private jumlahKedip = 0;
+  private waktuKedipMs = 0;
 
-  constructor(
-    private readonly ambangTertutup = 0.5,
-    private readonly durasiTertutupMinimalMs = 90,
-    private readonly jedaAntarKedipMs = 600,
+  private constructor(
+    private readonly ambangBerkedip = 0.5,
+    private readonly ambangMulut = 0.45,
+    private readonly selisihPutarMinimal = 0.06,
+    private readonly selisihPutarMaksimal = 0.55,
   ) {}
 
-  /** Kembalikan true tepat satu kali saat satu kedip lengkap tercatat. */
-  update(eyeBlink: number, now = Date.now()): boolean {
-    const tertutup = eyeBlink >= this.ambangTertutup;
+  static baru(): LivenessSession {
+    return new LivenessSession();
+  }
 
-    if (this.sedangTertutup) {
-      if (!tertutup) {
-        this.sedangTertutup = false;
-        const durasi = now - this.mulaiTutupMs;
-        const jedaAman = now - this.waktuKedipTerakhir >= this.jedaAntarKedipMs;
-        if (durasi >= this.durasiTertutupMinimalMs && jedaAman) {
-          this.waktuKedipTerakhir = now;
-          this.jumlahKedip += 1;
-          return true;
+  get tahapBerikut(): Tahap | null {
+    for (const t of URUTAN_TAHAP) {
+      if (!this.sudah.has(t)) return t;
+    }
+    return null;
+  }
+
+  get selesai(): boolean {
+    return this.tahapBerikut === null;
+  }
+
+  get progres(): number {
+    return this.sudah.size / URUTAN_TAHAP.length;
+  }
+
+  /** Beri tahu posisi netral pertama supaya tahap lain bisa dibandingkan. */
+  tetapkanNetral(d: FaceDetection): void {
+    if (!this.netral) {
+      this.netral = { descriptor: d.descriptor, yaw: d.yaw };
+    }
+  }
+
+  /**
+   * Periksa satu frame dan kembalikan tahap yang baru terpenuhi, atau null.
+   *
+   * Tahap dihitung berurutan, supaya orang tidak bisa melewati tahap dengan
+   * sekaligus melakukan semua gerakan.
+   */
+  periksa(d: FaceDetection, now = Date.now()): Tahap | null {
+    this.tetapkanNetral(d);
+    const berikut = this.tahapBerikut;
+    if (!berikut) return null;
+
+    switch (berikut) {
+      case "center":
+        if (Math.abs(d.yaw) < 12) {
+          return this.catat("center", d);
         }
+        return null;
+
+      case "blink": {
+        const tertutup = d.eyeBlink >= this.ambangBerkedip;
+        if (this.sedangTertutup && !tertutup) {
+          this.sedangTertutup = false;
+          const cukupLama = now - this.mulaiTutupMs >= 90;
+          const jedaAman = now - this.waktuKedipMs >= 600;
+          if (cukupLama && jedaAman) {
+            this.waktuKedipMs = now;
+            return this.catat("blink", d);
+          }
+        } else if (!this.sedangTertutup && tertutup) {
+          this.sedangTertutup = true;
+          this.mulaiTutupMs = now;
+        }
+        return null;
       }
-      return false;
-    }
 
-    if (tertutup) {
-      this.sedangTertutup = true;
-      this.mulaiTutupMs = now;
+      case "mouth":
+        if (d.jawOpen >= this.ambangMulut) {
+          return this.catat("mouth", d);
+        }
+        return null;
+
+      case "left":
+      case "right": {
+        if (!this.netral) return null;
+        const selisih = 1 - cosine(d.descriptor, this.netral.descriptor);
+        if (selisih < this.selisihPutarMinimal) return null;
+        // Terlalu jauh berarti wajah keluar bingkai atau berputar berlebihan.
+        if (selisih > this.selisihPutarMaksimal) return null;
+
+        const arah = d.yaw - this.netral.yaw;
+        const cukup = berikut === "left" ? arah < -8 : arah > 8;
+        return cukup ? this.catat(berikut, d) : null;
+      }
     }
-    return false;
   }
 
-  private waktuKedipTerakhir = 0;
-
-  get sudahLulus(): boolean {
-    return this.jumlahKedip > 0;
+  private catat(tahap: Tahap, d: FaceDetection): Tahap {
+    this.sudah.add(tahap);
+    this.catatan.push({
+      tahap,
+      descriptor: d.descriptor,
+      yaw: Number(d.yaw.toFixed(2)),
+    });
+    return tahap;
   }
 
-  get jumlah(): number {
-    return this.jumlahKedip;
+  /** Jejak yang dikirim ke server untuk diperiksa ulang di sana. */
+  jejak(): JejakLiveness {
+    return {
+      versi: 1,
+      selesai: this.selesai,
+      tahap: this.catatan.map((c) => ({
+        tahap: c.tahap,
+        descriptor: c.descriptor,
+        yaw: c.yaw,
+      })),
+    };
   }
 
   reset(): void {
+    this.netral = null;
+    this.catatan.length = 0;
+    this.sudah.clear();
     this.sedangTertutup = false;
-    this.jumlahKedip = 0;
-    this.waktuKedipTerakhir = 0;
+    this.waktuKedipMs = 0;
   }
+}
+
+/** Kemiripan kosinus dua vektor. */
+function cosine(a: number[], b: number[]): number {
+  if (a.length !== b.length || a.length === 0) return 0;
+  let dot = 0;
+  let magA = 0;
+  let magB = 0;
+  for (let i = 0; i < a.length; i += 1) {
+    dot += a[i] * b[i];
+    magA += a[i] * a[i];
+    magB += b[i] * b[i];
+  }
+  if (magA === 0 || magB === 0) return 0;
+  return dot / (Math.sqrt(magA) * Math.sqrt(magB));
 }

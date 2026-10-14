@@ -5,7 +5,14 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { formatRupiah } from "@/lib/format";
-import { BlinkChallenge, detectFaceInVideo, warmUpFaceEngine } from "@/lib/face";
+import {
+  LABEL_TAHAP,
+  URUTAN_TAHAP,
+  LivenessSession,
+  detectFaceInVideo,
+  warmUpFaceEngine,
+  type Tahap,
+} from "@/lib/face";
 import {
   ATTENDANCE_STATUS_LABELS,
   ATTENDANCE_STATUS_STYLE,
@@ -106,11 +113,15 @@ export function AttendanceConsole({
     profile.faceDescriptor,
   );
 
-  // Liveness: satu kedip lengkap harus tercatat sebelum absensi dikirim.
-  const blinkRef = useRef(new BlinkChallenge());
-  const [blinkDone, setBlinkDone] = useState(false);
+  // Tantangan liveness bertahap. Jejak setiap tahap dikirim ke server untuk
+  // diperiksa ulang di sana, bukan hanya klaim benar atau salah dari klien.
+  const liveRef = useRef(LivenessSession.baru());
+  const [liveSelesai, setLiveSelesai] = useState(false);
+  const [liveTahap, setLiveTahap] = useState<Tahap | null>("center");
+  const [liveTerpenuhi, setLiveTerpenuhi] = useState<Tahap[]>([]);
   const [eyeBlink, setEyeBlink] = useState(0);
-  const [mesinSiap, setMesinSiap] = useState(false);
+  const [jawOpen, setJawOpen] = useState(0);
+  const [yaw, setYaw] = useState(0);
 
   const [branchLat, setBranchLat] = useState(branch.latitude);
   const [branchLng, setBranchLng] = useState(branch.longitude);
@@ -257,14 +268,13 @@ export function AttendanceConsole({
   }, [requestGps]);
 
   /*
-   * Pemantau kedip.
+   * Pemantau tantangan liveness.
    *
-   * Berjalan hanya ketika kamera aktif, dan hanya setiap tiga frame supaya
-   * tidak ikut membebani ponsel. Setelah kedip tercatat, monitor berhenti
-   * supaya tidak menjalankan deteksi sepanjang hari.
+   * Berjalan setiap tiga frame supaya tidak membebani ponsel, berhenti begitu
+   * semua tahap terpenuhi, dan diulang dari awal saat tombol ulang ditekan.
    */
   useEffect(() => {
-    if (!cameraReady || blinkDone) return;
+    if (!cameraReady || liveSelesai) return;
 
     let berhenti = false;
     let frame = 0;
@@ -277,9 +287,15 @@ export function AttendanceConsole({
           const hasil = await detectFaceInVideo(videoRef.current!, performance.now());
           if (hasil && !berhenti) {
             setEyeBlink(hasil.eyeBlink);
-            if (blinkRef.current.update(hasil.eyeBlink)) {
-              setBlinkDone(true);
-              return;
+            setJawOpen(hasil.jawOpen);
+            setYaw(hasil.yaw);
+            const tahap = liveRef.current.periksa(hasil);
+            if (tahap) {
+              setLiveTerpenuhi((s) => [...s, tahap]);
+              setLiveTahap(liveRef.current.tahapBerikut);
+              const jadi = liveRef.current.selesai;
+              setLiveSelesai(jadi);
+              if (jadi) return;
             }
           }
         } catch {
@@ -293,7 +309,7 @@ export function AttendanceConsole({
     return () => {
       berhenti = true;
     };
-  }, [cameraReady, blinkDone]);
+  }, [cameraReady, liveSelesai]);
 
   /**
    * Pindai wajah pada frame video.
@@ -350,8 +366,11 @@ export function AttendanceConsole({
     setError(null);
     setInfo(null);
     // Kedip harus diulang supaya foto baru tidak memakai bukti dari frame lama.
-    blinkRef.current.reset();
-    setBlinkDone(false);
+    // Tantangan diulang supaya bukti dari frame lama tidak dipakai ulang.
+    liveRef.current.reset();
+    setLiveSelesai(false);
+    setLiveTahap("center");
+    setLiveTerpenuhi([]);
   }, []);
 
   const uploadPhoto = useCallback(async (blob: Blob): Promise<string> => {
@@ -454,7 +473,7 @@ export function AttendanceConsole({
           p_accuracy_meters: gps.accuracy,
           p_photo_url: photoPath,
           p_face_descriptor: scanWajah,
-          p_liveness_passed: blinkDone,
+          p_liveness_trace: liveRef.current.jejak(),
           p_late_reason: isLate ? lateReason.trim() : null,
         });
         if (rpcErr) throw new Error(rpcErr.message);
@@ -545,7 +564,7 @@ export function AttendanceConsole({
     insideRadius &&
     // Check-in butuh bukti liveness. Check-out tidak, karena sudah tercatat
     // pada check-in pagi itu.
-    (mode === "checkout" || blinkDone) &&
+    (mode === "checkout" || liveSelesai) &&
     (mode === "checkout" || lateReasonValid) &&
     mode !== "done";
 
@@ -868,31 +887,77 @@ export function AttendanceConsole({
             </div>
           </div>
 
-          {/* Status liveness. Kedip adalah bukti orang ada di depan kamera,
-              jadi absensi tidak bisa dikirim tanpa itu. */}
+          {/*
+             * Tantangan liveness bertahap.
+             *
+             * Setiap tahap diperiksa terhadap posisi netral orang itu sendiri,
+             * bukan angka tetap, sehingga orang dengan bentuk wajah berbeda
+             * tidak otomatis gagal. Foto yang dipegang di depan kamera tidak
+             * bisa menyelesaikan tahap putaran kepala karena vektornya tidak
+             * berubah.
+             */}
           {cameraReady ? (
             <div
-              className={`flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 ${
-                blinkDone
+              className={`rounded-xl px-3.5 py-3 flex flex-col gap-2.5 ${
+                liveSelesai
                   ? "bg-success-surface text-success-text"
                   : "bg-warning-surface text-warning-text"
               }`}
             >
-              <span className="material-symbols-outlined text-[20px]">
-                {blinkDone ? "verified_user" : "visibility"}
-              </span>
-              <div className="flex-1 text-left">
-                <p className="font-caption text-caption">
-                  {blinkDone
-                    ? "Liveness terverifikasi"
-                    : "Kedipkan mata satu kali untuk membuktikan Anda hadir"}
+              <div className="flex items-center gap-2.5">
+                <span className="material-symbols-outlined text-[20px]">
+                  {liveSelesai ? "verified_user" : "visibility"}
+                </span>
+                <p className="font-caption text-caption flex-1 text-left">
+                  {liveSelesai
+                    ? "Liveness terverifikasi, absen bisa dikirim"
+                    : liveTahap
+                      ? LABEL_TAHAP[liveTahap]
+                      : "Hadap lurus ke kamera"}
                 </p>
-                {!blinkDone && eyeBlink > 0.15 ? (
-                  <p className="font-micro-badge text-micro-badge opacity-80">
-                    Terdeteksi kedip, tahan sebentar lalu buka lagi
-                  </p>
-                ) : null}
+                <span className="font-micro-badge text-micro-badge">
+                  {liveTerpenuhi.length}/{URUTAN_TAHAP.length}
+                </span>
               </div>
+
+              <ol className="flex flex-col gap-1">
+                {URUTAN_TAHAP.map((t) => {
+                  const beres = liveTerpenuhi.includes(t);
+                  const aktif = liveTahap === t;
+                  return (
+                    <li key={t} className="flex items-center gap-2">
+                      <span
+                        className={`grid place-items-center w-[18px] h-[18px] rounded-full shrink-0 ${
+                          beres ? "bg-current" : "border border-current opacity-50"
+                        }`}
+                      >
+                        {beres ? (
+                          <span className="block w-[8px] h-[8px] rounded-full bg-white" />
+                        ) : null}
+                      </span>
+                      <span
+                        className={`font-caption text-caption ${
+                          aktif ? "font-bold" : "opacity-70"
+                        }`}
+                      >
+                        {LABEL_TAHAP[t]}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ol>
+
+              {!liveSelesai ? (
+                <p className="font-micro-badge text-micro-badge opacity-80">
+                  {liveTahap === "mouth"
+                    ? "Mulut terbuka jelas, lalu tutupkan lagi"
+                    : liveTahap === "left"
+                      ? "Putar kepala ke kiri sampai terasa berbeda"
+                      : liveTahap === "right"
+                        ? "Putar kepala ke kanan sampai terasa berbeda"
+                        : "Ikuti urutan di atas, satu tahap satu tahap"}
+                </p>
+              ) : null}
             </div>
           ) : null}
 

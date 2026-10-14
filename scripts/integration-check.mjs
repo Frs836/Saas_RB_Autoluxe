@@ -1082,8 +1082,11 @@ if (!faceStaff) {
 
   // Daftarkan sampel wajah dummy supaya ada yang bisa ditinjau. Pendaftaran
   // wajib mengembalikan status ke pending.
-  const dummyDescriptor = Array.from({ length: 64 }, (_, i) =>
-    Math.sin(i / 3) * 0.5,
+  // Panjang vektor mengikuti face_descriptor_length() di database, yaitu 1434
+  // titik landmark kali tiga koordinat. Sampel uji dibuat dari pola sinus
+  // supaya deterministik dan tidak bergantung pada berkas gambar.
+  const dummyDescriptor = Array.from({ length: 1434 }, (_, i) =>
+    Number((Math.sin(i / 3) * 0.5).toFixed(5)),
   );
   // Foto referensi wajib ada supaya maintainer punya wajah yang bisa dinilai.
   const registered = await karyawan.client.rpc("set_face_descriptor", {
@@ -1697,7 +1700,7 @@ const { data: cabangUntukAbsen } = await adminClient
  * Sampel dipasang di sini juga, bukan mengandalkan bagian 14, supaya bagian
  * ini tetap berarti dijalankan sendiri.
  */
-const vektorSampel = Array.from({ length: 256 }, (_, i) => Number((Math.sin(i * 0.37) * 0.5 + 0.5).toFixed(6)));
+const vektorSampel = Array.from({ length: 1434 }, (_, i) => Number((Math.sin(i * 0.37) * 0.5 + 0.5).toFixed(6)));
 
 const { data: karyawanProfil } = await karyawan.client
   .from("profiles")
@@ -1728,13 +1731,14 @@ if (!cabangUntukAbsen || !karyawanProfil) {
     .eq("profile_id", karyawanProfil?.id)
     .eq("date", hariIni);
 
-  const absen = (descriptor) =>
+  const absen = (descriptor, lv = true) =>
     karyawan.client.rpc("attendance_check_in", {
       p_latitude: Number(cabangUntukAbsen.latitude),
       p_longitude: Number(cabangUntukAbsen.longitude),
       p_accuracy_meters: 8,
       p_photo_url: `${TEST_MARKER}/scan.webp`,
       p_face_descriptor: descriptor,
+      p_liveness_passed: lv,
       p_late_reason: "Uji pencocokan wajah",
     });
 
@@ -1753,6 +1757,13 @@ if (!cabangUntukAbsen || !karyawanProfil) {
     skorPalsu.error ? "ditolak" : "LOLOS",
   );
 
+  const tanpaLiveness = await absen(vektorSampel, false);
+  suite.check(
+    "absen tanpa liveness ditolak",
+    Boolean(tanpaLiveness.error),
+    tanpaLiveness.error?.message,
+  );
+
   const tanpaScan = await absen(null);
   suite.check(
     "absen tanpa scan wajah ditolak",
@@ -1768,18 +1779,18 @@ if (!cabangUntukAbsen || !karyawanProfil) {
     salahPanjang.error?.message,
   );
 
-  const wajahLain = vektorAsli.map((v, i) =>
-    Number((v * Math.cos(i * 0.4) - vektorAsli[(i + 11) % vektorAsli.length] * Math.sin(i * 0.2)).toFixed(6)),
+  // Ambang 80 persen: vektor yang digeser sedikit harus tertahan.
+  const setengah = await absen(
+    vektorAsli.map((v, i) => Number((v * Math.cos(i * 0.4) - vektorAsli[(i + 11) % vektorAsli.length] * Math.sin(i * 0.2)).toFixed(6))),
   );
-  const tidakCocok = await absen(wajahLain);
   suite.check(
     "wajah yang tidak cocok ditolak",
-    Boolean(tidakCocok.error),
-    tidakCocok.error?.message,
+    Boolean(setengah.error),
+    setengah.error?.message,
   );
 
   const benar = await absen(vektorAsli);
-  suite.check("wajah yang cocok diterima", !benar.error, benar.error?.message);
+  suite.check("wajah yang cocok dengan liveness diterima", !benar.error, benar.error?.message);
   suite.check(
     "skor pada log dihitung server, bukan kiriman klien",
     benar.error ? null : Number(benar.data?.face_similarity_score) > 0.9,

@@ -26,6 +26,13 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    /*
+     * Berkas statis dilepas dari middleware. mediapipe, sw.js, dan manifest
+     * adalah berkas, bukan halaman. Kalau ikut dilewatkan, middleware
+     * mengarahkan permintaan ke halaman masuk, dan pemanggilnya menerima
+     * HTML padahal meminta WASM. Mesin pemindai wajah lalu gagal memuat tanpa
+     * pesan yang jelas, karena yang gagal bukan halamannya.
+     */
+    "/((?!_next/static|_next/image|favicon.ico|mediapipe|sw\\.js|manifest\\.json|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|wasm|task)$).*)",
   ],
 };

@@ -5,13 +5,13 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { formatRupiah } from "@/lib/format";
+import { BlinkChallenge, detectFaceInVideo, warmUpFaceEngine } from "@/lib/face";
 import {
   ATTENDANCE_STATUS_LABELS,
   ATTENDANCE_STATUS_STYLE,
   canvasToWebp,
   captureSquareCanvas,
   cosineSimilarity,
-  extractFaceDescriptor,
   formatDistance,
   formatDuration,
   haversineMeters,
@@ -106,6 +106,12 @@ export function AttendanceConsole({
     profile.faceDescriptor,
   );
 
+  // Liveness: satu kedip lengkap harus tercatat sebelum absensi dikirim.
+  const blinkRef = useRef(new BlinkChallenge());
+  const [blinkDone, setBlinkDone] = useState(false);
+  const [eyeBlink, setEyeBlink] = useState(0);
+  const [mesinSiap, setMesinSiap] = useState(false);
+
   const [branchLat, setBranchLat] = useState(branch.latitude);
   const [branchLng, setBranchLng] = useState(branch.longitude);
 
@@ -162,6 +168,10 @@ export function AttendanceConsole({
   // Mulai kamera
   useEffect(() => {
     let cancelled = false;
+
+    // Mesin pemindai dipanaskan bersamaan dengan kamera supaya frame
+    // pertama tidak menunggu pemuatan model.
+    warmUpFaceEngine();
 
     async function start() {
       if (!navigator.mediaDevices?.getUserMedia) {
@@ -246,6 +256,58 @@ export function AttendanceConsole({
     return () => window.clearTimeout(id);
   }, [requestGps]);
 
+  /*
+   * Pemantau kedip.
+   *
+   * Berjalan hanya ketika kamera aktif, dan hanya setiap tiga frame supaya
+   * tidak ikut membebani ponsel. Setelah kedip tercatat, monitor berhenti
+   * supaya tidak menjalankan deteksi sepanjang hari.
+   */
+  useEffect(() => {
+    if (!cameraReady || blinkDone) return;
+
+    let berhenti = false;
+    let frame = 0;
+
+    const tick = async () => {
+      if (berhenti) return;
+      frame += 1;
+      if (frame % 3 === 0) {
+        try {
+          const hasil = await detectFaceInVideo(videoRef.current!, performance.now());
+          if (hasil && !berhenti) {
+            setEyeBlink(hasil.eyeBlink);
+            if (blinkRef.current.update(hasil.eyeBlink)) {
+              setBlinkDone(true);
+              return;
+            }
+          }
+        } catch {
+          // Kesalahan mesin pemindai tidak boleh menghentikan pemantau.
+        }
+      }
+      requestAnimationFrame(() => void tick());
+    };
+
+    void tick();
+    return () => {
+      berhenti = true;
+    };
+  }, [cameraReady, blinkDone]);
+
+  /**
+   * Pindai wajah pada frame video.
+   *
+   * Memakai FaceLandmarker, bukan sekadar memperkecil gambar. Wajah yang
+   * tidak terdeteksi, terlalu kecil, atau tidak utuh ditolak di sini supaya
+   * yang terkirim ke server selalu wajah yang layak.
+   */
+  const pindaiWajah = useCallback(async () => {
+    const video = videoRef.current;
+    if (!video) return null;
+    return detectFaceInVideo(video, performance.now());
+  }, []);
+
   const handleCapture = useCallback(async () => {
     setError(null);
     setInfo(null);
@@ -256,18 +318,30 @@ export function AttendanceConsole({
     }
     try {
       setBusy("capture");
+      const hasil = await pindaiWajah();
+      if (!hasil) {
+        setError(
+          "Wajah belum terdeteksi. Posisikan wajah menghadap lurus ke kamera, lalu coba lagi.",
+        );
+        return;
+      }
+
       const canvas = captureSquareCanvas(video, 512);
-      const descriptor = extractFaceDescriptor(canvas, 512, 512, 16);
       const blob = await canvasToWebp(canvas, 0.82);
       setCapturedDataUrl(canvas.toDataURL("image/webp", 0.8));
       setCapturedBlob(blob);
-      setCapturedDescriptor(descriptor);
+      setCapturedDescriptor(hasil.descriptor);
+      setEyeBlink(hasil.eyeBlink);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal mengambil foto.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Gagal memindai wajah. Periksa izin kamera lalu coba lagi.",
+      );
     } finally {
       setBusy(null);
     }
-  }, []);
+  }, [pindaiWajah]);
 
   const handleRetake = useCallback(() => {
     setCapturedDataUrl(null);
@@ -275,6 +349,9 @@ export function AttendanceConsole({
     setCapturedDescriptor(null);
     setError(null);
     setInfo(null);
+    // Kedip harus diulang supaya foto baru tidak memakai bukti dari frame lama.
+    blinkRef.current.reset();
+    setBlinkDone(false);
   }, []);
 
   const uploadPhoto = useCallback(async (blob: Blob): Promise<string> => {
@@ -377,6 +454,7 @@ export function AttendanceConsole({
           p_accuracy_meters: gps.accuracy,
           p_photo_url: photoPath,
           p_face_descriptor: scanWajah,
+          p_liveness_passed: blinkDone,
           p_late_reason: isLate ? lateReason.trim() : null,
         });
         if (rpcErr) throw new Error(rpcErr.message);
@@ -465,6 +543,9 @@ export function AttendanceConsole({
     gps.status === "success" &&
     branchConfigured &&
     insideRadius &&
+    // Check-in butuh bukti liveness. Check-out tidak, karena sudah tercatat
+    // pada check-in pagi itu.
+    (mode === "checkout" || blinkDone) &&
     (mode === "checkout" || lateReasonValid) &&
     mode !== "done";
 
@@ -786,6 +867,34 @@ export function AttendanceConsole({
               </span>
             </div>
           </div>
+
+          {/* Status liveness. Kedip adalah bukti orang ada di depan kamera,
+              jadi absensi tidak bisa dikirim tanpa itu. */}
+          {cameraReady ? (
+            <div
+              className={`flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 ${
+                blinkDone
+                  ? "bg-success-surface text-success-text"
+                  : "bg-warning-surface text-warning-text"
+              }`}
+            >
+              <span className="material-symbols-outlined text-[20px]">
+                {blinkDone ? "verified_user" : "visibility"}
+              </span>
+              <div className="flex-1 text-left">
+                <p className="font-caption text-caption">
+                  {blinkDone
+                    ? "Liveness terverifikasi"
+                    : "Kedipkan mata satu kali untuk membuktikan Anda hadir"}
+                </p>
+                {!blinkDone && eyeBlink > 0.15 ? (
+                  <p className="font-micro-badge text-micro-badge opacity-80">
+                    Terdeteksi kedip, tahan sebentar lalu buka lagi
+                  </p>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
 
           {/* Kontrol ambil foto */}
           <div className="flex items-center justify-center gap-3">

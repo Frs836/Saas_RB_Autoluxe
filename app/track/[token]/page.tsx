@@ -67,12 +67,47 @@ function storageObjectUrl(path: string | null): string | null {
     .join("/")}`;
 }
 
-const STEPS: { key: string; label: string; icon: string }[] = [
+/*
+ * Tahap yang dilalui pelanggan, berurutan dari order dibuat sampai unit
+ * diambil pulang.
+ *
+ * Daftar ini sebelumnya hanya memuat queued sampai completed. Padahal
+ * migrasi 0030 menambah dua tahap lagi ke enum order_status, yaitu
+ * menunggu_diambil dan diserahkan. Karena keduanya tidak ada di daftar,
+ * findIndex mengembalikan -1, semua tahap jatuh ke "Menunggu", dan
+ * lencana status jatuh ke teks cadangan "Diproses". Pelanggan yang
+ * Eug belum mengambil kendaraannya tetap membaca "Diproses".
+ *
+ * Urutan di enum: queued, in_progress, qc_review, completed,
+ * menunggu_diambil, diserahkan. Jangan diubah seenaknya, karena apply_order_status
+ * dan advance_handover memvalidasi transisinya.
+ */
+const STEPS: { key: string; label: string; icon: string; note?: string }[] = [
   { key: "queued", label: "Antre", icon: "schedule" },
   { key: "in_progress", label: "Pengerjaan", icon: "build" },
   { key: "qc_review", label: "Quality Control", icon: "fact_check" },
-  { key: "completed", label: "Selesai", icon: "verified" },
+  {
+    key: "completed",
+    label: "Pengerjaan Selesai",
+    icon: "task_alt",
+    note: "Pekerjaan utama selesai dan sudah lolos pemeriksaan",
+  },
+  {
+    key: "menunggu_diambil",
+    label: "Siap Diambil",
+    icon: "local_shipping",
+    note: "Kendaraan sudah selesai dan siap diambil pelanggan",
+  },
+  {
+    key: "diserahkan",
+    label: "Telah Diambil",
+    icon: "verified",
+    note: "Kendaraan sudah diserahkan ke pelanggan",
+  },
 ];
+
+/* Cadangan kalau status tidak dikenal. Tidak boleh berbunyi "Diproses". */
+const STATUS_UNKNOWN = "Status tidak tersedia";
 
 const PHASE_LABEL: Record<string, string> = {
   before: "Kondisi Sebelum",
@@ -138,6 +173,22 @@ export default async function TrackPage({
   const isCancelled = order.status === "cancelled";
   const currentIndex = STEPS.findIndex((step) => step.key === order.status);
 
+  /*
+   * Setelah diserahkan, pelanggan sudah membawa unit pulang, jadi semua
+   * tahap tampil tuntas dan tidak ada yang berhenti sebagai "Sedang
+   * berlangsung".
+   */
+  const selesaiDiserahkan = order.status === "diserahkan";
+  const indexTampil = selesaiDiserahkan ? STEPS.length : currentIndex;
+
+  const lencanaStatus = isCancelled
+    ? "Dibatalkan"
+    : currentIndex >= 0
+      ? STEPS[currentIndex].label
+      : STATUS_UNKNOWN;
+
+  const siapDiambil = order.status === "menunggu_diambil";
+
   return (
     <div className="min-h-screen bg-surface pb-16">
       <header className="sticky top-0 z-20 bg-surface/95 backdrop-blur border-b border-white/70">
@@ -173,19 +224,26 @@ export default async function TrackPage({
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-body-bold text-caption ${
                 isCancelled
                   ? "bg-danger-surface text-danger-text"
-                  : order.status === "completed"
+                  : order.status === "diserahkan"
                     ? "bg-success-surface text-success-text"
-                    : "bg-brand-50 text-brand-600"
+                    : siapDiambil
+                      ? "bg-success-surface text-success-text"
+                      : "bg-brand-50 text-brand-600"
               }`}
             >
-              <Icon name={isCancelled
-                  ? "cancel"
-                  : order.status === "completed"
-                    ? "task_alt"
-                    : "pending"} className="text-[16px]" />
-              {isCancelled
-                ? "Dibatalkan"
-                : STEPS[currentIndex]?.label ?? "Diproses"}
+              <Icon
+                name={
+                  isCancelled
+                    ? "cancel"
+                    : order.status === "diserahkan"
+                      ? "verified"
+                      : siapDiambil
+                        ? "local_shipping"
+                        : "pending"
+                }
+                className="text-[16px]"
+              />
+              {lencanaStatus}
             </span>
           </div>
 
@@ -237,6 +295,44 @@ export default async function TrackPage({
               </p>
             </div>
           ) : null}
+
+          {/*
+           * Pengerjaan selesai tapi unit belum diambil adalah kabar yang
+           * paling ditunggu pelanggan. Sebelum ada banner ini, tahap
+           * "menunggu_diambil" tidak dikenal sama sekali oleh halaman ini,
+           * sehingga yang terbaca hanya "Diproses".
+           */}
+          {siapDiambil ? (
+            <div className="mt-4 flex items-start gap-2.5 p-3.5 rounded-xl bg-success-surface text-success-text">
+              <Icon name="local_shipping" className="text-[20px] shrink-0 mt-0.5" />
+              <div>
+                <p className="font-body-bold text-body-bold">
+                  Pengerjaan selesai, kendaraan siap diambil
+                </p>
+                <p className="font-caption text-caption leading-relaxed mt-0.5">
+                  Silakan datang ke workshop. Unit Anda sudah selesai dan
+                  menunggu untuk diserahkan.
+                </p>
+              </div>
+            </div>
+          ) : null}
+
+          {selesaiDiserahkan ? (
+            <div className="mt-4 flex items-start gap-2.5 p-3.5 rounded-xl bg-success-surface text-success-text">
+              <Icon name="verified" className="text-[20px] shrink-0 mt-0.5" />
+              <div>
+                <p className="font-body-bold text-body-bold">
+                  Kendaraan sudah diserahkan
+                </p>
+                <p className="font-caption text-caption leading-relaxed mt-0.5">
+                  Terima kasih telah mempercayakan kendaraan Anda.
+                  {order.completed_at
+                    ? ` Diserahkan pada ${formatDate(order.completed_at)}.`
+                    : ""}
+                </p>
+              </div>
+            </div>
+          ) : null}
         </section>
 
         <section className="bg-surface rounded-[20px] p-5 clay-card border border-white/80">
@@ -254,8 +350,8 @@ export default async function TrackPage({
           ) : (
             <ol className="flex flex-col">
               {STEPS.map((step, index) => {
-                const done = currentIndex >= 0 && index < currentIndex;
-                const active = index === currentIndex;
+                const done = indexTampil >= 0 && index < indexTampil;
+                const active = index === indexTampil && !selesaiDiserahkan;
                 const reached = done || active;
                 const isLast = index === STEPS.length - 1;
                 return (
@@ -287,11 +383,13 @@ export default async function TrackPage({
                         {step.label}
                       </p>
                       <p className="font-caption text-caption text-text-muted">
-                        {active
-                          ? "Sedang berlangsung"
-                          : done
-                            ? "Selesai"
-                            : "Menunggu"}
+                        {done
+                          ? "Selesai"
+                          : active
+                            ? "Sedang berlangsung"
+                            : step.note && (siapDiambil || selesaiDiserahkan)
+                              ? "Belum tercapai"
+                              : "Menunggu"}
                       </p>
                     </div>
                   </li>

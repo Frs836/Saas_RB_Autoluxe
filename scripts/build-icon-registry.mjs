@@ -28,20 +28,29 @@ const TAKEN = /^[a-z][a-z0-9_]{1,40}$/;
 for (const f of files) {
   const src = readFileSync(f, "utf8");
 
-  // <span className="material-symbols-outlined ...">ISI</span>
-  const spanRe = /<span\b[^>]*className=(?:"[^"]*\bmaterial-symbols-outlined\b[^"]*"|\{`[^`]*\bmaterial-symbols-outlined\b[^`]*`\})[^>]*>/g;
+  // Bentuk sekarang: <Icon name="literal" />
+  for (const m of src.matchAll(/<Icon\b[^>]*?\bname="([a-z][a-z0-9_]*)"/g)) {
+    if (TAKEN.test(m[1])) nama.add(m[1]);
+  }
+
+  // Bentuk dinamis: <Icon name={cond ? "a" : "b"} />
+  for (const m of src.matchAll(/<Icon\b[^>]*?\bname=\{[^>]*?\}/g)) {
+    for (const l of m[0].matchAll(/["'`]([a-z][a-z0-9_]*)["'`]/g)) {
+      if (TAKEN.test(l[1])) nama.add(l[1]);
+    }
+  }
+
+  // Bentuk lama, untuk berkas yang belum lewat codemod.
+  const spanRe =
+    /<span\b[^>]*className=(?:"[^"]*\bmaterial-symbols-outlined\b[^"]*"|\{`[^`]*\bmaterial-symbols-outlined\b[^`]*`\})[^>]*>/g;
   let m;
   while ((m = spanRe.exec(src))) {
     const mulai = spanRe.lastIndex;
     const akhir = src.indexOf("</span>", mulai);
     if (akhir === -1) continue;
-    let isi = src.slice(mulai, akhir);
+    const isi = src.slice(mulai, akhir);
 
-    // Buang ekspresi yang bukan nama ikon: ambil hanya string literal.
-    const literal = isi.matchAll(/["'`]([a-z][a-z0-9_]*)["'`]/g);
-    for (const l of literal) if (TAKEN.test(l[1])) nama.add(l[1]);
-
-    // Nama ikon juga bisa ditulis polos tanpa tanda kutip.
+    for (const l of isi.matchAll(/["'`]([a-z][a-z0-9_]*)["'`]/g)) if (TAKEN.test(l[1])) nama.add(l[1]);
     const polos = isi.match(/(?:^|>)\s*([a-z][a-z0-9_]*)\s*</);
     if (polos && TAKEN.test(polos[1])) nama.add(polos[1]);
   }
@@ -67,14 +76,19 @@ try {
   dipakai = readFileSync(dipakaiFile, "utf8").split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
 } catch {}
 
-const sah = [...new Set([...daftar, ...dipakai])].filter((n) => resmi.has(n)).sort();
-const bukanIkon = [...new Set([...daftar, ...dipakai])].filter((n) => !resmi.has(n)).sort();
-console.log("nama resmi tersedia :", resmi.size);
-console.log("dipakai setelah filter:", sah.length);
-if (bukanIkon.length) console.log("DIBUANG (bukan ikon):", bukanIkon.join(", "));
+/*
+ * Kandidat yang tidak ada di daftar resmi tetap dicoba unduh, bukan
+ * dibuang. Metadata Google tertinggal dari font yang baru, jadi ada ikon
+ * yang masih dipakai aplikasi tapi belum tercatat. Yang penting bukan
+ * namanya ada di daftar, tapi path-nya bisa diambil.
+ */
+const semua = [...new Set([...daftar, ...dipakai])].sort();
+const bukanIkon = semua.filter((n) => !resmi.has(n)).sort();
+if (bukanIkon.length) console.log("tidak ada di metadata, tetap dicoba:", bukanIkon.join(", "));
 
-const daftarFinal = sah;
-console.log("ikon akan diambil:", daftarFinal.length);
+const daftarFinal = semua;
+console.log("nama resmi tersedia :", resmi.size);
+console.log("kandidat akhir      :", daftarFinal.length);
 
 const path = {};
 const gagal = [];

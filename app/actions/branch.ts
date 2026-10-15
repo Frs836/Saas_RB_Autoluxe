@@ -47,7 +47,7 @@ export async function setActiveBranch(branchId: string, returnTo = "/dashboard")
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) redirect(destination);
+  if (!user) return { ok: false as const, reason: "Sesi berakhir. Silakan masuk kembali." };
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -56,11 +56,13 @@ export async function setActiveBranch(branchId: string, returnTo = "/dashboard")
     .maybeSingle();
 
   if (!profile || !can(profile.role, "branch.switch")) {
-    redirect(destination);
+    return { ok: false as const, reason: "Peran Anda tidak boleh berpindah cabang." };
   }
 
   if (branchId !== ALL_BRANCHES) {
-    if (!isBranchUuid(branchId)) redirect(destination);
+    if (!isBranchUuid(branchId)) {
+      return { ok: false as const, reason: "Cabang tidak dikenali." };
+    }
 
     const { data: branch } = await supabase
       .from("branches")
@@ -68,11 +70,24 @@ export async function setActiveBranch(branchId: string, returnTo = "/dashboard")
       .eq("id", branchId)
       .maybeSingle();
 
-    if (!branch || !branch.is_active) redirect(destination);
+    if (!branch || !branch.is_active) {
+      return { ok: false as const, reason: "Cabang tersebut sedang tidak aktif." };
+    }
   }
 
   await writeActiveBranch(branchId);
-  redirect(destination);
+
+  /*
+   * Sebelumnya fungsi ini memanggil redirect() ke halaman yang sedang
+   * dibuka. Itu memaksa browser melakukan navigasi penuh: seluruh dokumen
+   * diunduh ulang dari awal. Memindahkan cabang hanya mengubah satu cookie,
+   * jadi cukup router.refresh() dari client.
+   *
+   * redirect() juga melempar NEXT_REDIRECT. Kalau itu tidak tertangkap, state
+   * pending di client tidak pernah dibersihkan, tombol switcher mati dan
+   * satu-satunya jalan keluar adalah refresh manual.
+   */
+  return { ok: true as const, branchId };
 }
 
 /** Mengembalikan ke cabang penempatan tetap pengguna. */
@@ -100,5 +115,7 @@ export async function resetActiveBranch(returnTo = "/dashboard") {
     : ALL_BRANCHES;
 
   await writeActiveBranch(home);
-  redirect(destination);
+
+  // Sama seperti setActiveBranch: cukup refresh, jangan navigasi penuh.
+  return { ok: true as const, branchId: home };
 }

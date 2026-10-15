@@ -71,7 +71,15 @@ const STATUS_META: Record<string, { label: string; cls: string; step: number }> 
   queued: { label: "Dalam Antrean", cls: "bg-surface-container text-text-secondary", step: 0 },
   in_progress: { label: "Sedang Dikerjakan", cls: "bg-brand-50 text-brand-700", step: 1 },
   qc_review: { label: "Menunggu QC", cls: "bg-warning-surface text-warning-text", step: 2 },
-  completed: { label: "Selesai", cls: "bg-success-surface text-success-text", step: 3 },
+  completed: { label: "Pengerjaan Selesai", cls: "bg-success-surface text-success-text", step: 3 },
+  /*
+   * Dua tahap di bawah ini ditambahkan migrasi 0030. Semuanya tidak ada di
+   * peta ini, sehingga lookup falls back ke "Dalam Antrean". Padahal order
+   * sudah selesai dikerjakan, dan kekeliruan inilah yang membuat halaman
+   * lacak pelanggan menampilkan "Diproses" terus-menerus.
+   */
+  menunggu_diambil: { label: "Siap Diambil", cls: "bg-success-surface text-success-text", step: 4 },
+  diserahkan: { label: "Sudah Diserah", cls: "bg-success-surface text-success-text", step: 5 },
   cancelled: { label: "Dibatalkan", cls: "bg-danger-surface text-danger-text", step: -1 },
 };
 
@@ -658,7 +666,7 @@ export function OrderDetailView({
             <button
               type="button"
               onClick={openCamera}
-              className="w-full py-3.5 rounded-2xl bg-primary-gradient text-on-primary font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform"
+              className="w-full py-3.5 rounded-2xl bg-primary/10 text-primary flex items-center justify-center gap-2 border border-primary/20 active:scale-95 transition-transform"
             >
               <Icon name="add_a_photo" className="text-[20px]" />
               Tambah Foto Inspeksi
@@ -668,7 +676,7 @@ export function OrderDetailView({
       ) : null}
 
       {cameraOpen ? (
-        <div className="fixed inset-0 z-[60] bg-black/85 flex flex-col items-center justify-center gap-3 p-gutter">
+        <div className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex flex-col items-center justify-center gap-3 p-6">
           <div className="flex gap-2 w-full max-w-[420px]">
             {PHASES.map((p) => (
               <button
@@ -682,8 +690,8 @@ export function OrderDetailView({
                 disabled={p.key === "after" && !hasBefore}
                 className={`flex-1 py-2 rounded-xl font-caption text-caption flex items-center justify-center gap-1 disabled:opacity-40 ${
                   phase === p.key
-                    ? "bg-brand-500 text-white"
-                    : "bg-white/15 text-white/80"
+                    ? "bg-brand-50 text-white"
+                    : "bg-white/5 border border-white/10"
                 }`}
               >
                 {p.short}
@@ -697,7 +705,7 @@ export function OrderDetailView({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Catatan kondisi kendaraan (minimal 5 karakter)"
-              className="w-full h-12 px-3 rounded-xl bg-white/10 text-white font-body text-body outline-none placeholder:text-white/50"
+              className="w-full h-12 px-3 rounded-xl bg-white/5 text-white font-body text-body outline-none placeholder:text-white/50 border border-white/10"
             />
           </label>
 
@@ -754,7 +762,7 @@ export function OrderDetailView({
                     onClick={capture}
                     disabled={busy}
                     aria-label="Ambil foto"
-                    className="h-14 w-14 rounded-full bg-brand-500 text-white flex items-center justify-center clay-glow disabled:opacity-60"
+                    className="h-14 w-14 rounded-full bg-brand-100/50 border2 border-brand-200/50 flex items-center justify-center clay-glow disabled:opacity-60"
                   >
                     <Icon name="photo_camera" className="text-[28px]" />
                   </button>

@@ -23,6 +23,10 @@ const ORDER_STAGE: Record<string, { label: string; progress: number }> = {
   queued: { label: "Dalam Antrean", progress: 10 },
   in_progress: { label: "Sedang Dikerjakan", progress: 60 },
   qc_review: { label: "Review QC", progress: 85 },
+  // Pengerjaan selesai tapi belum diambil adalah tahap yang paling sering
+  // ditanyakan pelanggan, jadi harus punya label sendiri.
+  completed: { label: "Pengerjaan Selesai", progress: 95 },
+  menunggu_diambil: { label: "Siap Diambil", progress: 100 },
 };
 
 type MyCashHold = {

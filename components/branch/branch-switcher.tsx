@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { usePathname } from "next/navigation";
+import { useState, useTransition } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { setActiveBranch } from "@/app/actions/branch";
 import { ALL_BRANCHES, type BranchOption, type BranchScope } from "@/lib/branch";
 import { Icon } from "@/components/ui/icon";
@@ -11,19 +11,31 @@ type Props = {
   activeBranchId: string | null;
   scope: BranchScope;
   variant: "header" | "wide";
+  onError?: (message: string) => void;
 };
 
-export function BranchSwitcher({ branches, activeBranchId, scope, variant }: Props) {
+export function BranchSwitcher({ branches, activeBranchId, scope, variant, onError }: Props) {
   const pathname = usePathname();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState<string | null>(null);
 
   const returnTo = pathname || "/dashboard";
 
+  /*
+   * Label cabang ikut berubah seketika saat dipilih, sebelum server selesai
+   * menulis cookie. Sebelumnya label baru ikut berubah setelah seluruh
+   * halaman dimuat ulang, sehingga menekan menu lain tampak seperti tidak
+   * ada yang terjadi.
+   */
+  const [s, setS] = useState<string | null>(null);
+  const scopeAktif = s ?? scope;
+  const idAktif = s ?? activeBranchId;
+
   const currentLabel =
-    scope === "all"
+    scopeAktif === "all"
       ? "Seluruh Cabang"
-      : (branches.find((b) => b.id === activeBranchId)?.name ?? "Cabang Utama");
+      : (branches.find((b) => b.id === idAktif)?.name ?? "Cabang Utama");
 
   const options = branches.filter((branch) => branch.isActive);
 
@@ -31,7 +43,25 @@ export function BranchSwitcher({ branches, activeBranchId, scope, variant }: Pro
     if (pending) return;
     setPending(value);
     setOpen(false);
-    await setActiveBranch(value, returnTo);
+    setS(value);
+
+    try {
+      const hasil = await setActiveBranch(value, returnTo);
+      if (!hasil.ok) {
+        setS(null);
+        onError?.(hasil.reason);
+        return;
+      }
+      router.refresh();
+    } catch {
+      // Apa pun galatnya, kembalikan ke nilai lama. Tanpa ini, state
+      // optimistik membuat header menampilkan cabang yang tidak jadi
+      // tersimpan.
+      setS(null);
+      onError?.("Gagal menyimpan pilihan cabang. Coba lagi.");
+    } finally {
+      setPending(null);
+    }
   }
 
   const trigger = (

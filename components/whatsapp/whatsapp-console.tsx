@@ -48,7 +48,11 @@ const STATUS_LABEL: Record<string, string> = {
   queued: "Dalam Antrean",
   in_progress: "Sedang Dikerjakan",
   qc_review: "Menunggu Quality Control",
-  completed: "Selesai",
+  completed: "Pengerjaan Selesai",
+  // Dua status di bawah ada sejak migrasi 0030. Tanpa entri, pesan yang
+  // dikirim ke pelanggan menuliskan status kosong.
+  menunggu_diambil: "Siap Diambil",
+  diserahkan: "Sudah Diserah",
   cancelled: "Dibatalkan",
 };
 

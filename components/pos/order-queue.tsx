@@ -53,6 +53,21 @@ const STATUS_META: Record<
     cls: "bg-success-surface text-success-text",
     icon: "task_alt",
   },
+  /*
+   * Tahap serah terima dari migrasi 0030. Tanpa entri di sini, kartu
+   * antrean menampilkan label status kosong untuk order yang justru sudah
+   * selesai dan tinggal diambil.
+   */
+  menunggu_diambil: {
+    label: "Siap Diambil",
+    cls: "bg-success-surface text-success-text",
+    icon: "local_shipping",
+  },
+  diserahkan: {
+    label: "Sudah Diserah",
+    cls: "bg-success-surface text-success-text",
+    icon: "verified",
+  },
   cancelled: {
     label: "Dibatalkan",
     cls: "bg-danger-surface text-danger-text",
@@ -74,7 +89,16 @@ const TRANSITIONS: Record<
     { status: "completed", label: "Selesaikan", icon: "task_alt" },
     { status: "in_progress", label: "Kembalikan", icon: "undo" },
   ],
+  /*
+   * Tahap serah terima punya RPC sendiri. apply_order_status sengaja tidak
+   * boleh dipakai di sini karena advance_handover yang memvalidasi urutan
+   * selesai, menunggu diambil, lalu diserahkan.
+   */
+  completed: [{ status: "menunggu_diambil", label: "Siapkan untuk Diambil", icon: "local_shipping" }],
+  menunggu_diambil: [{ status: "diserahkan", label: "Serahkan ke Pelanggan", icon: "verified" }],
 };
+
+const STATUS_SERAH_TERIMA = new Set(["menunggu_diambil", "diserahkan"]);
 
 const FILTERS = [
   { key: "all", label: "Semua" },
@@ -143,13 +167,12 @@ export function OrderQueue({
     setBusyId(order.id);
     setError(null);
     const supabase = createClient();
-    const { error: rpcError } = await supabase.rpc("apply_order_status", {
-      p_order_id: order.id,
-      p_status: status,
-    });
+    const { error: rpcErr } = STATUS_SERAH_TERIMA.has(status)
+      ? await supabase.rpc("advance_handover", { p_order_id: order.id, p_next: status })
+      : await supabase.rpc("apply_order_status", { p_order_id: order.id, p_status: status });
     setBusyId(null);
-    if (rpcError) {
-      setError(rpcError.message);
+    if (rpcErr) {
+      setError(rpcErr.message);
       return;
     }
     router.refresh();

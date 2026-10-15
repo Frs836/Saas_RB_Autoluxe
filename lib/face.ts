@@ -74,9 +74,15 @@ export function loadFaceLandmarker(): Promise<FaceLandmarker> {
   return pending;
 }
 
-/** Panaskan mesin saat halaman dibuka supaya frame pertama tidak lambat. */
-export function warmUpFaceEngine(): void {
-  void loadFaceLandmarker().catch(() => undefined);
+/**
+ * Muat mesin pemindai wajah di latar belakang.
+ *
+ * Berkasnya 16 MB, jadi pemanggil yang menampilkan statusnya perlu bisa
+ * menunggu sampai selesai. Dikembalikan promise supaya halaman bisa
+ * menampilkan apa yang sedang terjadi, bukan diam saja selama unduhan.
+ */
+export function warmUpFaceEngine(): Promise<unknown> {
+  return loadFaceLandmarker().catch(() => undefined);
 }
 
 /**

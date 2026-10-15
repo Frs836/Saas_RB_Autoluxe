@@ -166,6 +166,26 @@
   border-radius: 9999px;
 }
 
+/*
+ * Font ikon dilayani sendiri, bukan dari Google Fonts.
+ *
+ * Font Material Symbols penuh berukuran 3,9 MB. Subset ini hanya memuat 105
+ * ikon yang benar-benar dipakai aplikasi dan berukuran 12 KB. Font-nya juga
+ * sudah dikunci ke sumbu yang dipakai (FILL 0, wght 500, GRAD 0, opsz 24),
+ * jadi tidak ada sumbu variabel yang perlu dianimasikan.
+ *
+ * font-display: swap dipakai supaya teks halaman langsung tampil dan hanya
+ * ikon yang menunggu. Daftar ikon ada di public/fonts/dipakai.txt dan
+ * dibangkitkan ulang oleh scripts/build-icon-subset.mjs.
+ */
+@font-face {
+  font-family: 'Material Symbols Outlined';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/material-symbols-subset.woff2') format('woff2');
+}
+
 .material-symbols-outlined {
   font-family: 'Material Symbols Outlined';
   font-weight: normal;

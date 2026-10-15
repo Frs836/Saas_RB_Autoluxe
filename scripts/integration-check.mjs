@@ -1208,6 +1208,9 @@ if (!faceStaff) {
   );
 
   // Bersihkan sampel wajah uji agar akun uji kembali seperti semula.
+  // Kolom foto ikut dikosongkan karena foto rujukan uji tidak pernah diunggah
+  // ke storage, dan sisa referensinya membuat halaman verifikasi wajah
+  // meminta berkas yang tidak ada.
   await adminClient
     .from("profiles")
     .update({
@@ -1216,6 +1219,8 @@ if (!faceStaff) {
       face_reviewed_by: null,
       face_reviewed_at: null,
       face_review_note: null,
+      face_reference_photo_url: null,
+      face_registered_at: null,
     })
     .eq("id", staffId);
   await adminClient.from("notifications").delete().eq("category", "account");
@@ -1861,8 +1866,9 @@ if (!cabangUntukAbsen || !karyawanProfil?.id) {
   const salahPanjang = await absen(vektorSampel.slice(0, 64), jejakBenar);
   suite.check("vektor dengan panjang berbeda ditolak", Boolean(salahPanjang.error), salahPanjang.error?.message);
 
-  await bersihkanAbsen();
-  const benar = await absen(vektorSampel, jejakBenar);
+await bersihkanAbsen();
+
+const benar = await absen(vektorSampel, jejakBenar);
   suite.check("lima tahap liveness yang benar diterima", !benar.error, benar.error?.message);
   suite.check(
     "skor pada log dihitung server, bukan kiriman klien",
@@ -1878,11 +1884,36 @@ if (!cabangUntukAbsen || !karyawanProfil?.id) {
   if (!benar.error) {
     await adminClient.from("attendance_logs").delete().eq("id", benar.data.id);
   }
+await adminClient
+  .from("attendance_logs")
+  .delete()
+  .eq("profile_id", karyawanProfil?.id)
+  .eq("date", hariIni);
+
+/*
+ * Sampel wajah uji yang dipasang di bagian ini dibersihkan di sini, bukan
+ * di bagian fourteen. Bagian fourteen selesai jauh lebih dulu, jadi
+ * membersihkannya di sana tidak menyentuh sampel yang baru dipasang.
+ *
+ * Kolom foto ikut dikosongkan karena foto rujukan uji tidak pernah diunggah ke
+ * storage. Kalau referensinya tertinggal, profiles menunjuk berkas yang tidak
+ * ada, dan halaman verifikasi wajah meminta signed URL yang dijawab 404. Itu
+ * muncul sebagai galat HTTP di konsol setiap kali maintainer membuka halamannya.
+ */
+if (karyawanProfil?.id) {
   await adminClient
-    .from("attendance_logs")
-    .delete()
-    .eq("profile_id", karyawanProfil?.id)
-    .eq("date", hariIni);
+    .from("profiles")
+    .update({
+      face_descriptor: null,
+      face_verification: null,
+      face_reviewed_by: null,
+      face_reviewed_at: null,
+      face_review_note: null,
+      face_reference_photo_url: null,
+      face_registered_at: null,
+    })
+    .eq("id", karyawanProfil.id);
+}
 }
 
 /* -------------------------------------------------------------------------- */

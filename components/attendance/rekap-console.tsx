@@ -1032,7 +1032,7 @@ function BulananPanel({
       ) : null}
 
       {mode === "bulanan" ? (
-        <div className="bg-surface rounded-[20px] clay-card p-4">
+        <div className="bg-surface rounded-[20px] clay-card px-2.5 py-4">
           <div className="flex items-center justify-between mb-3">
             <button
               type="button"
@@ -1059,7 +1059,12 @@ function BulananPanel({
             </button>
           </div>
 
-          <div className="grid grid-cols-7 gap-1 mb-1">
+          {/*
+           * Jarak antar sel diperkecil supaya tiap sel tetap lebih lebar dari
+           * 44px di layar 390px. Dengan gap-1 selnya hanya 43px, satu piksel
+           * di bawah luas sentuh minimum.
+           */}
+          <div className="grid grid-cols-7 gap-0.5 mb-1">
             {HARI_MINGGUAN.map((h) => (
               <div
                 key={h}
@@ -1070,7 +1075,7 @@ function BulananPanel({
             ))}
           </div>
 
-          <div className="grid grid-cols-7 gap-1">
+          <div className="grid grid-cols-7 gap-0.5">
             {sel.map((c) => {
               const n = perTanggal.get(c.date);
               const ada = n !== undefined && (n.hadir > 0 || n.off > 0);

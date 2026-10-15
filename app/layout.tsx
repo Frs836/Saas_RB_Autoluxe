@@ -36,12 +36,24 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="id" className={plusJakartaSans.variable}>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        {/*
+         * Font ikon dilayani sendiri dari /public, bukan dari Google Fonts.
+         *
+         * Versi penuh Material Symbols berukuran 3,9 MB dan stylesheet-nya
+         * memblokir render, jadi setiap halaman menunggu berkas sebesar itu
+         * hanya untuk menampilkan ikon daftar dan roda gigi. Subset yang
+         * dipakai aplikasi berukuran 12 KB, dilayani dari domain yang sama
+         * tanpa permintaan DNS dan TLS tambahan.
+         *
+         * Preload membuat unduhan dimulai paralel dengan CSS, dan
+         * font-display: swap membuat teks tetap tampil sebelum font tiba.
+         */}
         <link
-          rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
+          rel="preload"
+          href="/fonts/material-symbols-subset.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
         />
       </head>
       <body className="min-h-screen flex flex-col antialiased">

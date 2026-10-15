@@ -42,7 +42,13 @@ export function BranchSwitcher({ branches, activeBranchId, scope, variant }: Pro
       className={
         variant === "wide"
           ? "w-full flex items-center justify-between gap-2 h-12 px-3 rounded-xl bg-surface-container-low shadow-[inset_0px_2px_4px_rgba(15,23,42,0.06)]"
-          : "flex items-center gap-1 px-2 py-0.5 mt-0.5 rounded-full bg-brand-50 max-w-[190px]"
+          : /*
+             * Varian header memakai min-h-11 dan padding yang lebih longgar.
+             * Sebelumnya tinggi sebenarnya hanya 28px karena padding vertikal
+             * tipis, padahal ini tombol yang dipakai untuk berpindah cabang
+             * dan harus memenuhi luas sentuh minimum 44px.
+             */
+            "flex items-center gap-1.5 px-2.5 min-h-11 py-1.5 mt-0.5 rounded-full bg-brand-50 max-w-[190px]"
       }
     >
       <span className="flex items-center gap-1 min-w-0">

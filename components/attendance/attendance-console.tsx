@@ -94,6 +94,19 @@ export function AttendanceConsole({
 
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  /*
+   * Kamera dan mesin pemindai hanya dinyalakan setelah staf menekan tombol.
+   *
+   * Sebelumnya keduanya langsung nyala begitu halaman dibuka. Akibatnya
+   * setiap kunjungan ke /absensi mengunduh 16 MB mesin MediaPipe dan langsung
+   * meminta izin kamera, bahkan ketika staf hanya ingin melihat jam masuk
+   * atau riwayat kehadiran. Halaman ikut tertahan lebih dari 3 detik.
+   *
+   * Sekarang halaman tampil cepat, dan berkas besar hanya diambil ketika
+   * pemindaian benar-benar akan dilakukan.
+   */
+  const [scanDiminta, setScanDiminta] = useState(false);
+  const [mesinSiap, setMesinSiap] = useState(false);
   const [capturedDataUrl, setCapturedDataUrl] = useState<string | null>(null);
   const [capturedBlob, setCapturedBlob] = useState<Blob | null>(null);
   const [capturedDescriptor, setCapturedDescriptor] = useState<number[] | null>(
@@ -177,13 +190,10 @@ export function AttendanceConsole({
     };
   }, [updateClock]);
 
-  // Mulai kamera
+  // Kamera hanya dinyalakan setelah staf menekan tombol Mulai Pindai.
   useEffect(() => {
+    if (!scanDiminta) return;
     let cancelled = false;
-
-    // Mesin pemindai dipanaskan bersamaan dengan kamera supaya frame
-    // pertama tidak menunggu pemuatan model.
-    warmUpFaceEngine();
 
     async function start() {
       if (!navigator.mediaDevices?.getUserMedia) {
@@ -219,7 +229,23 @@ export function AttendanceConsole({
       streamRef.current?.getTracks().forEach((t) => t.stop());
       streamRef.current = null;
     };
-  }, []);
+  }, [scanDiminta]);
+
+  // Mesin pemindai dimuat setelah kamera benar-benar hidup, bukan saat halaman
+  // dibuka. Statusnya ditampilkan supaya menunggu 16 MB tidak terasa
+  // seperti halaman yang macet.
+  useEffect(() => {
+    if (!scanDiminta || mesinSiap) return;
+    let batal = false;
+    warmUpFaceEngine()
+      .then(() => {
+        if (!batal) setMesinSiap(true);
+      })
+      .catch(() => undefined);
+    return () => {
+      batal = true;
+    };
+  }, [scanDiminta, mesinSiap]);
 
   const requestGps = useCallback(() => {
     if (!navigator.geolocation) {
@@ -661,7 +687,7 @@ export function AttendanceConsole({
             <div className="flex gap-2">
               <Link
                 href="/shift"
-                className="flex-1 h-10 rounded-xl primary-gradient text-white font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+                className="flex-1 h-11 rounded-xl primary-gradient text-white font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
               >
                 <span className="material-symbols-outlined text-[16px]">
                   {handoff && handoff.status === "open" ? "fact_check" : "login"}
@@ -672,7 +698,7 @@ export function AttendanceConsole({
               </Link>
               <Link
                 href="/rekap"
-                className="flex-1 h-10 rounded-xl bg-surface-container-low text-text-secondary font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+                className="flex-1 h-11 rounded-xl bg-surface-container-low text-text-secondary font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
               >
                 <span className="material-symbols-outlined text-[16px]">groups</span>
                 Rekap
@@ -853,6 +879,41 @@ export function AttendanceConsole({
                 alt="Pratinjau selfie absensi"
                 className="w-full h-full object-cover"
               />
+            ) : !scanDiminta ? (
+              /*
+               * Gerbang mulai pindai. Halaman tetap punya jam, riwayat, dan
+               * daftar syarat tanpa kamera menyala, jadi yang membuka
+               * absensi bukan pengganti dengan câmera yang menggantung.
+               */
+              <div className="w-full h-full flex flex-col items-center justify-center gap-3 px-6 text-center">
+                <span className="material-symbols-outlined text-[36px] text-brand-200">
+                  face
+                </span>
+                <p className="font-caption text-caption text-white/80">
+                  Kamera menyala setelah kamu menekan tombol di bawah.
+                </p>
+              </div>
+            ) : !cameraReady ? (
+              <div className="w-full h-full flex flex-col items-center justify-center gap-3 px-6 text-center">
+                <span className="material-symbols-outlined text-[36px] text-brand-200 animate-spin">
+                  progress_activity
+                </span>
+                <p className="font-caption text-caption text-white/80">
+                  Menyalakan kamera...
+                </p>
+              </div>
+            ) : !mesinSiap ? (
+              <div className="w-full h-full flex flex-col items-center justify-center gap-3 px-6 text-center">
+                <span className="material-symbols-outlined text-[36px] text-brand-200 animate-spin">
+                  downloading
+                </span>
+                <p className="font-caption text-caption text-white/80">
+                  Memuat mesin pemindai wajah, sekitar 16 MB.
+                </p>
+                <p className="font-micro-badge text-micro-badge text-white/60">
+                  Hanya perlu sekali. Setelahnya tersimpan di perangkat.
+                </p>
+              </div>
             ) : (
               <video
                 ref={videoRef}
@@ -998,34 +1059,49 @@ export function AttendanceConsole({
             </div>
           ) : null}
 
-          {/* Kontrol ambil foto */}
-          <div className="flex items-center justify-center gap-3">
-            {capturedDataUrl ? (
-              <button
-                type="button"
-                onClick={handleRetake}
-                disabled={busy !== null}
-                className="h-11 px-5 rounded-full bg-surface-container-low text-text-secondary font-caption text-caption flex items-center gap-1.5 active:scale-95 transition-transform disabled:opacity-60"
-              >
-                <span className="material-symbols-outlined text-[18px]">
-                  restart_alt
-                </span>
-                Ulangi Foto
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={handleCapture}
-                disabled={!cameraReady || busy !== null}
-                className="h-11 px-5 rounded-full primary-gradient text-white font-body-bold text-body-bold flex items-center gap-2 active:scale-95 transition-transform disabled:opacity-60"
-              >
-                <span className="material-symbols-outlined text-[18px]">
-                  download
-                </span>
-                {busy === "capture" ? "Memproses..." : "Ambil Foto"}
-              </button>
-            )}
-          </div>
+            {/* Kontrol ambil foto */}
+            <div className="flex items-center justify-center gap-3">
+              {!scanDiminta ? (
+                <button
+                  type="button"
+                  onClick={() => setScanDiminta(true)}
+                  className="h-12 px-6 rounded-full primary-gradient text-white font-body-bold text-body-bold flex items-center gap-2 clay-glow active:scale-95 transition-transform"
+                >
+                  <span className="material-symbols-outlined text-[18px]">
+                    photo_camera
+                  </span>
+                  Mulai Pindai Wajah
+                </button>
+              ) : capturedDataUrl ? (
+                <button
+                  type="button"
+                  onClick={handleRetake}
+                  disabled={busy !== null}
+                  className="h-11 px-5 rounded-full bg-surface-container-low text-text-secondary font-caption text-caption flex items-center gap-1.5 active:scale-95 transition-transform disabled:opacity-50"
+                >
+                  <span className="material-symbols-outlined text-[18px]">
+                    restart_alt
+                  </span>
+                  Ulangi Foto
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleCapture}
+                  disabled={!cameraReady || !mesinSiap || busy !== null}
+                  className="h-11 px-5 rounded-full primary-gradient text-white font-body-bold text-body-bold flex items-center gap-1.5 active:scale-95 transition-transform disabled:opacity-50"
+                >
+                  <span className="material-symbols-outlined text-[18px]">
+                    download
+                  </span>
+                  {busy === "capture"
+                    ? "Memproses..."
+                    : !mesinSiap
+                      ? "Menyiapkan..."
+                      : "Ambil Foto"}
+                </button>
+              )}
+            </div>
 
           {cameraError ? (
             <p className="font-caption text-caption text-danger-text text-center">
@@ -1049,7 +1125,7 @@ export function AttendanceConsole({
             </span>
           </div>
           <span className="font-medium text-text-muted">
-            {clock ? `${clock.dateLabel} • ${clock.timeLabel} WIB` : "--:-- WIB"}
+            {clock ? `${clock.dateLabel} - ${clock.timeLabel} WIB` : "--:-- WIB"}
           </span>
         </div>
       </section>

@@ -13,9 +13,11 @@ export default async function AbsensiPage() {
 
   const supabase = await createClient();
 
+  // work_schedule ikut diambil karena jam yang berlaku bagi orang ini bisa
+  // berbeda dari jam operasional cabang, yaitu jam kantor 10 sampai 18.
   const { data: profile } = await supabase
     .from("profiles")
-    .select("face_descriptor, face_verification")
+    .select("face_descriptor, face_verification, work_schedule")
     .eq("id", session.id)
     .maybeSingle();
 
@@ -30,7 +32,7 @@ export default async function AbsensiPage() {
       ? supabase
           .from("branches")
           .select(
-            "id, branch_name, latitude, longitude, geofence_radius_meters, operating_open_time, operating_close_time",
+            "id, branch_name, latitude, longitude, geofence_radius_meters, operating_open_time, operating_close_time, office_open_time, office_close_time",
           )
           .eq("id", branchId)
           .maybeSingle()
@@ -124,8 +126,16 @@ export default async function AbsensiPage() {
             branch?.geofence_radius_meters === undefined
               ? 30
               : Number(branch.geofence_radius_meters),
-          openTime: (branch?.operating_open_time as string) ?? "07:30:00",
-          closeTime: (branch?.operating_close_time as string) ?? "21:00:00",
+          // Jam yang ditampilkan dan dipakai menghitung anticipation di UI
+          // mengikuti jadwal orang ini, bukan jam operasional umum.
+          openTime:
+            (profile?.work_schedule as string | null) === "office"
+              ? ((branch?.office_open_time as string) ?? "10:00:00")
+              : ((branch?.operating_open_time as string) ?? "07:30:00"),
+          closeTime:
+            (profile?.work_schedule as string | null) === "office"
+              ? ((branch?.office_close_time as string) ?? "18:00:00")
+              : ((branch?.operating_close_time as string) ?? "21:00:00"),
         }}
         today={
           todayRow

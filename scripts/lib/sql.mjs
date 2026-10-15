@@ -29,7 +29,11 @@ export async function sql(query) {
   return JSON.parse(teks);
 }
 
-if (import.meta.url === `file:///${process.argv[1].replace(/\\/g, "/")}`) {
+// process.argv[1] tidak ada kalau modul ini diimpor dari node -e, jadi
+// jalur_absolute harus aman dari undefined.
+const jalurSkrip = process.argv[1] ?? "";
+
+if (import.meta.url === `file:///${jalurSkrip.replace(/\\/g, "/")}`) {
   const cek = [
     ["cash_flow amount <= 0", "select count(*)::int as n from cash_flow where amount <= 0"],
     ["nama layanan duplikat", "select count(*)::int as n from (select name from services group by name having count(*) > 1) d"],

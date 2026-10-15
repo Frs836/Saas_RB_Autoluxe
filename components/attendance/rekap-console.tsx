@@ -4,11 +4,24 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { formatTimeWib, initials } from "@/lib/format";
 import {
+  ATTENDANCE_ROLE_LABELS,
   ATTENDANCE_STATUS_LABELS,
   formatDistance,
   haversineMeters,
   parseTimeToMinutes,
 } from "@/lib/attendance";
+import {
+  HARI_MINGGUAN,
+  calendarCells,
+  monthBounds,
+  monthLabel,
+  rollingMonths,
+  shiftMonth,
+  type MonthKey,
+} from "@/lib/attendance-period";
+
+/** Mode tampilan rekap. Harian tetap dipakai untuk melihat rincian satu hari. */
+type Mode = "harian" | "bulanan" | "tiga_bulan";
 
 type Staff = {
   id: string;
@@ -51,6 +64,60 @@ type Log = {
 };
 
 type Filter = "all" | "on-time" | "late" | "off";
+
+/**
+ * Baris dari fungsi get_attendance_audit.
+ *
+ * Bentuknya berbeda dari Log yang dipakai tampilan harian: fungsi ini
+ * mengembalikan nama dan cabang ikut serta jam jadwal yang berlaku saat
+ * absen dicatat, sehingga laporan bisa menjelaskan mengapa seseorang
+ * disebut terlambat tanpa perlu menebak jam masuknya.
+ */
+type AuditLog = {
+  profileId: string;
+  fullName: string;
+  role: string;
+  branchName: string | null;
+  workSchedule: string | null;
+  date: string;
+  clockIn: string | null;
+  clockOut: string | null;
+  status: string;
+  lateMinutes: number | null;
+  lateReason: string | null;
+  faceScore: number | null;
+  liveness: boolean | null;
+  expectedOpen: string | null;
+  expectedClose: string | null;
+  notes: string | null;
+};
+
+function mapAudit(row: Record<string, unknown>): AuditLog {
+  return {
+    profileId: String(row.profile_id ?? ""),
+    fullName: String(row.full_name ?? ""),
+    role: String(row.role ?? ""),
+    branchName: (row.branch_name as string | null) ?? null,
+    workSchedule: (row.work_schedule as string | null) ?? null,
+    date: String(row.date ?? "").slice(0, 10),
+    clockIn: (row.clock_in as string | null) ?? null,
+    clockOut: (row.clock_out as string | null) ?? null,
+    status: String(row.status ?? ""),
+    lateMinutes:
+      row.late_minutes === null || row.late_minutes === undefined
+        ? null
+        : Number(row.late_minutes),
+    lateReason: (row.late_reason as string | null) ?? null,
+    faceScore:
+      row.face_score === null || row.face_score === undefined
+        ? null
+        : Number(row.face_score),
+    liveness: row.liveness === null ? null : Boolean(row.liveness),
+    expectedOpen: (row.expected_open as string | null) ?? null,
+    expectedClose: (row.expected_close as string | null) ?? null,
+    notes: (row.notes as string | null) ?? null,
+  };
+}
 
 const LOG_COLUMNS =
   "id, profile_id, clock_in, clock_out, status, late_minutes, late_reason, face_similarity_score, gps_lat, gps_lng, gps_accuracy_meters, face_photo_url, clock_out_photo_url, notes";
@@ -111,6 +178,15 @@ export function RekapConsole({
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [photoPending, setPhotoPending] = useState(false);
 
+  // Kalender dan rekap tiga bulan memakai satu sumber data: fungsi
+  // get_attendance_audit, yang sudah membatasi rentang 120 hari di server.
+  const [mode, setMode] = useState<Mode>("harian");
+  const [bulan, setBulan] = useState<MonthKey>(today.slice(0, 7));
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const [auditLoading, setAuditLoading] = useState(false);
+  const [auditError, setAuditError] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
+
   // Konfigurasi cabang yang relevan untuk satu orang. Saat satu cabang
   // dipilih semua orang memakai config itu; saat lintas cabang, tiap orang
   // memakai cabang penempatannya dan null bila config-nya tidak tersedia,
@@ -160,6 +236,112 @@ export function RekapConsole({
     if (!isToday) return;
     // sync when todayLogs changes
   }, [todayLogs, isToday]);
+
+  // Rentang yang dimuat diturunkan dari mode, bukan disimpan di state, supaya
+  // tidak ada render kedua hanya untuk menyelaraskan keduanya.
+  const rentang = useMemo(
+    () =>
+      mode === "bulanan"
+        ? monthBounds(bulan)
+        : mode === "tiga_bulan"
+          ? rollingMonths(today)
+          : { from: today, to: today },
+    [mode, bulan, today],
+  );
+
+  useEffect(() => {
+    if (mode === "harian") return;
+    let active = true;
+    (async () => {
+      setAuditLoading(true);
+      setAuditError(null);
+      const supabase = createClient();
+      const { data, error: err } = await supabase.rpc("get_attendance_audit", {
+        p_from: rentang.from,
+        p_to: rentang.to,
+      });
+      if (!active) return;
+      if (err) {
+        setAuditError(err.message);
+        setAuditLogs([]);
+      } else {
+        setAuditLogs(
+          ((data ?? []) as Record<string, unknown>[]).map((row) => mapAudit(row)),
+        );
+        setAuditError(null);
+      }
+      setAuditLoading(false);
+    })();
+    return () => {
+      active = false;
+    };
+  }, [mode, rentang.from, rentang.to]);
+
+  /** Jumlah kemunculan tiap tanggal, dipakai untuk mewarnai sel kalender. */
+  const perTanggal = useMemo(() => {
+    const map = new Map<string, { hadir: number; late: number; off: number }>();
+    for (const log of auditLogs) {
+      const cur = map.get(log.date) ?? { hadir: 0, late: 0, off: 0 };
+      if (log.status === "hadir") {
+        cur.hadir += 1;
+        if ((log.lateMinutes ?? 0) > 0) cur.late += 1;
+      } else if (["izin", "sakit", "libur_shift"].includes(log.status)) {
+        cur.off += 1;
+      }
+      map.set(log.date, cur);
+    }
+    return map;
+  }, [auditLogs]);
+
+  const selBulan = useMemo(
+    () => calendarCells(bulan, today),
+    [bulan, today],
+  );
+
+  const ringkasanPerStaff = useMemo(() => {
+    const map = new Map<
+      string,
+      { nama: string; peran: string; hadir: number; late: number; menit: number; izin: number }
+    >();
+    for (const log of auditLogs) {
+      const cur = map.get(log.profileId) ?? {
+        nama: log.fullName,
+        peran: log.role,
+        hadir: 0,
+        late: 0,
+        menit: 0,
+        izin: 0,
+      };
+      if (log.status === "hadir") {
+        cur.hadir += 1;
+        const menit = log.lateMinutes ?? 0;
+        if (menit > 0) {
+          cur.late += 1;
+          cur.menit += menit;
+        }
+      } else if (["izin", "sakit", "libur_shift"].includes(log.status)) {
+        cur.izin += 1;
+      }
+      map.set(log.profileId, cur);
+    }
+    return [...map.entries()].sort((a, b) => a[1].nama.localeCompare(b[1].nama, "id"));
+  }, [auditLogs]);
+
+  const ringkasanBulan = useMemo(() => {
+    const map = new Map<string, { hadir: number; late: number; izin: number }>();
+    for (const log of auditLogs) {
+      const key = log.date.slice(0, 7);
+      const cur = map.get(key) ?? { hadir: 0, late: 0, izin: 0 };
+      if (log.status === "hadir") {
+        cur.hadir += 1;
+        if ((log.lateMinutes ?? 0) > 0) cur.late += 1;
+      } else if (["izin", "sakit", "libur_shift"].includes(log.status)) {
+        cur.izin += 1;
+      }
+      map.set(key, cur);
+    }
+    return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+  }, [auditLogs]);
 
   const logByProfile = useMemo(() => {
     const map = new Map<string, Log>();
@@ -254,72 +436,163 @@ export function RekapConsole({
     setPhotoPending(false);
   }, []);
 
-  const exportCsv = useCallback(() => {
-    const escape = (value: string | number | null): string => {
-      const text = value === null || value === undefined ? "" : String(value);
-      return `"${text.replace(/"/g, '""')}"`;
-    };
-    const header = [
-      "Tanggal",
-      "Staf",
-      "Peran",
-      "Cabang",
-      "Status",
-      "Masuk",
-      "Pulang",
-      "Terlambat (menit)",
-      // PRD 5.1 mewajibkan kolom ini di laporan audit keterlambatan. Data
-      // lateReason sudah diambil dari DB, hanya belum pernah diekspor.
-      "Alasan Terlambat",
-      "Jarak ke Cabang (m)",
-      "Kemiripan Wajah (%)",
-      "Catatan",
-    ].join(",");
-    const rows = staff.map((person) => {
-      const log = logByProfile.get(person.id);
-      const config = configFor(person);
-      const distance =
-        log?.gpsLat !== null &&
-        log?.gpsLat !== undefined &&
-        log?.gpsLng !== null &&
-        log?.gpsLng !== undefined &&
-        config?.latitude != null &&
-        config?.longitude != null
-          ? Math.round(
-              haversineMeters(
-                config.latitude,
-                config.longitude,
-                log.gpsLat,
-                log.gpsLng,
-              ),
-            )
-          : null;
-      return [
-        escape(dateLabel),
-        escape(person.fullName),
-        escape(person.roleLabel),
-        escape(config?.name ?? branch.name),
-        escape(log ? ATTENDANCE_STATUS_LABELS[log.status] ?? log.status : "Belum absen"),
-        escape(log?.clockIn ? formatTimeWib(log.clockIn) : ""),
-        escape(log?.clockOut ? formatTimeWib(log.clockOut) : ""),
-        escape(log?.lateMinutes ?? ""),
-        escape(log?.lateReason ?? ""),
-        escape(distance),
-        escape(log?.faceScore !== null && log?.faceScore !== undefined ? Math.round(log.faceScore * 100) : ""),
-        escape(log?.notes ?? ""),
-      ].join(",");
-    });
-    const csv = `\uFEFF${header}\n${rows.join("\n")}`;
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = `rekap-absensi-${date}.csv`;
-    document.body.appendChild(anchor);
-    anchor.click();
-    anchor.remove();
-    URL.revokeObjectURL(url);
-  }, [branch.name, configFor, date, dateLabel, logByProfile, staff]);
+  /**
+   * Berkas Excel mengikuti mode yang sedang dilihat.
+   *
+   * Mode harian menghasilkan satu lembar rincian untuk hari itu. Mode bulanan
+   * dan tiga bulan menambah lembar ringkasan per bulan dan rekap per staf,
+   * karena angka mentah tiga bulan terlalu panjang untuk dibaca.
+   */
+  const exportExcel = useCallback(async () => {
+    setExporting(true);
+    setAuditError(null);
+    try {
+      const XLSX = await import("xlsx");
+
+      const header = [
+        "Tanggal",
+        "Staf",
+        "Peran",
+        "Cabang",
+        "Jadwal Kerja",
+        "Jam Masuk Berlaku",
+        "Jam Pulang Berlaku",
+        "Status",
+        "Masuk",
+        "Pulang",
+        "Terlambat (menit)",
+        "Alasan Terlambat",
+        "Kemiripan Wajah (%)",
+        "Liveness Lulus",
+        "Catatan",
+      ];
+
+      const jamBuka = (s: string | null): string => (s ? s.slice(0, 5) : "");
+      const jadwal = (s: string | null): string =>
+        s === "office" ? "Kantor" : s === "field" ? "Lapangan" : "";
+
+      let baris: (string | number | boolean)[][];
+      if (mode === "harian") {
+        baris = staff.map((person) => {
+          const log = logByProfile.get(person.id);
+          const config = configFor(person);
+          return [
+            date,
+            person.fullName,
+            person.roleLabel,
+            config?.name ?? branch.name,
+            "",
+            jamBuka(config?.openTime ?? null),
+            jamBuka(config?.closeTime ?? null),
+            log ? ATTENDANCE_STATUS_LABELS[log.status] ?? log.status : "Belum absen",
+            log?.clockIn ? formatTimeWib(log.clockIn) : "",
+            log?.clockOut ? formatTimeWib(log.clockOut) : "",
+            log?.lateMinutes ?? "",
+            log?.lateReason ?? "",
+            log?.faceScore !== null && log?.faceScore !== undefined
+              ? Math.round(log.faceScore * 100)
+              : "",
+            log ? "Ya" : "",
+            log?.notes ?? "",
+          ];
+        });
+      } else {
+        baris = auditLogs.map((log) => [
+          log.date,
+          log.fullName,
+          ATTENDANCE_ROLE_LABELS[log.role] ?? log.role,
+          log.branchName ?? "",
+          jadwal(log.workSchedule),
+          jamBuka(log.expectedOpen),
+          jamBuka(log.expectedClose),
+          ATTENDANCE_STATUS_LABELS[log.status] ?? log.status,
+          log.clockIn ? formatTimeWib(log.clockIn) : "",
+          log.clockOut ? formatTimeWib(log.clockOut) : "",
+          log.lateMinutes ?? "",
+          log.lateReason ?? "",
+          log.faceScore === null ? "" : Math.round(Number(log.faceScore) * 100),
+          log.liveness === null ? "" : log.liveness ? "Ya" : "Tidak",
+          log.notes ?? "",
+        ]);
+      }
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(
+        wb,
+        XLSX.utils.aoa_to_sheet([header, ...baris]),
+        "Detail Kehadiran",
+      );
+
+      if (mode !== "harian") {
+        XLSX.utils.book_append_sheet(
+          wb,
+          XLSX.utils.aoa_to_sheet([
+            ["Bulan", "Hadir", "Terlambat", "Izin / Sakit"],
+            ...ringkasanBulan.map(([key, v]) => [
+              monthLabel(key),
+              v.hadir,
+              v.late,
+              v.izin,
+            ]),
+          ]),
+          "Ringkasan Bulanan",
+        );
+
+        XLSX.utils.book_append_sheet(
+          wb,
+          XLSX.utils.aoa_to_sheet([
+            [
+              "Staf",
+              "Peran",
+              "Hadir",
+              "Terlambat",
+              "Total Menit Terlambat",
+              "Izin / Sakit",
+            ],
+            ...ringkasanPerStaff.map(([, v]) => [
+              v.nama,
+              ATTENDANCE_ROLE_LABELS[v.peran] ?? v.peran,
+              v.hadir,
+              v.late,
+              v.menit,
+              v.izin,
+            ]),
+          ]),
+          "Rekap per Staf",
+        );
+      }
+
+      const nama =
+        mode === "harian"
+          ? `Rekap-Harian-${date}.xlsx`
+          : mode === "bulanan"
+            ? `Rekap-Bulanan-${bulan}.xlsx`
+            : `Rekap-3-Bulan-${rentang.from}_sd_${rentang.to}.xlsx`;
+
+      XLSX.writeFile(wb, nama);
+    } catch (err) {
+      setAuditError(
+        err instanceof Error
+          ? `Gagal membuat berkas Excel: ${err.message}`
+          : "Gagal membuat berkas Excel. Coba lagi.",
+      );
+    } finally {
+      setExporting(false);
+    }
+  }, [
+    auditLogs,
+    branch.name,
+    configFor,
+    date,
+    bulan,
+    logByProfile,
+    mode,
+    rentang.from,
+    rentang.to,
+    ringkasanBulan,
+    ringkasanPerStaff,
+    staff,
+  ]);
 
   const filterPills: { key: Filter; label: string; count: number }[] = [
     { key: "all", label: "Semua Staf", count: staff.length },
@@ -341,14 +614,72 @@ export function RekapConsole({
           </span>
           <button
             type="button"
-            onClick={exportCsv}
-            className="min-h-11 px-3 rounded-lg bg-brand-50 text-brand-700 font-caption text-caption flex items-center gap-1.5 active:scale-95 transition-transform"
+            onClick={() => void exportExcel()}
+            disabled={exporting}
+            className="min-h-11 px-3 rounded-lg bg-brand-50 text-brand-700 font-caption text-caption flex items-center gap-1.5 active:scale-95 transition-transform disabled:opacity-60"
           >
-            <span className="material-symbols-outlined text-[15px]">download</span>
-            Laporan
+            <span className="material-symbols-outlined text-[15px]">
+              {exporting ? "hourglass_top" : "download"}
+            </span>
+            {exporting ? "Menyusun" : mode === "tiga_bulan" ? "Excel 3 Bulan" : "Laporan"}
           </button>
         </div>
       </section>
+
+      {/* Pemilih tampilan: harian, kalender bulanan, atau tiga bulan bergulir */}
+      <section className="px-gutter pt-3">
+        <div
+          role="tablist"
+          aria-label="Tampilan rekap"
+          className="bg-clay-overlay rounded-xl p-1 flex gap-1 border border-border-subtle"
+        >
+          {(
+            [
+              { key: "harian", label: "Harian", icon: "today" },
+              { key: "bulanan", label: "Bulanan", icon: "calendar_month" },
+              { key: "tiga_bulan", label: "3 Bulan", icon: "date_range" },
+            ] as { key: Mode; label: string; icon: string }[]
+          ).map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              role="tab"
+              aria-selected={mode === tab.key}
+              onClick={() => setMode(tab.key)}
+              className={
+                "flex-1 min-h-11 rounded-lg font-caption text-caption flex items-center " +
+                "justify-center gap-1.5 transition-colors " +
+                (mode === tab.key
+                  ? "bg-white text-text-primary shadow-sm font-body-bold"
+                  : "text-text-secondary active:scale-95 transition-transform")
+              }
+            >
+              <span className="material-symbols-outlined text-[15px]">{tab.icon}</span>
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {mode !== "harian" ? (
+        <BulananPanel
+          mode={mode}
+          bulan={bulan}
+          setBulan={setBulan}
+          sel={selBulan}
+          perTanggal={perTanggal}
+          ringkasanBulan={ringkasanBulan}
+          ringkasanPerStaff={ringkasanPerStaff}
+          rentang={rentang}
+          memuat={auditLoading}
+          galat={auditError}
+          padaHari={(tanggal) => {
+            setDate(tanggal);
+            setMode("harian");
+          }}
+        />
+      ) : (
+        <>
 
       {/* Hero ringkasan */}
       <section className="px-gutter pt-4">
@@ -649,6 +980,271 @@ export function RekapConsole({
           }}
         />
       ) : null}
+        </>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Panel kalender bulanan dan rekap tiga bulan.
+ *
+ * Dipisah dari RekapConsole supaya perhitungannya tidak menambah ukuran
+ * komponen yang juga menangani rincian harian.
+ */
+function BulananPanel({
+  mode,
+  bulan,
+  setBulan,
+  sel,
+  perTanggal,
+  ringkasanBulan,
+  ringkasanPerStaff,
+  rentang,
+  memuat,
+  galat,
+  padaHari,
+}: {
+  mode: Mode;
+  bulan: MonthKey;
+  setBulan: (v: MonthKey) => void;
+  sel: ReturnType<typeof calendarCells>;
+  perTanggal: Map<string, { hadir: number; late: number; off: number }>;
+  ringkasanBulan: [string, { hadir: number; late: number; izin: number }][];
+  ringkasanPerStaff: [
+    string,
+    { nama: string; peran: string; hadir: number; late: number; menit: number; izin: number },
+  ][];
+  rentang: { from: string; to: string };
+  memuat: boolean;
+  galat: string | null;
+  padaHari: (tanggal: string) => void;
+}) {
+  return (
+    <section className="px-gutter pt-4 flex flex-col gap-4">
+      {galat ? (
+        <div
+          role="alert"
+          className="bg-error-surface text-error-text rounded-xl px-3 py-2.5 font-caption text-caption"
+        >
+          Gagal memuat rekap: {galat}
+        </div>
+      ) : null}
+
+      {mode === "bulanan" ? (
+        <div className="bg-surface rounded-[20px] clay-card p-4">
+          <div className="flex items-center justify-between mb-3">
+            <button
+              type="button"
+              aria-label="Bulan sebelumnya"
+              onClick={() => setBulan(shiftMonth(bulan, -1))}
+              className="w-11 h-11 rounded-xl bg-clay-overlay flex items-center justify-center text-text-primary active:scale-95 transition-transform"
+            >
+              <span className="material-symbols-outlined text-[20px]">
+                chevron_left
+              </span>
+            </button>
+            <span className="font-headline-3 text-headline-3 text-text-primary">
+              {monthLabel(bulan)}
+            </span>
+            <button
+              type="button"
+              aria-label="Bulan berikutnya"
+              onClick={() => setBulan(shiftMonth(bulan, 1))}
+              className="w-11 h-11 rounded-xl bg-clay-overlay flex items-center justify-center text-text-primary active:scale-95 transition-transform"
+            >
+              <span className="material-symbols-outlined text-[20px]">
+                chevron_right
+              </span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-7 gap-1 mb-1">
+            {HARI_MINGGUAN.map((h) => (
+              <div
+                key={h}
+                className="text-center font-micro-badge text-micro-badge text-text-tertiary"
+              >
+                {h}
+              </div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-7 gap-1">
+            {sel.map((c) => {
+              const n = perTanggal.get(c.date);
+              const ada = n !== undefined && (n.hadir > 0 || n.off > 0);
+              const classes = [
+                "min-h-11 rounded-lg flex flex-col items-center justify-center",
+                c.inMonth ? "text-text-primary" : "text-text-tertiary/50",
+                c.isToday ? "ring-2 ring-brand-500" : "",
+                ada ? "bg-surface-container font-body-bold" : "",
+              ].join(" ");
+              return (
+                <button
+                  key={c.date}
+                  type="button"
+                  disabled={!c.inMonth}
+                  onClick={() => padaHari(c.date)}
+                  aria-label={
+                    ada
+                      ? `${c.date}, ${n.hadir} hadir, ${n.late} terlambat`
+                      : c.date
+                  }
+                  className={classes}
+                >
+                  <span className="font-caption text-caption">{c.day}</span>
+                  {ada ? (
+                    <span className="font-micro-badge text-micro-badge text-text-secondary">
+                      {n.hadir}/{n.hadir + n.off}
+                    </span>
+                  ) : null}
+                </button>
+              );
+            })}
+          </div>
+
+          <p className="font-micro-badge text-micro-badge text-text-secondary mt-3">
+            Angka menunjukkan jumlah hadir dari total yang tercatat. Ketuk satu
+            hari untuk melihat rinciannya.
+          </p>
+        </div>
+      ) : (
+        <div className="bg-surface rounded-[20px] clay-card p-4">
+          <span className="font-headline-3 text-headline-3 text-text-primary">
+            Tiga Bulan Terakhir
+          </span>
+          <p className="font-caption text-caption text-text-secondary mt-1">
+            {rentang.from} sampai {rentang.to}
+          </p>
+        </div>
+      )}
+
+      {memuat ? (
+        <div className="flex items-center justify-center gap-2 py-6 text-text-secondary">
+          <span className="material-symbols-outlined text-[18px] animate-spin">
+            progress_activity
+          </span>
+          <span className="font-caption text-caption">Memuat rekap</span>
+        </div>
+      ) : null}
+
+      {mode === "bulanan" && ringkasanBulan.length > 0 ? (
+        <TabelRekap
+          judul="Ringkasan Bulan Ini"
+          kolom={["Tanggal", "Hadir", "Terlambat", "Izin"]}
+          baris={ringkasanBulan.map(([key, v]) => [
+            key.slice(8) + " " + monthLabel(key).split(" ")[0],
+            String(v.hadir),
+            String(v.late),
+            String(v.izin),
+          ])}
+        />
+      ) : null}
+
+      {mode === "tiga_bulan" && ringkasanBulan.length > 0 ? (
+        <TabelRekap
+          judul="Ringkasan Per Bulan"
+          kolom={["Bulan", "Hadir", "Terlambat", "Izin"]}
+          baris={ringkasanBulan.map(([key, v]) => [
+            monthLabel(key),
+            String(v.hadir),
+            String(v.late),
+            String(v.izin),
+          ])}
+        />
+      ) : null}
+
+      {!memuat && ringkasanPerStaff.length > 0 ? (
+        <TabelRekap
+          judul="Rekap per Staf"
+          kolom={["Staf", "Hadir", "Terlambat", "Menit", "Izin"]}
+          baris={ringkasanPerStaff.map(([, v]) => [
+            v.nama,
+            String(v.hadir),
+            String(v.late),
+            String(v.menit),
+            String(v.izin),
+          ])}
+        />
+      ) : null}
+
+      {!memuat && !galat && auditKosongTXT(ringkasanPerStaff, ringkasanBulan) ? (
+        <div className="bg-clay-overlay rounded-xl px-4 py-5 text-center">
+          <span className="material-symbols-outlined text-[28px] text-text-tertiary">
+            event_busy
+          </span>
+          <p className="font-body-bold text-body-bold text-text-primary mt-1">
+            Belum ada data pada periode ini
+          </p>
+          <p className="font-caption text-caption text-text-secondary mt-1">
+            Rekap hanya memuat tiga bulan terakhir. Data yang lebih lama sudah
+            dihapus otomatis oleh sistem.
+          </p>
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+function auditKosongTXT(
+  perStaff: [string, unknown][],
+  perBulan: [string, unknown][],
+): boolean {
+  return perStaff.length === 0 && perBulan.length === 0;
+}
+
+/** Tabel ringkasan sederhana yang bisa digulir secara horizontal di layar sempit. */
+function TabelRekap({
+  judul,
+  kolom,
+  baris,
+}: {
+  judul: string;
+  kolom: string[];
+  baris: string[][];
+}) {
+  return (
+    <div className="bg-surface rounded-[20px] clay-card overflow-hidden">
+      <div className="px-4 pt-4 pb-2">
+        <span className="font-headline-3 text-headline-3 text-text-primary">
+          {judul}
+        </span>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-left">
+          <thead>
+            <tr className="bg-clay-overlay">
+              {kolom.map((k) => (
+                <th
+                  key={k}
+                  scope="col"
+                  className="px-3 py-2 font-micro-badge text-micro-badge text-text-secondary whitespace-nowrap"
+                >
+                  {k}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {baris.map((b, i) => (
+              <tr key={i} className="border-t border-border-subtle">
+                {b.map((sel, j) => (
+                  <td
+                    key={j}
+                    className={
+                      "px-3 py-2.5 font-caption text-caption " +
+                      (j === 0 ? "text-text-primary whitespace-nowrap" : "text-text-secondary")
+                    }
+                  >
+                    {sel}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

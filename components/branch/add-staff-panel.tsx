@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createStaffAccount } from "@/app/actions/staff";
 import { useToast } from "@/components/toast";
+import { Icon } from "@/components/ui/icon";
 
 /**
  * Pembuatan akun staf oleh owner atau maintainer.
@@ -92,7 +93,7 @@ export function AddStaffPanel({
         onClick={() => setBuka(true)}
         className="w-full h-12 px-4 rounded-xl bg-primary-gradient text-white font-body-bold text-body-bold flex items-center justify-center gap-2 clay-fab active:scale-[0.98] transition-transform"
       >
-        <span className="material-symbols-outlined text-[20px]">person_add</span>
+        <Icon name="person_add" className="text-[20px]" />
         Tambah Staf
       </button>
     );
@@ -113,7 +114,7 @@ export function AddStaffPanel({
           aria-label="Batal menambah staf"
           className="w-11 h-11 rounded-xl bg-clay-overlay flex items-center justify-center text-text-secondary active:scale-95 transition-transform"
         >
-          <span className="material-symbols-outlined text-[20px]">close</span>
+          <Icon name="close" className="text-[20px]" />
         </button>
       </div>
 
@@ -202,9 +203,7 @@ export function AddStaffPanel({
         disabled={sibuk || Boolean(masalah)}
         className="w-full h-12 rounded-full primary-gradient text-white font-body-bold text-body-bold flex items-center justify-center gap-2 clay-fab active:scale-[0.98] transition-transform disabled:opacity-50"
       >
-        <span className="material-symbols-outlined text-[20px]">
-          {sibuk ? "hourglass_top" : "person_add"}
-        </span>
+        <Icon name={sibuk ? "hourglass_top" : "person_add"} className="text-[20px]" />
         {sibuk ? "Membuat..." : "Buat Akun"}
       </button>
     </div>

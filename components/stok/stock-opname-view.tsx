@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { formatAngka } from "@/lib/pos";
+import { Icon } from "@/components/ui/icon";
 
 export type OpnameLine = {
   id: string;
@@ -173,9 +174,7 @@ export function StockOpnameView({
     return (
       <div className="px-gutter py-6">
         <div className="clay-card p-6 flex flex-col items-center gap-3 text-center">
-          <span className="material-symbols-outlined text-[40px] text-warning-base">
-            domain_disabled
-          </span>
+          <Icon name="domain_disabled" className="text-[40px] text-warning-base" />
           <h2 className="font-headline-2 text-headline-2 text-text-primary">
             Pilih Satu Cabang
           </h2>
@@ -199,9 +198,7 @@ export function StockOpnameView({
             Bandingkan stok gudang dengan saldo sistem.
           </p>
         </div>
-        <span className="material-symbols-outlined text-[28px] text-brand-600">
-          fact_check
-        </span>
+        <Icon name="fact_check" className="text-[28px] text-brand-600" />
       </section>
 
       <section className="clay-card p-4 flex flex-col gap-2">
@@ -222,7 +219,7 @@ export function StockOpnameView({
           onClick={openOpname}
           className="h-11 rounded-xl bg-primary-gradient text-on-primary font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-60"
         >
-          <span className="material-symbols-outlined text-[20px]">add</span>
+          <Icon name="add" className="text-[20px]" />
           {busy ? "Membuka..." : "Buka atau Lanjutkan Opname"}
         </button>
       </section>
@@ -244,13 +241,11 @@ export function StockOpnameView({
                     : "bg-surface-container-low text-text-secondary"
                 }`}
               >
-                <span className="material-symbols-outlined text-[15px]">
-                  {row.status === "submitted"
+                <Icon name={row.status === "submitted"
                     ? "task_alt"
                     : row.status === "cancelled"
                       ? "cancel"
-                      : "pending"}
-                </span>
+                      : "pending"} className="text-[15px]" />
                 {periodLabel(row.period_month)}
                 <span className="opacity-70">
                   ({row.counted_count}/{row.line_count})
@@ -379,7 +374,7 @@ export function StockOpnameView({
             onClick={saveCounts}
             className="flex-1 py-3.5 rounded-2xl bg-surface-container text-text-secondary font-body-bold text-body-bold flex items-center justify-center gap-1.5 active:scale-95 transition-transform disabled:opacity-60"
           >
-            <span className="material-symbols-outlined text-[20px]">save</span>
+            <Icon name="save" className="text-[20px]" />
             Simpan Draf
           </button>
           <button
@@ -388,9 +383,7 @@ export function StockOpnameView({
             onClick={submit}
             className="flex-1 py-3.5 rounded-2xl bg-primary-gradient text-on-primary font-body-bold text-body-bold flex items-center justify-center gap-1.5 active:scale-95 transition-transform disabled:opacity-60"
           >
-            <span className="material-symbols-outlined text-[20px]">
-              {busy ? "hourglass_top" : "task_alt"}
-            </span>
+            <Icon name={busy ? "hourglass_top" : "task_alt"} className="text-[20px]" />
             Kirim dan Koreksi
           </button>
         </div>

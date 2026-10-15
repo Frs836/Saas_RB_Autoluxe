@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Icon } from "@/components/ui/icon";
 
 /**
  * Halaman tidak ditemukan untuk pelanggan halaman lacak.
@@ -11,9 +12,7 @@ export default function NotFound() {
   return (
     <div className="min-h-screen bg-surface flex items-center justify-center px-gutter">
       <div className="w-full max-w-[420px] text-center flex flex-col items-center gap-4">
-        <span className="material-symbols-outlined text-[56px] text-text-muted">
-          link_off
-        </span>
+        <Icon name="link_off" className="text-[56px] text-text-muted" />
 
         <h1 className="font-headline-1 text-headline-1 text-text-primary">
           Tautan Tidak Ditemukan
@@ -39,7 +38,7 @@ export default function NotFound() {
             rel="noopener noreferrer"
             className="mt-1 self-start h-11 px-4 rounded-xl bg-whatsapp text-white font-caption text-caption flex items-center gap-1.5"
           >
-            <span className="material-symbols-outlined text-[18px]">chat</span>
+            <Icon name="chat" className="text-[18px]" />
             Hubungi via WhatsApp
           </a>
         </div>

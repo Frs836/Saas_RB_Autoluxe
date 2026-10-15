@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { Icon } from "@/components/ui/icon";
 
 export function AuthShell({ children }: { children: React.ReactNode }) {
   return (
@@ -45,9 +46,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
 
         <div className="flex flex-col items-center text-center gap-2 px-4 pb-2">
           <div className="flex items-center gap-1.5 text-text-secondary font-caption text-caption">
-            <span className="material-symbols-outlined text-[16px] text-brand-600">
-              security
-            </span>
+            <Icon name="security" className="text-[16px] text-brand-600" />
             <span>Hak Akses Terproteksi Supabase RLS</span>
           </div>
           <p className="font-micro-badge text-micro-badge text-text-muted uppercase tracking-wider">

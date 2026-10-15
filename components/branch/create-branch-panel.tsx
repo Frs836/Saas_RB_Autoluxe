@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { isValidLatitude, isValidLongitude, parseCoordinateInput } from "@/lib/branch";
 import { useToast } from "@/components/toast";
+import { Icon } from "@/components/ui/icon";
 
 /**
  * Formulir pembuatan cabang.
@@ -99,7 +100,7 @@ export function CreateBranchPanel() {
         onClick={() => setBuka(true)}
         className="w-full h-12 px-4 rounded-xl bg-primary-gradient text-white font-body-bold text-body-bold flex items-center justify-center gap-2 clay-fab active:scale-[0.98] transition-transform"
       >
-        <span className="material-symbols-outlined text-[20px]">add_business</span>
+        <Icon name="add_business" className="text-[20px]" />
         Tambah Cabang
       </button>
     );
@@ -119,7 +120,7 @@ export function CreateBranchPanel() {
           aria-label="Batal membuat cabang"
           className="w-11 h-11 rounded-xl bg-clay-overlay flex items-center justify-center text-text-secondary active:scale-95 transition-transform"
         >
-          <span className="material-symbols-outlined text-[20px]">close</span>
+          <Icon name="close" className="text-[20px]" />
         </button>
       </div>
 
@@ -155,7 +156,7 @@ export function CreateBranchPanel() {
         }`}
       >
         <span className="flex items-center gap-2 font-body text-body">
-          <span className="material-symbols-outlined text-[18px]">gps_fixed</span>
+          <Icon name="gps_fixed" className="text-[18px]" />
           Pakai geofence
         </span>
         <span
@@ -259,9 +260,7 @@ export function CreateBranchPanel() {
         disabled={sibuk || Boolean(masalah)}
         className="w-full h-12 rounded-full primary-gradient text-white font-body-bold text-body-bold flex items-center justify-center gap-2 clay-fab active:scale-[0.98] transition-transform disabled:opacity-50"
       >
-        <span className="material-symbols-outlined text-[20px]">
-          {sibuk ? "hourglass_top" : "add_business"}
-        </span>
+        <Icon name={sibuk ? "hourglass_top" : "add_business"} className="text-[20px]" />
         {sibuk ? "Membuat..." : "Buat Cabang"}
       </button>
     </div>

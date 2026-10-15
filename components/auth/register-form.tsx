@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { Icon } from "@/components/ui/icon";
 
 export function RegisterForm() {
   const router = useRouter();
@@ -72,9 +73,7 @@ export function RegisterForm() {
     return (
       <div className="bg-surface rounded-3xl p-6 sm:p-7 flex flex-col gap-5 clay-card text-center">
         <div className="w-14 h-14 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center mx-auto">
-          <span className="material-symbols-outlined text-[28px]">
-            mark_email_read
-          </span>
+          <Icon name="mark_email_read" className="text-[28px]" />
         </div>
         <div className="flex flex-col gap-1.5">
           <h2 className="font-headline-1 text-headline-1 text-text-primary">
@@ -90,9 +89,7 @@ export function RegisterForm() {
           href="/login"
           className="w-full h-[46px] rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-600 font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-[0.99] transition-all duration-200"
         >
-          <span className="material-symbols-outlined text-[22px] text-brand-600">
-            login
-          </span>
+          <Icon name="login" className="text-[22px] text-brand-600" />
           <span>Kembali ke Halaman Masuk</span>
         </Link>
       </div>
@@ -113,9 +110,7 @@ export function RegisterForm() {
         </label>
         <div className="relative flex items-center">
           <div className="absolute left-3.5 flex items-center pointer-events-none text-outline">
-            <span className="material-symbols-outlined text-[20px]">
-              person
-            </span>
+            <Icon name="person" className="text-[20px]" />
           </div>
           <input
             id="full-name"
@@ -138,7 +133,7 @@ export function RegisterForm() {
         </label>
         <div className="relative flex items-center">
           <div className="absolute left-3.5 flex items-center pointer-events-none text-outline">
-            <span className="material-symbols-outlined text-[20px]">mail</span>
+            <Icon name="mail" className="text-[20px]" />
           </div>
           <input
             id="reg-email"
@@ -161,7 +156,7 @@ export function RegisterForm() {
         </label>
         <div className="relative flex items-center">
           <div className="absolute left-3.5 flex items-center pointer-events-none text-outline">
-            <span className="material-symbols-outlined text-[20px]">lock</span>
+            <Icon name="lock" className="text-[20px]" />
           </div>
           <input
             id="reg-password"
@@ -178,9 +173,7 @@ export function RegisterForm() {
             onClick={() => setShowPassword((value) => !value)}
             className="absolute right-3.5 flex items-center justify-center text-outline hover:text-brand-600 focus:outline-none transition-colors"
           >
-            <span className="material-symbols-outlined text-[20px]">
-              {showPassword ? "visibility_off" : "visibility"}
-            </span>
+            <Icon name={showPassword ? "visibility_off" : "visibility"} className="text-[20px]" />
           </button>
         </div>
       </div>
@@ -194,9 +187,7 @@ export function RegisterForm() {
         </label>
         <div className="relative flex items-center">
           <div className="absolute left-3.5 flex items-center pointer-events-none text-outline">
-            <span className="material-symbols-outlined text-[20px]">
-              lock_reset
-            </span>
+            <Icon name="lock_reset" className="text-[20px]" />
           </div>
           <input
             id="reg-confirm"
@@ -212,9 +203,7 @@ export function RegisterForm() {
 
       {error && (
         <div className="flex items-start gap-2.5 p-3 rounded-xl bg-danger-surface text-danger-text">
-          <span className="material-symbols-outlined text-[18px] shrink-0">
-            error
-          </span>
+          <Icon name="error" className="text-[18px] shrink-0" />
           <p className="font-caption text-caption leading-relaxed">{error}</p>
         </div>
       )}
@@ -226,9 +215,7 @@ export function RegisterForm() {
       >
         <span>{loading ? "MENDAFTAR..." : "DAFTAR AKUN STAF"}</span>
         {!loading && (
-          <span className="material-symbols-outlined text-[20px]">
-            arrow_forward
-          </span>
+          <Icon name="arrow_forward" className="text-[20px]" />
         )}
       </button>
 
@@ -243,9 +230,7 @@ export function RegisterForm() {
         href="/login"
         className="w-full h-[46px] rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-600 font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-[0.99] transition-all duration-200"
       >
-        <span className="material-symbols-outlined text-[22px] text-brand-600">
-          login
-        </span>
+        <Icon name="login" className="text-[22px] text-brand-600" />
         <span>Masuk ke Sistem</span>
       </Link>
     </form>

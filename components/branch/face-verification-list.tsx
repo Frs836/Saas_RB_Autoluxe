@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { Icon } from "@/components/ui/icon";
 
 export type FaceRegistration = {
   profile_id: string;
@@ -85,9 +86,7 @@ function FaceReferencePhoto({
   if (!path || gagal) {
     return (
       <div className="rounded-xl bg-surface-container-low p-4 flex flex-col items-center gap-1.5 text-center">
-        <span className="material-symbols-outlined text-[22px] text-text-muted">
-          no_photography
-        </span>
+        <Icon name="no_photography" className="text-[22px] text-text-muted" />
         <p className="font-caption text-caption text-text-secondary">
           {path
             ? "Foto referensi tidak bisa dimuat. Minta staf mendaftar ulang."
@@ -108,9 +107,7 @@ function FaceReferencePhoto({
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <span className="material-symbols-outlined text-[26px] text-white/60 animate-pulse">
-              image
-            </span>
+            <Icon name="image" className="text-[26px] text-white/60 animate-pulse" />
           </div>
         )}
       </div>
@@ -170,9 +167,7 @@ export function FaceVerificationList({
     return (
       <div className="px-gutter py-6">
         <div className="clay-card p-6 flex flex-col items-center gap-3 text-center">
-          <span className="material-symbols-outlined text-[40px] text-success-base">
-            verified_user
-          </span>
+          <Icon name="verified_user" className="text-[40px] text-success-base" />
           <h2 className="font-headline-2 text-headline-2 text-text-primary">
             Belum Ada Pendaftaran Wajah
           </h2>
@@ -204,9 +199,7 @@ export function FaceVerificationList({
               : "Semua sampel sudah ditinjau."}
           </p>
         </div>
-        <span className="material-symbols-outlined text-[28px] text-brand-600">
-          face_retouching_natural
-        </span>
+        <Icon name="face_retouching_natural" className="text-[28px] text-brand-600" />
       </section>
 
       {pendingCount > 0 ? (
@@ -279,9 +272,7 @@ export function FaceVerificationList({
                 onClick={() => review(row.profile_id, true)}
                 className="flex-1 h-11 rounded-xl bg-success-base text-white font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform disabled:opacity-60"
               >
-                <span className="material-symbols-outlined text-[18px]">
-                  {busy ? "hourglass_top" : "check"}
-                </span>
+                <Icon name={busy ? "hourglass_top" : "check"} className="text-[18px]" />
                 Setujui
               </button>
               <button
@@ -290,7 +281,7 @@ export function FaceVerificationList({
                 onClick={() => review(row.profile_id, false)}
                 className="flex-1 h-11 rounded-xl bg-danger-base text-white font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform disabled:opacity-60"
               >
-                <span className="material-symbols-outlined text-[18px]">close</span>
+                <Icon name="close" className="text-[18px]" />
                 Tolak
               </button>
             </div>

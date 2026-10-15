@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Icon } from "@/components/ui/icon";
 
 type Series = { label: string; income: number; expense: number };
 
@@ -148,9 +149,7 @@ export function LaporanView({ data }: { data: LaporanData }) {
       <section className="bg-surface rounded-[20px] p-4 clay-card border border-white/80">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-brand-600 text-[20px]">
-              account_balance_wallet
-            </span>
+            <Icon name="account_balance_wallet" className="text-brand-600 text-[20px]" />
             <span className="font-headline-2 text-headline-2 text-text-primary">
               Ringkasan Finansial
             </span>
@@ -161,9 +160,7 @@ export function LaporanView({ data }: { data: LaporanData }) {
             disabled={exporting}
             className="inline-flex items-center gap-1.5 min-h-11 px-3 rounded-full primary-gradient text-white font-body-bold text-caption active:scale-[0.98] transition-transform disabled:opacity-70"
           >
-            <span className="material-symbols-outlined text-[18px]">
-              download
-            </span>
+            <Icon name="download" className="text-[18px]" />
             {exporting ? "Menyiapkan..." : "Excel"}
           </button>
         </div>
@@ -234,9 +231,7 @@ export function LaporanView({ data }: { data: LaporanData }) {
 
       <section className="bg-surface rounded-[20px] p-4 clay-card border border-white/80">
         <div className="flex items-center gap-2 mb-3">
-          <span className="material-symbols-outlined text-brand-600 text-[20px]">
-            storefront
-          </span>
+          <Icon name="storefront" className="text-brand-600 text-[20px]" />
           <span className="font-headline-2 text-headline-2 text-text-primary">
             Omzet per Cabang
           </span>
@@ -274,9 +269,7 @@ export function LaporanView({ data }: { data: LaporanData }) {
 
       <section className="bg-surface rounded-[20px] p-4 clay-card border border-white/80">
         <div className="flex items-center gap-2 mb-3">
-          <span className="material-symbols-outlined text-brand-600 text-[20px]">
-            groups
-          </span>
+          <Icon name="groups" className="text-brand-600 text-[20px]" />
           <span className="font-headline-2 text-headline-2 text-text-primary">
             Rekap Komisi Tim
           </span>
@@ -321,9 +314,7 @@ export function LaporanView({ data }: { data: LaporanData }) {
 
       <section className="bg-surface rounded-[20px] p-4 clay-card border border-white/80">
         <div className="flex items-center gap-2 mb-3">
-          <span className="material-symbols-outlined text-brand-600 text-[20px]">
-            inventory_2
-          </span>
+          <Icon name="inventory_2" className="text-brand-600 text-[20px]" />
           <span className="font-headline-2 text-headline-2 text-text-primary">
             Analisis Stok
           </span>

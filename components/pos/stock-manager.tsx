@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { formatTimeWib, formatDateWib } from "@/lib/format";
 import { formatAngka } from "@/lib/pos";
+import { Icon } from "@/components/ui/icon";
 
 export type InventoryItem = {
   id: string;
@@ -295,7 +296,7 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
 
       {error ? (
         <div className="p-3 rounded-xl bg-danger-surface text-danger-text font-body text-body flex items-center gap-2">
-          <span className="material-symbols-outlined text-[20px]">error</span>
+          <Icon name="error" className="text-[20px]" />
           {error}
         </div>
       ) : null}
@@ -303,9 +304,7 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
       {tab === "items" ? (
         items.length === 0 ? (
           <div className="clay-card p-8 flex flex-col items-center text-center gap-2">
-            <span className="material-symbols-outlined text-[40px] text-text-muted">
-              inventory_2
-            </span>
+            <Icon name="inventory_2" className="text-[40px] text-text-muted" />
             <p className="font-body text-body text-text-secondary">
               Belum ada item inventaris di cabang ini.
             </p>
@@ -331,9 +330,7 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
                             : "bg-brand-50 text-brand-600"
                         }`}
                       >
-                        <span className="material-symbols-outlined text-[22px]">
-                          inventory_2
-                        </span>
+                        <Icon name="inventory_2" className="text-[22px]" />
                       </div>
                       <div className="flex flex-col min-w-0">
                         <span className="font-body-bold text-body-bold text-text-primary truncate">
@@ -368,9 +365,7 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
                   <div className="flex items-center justify-between pt-1">
                     {low ? (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-danger-surface text-danger-text font-caption text-caption">
-                        <span className="material-symbols-outlined text-[13px]">
-                          warning
-                        </span>
+                        <Icon name="warning" className="text-[13px]" />
                         Perlu Restock
                       </span>
                     ) : (
@@ -383,9 +378,7 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
                       onClick={() => openClaim(item)}
                       className="px-3 min-h-11 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center gap-1 active:scale-95 transition-transform"
                     >
-                      <span className="material-symbols-outlined text-[16px]">
-                        shopping_cart_checkout
-                      </span>
+                      <Icon name="shopping_cart_checkout" className="text-[16px]" />
                       Klaim Ambil
                     </button>
                   </div>
@@ -396,9 +389,7 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
         )
       ) : claims.length === 0 ? (
         <div className="clay-card p-8 flex flex-col items-center text-center gap-2">
-          <span className="material-symbols-outlined text-[40px] text-text-muted">
-            receipt_long
-          </span>
+          <Icon name="receipt_long" className="text-[40px] text-text-muted" />
           <p className="font-body text-body text-text-secondary">
             Belum ada riwayat klaim stok.
           </p>
@@ -423,9 +414,7 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
                   <span
                     className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-caption text-caption shrink-0 ${meta.cls}`}
                   >
-                    <span className="material-symbols-outlined text-[14px]">
-                      {meta.icon}
-                    </span>
+                    <Icon name={meta.icon} className="text-[14px]" />
                     {meta.label}
                   </span>
                 </div>
@@ -449,9 +438,7 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
                       onClick={() => confirmClaim(claim)}
                       className="flex-1 py-2.5 rounded-xl bg-success-surface text-success-text font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform disabled:opacity-60"
                     >
-                      <span className="material-symbols-outlined text-[18px]">
-                        check
-                      </span>
+                      <Icon name="check" className="text-[18px]" />
                       Setujui
                     </button>
                     <button
@@ -460,9 +447,7 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
                       onClick={() => rejectClaim(claim)}
                       className="flex-1 py-2.5 rounded-xl bg-danger-surface text-danger-text font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform disabled:opacity-60"
                     >
-                      <span className="material-symbols-outlined text-[18px]">
-                        close
-                      </span>
+                      <Icon name="close" className="text-[18px]" />
                       Tolak
                     </button>
                   </div>
@@ -486,9 +471,7 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
                 aria-label="Tutup"
                 className="w-9 h-9 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary active:scale-95"
               >
-                <span className="material-symbols-outlined text-[20px]">
-                  close
-                </span>
+                <Icon name="close" className="text-[20px]" />
               </button>
             </div>
             <div className="p-3 rounded-2xl bg-surface-container-low flex items-center justify-between">
@@ -533,9 +516,7 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
               onClick={submitClaim}
               className="w-full py-4 rounded-2xl bg-primary text-white font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-60"
             >
-              <span className="material-symbols-outlined text-[22px]">
-                {submitting ? "hourglass_top" : "send"}
-              </span>
+              <Icon name={submitting ? "hourglass_top" : "send"} className="text-[22px]" />
               {submitting ? "Mengirim..." : "Ajukan Klaim"}
             </button>
           </div>
@@ -550,7 +531,7 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
             onClick={() => setInOpen((v) => !v)}
             className="w-full h-11 rounded-2xl bg-success-surface text-success-text font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
           >
-            <span className="material-symbols-outlined text-[18px]">move_to_inbox</span>
+            <Icon name="move_to_inbox" className="text-[18px]" />
             {inOpen ? "Tutup formulir stok masuk" : "Catat stok masuk supplier"}
           </button>
 
@@ -662,9 +643,7 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
                     onClick={submitStockIn}
                     className="w-full py-3 rounded-xl bg-success-base text-white font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-60"
                   >
-                    <span className="material-symbols-outlined text-[20px]">
-                      {submitting ? "hourglass_top" : "inventory_2"}
-                    </span>
+                    <Icon name={submitting ? "hourglass_top" : "inventory_2"} className="text-[20px]" />
                     {submitting ? "Mencatat..." : "Catat Stok Masuk"}
                   </button>
                 </>

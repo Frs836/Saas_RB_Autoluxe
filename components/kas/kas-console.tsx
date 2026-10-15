@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { formatRupiah, formatTimeWib } from "@/lib/format";
 import { canvasToWebp, captureSquareCanvas } from "@/lib/attendance";
 import { createClient } from "@/lib/supabase/client";
+import { Icon } from "@/components/ui/icon";
 
 type PettyCashRow = {
   id: string;
@@ -343,9 +344,7 @@ export function KasConsole({
                   {proofPath ? (
                     <div className="flex items-center justify-between gap-2 rounded-xl bg-success-surface text-success-text px-3 py-2.5">
                       <span className="flex items-center gap-2 font-caption text-caption">
-                        <span className="material-symbols-outlined text-[18px]">
-                          check_circle
-                        </span>
+                        <Icon name="check_circle" className="text-[18px]" />
                         Foto nota terlampir
                       </span>
                       <button
@@ -362,9 +361,7 @@ export function KasConsole({
                       onClick={openCamera}
                       className="h-12 rounded-xl bg-surface-container-low text-text-secondary font-caption text-caption flex items-center justify-center gap-2 shadow-[inset_0px_2px_4px_rgba(255,255,255,0.95)]"
                     >
-                      <span className="material-symbols-outlined text-[18px]">
-                        photo_camera
-                      </span>
+                      <Icon name="photo_camera" className="text-[18px]" />
                       Ambil foto nota
                     </button>
                   )}
@@ -441,7 +438,7 @@ export function KasConsole({
               className="h-14 w-14 rounded-full bg-primary-gradient text-on-primary flex items-center justify-center clay-glow disabled:opacity-60"
               aria-label="Ambil foto"
             >
-              <span className="material-symbols-outlined text-[28px]">photo_camera</span>
+              <Icon name="photo_camera" className="text-[28px]" />
             </button>
           </div>
         </div>

@@ -1,3 +1,5 @@
+import { Icon } from "@/components/ui/icon";
+
 /**
  * Daftar syarat yang belum terpenuhi sebelum tombol kirim bisa ditekan.
  *
@@ -27,7 +29,7 @@ export function SyaratBelumTerpenuhi({
   if (belum.length === 0) {
     return (
       <p className="flex items-center gap-2 rounded-xl bg-success-surface text-success-text px-3.5 py-2.5 font-caption text-caption">
-        <span className="material-symbols-outlined text-[18px]">check_circle</span>
+        <Icon name="check_circle" className="text-[18px]" />
         Semua syarat terpenuhi, tombol kirim sudah aktif.
       </p>
     );
@@ -36,7 +38,7 @@ export function SyaratBelumTerpenuhi({
   return (
     <div className="rounded-xl bg-warning-surface text-warning-text px-3.5 py-2.5 flex flex-col gap-1.5">
       <p className="font-caption text-caption flex items-center gap-2">
-        <span className="material-symbols-outlined text-[18px]">pending_actions</span>
+        <Icon name="pending_actions" className="text-[18px]" />
         {judul} ({belum.length})
       </p>
       <ul className="flex flex-col gap-1 pl-6">

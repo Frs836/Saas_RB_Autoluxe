@@ -37,24 +37,18 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="id" className={plusJakartaSans.variable}>
       <head>
         {/*
-         * Font ikon dilayani sendiri dari /public, bukan dari Google Fonts.
+         * Tidak ada preload font ikon lagi.
          *
-         * Versi penuh Material Symbols berukuran 3,9 MB dan stylesheet-nya
-         * memblokir render, jadi setiap halaman menunggu berkas sebesar itu
-         * hanya untuk menampilkan ikon daftar dan roda gigi. Subset yang
-         * dipakai aplikasi berukuran 12 KB, dilayani dari domain yang sama
-         * tanpa permintaan DNS dan TLS tambahan.
+         * Ikon dulunya memakai ligature font Material Symbols. Versi penuh
+         * 3,9 MB, lalu dipangkas jadi subset. Subset itu harus diperbarui
+         * setiap kali ada nama ikon baru, dan kalau ada yang terlewat, yang
+         * tampil bukan ikon melainkan teks nama ikon itu mentah, misalnya
+         * "DASHBOARD" atau "INSIGHTS".
          *
-         * Preload membuat unduhan dimulai paralel dengan CSS, dan
-         * font-display: swap membuat teks tetap tampil sebelum font tiba.
+         * Ikon sekarang inline SVG dari components/ui/icon-paths.ts, jadi
+         * tidak ada unduhan font sama sekali dan tidak ada yang bisa gagal
+         * dimuat.
          */}
-        <link
-          rel="preload"
-          href="/fonts/material-symbols-subset.woff2"
-          as="font"
-          type="font/woff2"
-          crossOrigin="anonymous"
-        />
       </head>
       <body className="min-h-screen flex flex-col antialiased">
         <ToastProvider>

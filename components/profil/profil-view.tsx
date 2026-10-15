@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { initials } from "@/lib/format";
 import type { ProfileMenuItem } from "@/lib/rbac";
+import { Icon } from "@/components/ui/icon";
 
 type MenuItem = ProfileMenuItem;
 
@@ -40,9 +41,7 @@ export function ProfilView({
       <section className="px-gutter pt-4">
         <div className="relative overflow-hidden rounded-[24px] p-5 primary-gradient text-on-primary clay-glow">
           <div className="absolute -right-6 -bottom-6 opacity-10 pointer-events-none text-white">
-            <span className="material-symbols-outlined text-[130px]">
-              account_circle
-            </span>
+            <Icon name="account_circle" className="text-[130px]" />
           </div>
           <div className="relative z-10 flex items-center gap-4">
             <div className="w-16 h-16 rounded-[22px] bg-white/20 backdrop-blur-md flex items-center justify-center font-headline-1 text-headline-1 text-white shrink-0">
@@ -67,7 +66,7 @@ export function ProfilView({
       <section className="px-gutter pt-2.5">
         <div className="bg-surface rounded-[20px] p-4 clay-card border border-white/80 flex items-center gap-3">
           <div className="w-11 h-11 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
-            <span className="material-symbols-outlined text-[22px]">garage</span>
+            <Icon name="garage" className="text-[22px]" />
           </div>
           <div className="flex-1 min-w-0">
             <span className="font-caption text-caption text-text-muted block">
@@ -88,9 +87,7 @@ export function ProfilView({
                 : "bg-warning-surface text-warning-text"
             }`}
           >
-            <span className="material-symbols-outlined text-[13px]">
-              {branchConfigured ? "verified" : "wrong_location"}
-            </span>
+            <Icon name={branchConfigured ? "verified" : "wrong_location"} className="text-[13px]" />
             {branchConfigured ? "Lokasi OK" : "Belum Diatur"}
           </span>
         </div>
@@ -100,9 +97,7 @@ export function ProfilView({
       <section className="px-gutter pt-2.5">
         <div className="bg-surface rounded-[20px] p-2 clay-card border border-white/80">
           <div className="flex items-center gap-2 px-3 pt-2.5 pb-1.5">
-            <span className="material-symbols-outlined text-brand-600 text-[18px]">
-              apps
-            </span>
+            <Icon name="apps" className="text-brand-600 text-[18px]" />
             <span className="font-body-bold text-body-bold text-text-primary">
               Modul Saya
             </span>
@@ -114,9 +109,7 @@ export function ProfilView({
               className="flex items-center gap-3 px-3 py-3 rounded-2xl active:bg-surface-container-low active:scale-[0.99] transition-all"
             >
               <div className="w-10 h-10 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-[20px]">
-                  {item.icon}
-                </span>
+                <Icon name={item.icon} className="text-[20px]" />
               </div>
               <div className="flex-1 min-w-0">
                 <span className="font-body-bold text-body-bold text-text-primary block">
@@ -126,9 +119,7 @@ export function ProfilView({
                   {item.caption}
                 </span>
               </div>
-              <span className="material-symbols-outlined text-text-muted text-[20px] shrink-0">
-                chevron_right
-              </span>
+              <Icon name="chevron_right" className="text-text-muted text-[20px] shrink-0" />
             </Link>
           ))}
         </div>
@@ -141,9 +132,7 @@ export function ProfilView({
             href="/absensi"
             className="block bg-warning-surface rounded-[16px] p-3.5 flex items-start gap-2.5 active:scale-[0.99] transition-transform"
           >
-            <span className="material-symbols-outlined text-warning-text text-[20px] mt-0.5">
-              wrong_location
-            </span>
+            <Icon name="wrong_location" className="text-warning-text text-[20px] mt-0.5" />
             <div className="flex-1 min-w-0">
               <span className="font-body-bold text-body-bold text-warning-text block">
                 Lokasi cabang belum diatur
@@ -164,7 +153,7 @@ export function ProfilView({
             type="submit"
             className="w-full h-[50px] rounded-full bg-danger-surface text-danger-text font-body-bold text-body-bold flex items-center justify-center gap-2.5 active:scale-[0.98] transition-transform"
           >
-            <span className="material-symbols-outlined text-[20px]">logout</span>
+            <Icon name="logout" className="text-[20px]" />
             Keluar dari Aplikasi
           </button>
         </form>

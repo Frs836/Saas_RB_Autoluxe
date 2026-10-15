@@ -1,11 +1,10 @@
 import Link from "next/link";
+import { Icon } from "@/components/ui/icon";
 
 export function AccountDisabledNotice() {
   return (
     <div className="w-full rounded-2xl bg-danger-surface text-danger-text px-4 py-3 flex items-start gap-3 shadow-[inset_0px_1px_2px_rgba(255,255,255,0.6)]">
-      <span className="material-symbols-outlined text-[22px] shrink-0">
-        block
-      </span>
+      <Icon name="block" className="text-[22px] shrink-0" />
       <div className="flex flex-col gap-1">
         <p className="font-body-bold text-body-bold">
           Akun Anda dinonaktifkan

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Icon } from "@/components/ui/icon";
 
 export function SubPageHeader({
   title,
@@ -24,7 +25,7 @@ export function SubPageHeader({
             // dipakai di semua subhalaman, jadi ukuran ini berlaku di setiap layar.
             className="w-11 h-11 shrink-0 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary active:scale-95 transition-transform shadow-[inset_0px_2px_4px_rgba(255,255,255,0.95)]"
           >
-            <span className="material-symbols-outlined text-[22px]">arrow_back</span>
+            <Icon name="arrow_back" className="text-[22px]" />
           </Link>
           <div className="flex flex-col min-w-0">
             <h1 className="font-headline-2 text-headline-2 text-text-primary truncate">{title}</h1>

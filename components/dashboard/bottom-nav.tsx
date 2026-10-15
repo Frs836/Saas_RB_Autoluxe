@@ -8,6 +8,7 @@ import {
   type NavItem,
   type Role,
 } from "@/lib/rbac";
+import { Icon } from "@/components/ui/icon";
 
 type Props = {
   role: Role;
@@ -26,9 +27,7 @@ export function BottomNav({ role }: Props) {
 
     return (
       <Link key={item.href} href={item.href} className={classes}>
-        <span className="material-symbols-outlined text-[22px]">
-          {item.icon}
-        </span>
+        <Icon name={item.icon} className="text-[22px]" />
         <span className="font-caption text-caption">{item.label}</span>
       </Link>
     );
@@ -53,7 +52,7 @@ export function BottomNav({ role }: Props) {
               aria-label="Buat Order Baru"
               className="w-14 h-14 rounded-full primary-gradient flex items-center justify-center text-on-primary clay-fab active:scale-95 transition-transform"
             >
-              <span className="material-symbols-outlined text-[28px]">add</span>
+              <Icon name="add" className="text-[28px]" />
             </Link>
           </div>
         ) : (

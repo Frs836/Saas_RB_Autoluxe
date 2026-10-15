@@ -4,6 +4,7 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { setActiveBranch } from "@/app/actions/branch";
 import { ALL_BRANCHES, type BranchOption, type BranchScope } from "@/lib/branch";
+import { Icon } from "@/components/ui/icon";
 
 type Props = {
   branches: BranchOption[];
@@ -52,11 +53,10 @@ export function BranchSwitcher({ branches, activeBranchId, scope, variant }: Pro
       }
     >
       <span className="flex items-center gap-1 min-w-0">
-        <span
-          className={`material-symbols-outlined text-brand-600 ${variant === "wide" ? "text-[18px]" : "text-[13px]"}`}
-        >
-          {scope === "all" ? "public" : "storefront"}
-        </span>
+        <Icon
+          name={scope === "all" ? "public" : "storefront"}
+          className={`text-brand-600 ${variant === "wide" ? "text-[18px]" : "text-[13px]"}`}
+        />
         <span
           className={
             variant === "wide"
@@ -67,11 +67,10 @@ export function BranchSwitcher({ branches, activeBranchId, scope, variant }: Pro
           {currentLabel}
         </span>
       </span>
-      <span
-        className={`material-symbols-outlined text-text-muted shrink-0 ${variant === "wide" ? "text-[18px]" : "text-[13px]"}`}
-      >
-        expand_more
-      </span>
+      <Icon
+        name="expand_more"
+        className={`text-text-muted shrink-0 ${variant === "wide" ? "text-[18px]" : "text-[13px]"}`}
+      />
     </button>
   );
 
@@ -102,10 +101,10 @@ export function BranchSwitcher({ branches, activeBranchId, scope, variant }: Pro
                   : "text-text-secondary hover:bg-surface-container-low"
               }`}
             >
-              <span className="material-symbols-outlined text-[16px]">public</span>
+              <Icon name="public" className="text-[16px]" />
               <span className="flex-1">Seluruh Cabang</span>
               {scope === "all" ? (
-                <span className="material-symbols-outlined text-[16px]">check</span>
+                <Icon name="check" className="text-[16px]" />
               ) : null}
             </button>
 
@@ -132,10 +131,10 @@ export function BranchSwitcher({ branches, activeBranchId, scope, variant }: Pro
                       : "text-text-secondary hover:bg-surface-container-low"
                   }`}
                 >
-                  <span className="material-symbols-outlined text-[16px]">storefront</span>
+                  <Icon name="storefront" className="text-[16px]" />
                   <span className="flex-1 truncate">{branch.name}</span>
                   {active ? (
-                    <span className="material-symbols-outlined text-[16px]">check</span>
+                    <Icon name="check" className="text-[16px]" />
                   ) : null}
                 </button>
               );
@@ -147,7 +146,7 @@ export function BranchSwitcher({ branches, activeBranchId, scope, variant }: Pro
               href="/pengaturan/cabang"
               className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-left font-caption text-caption text-text-secondary hover:bg-surface-container-low"
             >
-              <span className="material-symbols-outlined text-[16px]">tune</span>
+              <Icon name="tune" className="text-[16px]" />
               Pengaturan Cabang
             </a>
           </div>

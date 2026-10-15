@@ -8,6 +8,7 @@ import {
   normalizeWaNumber,
   whatsappLink,
 } from "@/lib/pos";
+import { Icon } from "@/components/ui/icon";
 
 export type WaOrderItem = {
   name: string;
@@ -284,9 +285,7 @@ export function WhatsappConsole({
                     : "bg-surface-container-low text-text-secondary"
                 }`}
               >
-                <span className="material-symbols-outlined text-[15px]">
-                  {tpl.icon}
-                </span>
+                <Icon name={tpl.icon} className="text-[15px]" />
                 {tpl.label}
               </button>
             ))}
@@ -386,7 +385,7 @@ export function WhatsappConsole({
                 rel="noopener noreferrer"
                 className="h-[50px] rounded-full bg-gradient-to-r from-emerald-600 to-whatsapp flex items-center justify-center gap-2 text-on-primary font-body-bold text-body-bold shadow-[0px_10px_22px_rgba(34,197,94,0.32)]"
               >
-                <span className="material-symbols-outlined">chat</span>
+                <Icon name="chat" />
                 {phone
                   ? `Kirim ke +${phone}`
                   : "Buka WhatsApp (pilih kontak)"}
@@ -399,9 +398,7 @@ export function WhatsappConsole({
                 onClick={copyMessage}
                 className="h-12 rounded-2xl bg-surface-container-low text-text-secondary font-caption text-caption flex items-center justify-center gap-2"
               >
-                <span className="material-symbols-outlined text-[18px]">
-                  {copied ? "check" : "content_copy"}
-                </span>
+                <Icon name={copied ? "check" : "content_copy"} className="text-[18px]" />
                 {copied ? "Tersalin" : "Salin pesan"}
               </button>
               <button
@@ -409,9 +406,7 @@ export function WhatsappConsole({
                 onClick={() => setTemplate("custom")}
                 className="h-12 rounded-2xl bg-surface-container-low text-text-secondary font-caption text-caption flex items-center justify-center gap-2"
               >
-                <span className="material-symbols-outlined text-[18px]">
-                  edit_note
-                </span>
+                <Icon name="edit_note" className="text-[18px]" />
                 Tulis sendiri
               </button>
             </div>

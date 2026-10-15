@@ -19,6 +19,7 @@ import {
   shiftMonth,
   type MonthKey,
 } from "@/lib/attendance-period";
+import { Icon } from "@/components/ui/icon";
 
 /** Mode tampilan rekap. Harian tetap dipakai untuk melihat rincian satu hari. */
 type Mode = "harian" | "bulanan" | "tiga_bulan";
@@ -607,7 +608,7 @@ export function RekapConsole({
       <section className="px-gutter pt-3">
         <div className="bg-clay-overlay rounded-xl px-3 py-2.5 flex items-center justify-between border border-border-subtle">
           <span className="font-caption text-caption text-success-text flex items-center gap-1.5">
-            <span className="material-symbols-outlined text-[15px]">radar</span>
+            <Icon name="radar" className="text-[15px]" />
             {crossBranch
               ? "Geofence mengikuti cabang tiap staf"
               : `Geofence ${Math.round(branch.radius)}m Aktif`}
@@ -618,9 +619,7 @@ export function RekapConsole({
             disabled={exporting}
             className="min-h-11 px-3 rounded-lg bg-brand-50 text-brand-700 font-caption text-caption flex items-center gap-1.5 active:scale-95 transition-transform disabled:opacity-60"
           >
-            <span className="material-symbols-outlined text-[15px]">
-              {exporting ? "hourglass_top" : "download"}
-            </span>
+            <Icon name={exporting ? "hourglass_top" : "download"} className="text-[15px]" />
             {exporting ? "Menyusun" : mode === "tiga_bulan" ? "Excel 3 Bulan" : "Laporan"}
           </button>
         </div>
@@ -654,7 +653,7 @@ export function RekapConsole({
                   : "text-text-secondary active:scale-95 transition-transform")
               }
             >
-              <span className="material-symbols-outlined text-[15px]">{tab.icon}</span>
+              <Icon name={tab.icon} className="text-[15px]" />
               {tab.label}
             </button>
           ))}
@@ -685,12 +684,12 @@ export function RekapConsole({
       <section className="px-gutter pt-4">
         <div className="relative overflow-hidden rounded-[24px] p-5 primary-gradient text-on-primary clay-glow">
           <div className="absolute -right-6 -bottom-6 opacity-10 pointer-events-none text-white">
-            <span className="material-symbols-outlined text-[130px]">groups</span>
+            <Icon name="groups" className="text-[130px]" />
           </div>
           <div className="relative z-10 flex flex-col gap-3">
             <div className="flex items-center justify-between gap-2">
               <span className="font-caption text-caption text-brand-100 flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[16px]">calendar_today</span>
+                <Icon name="calendar_today" className="text-[16px]" />
                 Kehadiran ({dateLabel})
               </span>
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-md font-micro-badge text-micro-badge text-white uppercase tracking-wider">
@@ -742,7 +741,7 @@ export function RekapConsole({
             aria-label="Hari sebelumnya"
             className="w-11 h-11 rounded-xl bg-surface-container-low text-text-secondary flex items-center justify-center active:scale-95 transition-transform disabled:opacity-50"
           >
-            <span className="material-symbols-outlined text-[20px]">chevron_left</span>
+            <Icon name="chevron_left" className="text-[20px]" />
           </button>
           <div className="flex-1 text-center">
             <span
@@ -767,7 +766,7 @@ export function RekapConsole({
             aria-label="Hari berikutnya"
             className="w-11 h-11 rounded-xl bg-surface-container-low text-text-secondary flex items-center justify-center active:scale-95 transition-transform disabled:opacity-50"
           >
-            <span className="material-symbols-outlined text-[20px]">chevron_right</span>
+            <Icon name="chevron_right" className="text-[20px]" />
           </button>
         </div>
       </section>
@@ -795,7 +794,7 @@ export function RekapConsole({
       {error ? (
         <section className="px-gutter pt-3">
           <div className="p-3 rounded-xl bg-danger-surface text-danger-text font-body text-body flex items-center gap-2">
-            <span className="material-symbols-outlined text-[18px]">error</span>
+            <Icon name="error" className="text-[18px]" />
             <span className="flex-1">{error}</span>
           </div>
         </section>
@@ -911,9 +910,7 @@ export function RekapConsole({
 
                         {isLate && log.lateMinutes ? (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-warning-surface text-warning-text font-micro-badge text-micro-badge mt-1.5">
-                            <span className="material-symbols-outlined text-[13px]">
-                              running_with_errors
-                            </span>
+                            <Icon name="running_with_errors" className="text-[13px]" />
                             Terlambat {log.lateMinutes} menit
                             {config ? ` (Batas Shift ${config.openTime.slice(0, 5)} WIB)` : ""}
                           </span>
@@ -921,17 +918,13 @@ export function RekapConsole({
 
                         <div className="flex flex-wrap gap-1.5 mt-2">
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-clay-overlay text-text-secondary font-caption text-caption">
-                            <span className="material-symbols-outlined text-[13px] text-brand-500">
-                              location_on
-                            </span>
+                            <Icon name="location_on" className="text-[13px] text-brand-500" />
                             {distance === null
                               ? "GPS -"
                               : `GPS Verified (${formatDistance(distance)})`}
                           </span>
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-clay-overlay text-text-secondary font-caption text-caption">
-                            <span className="material-symbols-outlined text-[13px] text-brand-500">
-                              face
-                            </span>
+                            <Icon name="face" className="text-[13px] text-brand-500" />
                             {log.faceScore === null
                               ? "Face ID -"
                               : `Face ID ${Math.round(log.faceScore * 100)}% Match`}
@@ -942,9 +935,7 @@ export function RekapConsole({
                               onClick={() => void openModal(person, log)}
                               className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface border border-brand-200 text-brand-700 font-caption text-caption active:scale-95 transition-transform"
                             >
-                              <span className="material-symbols-outlined text-[13px]">
-                                photo_camera
-                              </span>
+                              <Icon name="photo_camera" className="text-[13px]" />
                               Selfie
                             </button>
                           ) : null}
@@ -1040,9 +1031,7 @@ function BulananPanel({
               onClick={() => setBulan(shiftMonth(bulan, -1))}
               className="w-11 h-11 rounded-xl bg-clay-overlay flex items-center justify-center text-text-primary active:scale-95 transition-transform"
             >
-              <span className="material-symbols-outlined text-[20px]">
-                chevron_left
-              </span>
+              <Icon name="chevron_left" className="text-[20px]" />
             </button>
             <span className="font-headline-3 text-headline-3 text-text-primary">
               {monthLabel(bulan)}
@@ -1053,9 +1042,7 @@ function BulananPanel({
               onClick={() => setBulan(shiftMonth(bulan, 1))}
               className="w-11 h-11 rounded-xl bg-clay-overlay flex items-center justify-center text-text-primary active:scale-95 transition-transform"
             >
-              <span className="material-symbols-outlined text-[20px]">
-                chevron_right
-              </span>
+              <Icon name="chevron_right" className="text-[20px]" />
             </button>
           </div>
 
@@ -1127,9 +1114,7 @@ function BulananPanel({
 
       {memuat ? (
         <div className="flex items-center justify-center gap-2 py-6 text-text-secondary">
-          <span className="material-symbols-outlined text-[18px] animate-spin">
-            progress_activity
-          </span>
+          <Icon name="progress_activity" className="text-[18px] animate-spin" />
           <span className="font-caption text-caption">Memuat rekap</span>
         </div>
       ) : null}
@@ -1176,9 +1161,7 @@ function BulananPanel({
 
       {!memuat && !galat && auditKosongTXT(ringkasanPerStaff, ringkasanBulan) ? (
         <div className="bg-clay-overlay rounded-xl px-4 py-5 text-center">
-          <span className="material-symbols-outlined text-[28px] text-text-tertiary">
-            event_busy
-          </span>
+          <Icon name="event_busy" className="text-[28px] text-text-tertiary" />
           <p className="font-body-bold text-body-bold text-text-primary mt-1">
             Belum ada data pada periode ini
           </p>
@@ -1326,7 +1309,7 @@ function VerificationModal({
             aria-label="Tutup"
             className="w-9 h-9 rounded-xl bg-surface-container-low text-text-secondary flex items-center justify-center active:scale-95 transition-transform shrink-0"
           >
-            <span className="material-symbols-outlined text-[18px]">close</span>
+            <Icon name="close" className="text-[18px]" />
           </button>
         </div>
 
@@ -1349,7 +1332,7 @@ function VerificationModal({
             )}
             {photoUrl ? (
               <span className="absolute top-3 right-3 inline-flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-500 text-white font-micro-badge text-micro-badge shadow">
-                <span className="material-symbols-outlined text-[13px]">verified</span>
+                <Icon name="verified" className="text-[13px]" />
                 VERIFIED
               </span>
             ) : null}
@@ -1359,9 +1342,7 @@ function VerificationModal({
         <div className="px-4 py-4 space-y-2">
           <div className="bg-surface-container-low rounded-2xl p-3 flex items-center justify-between">
             <span className="font-caption text-caption text-text-secondary flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-[15px] text-brand-500">
-                location_on
-              </span>
+              <Icon name="location_on" className="text-[15px] text-brand-500" />
               Geofence {Math.round(branch.radius)}m
             </span>
             <span className="font-caption text-caption text-text-primary">
@@ -1374,9 +1355,7 @@ function VerificationModal({
           </div>
           <div className="bg-surface-container-low rounded-2xl p-3 flex items-center justify-between">
             <span className="font-caption text-caption text-text-secondary flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-[15px] text-brand-500">
-                face
-              </span>
+              <Icon name="face" className="text-[15px] text-brand-500" />
               Kemiripan Sampel Wajah
             </span>
             <span className="font-body-bold text-body-bold text-text-primary">
@@ -1398,7 +1377,7 @@ function VerificationModal({
             onClick={onClose}
             className="w-full h-11 rounded-full bg-surface-container-low text-text-secondary font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform"
           >
-            <span className="material-symbols-outlined text-[18px]">verified_user</span>
+            <Icon name="verified_user" className="text-[18px]" />
             Tutup Verifikasi
           </button>
         </div>

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { Icon } from "@/components/ui/icon";
 
 /**
  * Lonceng notifikasi.
@@ -80,7 +81,7 @@ export function NotificationBell() {
       }
       className="relative w-11 h-11 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary shadow-[inset_0px_2px_4px_rgba(255,255,255,0.95)] active:scale-[0.98] transition-transform"
     >
-      <span className="material-symbols-outlined text-[20px]">notifications</span>
+      <Icon name="notifications" className="text-[20px]" />
       {belum > 0 ? (
         <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-danger-base text-white text-[10px] font-bold grid place-items-center">
           {belum > 99 ? "99+" : belum}

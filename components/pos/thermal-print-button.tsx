@@ -10,6 +10,7 @@ import {
   type PrinterInfo,
   type ThermalReceipt,
 } from "@/lib/thermal";
+import { Icon } from "@/components/ui/icon";
 
 /**
  * Kontrol cetak struk ke printer thermal Bluetooth.
@@ -101,7 +102,7 @@ export function ThermalPrintButton({
             compact ? "" : "w-full"
           }`}
         >
-          <span className="material-symbols-outlined text-[18px]">print_disabled</span>
+          <Icon name="print_disabled" className="text-[18px]" />
           Cetak thermal tidak tersedia
         </button>
         {support.reason ? (
@@ -134,7 +135,7 @@ export function ThermalPrintButton({
           aria-expanded={open}
           className="h-11 px-3 rounded-xl bg-surface-container text-text-secondary font-caption text-caption flex items-center gap-1 active:scale-95 transition-transform"
         >
-          <span className="material-symbols-outlined text-[18px]">bluetooth</span>
+          <Icon name="bluetooth" className="text-[18px]" />
         </button>
       </div>
 
@@ -144,7 +145,7 @@ export function ThermalPrintButton({
           onClick={pair}
           className="h-10 px-3 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center gap-1.5 self-start active:scale-95 transition-transform"
         >
-          <span className="material-symbols-outlined text-[16px]">add</span>
+          <Icon name="add" className="text-[16px]" />
           Pasangkan printer baru
         </button>
       ) : null}
@@ -157,9 +158,7 @@ export function ThermalPrintButton({
           compact ? "" : "w-full"
         }`}
       >
-        <span className="material-symbols-outlined text-[18px]">
-          {busy ? "hourglass_top" : "print"}
-        </span>
+        <Icon name={busy ? "hourglass_top" : "print"} className="text-[18px]" />
         {busy ? "Mengirim..." : label}
       </button>
 

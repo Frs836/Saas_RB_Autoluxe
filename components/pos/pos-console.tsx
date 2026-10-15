@@ -23,6 +23,7 @@ import {
   type VehicleType,
 } from "@/lib/pos";
 import type { Role } from "@/lib/rbac";
+import { Icon } from "@/components/ui/icon";
 
 type CartLine = { serviceId: string; qty: number };
 
@@ -327,9 +328,7 @@ export function PosConsole({
       <div className="px-gutter py-6">
         <div className="clay-card p-6 flex flex-col items-center text-center gap-3">
           <div className="w-14 h-14 rounded-2xl bg-warning-surface flex items-center justify-center">
-            <span className="material-symbols-outlined text-warning-text text-[28px]">
-              lock
-            </span>
+            <Icon name="lock" className="text-warning-text text-[28px]" />
           </div>
           <h2 className="font-headline-2 text-headline-2 text-text-primary">
             Akses Terbatas
@@ -354,9 +353,7 @@ export function PosConsole({
       <div className="px-gutter py-6 pb-28">
         <div className="clay-card p-6 flex flex-col items-center text-center gap-3">
           <div className="w-16 h-16 rounded-full bg-success-surface flex items-center justify-center">
-            <span className="material-symbols-outlined text-success-text text-[34px]">
-              check_circle
-            </span>
+            <Icon name="check_circle" className="text-success-text text-[34px]" />
           </div>
           <h2 className="font-headline-2 text-headline-2 text-text-primary">
             Order Berhasil Dibuat
@@ -393,9 +390,7 @@ export function PosConsole({
             </span>
             {isEmployee && result.paymentState === "paid" ? (
               <div className="mt-3 p-3 rounded-xl bg-warning-surface text-warning-text font-caption text-caption flex items-start gap-2">
-                <span className="material-symbols-outlined text-[18px] shrink-0">
-                  savings
-                </span>
+                <Icon name="savings" className="text-[18px] shrink-0" />
                 <span>
                   Rp {formatRupiah(result.total)} tercatat sebagai kas titipan
                   atas nama Anda. Serahkan ke Admin Kasir saat shift dibuka.
@@ -404,9 +399,7 @@ export function PosConsole({
             ) : null}
             {result.startedImmediately ? (
               <div className="mt-2 p-3 rounded-xl bg-success-surface text-success-text font-caption text-caption flex items-start gap-2">
-                <span className="material-symbols-outlined text-[18px] shrink-0">
-                  engineering
-                </span>
+                <Icon name="engineering" className="text-[18px] shrink-0" />
                 <span>Order sudah berstatus &ldquo;Sedang Dikerjakan&rdquo;.</span>
               </div>
             ) : null}
@@ -421,9 +414,7 @@ export function PosConsole({
               rel="noopener noreferrer"
               className="w-full py-4 rounded-2xl bg-whatsapp text-white font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-[0_8px_20px_-6px_rgba(37,211,102,0.6)]"
             >
-              <span className="material-symbols-outlined text-[22px]">
-                chat
-              </span>
+              <Icon name="chat" className="text-[22px]" />
               Kirim Nota ke WhatsApp Pelanggan
             </a>
           ) : null}
@@ -434,7 +425,7 @@ export function PosConsole({
           {!isEmployee ? (
             <div className="rounded-2xl bg-surface-container-low p-3 flex flex-col gap-2">
               <span className="font-caption text-caption text-text-secondary flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[18px]">print</span>
+                <Icon name="print" className="text-[18px]" />
                 Cetak struk ke printer thermal
               </span>
               <ThermalPrintButton receipt={result.thermal} />
@@ -444,9 +435,7 @@ export function PosConsole({
             href="/pos/orders"
             className="w-full py-4 rounded-2xl bg-primary text-white font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform"
           >
-            <span className="material-symbols-outlined text-[22px]">
-              list_alt
-            </span>
+            <Icon name="list_alt" className="text-[22px]" />
             Lihat Antrean Order
           </Link>
           <button
@@ -481,9 +470,7 @@ export function PosConsole({
               aria-label="Kembali ke katalog"
               className="w-11 h-11 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary active:scale-95 transition-transform"
             >
-              <span className="material-symbols-outlined text-[22px]">
-                arrow_back
-              </span>
+              <Icon name="arrow_back" className="text-[22px]" />
             </button>
             <h1 className="font-headline-2 text-headline-2 text-text-primary">
               Checkout Order
@@ -494,9 +481,7 @@ export function PosConsole({
         <div className="px-gutter py-4 flex flex-col gap-4">
           <section className="clay-card p-4 flex flex-col gap-3">
             <h2 className="font-body-bold text-body-bold text-text-primary flex items-center gap-2">
-              <span className="material-symbols-outlined text-[20px] text-brand-600">
-                directions_car
-              </span>
+              <Icon name="directions_car" className="text-[20px] text-brand-600" />
               Data Kendaraan
             </h2>
             <div className="grid grid-cols-2 gap-3">
@@ -525,9 +510,7 @@ export function PosConsole({
             </div>
             <div className="flex items-center gap-2 text-text-secondary font-caption text-caption">
               <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-brand-50 text-brand-700">
-                <span className="material-symbols-outlined text-[14px]">
-                  {vehicleType === "motor" ? "two_wheeler" : "directions_car"}
-                </span>
+                <Icon name={vehicleType === "motor" ? "two_wheeler" : "directions_car"} className="text-[14px]" />
                 {vehicleType === "motor" ? "Motor" : "Mobil"}
               </span>
               <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-surface-container-high">
@@ -538,9 +521,7 @@ export function PosConsole({
 
           <section className="clay-card p-4 flex flex-col gap-3">
             <h2 className="font-body-bold text-body-bold text-text-primary flex items-center gap-2">
-              <span className="material-symbols-outlined text-[20px] text-brand-600">
-                person
-              </span>
+              <Icon name="person" className="text-[20px] text-brand-600" />
               Data Pelanggan
             </h2>
             <label className="flex flex-col gap-1">
@@ -570,9 +551,7 @@ export function PosConsole({
 
           <section className="clay-card p-4 flex flex-col gap-3">
             <h2 className="font-body-bold text-body-bold text-text-primary flex items-center gap-2">
-              <span className="material-symbols-outlined text-[20px] text-brand-600">
-                groups
-              </span>
+              <Icon name="groups" className="text-[20px] text-brand-600" />
               Tim Teknisi
               <span className="font-caption text-caption text-text-muted ml-auto">
                 opsional, maks 5
@@ -599,9 +578,7 @@ export function PosConsole({
                       }`}
                     >
                       {selected && index === 0 ? (
-                        <span className="material-symbols-outlined text-[14px]">
-                          star
-                        </span>
+                        <Icon name="star" className="text-[14px]" />
                       ) : null}
                       {member.full_name}
                     </button>
@@ -618,9 +595,7 @@ export function PosConsole({
 
           <section className="clay-card p-4 flex flex-col gap-3">
             <h2 className="font-body-bold text-body-bold text-text-primary flex items-center gap-2">
-              <span className="material-symbols-outlined text-[20px] text-brand-600">
-                payments
-              </span>
+              <Icon name="payments" className="text-[20px] text-brand-600" />
               Metode Pembayaran
             </h2>
             <div className="grid grid-cols-3 gap-2">
@@ -637,9 +612,7 @@ export function PosConsole({
                         : "bg-surface-container-low text-text-secondary"
                     }`}
                   >
-                    <span className="material-symbols-outlined text-[20px]">
-                      {PAYMENT_ICONS[method]}
-                    </span>
+                    <Icon name={PAYMENT_ICONS[method]} className="text-[20px]" />
                     <span className="font-caption text-caption">
                       {PAYMENT_LABELS[method]}
                     </span>
@@ -667,9 +640,7 @@ export function PosConsole({
                         : "bg-surface-container-low text-text-secondary"
                     }`}
                   >
-                    <span className="material-symbols-outlined text-[20px]">
-                      schedule
-                    </span>
+                    <Icon name="schedule" className="text-[20px]" />
                     <span className="font-caption text-caption">Bayar Nanti</span>
                   </button>
                   <button
@@ -682,20 +653,16 @@ export function PosConsole({
                         : "bg-surface-container-low text-text-secondary"
                     }`}
                   >
-                    <span className="material-symbols-outlined text-[20px]">
-                      paid
-                    </span>
+                    <Icon name="paid" className="text-[20px]" />
                     <span className="font-caption text-caption">
                       Bayar Sekarang
                     </span>
                   </button>
                 </div>
                 <div className="flex items-start gap-2 p-3 rounded-xl bg-surface-container-low">
-                  <span className="material-symbols-outlined text-[18px] text-brand-600 mt-0.5">
-                    {effectivePaymentState === "paid"
+                  <Icon name={effectivePaymentState === "paid"
                       ? "savings"
-                      : "hourglass_empty"}
-                  </span>
+                      : "hourglass_empty"} className="text-[18px] text-brand-600 mt-0.5" />
                   <p className="font-caption text-caption text-text-secondary">
                     {effectivePaymentState === "paid" ? (
                       <>
@@ -728,9 +695,7 @@ export function PosConsole({
                   : "bg-surface-container-low text-text-secondary"
               }`}
             >
-              <span className="material-symbols-outlined text-[20px]">
-                {startWork ? "check_box" : "check_box_outline_blank"}
-              </span>
+              <Icon name={startWork ? "check_box" : "check_box_outline_blank"} className="text-[20px]" />
               <span className="flex flex-col items-start">
                 <span className="font-caption text-caption">
                   Kerjakan Sekarang
@@ -772,9 +737,7 @@ export function PosConsole({
 
           {error ? (
             <div className="p-3 rounded-xl bg-danger-surface text-danger-text font-body text-body flex items-center gap-2">
-              <span className="material-symbols-outlined text-[20px]">
-                error
-              </span>
+              <Icon name="error" className="text-[20px]" />
               {error}
             </div>
           ) : null}
@@ -796,9 +759,7 @@ export function PosConsole({
             onClick={submitOrder}
             className="w-full py-4 rounded-full primary-gradient text-white font-body-bold text-body-bold flex items-center justify-center gap-2 clay-fab active:scale-95 transition-transform disabled:opacity-60"
           >
-            <span className="material-symbols-outlined text-[22px]">
-              {submitting ? "hourglass_top" : "check_circle"}
-            </span>
+            <Icon name={submitting ? "hourglass_top" : "check_circle"} className="text-[22px]" />
             {submitting
               ? "Memproses..."
               : `${startWork ? "Simpan & Kerjakan" : "Buat Order"} - ${formatRupiah(total)}`}
@@ -839,9 +800,7 @@ export function PosConsole({
             aria-label="Antrean order"
             className="w-11 h-11 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary active:scale-95 transition-transform"
           >
-            <span className="material-symbols-outlined text-[22px]">
-              list_alt
-            </span>
+            <Icon name="list_alt" className="text-[22px]" />
           </Link>
         </div>
       </div>
@@ -861,9 +820,7 @@ export function PosConsole({
                     : "bg-surface-container-low text-text-secondary"
                 }`}
               >
-                <span className="material-symbols-outlined text-[20px]">
-                  {type.icon}
-                </span>
+                <Icon name={type.icon} className="text-[20px]" />
                 {type.label}
               </button>
             );
@@ -895,17 +852,13 @@ export function PosConsole({
           </div>
         ) : (
           <div className="px-3 py-2.5 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center gap-2">
-            <span className="material-symbols-outlined text-[16px]">
-              two_wheeler
-            </span>
+            <Icon name="two_wheeler" className="text-[16px]" />
             Semua layanan motor menggunakan tarif Motor.
           </div>
         )}
 
         <div className="relative">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[20px]">
-            search
-          </span>
+          <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[20px]" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -957,9 +910,7 @@ export function PosConsole({
                 return (
                   <div key={service.id} className="clay-card p-3 flex flex-col gap-2">
                     <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center">
-                      <span className="material-symbols-outlined text-brand-600 text-[22px]">
-                        {CATEGORY_ICONS[service.category] ?? "build"}
-                      </span>
+                      <Icon name={CATEGORY_ICONS[service.category] ?? "build"} className="text-brand-600 text-[22px]" />
                     </div>
                     <div className="flex flex-col">
                       <span className="font-body-bold text-body-bold text-text-primary leading-tight line-clamp-2">
@@ -979,9 +930,7 @@ export function PosConsole({
                           onClick={() => changeQty(service.id, -1)}
                           className="w-11 h-11 rounded-lg bg-surface flex items-center justify-center active:scale-95"
                         >
-                          <span className="material-symbols-outlined text-[18px] text-text-secondary">
-                            remove
-                          </span>
+                          <Icon name="remove" className="text-[18px] text-text-secondary" />
                         </button>
                         <span className="font-body-bold text-body-bold text-text-primary">
                           {qty}
@@ -991,9 +940,7 @@ export function PosConsole({
                           onClick={() => changeQty(service.id, 1)}
                           className="w-11 h-11 rounded-lg bg-primary text-white flex items-center justify-center active:scale-95"
                         >
-                          <span className="material-symbols-outlined text-[18px]">
-                            add
-                          </span>
+                          <Icon name="add" className="text-[18px]" />
                         </button>
                       </div>
                     ) : (
@@ -1002,9 +949,7 @@ export function PosConsole({
                         onClick={() => addToCart(service.id)}
                         className="min-h-11 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform"
                       >
-                        <span className="material-symbols-outlined text-[16px]">
-                          add
-                        </span>
+                        <Icon name="add" className="text-[16px]" />
                         Tambah
                       </button>
                     )}
@@ -1029,9 +974,7 @@ export function PosConsole({
                     className="clay-card p-3 flex items-center gap-3"
                   >
                     <div className="w-10 h-10 rounded-xl bg-surface-container-low flex items-center justify-center shrink-0">
-                      <span className="material-symbols-outlined text-brand-600 text-[22px]">
-                        add_circle
-                      </span>
+                      <Icon name="add_circle" className="text-brand-600 text-[22px]" />
                     </div>
                     <div className="flex flex-col min-w-0 flex-1">
                       <span className="font-body-bold text-body-bold text-text-primary truncate">
@@ -1048,9 +991,7 @@ export function PosConsole({
                           onClick={() => changeQty(service.id, -1)}
                           className="w-11 h-11 rounded-lg bg-surface-container-low flex items-center justify-center active:scale-95"
                         >
-                          <span className="material-symbols-outlined text-[18px] text-text-secondary">
-                            remove
-                          </span>
+                          <Icon name="remove" className="text-[18px] text-text-secondary" />
                         </button>
                         <span className="font-body-bold text-body-bold text-text-primary w-5 text-center">
                           {qty}
@@ -1060,9 +1001,7 @@ export function PosConsole({
                           onClick={() => changeQty(service.id, 1)}
                           className="w-11 h-11 rounded-lg bg-primary text-white flex items-center justify-center active:scale-95"
                         >
-                          <span className="material-symbols-outlined text-[18px]">
-                            add
-                          </span>
+                          <Icon name="add" className="text-[18px]" />
                         </button>
                       </div>
                     ) : (
@@ -1072,9 +1011,7 @@ export function PosConsole({
                         aria-label={`Tambah ${service.name}`}
                         className="w-11 h-11 rounded-xl bg-brand-50 text-brand-700 flex items-center justify-center active:scale-95 transition-transform"
                       >
-                        <span className="material-symbols-outlined text-[20px]">
-                          add
-                        </span>
+                        <Icon name="add" className="text-[20px]" />
                       </button>
                     )}
                   </div>
@@ -1105,9 +1042,7 @@ export function PosConsole({
               className="w-full py-4 rounded-full primary-gradient text-white font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform"
             >
               Lanjut ke Checkout
-              <span className="material-symbols-outlined text-[22px]">
-                arrow_forward
-              </span>
+              <Icon name="arrow_forward" className="text-[22px]" />
             </button>
           </div>
         </div>

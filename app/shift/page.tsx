@@ -4,6 +4,7 @@ import { SubPageHeader } from "@/components/pos/sub-page-header";
 import { ShiftConsole } from "@/components/shift/shift-console";
 import { ATTENDANCE_ROLE_LABELS, wibNow } from "@/lib/attendance";
 import { requirePermission, scopedBranchId } from "@/lib/rbac-guard";
+import { Icon } from "@/components/ui/icon";
 
 export const instant = false;
 
@@ -47,9 +48,7 @@ export default async function ShiftPage() {
         />
         <main className="flex-1 flex items-center justify-center px-gutter">
           <div className="w-full max-w-[420px] bg-surface rounded-3xl p-6 clay-card text-center flex flex-col items-center gap-3">
-            <span className="material-symbols-outlined text-[40px] text-warning-base">
-              {viewingAll ? "domain_disabled" : "account_tree"}
-            </span>
+            <Icon name={viewingAll ? "domain_disabled" : "account_tree"} className="text-[40px] text-warning-base" />
             <h1 className="font-headline-1 text-headline-1 text-text-primary">
               {viewingAll ? "Pilih Satu Cabang" : "Cabang Belum Ditugaskan"}
             </h1>
@@ -62,7 +61,7 @@ export default async function ShiftPage() {
               href="/dashboard"
               className="h-11 px-5 rounded-xl primary-gradient text-white font-body-bold text-body-bold flex items-center gap-2"
             >
-              <span className="material-symbols-outlined text-[18px]">home</span>
+              <Icon name="home" className="text-[18px]" />
               Kembali ke Beranda
             </a>
           </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { Icon } from "@/components/ui/icon";
 
 /**
  * Layar error untuk halaman yang gagal memuat.
@@ -23,9 +24,7 @@ export function PageError({
 
   return (
     <div className="px-gutter py-6 flex flex-col items-start gap-3 max-w-xl">
-      <span className="material-symbols-outlined text-[28px] text-danger-base">
-        cloud_off
-      </span>
+      <Icon name="cloud_off" className="text-[28px] text-danger-base" />
 
       <h2 className="text-lg font-bold text-text">Data tidak bisa dimuat</h2>
 
@@ -45,7 +44,7 @@ export function PageError({
         onClick={reset}
         className="mt-1 inline-flex items-center gap-2 min-h-11 px-5 rounded-xl bg-primary text-white font-body-bold text-body-bold"
       >
-        <span className="material-symbols-outlined text-[18px]">refresh</span>
+        <Icon name="refresh" className="text-[18px]" />
         Coba lagi
       </button>
     </div>

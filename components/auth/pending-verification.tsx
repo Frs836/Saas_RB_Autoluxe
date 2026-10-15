@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Icon } from "@/components/ui/icon";
 
 type Props = {
   detail?: ReactNode;
@@ -10,9 +11,7 @@ export function PendingVerification({ detail, action }: Props) {
   return (
     <main className="flex-1 flex items-center justify-center px-gutter">
       <div className="max-w-[420px] bg-surface rounded-3xl p-6 clay-card text-center flex flex-col items-center gap-3">
-        <span className="material-symbols-outlined text-[40px] text-warning-base">
-          pending_actions
-        </span>
+        <Icon name="pending_actions" className="text-[40px] text-warning-base" />
         <h1 className="font-headline-1 text-headline-1 text-text-primary">
           Akun Menunggu Verifikasi
         </h1>

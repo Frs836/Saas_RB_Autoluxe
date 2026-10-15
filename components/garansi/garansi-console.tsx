@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatDateWib, todayWibIso } from "@/lib/format";
 import { createClient } from "@/lib/supabase/client";
+import { Icon } from "@/components/ui/icon";
 
 type Order = {
   id: string;
@@ -190,7 +191,7 @@ export function GaransiConsole({
                 type="submit"
                 className="h-11 px-4 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center gap-1 active:scale-95 transition-transform"
               >
-                <span className="material-symbols-outlined text-[16px]">search</span>
+                <Icon name="search" className="text-[16px]" />
                 Cari
               </button>
             </form>

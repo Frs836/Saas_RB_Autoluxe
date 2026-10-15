@@ -6,6 +6,7 @@ import { formatDateWib, formatRupiah, formatTimeWib } from "@/lib/format";
 import { canvasToWebp, captureSquareCanvas, fileToSquareWebp } from "@/lib/attendance";
 import { createClient } from "@/lib/supabase/client";
 import { PAYMENT_LABELS } from "@/lib/pos";
+import { Icon } from "@/components/ui/icon";
 
 export type InspectionPhoto = {
   id: string;
@@ -395,7 +396,7 @@ export function OrderDetailView({
             aria-label="Kembali ke antrean"
             className="w-10 h-10 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary active:scale-95 transition-transform"
           >
-            <span className="material-symbols-outlined text-[22px]">arrow_back</span>
+            <Icon name="arrow_back" className="text-[22px]" />
           </button>
           <div className="flex flex-col min-w-0">
             <span className="font-headline-2 text-headline-2 text-text-primary font-mono">
@@ -417,9 +418,7 @@ export function OrderDetailView({
         <section className="clay-card p-4 flex flex-col gap-3">
           <div className="flex items-start gap-3">
             <div className="w-12 h-12 rounded-xl bg-surface-container flex items-center justify-center shrink-0 text-brand-600">
-              <span className="material-symbols-outlined text-[26px]">
-                {order.vehicleSize === "Motor" ? "two_wheeler" : "directions_car"}
-              </span>
+              <Icon name={order.vehicleSize === "Motor" ? "two_wheeler" : "directions_car"} className="text-[26px]" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
@@ -496,7 +495,7 @@ export function OrderDetailView({
             rel="noopener noreferrer"
             className="self-start px-3 py-2 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center gap-1"
           >
-            <span className="material-symbols-outlined text-[16px]">link</span>
+            <Icon name="link" className="text-[16px]" />
             Buka halaman lacak pelanggan
           </a>
 
@@ -520,7 +519,7 @@ export function OrderDetailView({
           {warranty ? (
             <div className="rounded-xl bg-success-surface text-success-text px-3 py-2.5 flex flex-col gap-0.5">
               <div className="flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[18px]">verified</span>
+                <Icon name="verified" className="text-[18px]" />
                 <span className="font-body-bold text-body-bold">
                   {warranty.warrantyCode}
                 </span>
@@ -554,9 +553,7 @@ export function OrderDetailView({
           {grouped.map((group) => (
             <div key={group.key} className="flex flex-col gap-2">
               <div className="flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[16px] text-brand-600">
-                  {group.icon}
-                </span>
+                <Icon name={group.icon} className="text-[16px] text-brand-600" />
                 <span className="font-caption text-caption font-semibold text-text-primary">
                   {group.label}
                 </span>
@@ -580,9 +577,7 @@ export function OrderDetailView({
                     >
                       {brokenImages[photo.id] ? (
                         <div className="aspect-[4/3] flex flex-col items-center justify-center gap-1 text-text-muted">
-                          <span className="material-symbols-outlined text-[22px]">
-                            broken_image
-                          </span>
+                          <Icon name="broken_image" className="text-[22px]" />
                           <span className="font-micro-badge text-micro-badge text-center px-2">
                             Foto tidak tersedia
                           </span>
@@ -615,9 +610,7 @@ export function OrderDetailView({
                               aria-label="Hapus foto"
                               className="text-danger-text disabled:opacity-50"
                             >
-                              <span className="material-symbols-outlined text-[15px]">
-                                delete
-                              </span>
+                              <Icon name="delete" className="text-[15px]" />
                             </button>
                           ) : null}
                         </div>
@@ -654,9 +647,7 @@ export function OrderDetailView({
                   onClick={() => changeStatus(action.status)}
                   className={`flex-1 py-3 rounded-2xl font-body-bold text-body-bold flex items-center justify-center gap-1.5 active:scale-95 transition-transform disabled:opacity-60 ${action.cls}`}
                 >
-                  <span className="material-symbols-outlined text-[18px]">
-                    {action.icon}
-                  </span>
+                  <Icon name={action.icon} className="text-[18px]" />
                   {action.label}
                 </button>
               ))}
@@ -669,7 +660,7 @@ export function OrderDetailView({
               onClick={openCamera}
               className="w-full py-3.5 rounded-2xl bg-primary-gradient text-on-primary font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform"
             >
-              <span className="material-symbols-outlined text-[20px]">add_a_photo</span>
+              <Icon name="add_a_photo" className="text-[20px]" />
               Tambah Foto Inspeksi
             </button>
           ) : null}
@@ -723,9 +714,7 @@ export function OrderDetailView({
              * melakukan apa-apa. Sekarang jelas keadaannya.
              */
             <div className="w-full max-w-[420px] aspect-square rounded-3xl bg-white/10 flex flex-col items-center justify-center gap-2 px-gutter text-center">
-              <span className="material-symbols-outlined text-[40px] text-white/70">
-                no_photography
-              </span>
+              <Icon name="no_photography" className="text-[40px] text-white/70" />
               <span className="font-caption text-caption text-white/80">
                 Kamera tidak aktif. Pilih foto dari perangkat di bawah.
               </span>
@@ -767,9 +756,7 @@ export function OrderDetailView({
                     aria-label="Ambil foto"
                     className="h-14 w-14 rounded-full bg-brand-500 text-white flex items-center justify-center clay-glow disabled:opacity-60"
                   >
-                    <span className="material-symbols-outlined text-[28px]">
-                      photo_camera
-                    </span>
+                    <Icon name="photo_camera" className="text-[28px]" />
                   </button>
                 ) : null}
 
@@ -779,9 +766,7 @@ export function OrderDetailView({
                  * pemilih berkas.
                  */}
                 <label className="h-12 px-5 rounded-full bg-white/15 text-white font-body-bold text-body-bold flex items-center gap-2 cursor-pointer active:scale-95 transition-transform">
-                  <span className="material-symbols-outlined text-[20px]">
-                    photo_library
-                  </span>
+                  <Icon name="photo_library" className="text-[20px]" />
                   Pilih Foto
                   <input
                     type="file"

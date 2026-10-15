@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import { InspectionPhoto } from "@/components/track/inspection-photo";
+import { Icon } from "@/components/ui/icon";
 
 export const instant = false;
 
@@ -143,9 +144,7 @@ export default async function TrackPage({
         <div className="px-gutter pt-safe">
           <div className="h-14 flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-2xl primary-gradient clay-glow flex items-center justify-center">
-              <span className="material-symbols-outlined text-on-primary text-[20px]">
-                local_car_wash
-              </span>
+              <Icon name="local_car_wash" className="text-on-primary text-[20px]" />
             </div>
             <div className="flex flex-col leading-tight">
               <span className="font-headline-2 text-headline-2 text-text-primary">
@@ -179,13 +178,11 @@ export default async function TrackPage({
                     : "bg-brand-50 text-brand-600"
               }`}
             >
-              <span className="material-symbols-outlined text-[16px]">
-                {isCancelled
+              <Icon name={isCancelled
                   ? "cancel"
                   : order.status === "completed"
                     ? "task_alt"
-                    : "pending"}
-              </span>
+                    : "pending"} className="text-[16px]" />
               {isCancelled
                 ? "Dibatalkan"
                 : STEPS[currentIndex]?.label ?? "Diproses"}
@@ -234,9 +231,7 @@ export default async function TrackPage({
 
           {isCancelled && order.cancellation_reason ? (
             <div className="mt-4 flex items-start gap-2.5 p-3 rounded-xl bg-danger-surface text-danger-text">
-              <span className="material-symbols-outlined text-[18px] shrink-0">
-                info
-              </span>
+              <Icon name="info" className="text-[18px] shrink-0" />
               <p className="font-caption text-caption leading-relaxed">
                 Alasan pembatalan: {order.cancellation_reason}
               </p>
@@ -246,9 +241,7 @@ export default async function TrackPage({
 
         <section className="bg-surface rounded-[20px] p-5 clay-card border border-white/80">
           <div className="flex items-center gap-2 mb-4">
-            <span className="material-symbols-outlined text-brand-600 text-[20px]">
-              timeline
-            </span>
+            <Icon name="timeline" className="text-brand-600 text-[20px]" />
             <span className="font-headline-2 text-headline-2 text-text-primary">
               Progres Pengerjaan
             </span>
@@ -275,9 +268,7 @@ export default async function TrackPage({
                             : "bg-surface-container text-text-muted"
                         }`}
                       >
-                        <span className="material-symbols-outlined text-[18px]">
-                          {done ? "check" : step.icon}
-                        </span>
+                        <Icon name={done ? "check" : step.icon} className="text-[18px]" />
                       </span>
                       {!isLast ? (
                         <span
@@ -313,9 +304,7 @@ export default async function TrackPage({
         {inspections.length > 0 ? (
           <section className="bg-surface rounded-[20px] p-5 clay-card border border-white/80">
             <div className="flex items-center gap-2 mb-4">
-              <span className="material-symbols-outlined text-brand-600 text-[20px]">
-                photo_library
-              </span>
+              <Icon name="photo_library" className="text-brand-600 text-[20px]" />
               <span className="font-headline-2 text-headline-2 text-text-primary">
                 Dokumentasi Foto
               </span>
@@ -342,9 +331,7 @@ export default async function TrackPage({
                             />
                           ) : (
                             <div className="w-full h-32 flex items-center justify-center text-text-muted">
-                              <span className="material-symbols-outlined text-[28px]">
-                                image
-                              </span>
+                              <Icon name="image" className="text-[28px]" />
                             </div>
                           )}
                           {item.notes ? (
@@ -365,9 +352,7 @@ export default async function TrackPage({
         {warranty ? (
           <section className="bg-surface rounded-[20px] p-5 clay-card border border-white/80">
             <div className="flex items-center gap-2 mb-4">
-              <span className="material-symbols-outlined text-brand-600 text-[20px]">
-                verified_user
-              </span>
+              <Icon name="verified_user" className="text-brand-600 text-[20px]" />
               <span className="font-headline-2 text-headline-2 text-text-primary">
                 Sertifikat Garansi
               </span>
@@ -469,9 +454,7 @@ export default async function TrackPage({
 
         <section className="bg-surface-overlay rounded-[20px] p-4">
           <div className="flex items-start gap-2.5">
-            <span className="material-symbols-outlined text-brand-600 text-[18px] shrink-0">
-              info
-            </span>
+            <Icon name="info" className="text-brand-600 text-[18px] shrink-0" />
             <p className="font-caption text-caption text-text-secondary leading-relaxed">
               Pembaruan terakhir: {formatDate(order.updated_at ?? order.created_at)}
               {order.completed_at

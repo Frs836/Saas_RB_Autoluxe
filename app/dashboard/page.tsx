@@ -15,6 +15,7 @@ import {
 import { can, quickActionsFor, roleLabel } from "@/lib/rbac";
 import { getSessionProfile, scopedBranchId } from "@/lib/rbac-guard";
 import { scopeBranchQuery } from "@/lib/branch";
+import { Icon } from "@/components/ui/icon";
 
 export const instant = false;
 
@@ -214,22 +215,16 @@ const jamSekarang = wibNow();
       <div className="px-gutter pt-space-md grid grid-cols-2 gap-space-md">
         <section className="col-span-2 relative overflow-hidden rounded-[20px] p-5 primary-gradient text-on-primary clay-glow">
           <div className="absolute -right-6 -bottom-6 opacity-10 pointer-events-none text-white">
-            <span className="material-symbols-outlined text-[130px]">
-              directions_car
-            </span>
+            <Icon name="directions_car" className="text-[130px]" />
           </div>
           <div className="relative z-10 flex flex-col gap-3">
             <div className="flex items-center justify-between gap-2">
               <span className="font-caption text-caption text-brand-100 flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[16px]">
-                  schedule
-                </span>
+                <Icon name="schedule" className="text-[16px]" />
                 Jam Resmi: {openedTime} WIB
               </span>
               <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-md">
-                <span className="material-symbols-outlined text-[14px] text-white">
-                  {attendance?.status === "hadir" ? "verified" : "info"}
-                </span>
+                <Icon name={attendance?.status === "hadir" ? "verified" : "info"} className="text-[14px] text-white" />
                 <span className="font-micro-badge text-micro-badge text-white tracking-wider uppercase">
                   {badge.text}
                 </span>
@@ -260,9 +255,7 @@ const jamSekarang = wibNow();
                 href="/absensi"
                 className="w-full h-11 px-4 rounded-xl bg-white/20 flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
               >
-                <span className="material-symbols-outlined text-[20px] text-white">
-                  {clockInTime ? "how_to_reg" : "face_retouching_natural"}
-                </span>
+                <Icon name={clockInTime ? "how_to_reg" : "face_retouching_natural"} className="text-[20px] text-white" />
                 <span className="font-body-bold text-body-bold text-white">
                   {clockInTime ? "Absensi Hari Ini Tercatat" : "Buka Scanner Face ID"}
                 </span>
@@ -279,9 +272,7 @@ const jamSekarang = wibNow();
           >
             <div className="flex flex-col gap-2">
               <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center text-brand-600 shadow-[inset_0px_1px_2px_rgba(255,255,255,0.9)]">
-                <span className="material-symbols-outlined text-[22px]">
-                  payments
-                </span>
+                <Icon name="payments" className="text-[22px]" />
               </div>
               <div>
                 <span className="font-caption text-caption text-text-secondary line-clamp-1">
@@ -296,9 +287,7 @@ const jamSekarang = wibNow();
             </div>
             <div className="mt-3 pt-2">
               <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-warning-surface text-warning-text w-full">
-                <span className="material-symbols-outlined text-[13px] shrink-0">
-                  {handoff?.status === "closed" ? "task_alt" : "pending"}
-                </span>
+                <Icon name={handoff?.status === "closed" ? "task_alt" : "pending"} className="text-[13px] shrink-0" />
                 <span className="font-micro-badge text-micro-badge truncate">
                   {handoff?.status === "closed"
                     ? "Shift Sudah Ditutup"
@@ -311,9 +300,7 @@ const jamSekarang = wibNow();
           <section className="col-span-1 rounded-[20px] p-4 bg-surface flex flex-col justify-between clay-card">
             <div className="flex flex-col gap-2">
               <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center text-brand-600 shadow-[inset_0px_1px_2px_rgba(255,255,255,0.9)]">
-                <span className="material-symbols-outlined text-[22px]">
-                  savings
-                </span>
+                <Icon name="savings" className="text-[22px]" />
               </div>
               <div>
                 <span className="font-caption text-caption text-text-secondary line-clamp-1">
@@ -326,17 +313,13 @@ const jamSekarang = wibNow();
             </div>
             <div className="mt-3 pt-2 flex flex-col gap-1">
               <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 w-full">
-                <span className="material-symbols-outlined text-[13px] shrink-0">
-                  account_balance_wallet
-                </span>
+                <Icon name="account_balance_wallet" className="text-[13px] shrink-0" />
                 <span className="font-micro-badge text-micro-badge truncate">
                   Tunai {formatRupiahShort(heldCash)}
                 </span>
               </div>
               <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container text-text-secondary w-full">
-                <span className="material-symbols-outlined text-[13px] shrink-0">
-                  qr_code_scanner
-                </span>
+                <Icon name="qr_code_scanner" className="text-[13px] shrink-0" />
                 <span className="font-micro-badge text-micro-badge truncate">
                   QRIS/Transfer {formatRupiahShort(heldDigital)}
                 </span>
@@ -348,9 +331,7 @@ const jamSekarang = wibNow();
         <section className="col-span-1 rounded-[20px] p-4 bg-surface flex flex-col justify-between clay-card">
           <div className="flex flex-col gap-2">
             <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center text-brand-600 shadow-[inset_0px_1px_2px_rgba(255,255,255,0.9)]">
-              <span className="material-symbols-outlined text-[22px]">
-                garage
-              </span>
+              <Icon name="garage" className="text-[22px]" />
             </div>
             <div>
               <span className="font-caption text-caption text-text-secondary line-clamp-1">
@@ -379,9 +360,7 @@ const jamSekarang = wibNow();
             href="/pos/orders"
             className="col-span-2 rounded-[16px] p-3.5 bg-warning-surface flex items-center gap-3 active:scale-[0.98] transition-transform"
           >
-            <span className="material-symbols-outlined text-[22px] text-warning-text shrink-0">
-              hourglass_top
-            </span>
+            <Icon name="hourglass_top" className="text-[22px] text-warning-text shrink-0" />
             <div className="min-w-0">
               <p className="font-caption text-caption text-warning-text font-semibold">
                 {unpaidCount} order menunggu pembayaran kasir
@@ -403,9 +382,7 @@ const jamSekarang = wibNow();
                 Pintasan sesuai hak akses {roleLabel(role)}
               </p>
             </div>
-            <span className="material-symbols-outlined text-text-muted text-[18px]">
-              bolt
-            </span>
+            <Icon name="bolt" className="text-text-muted text-[18px]" />
           </div>
           <div className="grid grid-cols-4 gap-2">
             {quickActions.map((action) =>
@@ -418,9 +395,7 @@ const jamSekarang = wibNow();
                   className="group flex flex-col items-center gap-1.5 p-2 rounded-xl bg-surface-container-low text-center cursor-not-allowed opacity-70"
                 >
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-[inset_0px_1px_2px_rgba(255,255,255,0.9)] bg-brand-50 text-brand-600">
-                    <span className="material-symbols-outlined text-[20px]">
-                      {action.icon}
-                    </span>
+                    <Icon name={action.icon} className="text-[20px]" />
                   </div>
                   <span className="font-micro-badge text-micro-badge text-text-primary leading-tight line-clamp-1">
                     {action.label}
@@ -439,9 +414,7 @@ const jamSekarang = wibNow();
                         : "bg-brand-50 text-brand-600"
                     }`}
                   >
-                    <span className="material-symbols-outlined text-[20px]">
-                      {action.icon}
-                    </span>
+                    <Icon name={action.icon} className="text-[20px]" />
                   </div>
                   <span className="font-micro-badge text-micro-badge text-text-primary leading-tight line-clamp-1">
                     {action.label}
@@ -476,9 +449,7 @@ const jamSekarang = wibNow();
             </div>
             <div className="flex gap-3 items-center">
               <div className="w-16 h-16 rounded-xl bg-surface-container flex items-center justify-center shrink-0 text-brand-600 shadow-[inset_0px_1px_2px_rgba(0,0,0,0.05)]">
-                <span className="material-symbols-outlined text-[30px]">
-                  directions_car
-                </span>
+                <Icon name="directions_car" className="text-[30px]" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-1">
@@ -533,9 +504,7 @@ const jamSekarang = wibNow();
         {note && (
           <section className="col-span-2 rounded-[20px] p-3.5 bg-brand-50 flex items-start gap-3 shadow-[0px_2px_4px_rgba(15,23,42,0.03)]">
             <div className="w-8 h-8 rounded-lg bg-surface flex items-center justify-center text-brand-600 shrink-0 shadow-[0px_2px_4px_rgba(37,99,235,0.08)]">
-              <span className="material-symbols-outlined text-[18px]">
-                campaign
-              </span>
+              <Icon name="campaign" className="text-[18px]" />
             </div>
             <div className="flex-1 min-w-0">
               <span className="font-caption text-caption text-text-primary font-semibold block">

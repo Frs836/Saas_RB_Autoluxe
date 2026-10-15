@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { formatDateWib } from "@/lib/format";
 import { canvasToWebp, captureSquareCanvas } from "@/lib/attendance";
 import { createClient } from "@/lib/supabase/client";
+import { Icon } from "@/components/ui/icon";
 
 export type TimeOffRow = {
   id: string;
@@ -255,9 +256,7 @@ export function TimeOffConsole({ requests, canDecide, todayIso }: Props) {
                       : "bg-surface-container-low text-text-secondary"
                   }`}
                 >
-                  <span className="material-symbols-outlined text-[20px]">
-                    {item.icon}
-                  </span>
+                  <Icon name={item.icon} className="text-[20px]" />
                   <span className="font-caption text-caption">{item.label}</span>
                 </button>
               );
@@ -331,9 +330,7 @@ export function TimeOffConsole({ requests, canDecide, todayIso }: Props) {
               {proofBlob ? (
                 <div className="flex items-center justify-between rounded-xl bg-success-surface text-success-text px-3 py-2.5">
                   <span className="flex items-center gap-2 font-caption text-caption">
-                    <span className="material-symbols-outlined text-[18px]">
-                      check_circle
-                    </span>
+                    <Icon name="check_circle" className="text-[18px]" />
                     Bukti terlampir
                   </span>
                   <button
@@ -353,9 +350,7 @@ export function TimeOffConsole({ requests, canDecide, todayIso }: Props) {
                   onClick={openCamera}
                   className="h-12 rounded-xl bg-surface-container-low text-text-secondary font-caption text-caption flex items-center justify-center gap-2"
                 >
-                  <span className="material-symbols-outlined text-[18px]">
-                    photo_camera
-                  </span>
+                  <Icon name="photo_camera" className="text-[18px]" />
                   Ambil foto surat dokter
                 </button>
               )}
@@ -382,7 +377,7 @@ export function TimeOffConsole({ requests, canDecide, todayIso }: Props) {
             disabled={busy || Boolean(validationError)}
             className="py-3.5 rounded-2xl bg-primary-gradient text-on-primary font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-50"
           >
-            <span className="material-symbols-outlined text-[20px]">send</span>
+            <Icon name="send" className="text-[20px]" />
             {busy ? "Mengirim..." : "Kirim Pengajuan"}
           </button>
         </section>
@@ -436,17 +431,13 @@ export function TimeOffConsole({ requests, canDecide, todayIso }: Props) {
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="flex items-center gap-1.5 font-body-bold text-body-bold text-text-primary">
-                        <span className="material-symbols-outlined text-[18px] text-brand-600">
-                          {typeMeta?.icon}
-                        </span>
+                        <Icon name={typeMeta?.icon ?? "event_busy"} className="text-[18px] text-brand-600" />
                         {row.requesterName}
                       </span>
                       <span
                         className={`px-2 py-0.5 rounded-full font-micro-badge text-micro-badge uppercase flex items-center gap-1 ${meta.cls}`}
                       >
-                        <span className="material-symbols-outlined text-[13px]">
-                          {meta.icon}
-                        </span>
+                        <Icon name={meta.icon} className="text-[13px]" />
                         {meta.label}
                       </span>
                     </div>
@@ -482,9 +473,7 @@ export function TimeOffConsole({ requests, canDecide, todayIso }: Props) {
                           onClick={() => decide(row.id, "approved")}
                           className="flex-1 py-2.5 rounded-xl bg-success-base text-white font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform disabled:opacity-60"
                         >
-                          <span className="material-symbols-outlined text-[16px]">
-                            task_alt
-                          </span>
+                          <Icon name="task_alt" className="text-[16px]" />
                           Setujui
                         </button>
                         <button
@@ -493,9 +482,7 @@ export function TimeOffConsole({ requests, canDecide, todayIso }: Props) {
                           onClick={() => decide(row.id, "rejected")}
                           className="flex-1 py-2.5 rounded-xl bg-danger-surface text-danger-text font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform disabled:opacity-60"
                         >
-                          <span className="material-symbols-outlined text-[16px]">
-                            cancel
-                          </span>
+                          <Icon name="cancel" className="text-[16px]" />
                           Tolak
                         </button>
                       </div>
@@ -555,7 +542,7 @@ export function TimeOffConsole({ requests, canDecide, todayIso }: Props) {
                 aria-label="Ambil foto"
                 className="h-14 w-14 rounded-full bg-brand-500 text-white flex items-center justify-center clay-glow disabled:opacity-60"
               >
-                <span className="material-symbols-outlined text-[28px]">photo_camera</span>
+                <Icon name="photo_camera" className="text-[28px]" />
               </button>
             )}
           </div>
@@ -590,9 +577,7 @@ function ProofRow({ path, canView }: { path: string; canView: boolean }) {
       disabled={!canView}
       className="self-start px-2 py-1 rounded-full bg-surface text-text-secondary font-micro-badge text-micro-badge flex items-center gap-1 disabled:opacity-60"
     >
-      <span className="material-symbols-outlined text-[13px]">
-        {failed ? "error" : "attach_file"}
-      </span>
+      <Icon name={failed ? "error" : "attach_file"} className="text-[13px]" />
       {failed ? "Bukti tidak dapat dibuka" : "Lihat bukti"}
     </button>
   );

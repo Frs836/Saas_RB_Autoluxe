@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Icon } from "@/components/ui/icon";
 
 export const instant = false;
 
@@ -6,9 +7,7 @@ export default function OfflinePage() {
   return (
     <main className="flex-1 flex items-center justify-center px-gutter py-10">
       <div className="w-full max-w-[420px] clay-card p-6 rounded-3xl bg-surface flex flex-col items-center gap-3 text-center">
-        <span className="material-symbols-outlined text-[40px] text-warning-base">
-          cloud_off
-        </span>
+        <Icon name="cloud_off" className="text-[40px] text-warning-base" />
         <h1 className="font-headline-1 text-headline-1 text-text-primary">
           Jaringan Tidak Tersedia
         </h1>
@@ -21,7 +20,7 @@ export default function OfflinePage() {
           href="/dashboard"
           className="h-11 px-5 rounded-xl bg-primary-gradient text-white font-body-bold text-body-bold flex items-center gap-2"
         >
-          <span className="material-symbols-outlined text-[18px]">refresh</span>
+          <Icon name="refresh" className="text-[18px]" />
           Coba Lagi
         </Link>
       </div>

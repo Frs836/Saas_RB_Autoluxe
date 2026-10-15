@@ -6,6 +6,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { formatRupiah, formatTimeWib, formatDateWib } from "@/lib/format";
 import { PAYMENT_LABELS, whatsappLink } from "@/lib/pos";
+import { Icon } from "@/components/ui/icon";
 
 export type TeamMember = { id: string; full_name: string; is_lead: boolean };
 
@@ -217,9 +218,7 @@ export function OrderQueue({
       </div>
 
       <div className="relative">
-        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[20px]">
-          search
-        </span>
+        <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[20px]" />
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -250,16 +249,14 @@ export function OrderQueue({
 
       {error ? (
         <div className="p-3 rounded-xl bg-danger-surface text-danger-text font-body text-body flex items-center gap-2">
-          <span className="material-symbols-outlined text-[20px]">error</span>
+          <Icon name="error" className="text-[20px]" />
           {error}
         </div>
       ) : null}
 
       {filtered.length === 0 ? (
         <div className="clay-card p-8 flex flex-col items-center text-center gap-2">
-          <span className="material-symbols-outlined text-[40px] text-text-muted">
-            inbox
-          </span>
+          <Icon name="inbox" className="text-[40px] text-text-muted" />
           <p className="font-body text-body text-text-secondary">
             Tidak ada order pada filter ini.
           </p>
@@ -294,20 +291,16 @@ export function OrderQueue({
                   <span
                     className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-caption text-caption ${meta.cls}`}
                   >
-                    <span className="material-symbols-outlined text-[14px]">
-                      {meta.icon}
-                    </span>
+                    <Icon name={meta.icon} className="text-[14px]" />
                     {meta.label}
                   </span>
                 </div>
 
                 <div className="flex items-start gap-3">
                   <div className="w-12 h-12 rounded-xl bg-surface-container flex items-center justify-center shrink-0 text-brand-600">
-                    <span className="material-symbols-outlined text-[24px]">
-                      {order.vehicle_size === "Motor"
+                    <Icon name={order.vehicle_size === "Motor"
                         ? "two_wheeler"
-                        : "directions_car"}
-                    </span>
+                        : "directions_car"} className="text-[24px]" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
@@ -392,9 +385,7 @@ export function OrderQueue({
                       aria-label="Hubungi pelanggan via WhatsApp"
                       className="w-11 h-11 rounded-xl bg-whatsapp/10 text-whatsapp flex items-center justify-center shrink-0 active:scale-95 transition-transform"
                     >
-                      <span className="material-symbols-outlined text-[20px]">
-                        chat
-                      </span>
+                      <Icon name="chat" className="text-[20px]" />
                     </a>
                   ) : null}
                   {canManage && actions.length > 0 ? (
@@ -411,9 +402,7 @@ export function OrderQueue({
                               : "bg-primary text-white"
                           }`}
                         >
-                          <span className="material-symbols-outlined text-[18px]">
-                            {action.icon}
-                          </span>
+                          <Icon name={action.icon} className="text-[18px]" />
                           {action.label}
                         </button>
                       ))}
@@ -427,9 +416,7 @@ export function OrderQueue({
                       aria-label="Batalkan order"
                       className="w-10 h-10 rounded-xl bg-danger-surface text-danger-text flex items-center justify-center shrink-0 active:scale-95 transition-transform disabled:opacity-60"
                     >
-                      <span className="material-symbols-outlined text-[20px]">
-                        cancel
-                      </span>
+                      <Icon name="cancel" className="text-[20px]" />
                     </button>
                   ) : null}
                   {!canManage && canStartWork && order.status === "queued" ? (
@@ -439,9 +426,7 @@ export function OrderQueue({
                       onClick={() => startWork(order)}
                       className="flex-1 py-2.5 rounded-xl bg-primary text-white font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform disabled:opacity-60"
                     >
-                      <span className="material-symbols-outlined text-[18px]">
-                        engineering
-                      </span>
+                      <Icon name="engineering" className="text-[18px]" />
                       Kerjakan Sekarang
                     </button>
                   ) : null}
@@ -449,9 +434,7 @@ export function OrderQueue({
                     href={`/pos/orders/${order.id}`}
                     className="min-h-11 px-3 rounded-xl bg-surface-container text-text-secondary flex items-center gap-1 font-caption text-caption shrink-0"
                   >
-                    <span className="material-symbols-outlined text-[18px]">
-                      photo_camera
-                    </span>
+                    <Icon name="photo_camera" className="text-[18px]" />
                     Inspeksi
                   </Link>
                   {!canManage && !canStartWork ? (

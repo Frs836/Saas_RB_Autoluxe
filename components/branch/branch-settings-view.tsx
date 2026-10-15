@@ -15,6 +15,7 @@ import {
   toTimeInput,
   type BranchRecord,
 } from "@/lib/branch";
+import { Icon } from "@/components/ui/icon";
 
 type Props = {
   branches: BranchRecord[];
@@ -273,9 +274,7 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
     return (
       <div className="px-gutter py-6">
         <div className="clay-card p-6 flex flex-col items-center gap-3 text-center">
-          <span className="material-symbols-outlined text-[40px] text-warning-base">
-            store
-          </span>
+          <Icon name="store" className="text-[40px] text-warning-base" />
           <h2 className="font-headline-2 text-headline-2 text-text-primary">
             Belum ada Cabang
           </h2>
@@ -311,7 +310,7 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
                   : "bg-surface-container-low text-text-secondary"
               }`}
             >
-              <span className="material-symbols-outlined text-[15px]">storefront</span>
+              <Icon name="storefront" className="text-[15px]" />
               {branch.name}
             </button>
           ))}
@@ -336,9 +335,7 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
 
       <section className="clay-card p-4 flex flex-col gap-3">
         <h2 className="font-body-bold text-body-bold text-text-primary flex items-center gap-2">
-          <span className="material-symbols-outlined text-[20px] text-brand-600">
-            info
-          </span>
+          <Icon name="info" className="text-[20px] text-brand-600" />
           Identitas Cabang
         </h2>
 
@@ -367,9 +364,7 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
       <section className="clay-card p-4 flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <h2 className="font-body-bold text-body-bold text-text-primary flex items-center gap-2">
-            <span className="material-symbols-outlined text-[20px] text-brand-600">
-              my_location
-            </span>
+            <Icon name="my_location" className="text-[20px] text-brand-600" />
             Titik GPS dan Geofence
           </h2>
           <button
@@ -383,9 +378,7 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
                 : "bg-surface-container text-text-secondary"
             }`}
           >
-            <span className="material-symbols-outlined text-[15px]">
-              {form.setCoordinates ? "check_circle" : "cancel"}
-            </span>
+            <Icon name={form.setCoordinates ? "check_circle" : "cancel"} className="text-[15px]" />
             {form.setCoordinates ? "Aktif" : "Nonaktif"}
           </button>
         </div>
@@ -414,7 +407,7 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
                   onClick={applyCoordinateInput}
                   className="h-10 px-3 rounded-lg bg-brand-500 text-white font-caption text-caption flex items-center gap-1 active:scale-95 transition-transform"
                 >
-                  <span className="material-symbols-outlined text-[15px]">content_paste</span>
+                  <Icon name="content_paste" className="text-[15px]" />
                   Terapkan
                 </button>
                 <button
@@ -422,7 +415,7 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
                   onClick={useDeviceLocation}
                   className="h-10 px-3 rounded-lg bg-surface text-text-secondary font-caption text-caption flex items-center gap-1 active:scale-95 transition-transform"
                 >
-                  <span className="material-symbols-outlined text-[15px]">gps_fixed</span>
+                  <Icon name="gps_fixed" className="text-[15px]" />
                   Baca GPS Perangkat
                 </button>
               </div>
@@ -506,7 +499,7 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
                   rel="noopener noreferrer"
                   className="self-start mt-1 font-caption text-caption text-brand-600 flex items-center gap-1"
                 >
-                  <span className="material-symbols-outlined text-[15px]">map</span>
+                  <Icon name="map" className="text-[15px]" />
                   Buka di Google Maps
                 </a>
               ) : null}
@@ -522,9 +515,7 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
 
       <section className="clay-card p-4 flex flex-col gap-3">
         <h2 className="font-body-bold text-body-bold text-text-primary flex items-center gap-2">
-          <span className="material-symbols-outlined text-[20px] text-brand-600">
-            schedule
-          </span>
+          <Icon name="schedule" className="text-[20px] text-brand-600" />
           Jam Operasional
         </h2>
 
@@ -567,9 +558,7 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
           }`}
         >
           <span className="flex items-center gap-2 font-body text-body">
-            <span className="material-symbols-outlined text-[18px]">
-              {form.isActive ? "toggle_on" : "toggle_off"}
-            </span>
+            <Icon name={form.isActive ? "toggle_on" : "toggle_off"} className="text-[18px]" />
             {form.isActive ? "Cabang aktif" : "Cabang nonaktif"}
           </span>
         </button>
@@ -609,7 +598,7 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
             disabled={busy || Boolean(validation)}
             className="w-full py-3.5 rounded-full primary-gradient text-on-primary font-body-bold text-body-bold flex items-center justify-center gap-2 clay-fab active:scale-95 transition-transform disabled:opacity-50"
           >
-            <span className="material-symbols-outlined text-[20px]">save</span>
+            <Icon name="save" className="text-[20px]" />
             {busy ? "Menyimpan..." : "Simpan Konfigurasi"}
           </button>
 

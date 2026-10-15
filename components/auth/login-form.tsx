@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { Icon } from "@/components/ui/icon";
 
 export function LoginForm() {
   const router = useRouter();
@@ -85,7 +86,7 @@ export function LoginForm() {
         </label>
         <div className="relative flex items-center">
           <div className="absolute left-3.5 flex items-center pointer-events-none text-outline">
-            <span className="material-symbols-outlined text-[20px]">badge</span>
+            <Icon name="badge" className="text-[20px]" />
           </div>
           <input
             id="email"
@@ -108,7 +109,7 @@ export function LoginForm() {
         </label>
         <div className="relative flex items-center">
           <div className="absolute left-3.5 flex items-center pointer-events-none text-outline">
-            <span className="material-symbols-outlined text-[20px]">lock</span>
+            <Icon name="lock" className="text-[20px]" />
           </div>
           <input
             id="password"
@@ -125,9 +126,7 @@ export function LoginForm() {
             onClick={() => setShowPassword((value) => !value)}
             className="absolute right-3.5 flex items-center justify-center text-outline hover:text-brand-600 focus:outline-none transition-colors"
           >
-            <span className="material-symbols-outlined text-[20px]">
-              {showPassword ? "visibility_off" : "visibility"}
-            </span>
+            <Icon name={showPassword ? "visibility_off" : "visibility"} className="text-[20px]" />
           </button>
         </div>
       </div>
@@ -155,18 +154,14 @@ export function LoginForm() {
 
       {error && (
         <div className="flex items-start gap-2.5 p-3 rounded-xl bg-danger-surface text-danger-text">
-          <span className="material-symbols-outlined text-[18px] shrink-0">
-            error
-          </span>
+          <Icon name="error" className="text-[18px] shrink-0" />
           <p className="font-caption text-caption leading-relaxed">{error}</p>
         </div>
       )}
 
       {info && (
         <div className="flex items-start gap-2.5 p-3 rounded-xl bg-success-surface text-success-text">
-          <span className="material-symbols-outlined text-[18px] shrink-0">
-            mark_email_read
-          </span>
+          <Icon name="mark_email_read" className="text-[18px] shrink-0" />
           <p className="font-caption text-caption leading-relaxed">{info}</p>
         </div>
       )}
@@ -178,9 +173,7 @@ export function LoginForm() {
       >
         <span>{loading ? "MEMPROSES..." : "MASUK KE SISTEM"}</span>
         {!loading && (
-          <span className="material-symbols-outlined text-[20px]">
-            arrow_forward
-          </span>
+          <Icon name="arrow_forward" className="text-[20px]" />
         )}
       </button>
 
@@ -195,15 +188,13 @@ export function LoginForm() {
         href="/register"
         className="w-full h-[46px] rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-600 font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-[0.99] transition-all duration-200"
       >
-        <span className="material-symbols-outlined text-[22px] text-brand-600">
-          person_add
-        </span>
+        <Icon name="person_add" className="text-[22px] text-brand-600" />
         <span>Daftar Akun Staf Baru</span>
       </Link>
 
       <div className="flex items-start gap-2.5 p-3 rounded-xl bg-surface-overlay text-text-secondary mt-1">
         <div className="flex-shrink-0 text-brand-600 pt-0.5">
-          <span className="material-symbols-outlined text-[18px]">verified_user</span>
+          <Icon name="verified_user" className="text-[18px]" />
         </div>
         <p className="font-caption text-caption text-text-secondary leading-relaxed">
           Sistem otomatis mengunci akun Anda ke cabang operasional resmi setelah

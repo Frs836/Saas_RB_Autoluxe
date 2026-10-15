@@ -5,6 +5,7 @@ import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/toast";
+import { Icon } from "@/components/ui/icon";
 
 export type BarisNotifikasi = {
   id: string;
@@ -235,9 +236,7 @@ export function NotificationList({
                 )}
                 <span className="flex-1 min-w-0 flex flex-col gap-0.5">
                   <span className="flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-[16px] text-text-muted">
-                      {IKON_KATEGORI[b.category ?? ""] ?? "notifications"}
-                    </span>
+                    <Icon name={IKON_KATEGORI[b.category ?? ""] ?? "notifications"} className="text-[16px] text-text-muted" />
                     <span className="font-micro-badge text-micro-badge text-text-muted">
                       {LABEL_KATEGORI[b.category ?? ""] ?? "Umum"}
                     </span>
@@ -346,7 +345,7 @@ function DetailNotifikasi({
             aria-label="Tutup"
             className="grid place-items-center w-11 h-11 rounded-full bg-surface-container-low"
           >
-            <span className="material-symbols-outlined text-[20px]">close</span>
+            <Icon name="close" className="text-[20px]" />
           </button>
         </div>
 
@@ -361,7 +360,7 @@ function DetailNotifikasi({
               onClick={onTutup}
               className="h-11 rounded-xl bg-surface-container-low text-text-primary font-caption text-caption flex items-center justify-center gap-2"
             >
-              <span className="material-symbols-outlined text-[18px]">receipt_long</span>
+              <Icon name="receipt_long" className="text-[18px]" />
               Buka detail order
             </Link>
           ) : null}
@@ -373,9 +372,7 @@ function DetailNotifikasi({
               disabled={sibuk}
               className="h-11 rounded-xl bg-primary text-white font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-60"
             >
-              <span className="material-symbols-outlined text-[18px]">
-                {sibuk ? "hourglass_top" : "play_arrow"}
-              </span>
+              <Icon name={sibuk ? "hourglass_top" : "play_arrow"} className="text-[18px]" />
               {sibuk ? "Mengirim..." : "Kerjakan sekarang"}
             </button>
           ) : null}

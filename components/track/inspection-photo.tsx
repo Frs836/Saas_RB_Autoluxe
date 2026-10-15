@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Icon } from "@/components/ui/icon";
 
 /**
  * Foto inspeksi pada halaman lacak publik.
@@ -21,7 +22,7 @@ export function InspectionPhoto({
   if (!src || gagal) {
     return (
       <div className="w-full h-32 flex flex-col items-center justify-center gap-1 text-text-muted px-2 text-center">
-        <span className="material-symbols-outlined text-[24px]">broken_image</span>
+        <Icon name="broken_image" className="text-[24px]" />
         <span className="font-micro-badge text-micro-badge">{alt}</span>
         <span className="font-micro-badge text-micro-badge opacity-80">
           Foto belum dapat dimuat

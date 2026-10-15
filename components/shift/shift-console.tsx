@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { formatRupiah, formatTimeWib, initials } from "@/lib/format";
+import { Icon } from "@/components/ui/icon";
 
 type Handoff = {
   id: string;
@@ -256,7 +257,7 @@ export function ShiftConsole({
 
           <div className="flex items-center gap-3 bg-surface-container-low rounded-2xl p-3">
             <div className="w-11 h-11 rounded-2xl bg-success-surface text-success-text flex items-center justify-center shrink-0">
-              <span className="material-symbols-outlined text-[24px]">verified_user</span>
+              <Icon name="verified_user" className="text-[24px]" />
             </div>
             <div className="flex-1 min-w-0">
               <span className="font-caption text-caption text-text-secondary block">
@@ -283,7 +284,7 @@ export function ShiftConsole({
           }}
           className="w-full min-h-11 rounded-xl bg-surface text-text-secondary font-caption text-caption flex items-center justify-center gap-1.5 clay-card active:scale-95 transition-transform"
         >
-          <span className="material-symbols-outlined text-[16px]">history</span>
+          <Icon name="history" className="text-[16px]" />
           {showHistory ? "Tutup Riwayat Tutup Kas" : "Riwayat Penutupan Kas"}
         </button>
 
@@ -380,7 +381,7 @@ export function ShiftConsole({
       {error && (handoff?.status === "open" || handoff === null) ? (
         <section className="px-gutter pt-3">
           <div className="p-3 rounded-xl bg-danger-surface text-danger-text font-body text-body flex items-center gap-2">
-            <span className="material-symbols-outlined text-[18px]">error</span>
+            <Icon name="error" className="text-[18px]" />
             <span className="flex-1">{error}</span>
           </div>
         </section>
@@ -389,7 +390,7 @@ export function ShiftConsole({
       {info ? (
         <section className="px-gutter pt-3">
           <div className="p-3 rounded-xl bg-success-surface text-success-text font-body text-body flex items-center gap-2">
-            <span className="material-symbols-outlined text-[18px]">check_circle</span>
+            <Icon name="check_circle" className="text-[18px]" />
             <span className="flex-1">{info}</span>
           </div>
         </section>
@@ -410,7 +411,7 @@ export function ShiftConsole({
             href="/rekap"
             className="min-h-11 px-3.5 rounded-xl primary-gradient text-white font-caption text-caption flex items-center gap-1.5 shrink-0 active:scale-95 transition-transform"
           >
-            <span className="material-symbols-outlined text-[16px]">groups</span>
+            <Icon name="groups" className="text-[16px]" />
             Buka Rekap
           </Link>
         </div>
@@ -468,7 +469,7 @@ function BukaKasForm({
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2">
             <span className="p-1.5 rounded-lg bg-brand-50 text-brand-600">
-              <span className="material-symbols-outlined text-[18px]">savings</span>
+              <Icon name="savings" className="text-[18px]" />
             </span>
             <span className="font-body-bold text-body-bold text-text-primary">
               Serah Terima Kas Titipan Pagi
@@ -542,7 +543,7 @@ function BukaKasForm({
           disabled={!canSubmit}
           className="w-full h-[50px] rounded-full primary-gradient text-white font-bold text-[14px] tracking-wide uppercase flex items-center justify-center gap-2.5 clay-glow active:scale-[0.98] transition-all disabled:opacity-60"
         >
-          <span className="material-symbols-outlined text-[22px]">play_arrow</span>
+          <Icon name="play_arrow" className="text-[22px]" />
           {busy ? "Membuka..." : "Buka &amp; Catat Kas Titipan"}
         </button>
       </div>
@@ -622,7 +623,7 @@ function AuditForm({
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2">
             <span className="p-1.5 rounded-lg bg-brand-50 text-brand-600">
-              <span className="material-symbols-outlined text-[18px]">fact_check</span>
+              <Icon name="fact_check" className="text-[18px]" />
             </span>
             <span className="font-body-bold text-body-bold text-text-primary">
               Rekonsiliasi Kas Shift
@@ -725,9 +726,7 @@ function AuditForm({
                 : "bg-warning-surface text-warning-text"
             }`}
           >
-            <span className="material-symbols-outlined text-[14px]">
-              {liveDifference === 0 ? "task_alt" : "swap_horiz"}
-            </span>
+            <Icon name={liveDifference === 0 ? "task_alt" : "swap_horiz"} className="text-[14px]" />
             {liveDifference === 0
               ? "SESUAI"
               : `SELISIH ${liveDifference > 0 ? "+" : "-"}${formatRupiah(
@@ -785,7 +784,7 @@ function AuditForm({
             </span>
           </div>
           <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-surface text-success-text font-micro-badge text-micro-badge border border-success-surface shrink-0">
-            <span className="material-symbols-outlined text-[13px]">verified</span>
+            <Icon name="verified" className="text-[13px]" />
             SHA-256 VALID
           </span>
         </div>
@@ -796,7 +795,7 @@ function AuditForm({
           disabled={!canSubmit}
           className="w-full h-[50px] rounded-full primary-gradient text-white font-bold text-[14px] tracking-wide uppercase flex items-center justify-center gap-2.5 clay-glow active:scale-[0.98] transition-all disabled:opacity-60"
         >
-          <span className="material-symbols-outlined text-[22px]">savings</span>
+          <Icon name="savings" className="text-[22px]" />
           {busy ? "Menutup Audit..." : "Simpan &amp; Tutup Audit Shift"}
         </button>
       </div>
@@ -820,7 +819,7 @@ function ClosedSummary({
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2">
             <span className="p-1.5 rounded-lg bg-success-surface text-success-text">
-              <span className="material-symbols-outlined text-[18px]">task_alt</span>
+              <Icon name="task_alt" className="text-[18px]" />
             </span>
             <span className="font-body-bold text-body-bold text-text-primary">
               Audit Shift Selesai
@@ -895,7 +894,7 @@ function ClosedSummary({
           onClick={handlePrint}
           className="w-full h-[50px] rounded-full primary-gradient text-white font-bold text-[14px] tracking-wide uppercase flex items-center justify-center gap-2.5 clay-glow active:scale-[0.98] transition-all"
         >
-          <span className="material-symbols-outlined text-[22px]">print</span>
+          <Icon name="print" className="text-[22px]" />
           Cetak Bukti Serah Terima Kas (Thermal)
         </button>
       </div>
@@ -924,7 +923,7 @@ function SuccessCard({
       <div className="bg-surface rounded-[24px] p-4 sm:p-5 clay-card border border-white/80 inner-clay-highlight space-y-4">
         <div className="flex flex-col items-center gap-2 text-center px-1">
           <div className="w-16 h-16 rounded-full bg-success-surface text-success-text flex items-center justify-center">
-            <span className="material-symbols-outlined text-[36px]">verified</span>
+            <Icon name="verified" className="text-[36px]" />
           </div>
           <div>
             <span className="font-headline-1 text-headline-1 text-text-primary block">
@@ -965,9 +964,7 @@ function SuccessCard({
 
         {hash ? (
           <div className="bg-surface-container-low rounded-2xl p-3 flex items-center gap-2.5">
-            <span className="material-symbols-outlined text-success-text text-[18px] shrink-0">
-              fingerprint
-            </span>
+            <Icon name="fingerprint" className="text-success-text text-[18px] shrink-0" />
             <div className="flex-1 min-w-0">
               <span className="font-caption text-caption text-text-muted block">
                 Sidik Digital (SHA-256)
@@ -987,7 +984,7 @@ function SuccessCard({
           onClick={handlePrint}
           className="w-full h-[50px] rounded-full primary-gradient text-white font-bold text-[14px] tracking-wide uppercase flex items-center justify-center gap-2.5 clay-glow active:scale-[0.98] transition-all"
         >
-          <span className="material-symbols-outlined text-[22px]">print</span>
+          <Icon name="print" className="text-[22px]" />
           Cetak Bukti Serah Terima Kas (Thermal)
         </button>
         <button
@@ -995,7 +992,7 @@ function SuccessCard({
           onClick={onReload}
           className="w-full h-11 rounded-full bg-surface-container-low text-text-secondary font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform"
         >
-          <span className="material-symbols-outlined text-[18px]">refresh</span>
+          <Icon name="refresh" className="text-[18px]" />
           Muat Ringkasan Terbaru
         </button>
       </div>

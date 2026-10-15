@@ -3,6 +3,7 @@ import { initials } from "@/lib/format";
 import { NotificationBell } from "@/components/dashboard/notification-bell";
 import { BranchSwitcher } from "@/components/branch/branch-switcher";
 import type { BranchOption, BranchScope } from "@/lib/branch";
+import { Icon } from "@/components/ui/icon";
 
 export function DashboardHeader({
   branchName,
@@ -48,9 +49,7 @@ export function DashboardHeader({
               />
             ) : (
               <span className="flex items-center gap-1 px-2 py-0.5 mt-0.5 rounded-full bg-brand-50 w-fit">
-                <span className="material-symbols-outlined text-[13px] text-brand-600">
-                  storefront
-                </span>
+                <Icon name="storefront" className="text-[13px] text-brand-600" />
                 <span className="font-caption text-caption text-brand-700 truncate max-w-[140px]">
                   {branchName}
                 </span>

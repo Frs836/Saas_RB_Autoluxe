@@ -7,6 +7,7 @@ import { ATTENDANCE_ROLE_LABELS } from "@/lib/attendance";
 import { initials } from "@/lib/format";
 import { useToast } from "@/components/toast";
 import { AddStaffPanel } from "@/components/branch/add-staff-panel";
+import { Icon } from "@/components/ui/icon";
 
 export type StaffSchedule = {
   id: string;
@@ -125,9 +126,7 @@ export function StaffScheduleView({
         <div className="grid grid-cols-2 gap-3 mt-3">
           <div className="bg-clay-overlay rounded-xl p-3">
             <span className="font-caption text-caption text-text-primary flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-[16px]">
-                construction
-              </span>
+              <Icon name="construction" className="text-[16px]" />
               Lapangan
             </span>
             <span className="font-body-bold text-body-bold text-text-primary block mt-1">
@@ -136,7 +135,7 @@ export function StaffScheduleView({
           </div>
           <div className="bg-clay-overlay rounded-xl p-3">
             <span className="font-caption text-caption text-text-primary flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-[16px]">desk</span>
+              <Icon name="desk" className="text-[16px]" />
               Kantor
             </span>
             <span className="font-body-bold text-body-bold text-text-primary block mt-1">
@@ -247,9 +246,7 @@ export function StaffScheduleView({
                               : "text-text-secondary active:scale-95 transition-transform")
                           }
                         >
-                          <span className="material-symbols-outlined text-[15px]">
-                            {LABEL_JADWAL[opsi].ikon}
-                          </span>
+                          <Icon name={LABEL_JADWAL[opsi].ikon} className="text-[15px]" />
                           {LABEL_JADWAL[opsi].nama}
                         </button>
                       );

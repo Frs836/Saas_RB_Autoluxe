@@ -9,6 +9,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { Icon } from "@/components/ui/icon";
 
 /*
  * Notifikasi mengambang di bagian atas layar.
@@ -133,9 +134,7 @@ function ToastBar({ toast, onTutup }: { toast: Toast; onTutup: (id: number) => v
       role="alert"
       className={`pointer-events-auto w-full max-w-md rounded-2xl border px-3.5 py-3 shadow-lg flex items-start gap-2.5 ${gaya.kelas}`}
     >
-      <span className="material-symbols-outlined text-[20px] shrink-0 mt-0.5">
-        {gaya.ikon}
-      </span>
+      <Icon name={gaya.ikon} className="text-[20px] shrink-0 mt-0.5" />
       <div className="flex-1 min-w-0">
         <p className="font-body-bold text-body-bold">{toast.judul}</p>
         {toast.detail ? (
@@ -148,7 +147,7 @@ function ToastBar({ toast, onTutup }: { toast: Toast; onTutup: (id: number) => v
         aria-label="Tutup notifikasi"
         className="shrink-0 grid place-items-center w-8 h-8 -m-1 rounded-full"
       >
-        <span className="material-symbols-outlined text-[18px]">close</span>
+        <Icon name="close" className="text-[18px]" />
       </button>
     </div>
   );

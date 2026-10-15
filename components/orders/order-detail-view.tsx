@@ -220,10 +220,18 @@ export function OrderDetailView({
     setSuccess(null);
     try {
       const supabase = createClient();
-      const { data, error: rpcError } = await supabase.rpc("apply_order_status", {
-        p_order_id: order.id,
-        p_status: next,
-      });
+      // Tahap serah terima punya jalurnya sendiri, karena transisinya bukan
+      // keputusan QC melainkan catatan dari fisik kendaraan.
+      const serahTerima = next === "menunggu_diambil" || next === "diserahkan";
+      const { data, error: rpcError } = serahTerima
+        ? await supabase.rpc("advance_handover", {
+            p_order_id: order.id,
+            p_next: next,
+          })
+        : await supabase.rpc("apply_order_status", {
+            p_order_id: order.id,
+            p_status: next,
+          });
       if (rpcError) throw new Error(rpcError.message);
 
       const warrantyCode = typeof data === "string" ? data : null;
@@ -277,6 +285,24 @@ export function OrderDetailView({
       icon: "fact_check",
       status: "qc_review",
       cls: "bg-primary text-white",
+    });
+  }
+  if (order.status === "completed") {
+    // Setelah QC selesai, mobil belum otomatis dianggap selesai. Pelanggan
+    // biasanya belum datang, jadi ada tahap menunggu diambil dulu.
+    primaryActions.push({
+      label: "Tandai Menunggu Diambil",
+      icon: "hourglass_top",
+      status: "menunggu_diambil",
+      cls: "bg-warning-base text-white",
+    });
+  }
+  if (order.status === "menunggu_diambil") {
+    primaryActions.push({
+      label: "Kendaraan Sudah Diserah",
+      icon: "task_alt",
+      status: "diserahkan",
+      cls: "bg-success-base text-white",
     });
   }
   if (order.status === "qc_review" && canDecideQc) {

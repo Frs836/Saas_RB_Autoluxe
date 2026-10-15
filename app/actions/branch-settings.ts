@@ -19,7 +19,15 @@ type Payload = {
   openTime: string;
   closeTime: string;
   setCoordinates: boolean;
-  isActive: boolean;
+  /**
+   * null berarti status aktif tidak ikut diubah.
+   *
+   * Sakelar ini punya syarat sendiri, yaitu tidak boleh dimatikan sementara
+   * masih ada staf. Kalau ikut dikirim bersama data lain, kegagalan di
+   * sakelar membatalkan seluruh simpanan, termasuk nama, deskripsi, dan
+   * koordinat yang tidak ada hubungannya dengan staffing.
+   */
+  isActive: boolean | null;
 };
 
 export async function saveBranchSettings(payload: Payload): Promise<BranchSettingsResult> {

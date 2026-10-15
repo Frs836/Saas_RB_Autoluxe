@@ -209,11 +209,23 @@ export function TimeOffConsole({ requests, canDecide, todayIso }: Props) {
     (r) => r.status === "pending" && canDecide && !r.isOwn,
   ).length;
 
-  const FILTERS = [
-    { key: "mine", label: "Milik Saya" },
-    { key: "pending", label: "Perlu Ditinjau" },
-    { key: "all", label: "Semua" },
-  ] as const;
+  /*
+   * Saringan "Perlu Ditinjau" dan "Semua" hanya untuk yang berhak memutuskan.
+   *
+   * Admin kasir punya izin memutuskan secara historis, jadi
+   * sebelumnya mereka melihat seluruh daftar pengajuan orang lain. Dari
+   * daftar itu terbaca siapa yang sakit, siapa yang cuti, dan siapa yang
+   * pengajuannya ditolak, dan itu bisa jadi perdebatan internal. Policy di
+   * database sudah menutup hak bacanya; di sini saringannya ikut ditutup
+   * supaya tidak ada tombol yang mengarah ke daftar kosong.
+   */
+  const FILTERS = canDecide
+    ? ([
+        { key: "mine", label: "Milik Saya" },
+        { key: "pending", label: "Perlu Ditinjau" },
+        { key: "all", label: "Semua" },
+      ] as const)
+    : ([{ key: "mine", label: "Milik Saya" }] as const);
 
   return (
     <div className="flex flex-col w-full min-h-screen">

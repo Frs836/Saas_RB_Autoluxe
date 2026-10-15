@@ -21,19 +21,38 @@ const files = execSync('git ls-files "*.tsx" "*.ts"', { encoding: "utf8" })
   .split("\n")
   .filter((f) => f.startsWith("app/") || f.startsWith("components/"));
 
+// Ikon yang hanya muncul sebagai nilai cadangan, bukan sebagai nama ikon.
+const tambahan = ["loading", "progress_activity", "photo_camera"];
+
 const set = new Set();
 for (const f of files) {
   const c = readFileSync(f, "utf8");
+  // Bentuk biasa: ikon ditulis sebagai teks di dalam span.
   for (const m of c.matchAll(
     /material-symbols-outlined[^>]*>\s*([a-z_0-9]+)\s*</g,
   )) {
     set.add(m[1]);
   }
+  // Bentuk kedua: ikon datang dari ekspresi, misalnya
+  // {sibuk ? "hourglass_top" : "add_business"}.
+  //
+  // Bentuk ini tidak tertangkap pola di atas, dan itulah cara ikon
+  // add_business hilang dari subset sehingga tampil sebagai tulisan. Semua
+  // nama yang Gene di dalam kurung kurawal pada baris yang sama dengan
+  // material-symbols-outlined ikut diambil.
+  for (const m of c.matchAll(
+    /material-symbols-outlined[\s\S]{0,120}?\}\s*([a-z_0-9]{3,30})/g,
+  )) {
+    set.add(m[1]);
+  }
+  // Bentuk ketiga: nama ikon dari properti objek, misalnya daftar tab
+  // { key: "harian", label: "Harian", icon: "today" }.
+  for (const m of c.matchAll(/\bicon:\s*"([a-z_0-9]{3,30})"/g)) {
+    set.add(m[1]);
+  }
 }
 
-// Ikon yang ditulis lewat ekspresi, bukan string literal, ikut diambil manual
-// karena tidak bisa ditemukan oleh pola di atas.
-const tambahan = ["loading", "progress_activity", "photo_camera"];
+// Daftar ikon dipakai sebagai nilai cadangan di luar kode sumber.
 for (const t of tambahan) set.add(t);
 
 const ikon = [...set].sort();

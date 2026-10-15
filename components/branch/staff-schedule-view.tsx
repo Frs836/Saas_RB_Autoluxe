@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { ATTENDANCE_ROLE_LABELS } from "@/lib/attendance";
 import { initials } from "@/lib/format";
 import { useToast } from "@/components/toast";
+import { AddStaffPanel } from "@/components/branch/add-staff-panel";
 
 export type StaffSchedule = {
   id: string;
@@ -37,10 +38,14 @@ export function StaffScheduleView({
   staff,
   jam,
   bisaUbah,
+  cabangId,
+  bisaBuatMaintainer,
 }: {
   staff: StaffSchedule[];
   jam: JamKerja;
   bisaUbah: boolean;
+  cabangId: string | null;
+  bisaBuatMaintainer: boolean;
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -266,6 +271,17 @@ export function StaffScheduleView({
           </p>
         ) : null}
       </section>
+
+      {/*
+        Pembuatan akun berdiri sendiri dari jadwal di atas. Jadwal hanya bisa
+        diubah untuk staf yang sudah ada, sedangkan menambah staf butuh
+        email dan kata sandi, jadi tidak bisa memakai kontrol yang sama.
+      */}
+      <AddStaffPanel
+        branchId={cabangId}
+        branchName="cabang aktif"
+        bisaBuatMaintainer={bisaBuatMaintainer}
+      />
     </div>
   );
 }

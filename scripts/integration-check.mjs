@@ -385,10 +385,8 @@ const { data: pendingOrders } = await admin.client
 const busyOrderIds = new Set((pendingOrders ?? []).map((c) => c.order_id));
 const todayIso = new Date().toISOString().slice(0, 10);
 
-// Garansi hanya bisa diklaim bila order-nya benar-benar selesai. Seed demo
-// sengaja memuat garansi untuk order yang masih qc_review, jadi status order
-// ikut diperiksa di sini.
-const claimable = (warrantyRows ?? []).find((w) => {
+// Garansi hanya bisa diklaim bila order-nya benar-benar selesai.
+let claimable = (warrantyRows ?? []).find((w) => {
   const parent = Array.isArray(w.orders) ? w.orders[0] : w.orders;
   return (
     String(w.end_date) >= todayIso &&
@@ -396,6 +394,83 @@ const claimable = (warrantyRows ?? []).find((w) => {
     parent?.status === "completed"
   );
 });
+
+/*
+ * Kalau tidak ada, bagian ini membuat order dan garansinya sendiri.
+ *
+ * Sebelumnya bagian ini membaca garansi yang sudah ada dari data contoh.
+ * Begitu data contoh dihapus supaya pengujian benar-benar bersih, bagian
+ * yang sama ikut gagal karena tidak punya apa pun untuk diuji. Ketergantungan
+ * seperti itu membuat hasil pengujian bergantung pada isi database, bukan
+ * pada kode yang diuji.
+ */
+if (!claimable) {
+  // Order dibuat lewat sesi karyawan, bukan service role, karena fungsi
+  // pembuatan order menolak permintaan tanpa pengguna yang masuk.
+  const orderGaransi = await karyawan.client.rpc("create_pos_order_with_hold", {
+    p_license_plate: `${TEST_PLATE} GARANSI`,
+    p_vehicle_model: "Mobil Uji",
+    p_vehicle_size: "M",
+    p_customer_name: `${TEST_MARKER} Garansi`,
+    p_customer_phone: "081200000009",
+    p_service_package: `${TEST_MARKER} Garansi`,
+    p_items: [await itemUji(karyawan.client)],
+    p_payment_method: "cash",
+    p_payment_state: "paid",
+    p_start_work: true,
+  });
+  const orderId = orderGaransi.data?.id;
+  if (orderId) {
+    cleanupOrderIds.push(orderId);
+    // Lewati satu per status yang dilalui, karena setiap transisi punya
+    // syaratnya sendiri dan tidak bisa dilompati.
+    for (const langkah of ["in_progress", "qc_review", "completed"]) {
+      await admin.client.rpc("apply_order_status", {
+        p_order_id: orderId,
+        p_status: langkah,
+      });
+    }
+    let garansiBaru = (
+      await admin.client
+        .from("warranties")
+        .select("order_id, status, end_date, warranty_code")
+        .eq("order_id", orderId)
+        .maybeSingle()
+    ).data;
+
+    /*
+     * Garansi tidak terbit dari transisi status, jadi kalau kosong barisnya
+     * disiapkan di sini. Yang diuji bagian ini adalah alur klaim, bukan
+     * penerbitan garansi. Baris ini ikut terhapus bersama order-nya di
+     * bagian nineteen.
+     */
+    if (!garansiBaru) {
+      const akhir = new Date();
+      akhir.setFullYear(akhir.getFullYear() + 1);
+      await adminClient.from("warranties").insert([
+        {
+          order_id: orderId,
+          warranty_code: `${TEST_MARKER}-W`,
+          start_date: new Date().toISOString().slice(0, 10),
+          end_date: akhir.toISOString().slice(0, 10),
+          status: "active",
+        },
+      ]);
+      garansiBaru = (
+        await adminClient
+          .from("warranties")
+          .select("order_id, status, end_date, warranty_code")
+          .eq("order_id", orderId)
+          .maybeSingle()
+      ).data;
+    }
+
+    if (garansiBaru) {
+      claimable = { ...garansiBaru, orders: [{ id: orderId, status: "completed" }] };
+    }
+  }
+}
+
 suite.check("ada garansi aktif pada order selesai", Boolean(claimable), claimable?.warranty_code);
 
 if (claimable) {

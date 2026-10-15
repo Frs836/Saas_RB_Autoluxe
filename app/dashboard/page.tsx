@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { LiveClock } from "@/components/dashboard/live-clock";
+import { wibNow } from "@/lib/attendance";
 import { createClient } from "@/lib/supabase/server";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { BottomNav } from "@/components/dashboard/bottom-nav";
@@ -181,6 +183,10 @@ export default async function DashboardPage() {
     : null;
 
   const openedTime = (branch?.operating_open_time ?? "07:30:00").slice(0, 5);
+
+// Jam dikirim dari server supaya render pertama sama persis dengan HTML hasil
+// render server. Setelah itu LiveClock yang memperbaruinya setiap detik.
+const jamSekarang = wibNow();
   const quickActions = quickActionsFor(role);
 
   const heldTotal = Number(myHold?.held_total ?? 0);
@@ -230,14 +236,23 @@ export default async function DashboardPage() {
               </div>
             </div>
             <div className="flex flex-col">
+              {/*
+                Angka besar itu jam berjalan, bukan jam absen.
+                Sebelumnya kolom ini diisi jam check-in dari database, jadi
+                selama staf belum absen isinya tetap dua strip dan tidak pernah
+                bergerak. Jam absen dipisahkan ke bawah supaya keduanya tidak
+                saling menggantikan.
+              */}
               <h2 className="font-metric-display text-metric-display text-white tracking-tight leading-none">
-                {clockInTime ?? "--:--"}&nbsp;
+                <LiveClock jamAwal={jamSekarang.timeLabel} />
                 <span className="font-headline-2 text-headline-2 text-brand-100 font-normal">
                   WIB
                 </span>
               </h2>
               <p className="font-caption text-caption text-brand-100 mt-1">
-                {shift?.name ?? "Shift belum diatur"} • {roleLabel(role)}
+                {clockInTime
+                  ? `Absen masuk tercatat ${clockInTime}`
+                  : "Belum absen hari ini"}
               </p>
             </div>
             <div className="pt-1">

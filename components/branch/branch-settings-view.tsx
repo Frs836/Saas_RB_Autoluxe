@@ -2,7 +2,9 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import { saveBranchSettings } from "@/app/actions/branch-settings";
+import { CreateBranchPanel } from "@/components/branch/create-branch-panel";
 import {
   crossesDateLine,
   formatCoordinate,
@@ -202,8 +204,22 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
     return null;
   })();
 
+  /**
+   * Sakelar status aktif memanggil fungsi sendiri, bukan ikut dalam simpanan
+   * konfigurasi. Pemeriksaan staf aktif hanya berlaku di sini, jadi nama,
+   * deskripsi, koordinat, dan jam tidak ikut gagal karena masih ada staf.
+   */
+  async function ubahStatusCabang(id: string, aktif: boolean) {
+    const supabase = createClient();
+    const { error } = await supabase.rpc("set_branch_active", {
+      p_branch_id: id,
+      p_active: aktif,
+    });
+    if (error) return { ok: false as const, message: error.message };
+    return { ok: true as const, message: aktif ? "Cabang diaktifkan." : "Cabang dinonaktifkan." };
+  }
+
   async function submit() {
-    setFeedback(null);
     if (validation) {
       setFeedback({ tone: "error", text: validation });
       return;
@@ -221,13 +237,31 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
         openTime: form.openTime,
         closeTime: form.closeTime,
         setCoordinates: form.setCoordinates,
-        isActive: form.isActive,
+        // Sakelar aktif punya syarat sendiri, jadi tidak dikirim bersama
+        // data lainnya. Sebelumnya ikut dikirim, dan kalau dimatikan sementara
+        // masih ada staf, seluruh permintaan ditolak termasuk nama, deskripsi,
+        // dan koordinat yang tidak ada hubungannya dengan staffing.
+        isActive: null,
       });
 
-      setFeedback({ tone: result.ok ? "ok" : "error", text: result.message });
-      if (result.ok) {
-        router.refresh();
+      if (!result.ok) {
+        setFeedback({ tone: "error", text: result.message });
+        return;
       }
+
+      // Status aktif dicoba setelah data lain tersimpan, supaya kegagalan di
+      // sini tidak membatalkan simpanan tadi.
+      if (form.isActive !== selected?.isActive) {
+        const status = await ubahStatusCabang(selectedId, form.isActive);
+        if (!status.ok) {
+          setFeedback({ tone: "error", text: status.message });
+          router.refresh();
+          return;
+        }
+      }
+
+      setFeedback({ tone: "ok", text: result.message });
+      router.refresh();
     } catch {
       setFeedback({ tone: "error", text: "Gagal menyimpan konfigurasi." });
     } finally {
@@ -567,15 +601,26 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
             {feedback.text}
           </p>
         ) : null}
-        <button
-          type="button"
-          onClick={submit}
-          disabled={busy || Boolean(validation)}
-          className="w-full py-3.5 rounded-full primary-gradient text-on-primary font-body-bold text-body-bold flex items-center justify-center gap-2 clay-fab active:scale-95 transition-transform disabled:opacity-50"
-        >
-          <span className="material-symbols-outlined text-[20px]">save</span>
-          {busy ? "Menyimpan..." : "Simpan Konfigurasi"}
-        </button>
+
+        <div className="flex flex-col gap-2">
+          <button
+            type="button"
+            onClick={submit}
+            disabled={busy || Boolean(validation)}
+            className="w-full py-3.5 rounded-full primary-gradient text-on-primary font-body-bold text-body-bold flex items-center justify-center gap-2 clay-fab active:scale-95 transition-transform disabled:opacity-50"
+          >
+            <span className="material-symbols-outlined text-[20px]">save</span>
+            {busy ? "Menyimpan..." : "Simpan Konfigurasi"}
+          </button>
+
+          {/*
+            Pembuatan cabang punya formularnya sendiri karena butuh nilai yang
+            tidak ada di cabang mana pun: nama, alamat, titik, dan jam. Ditaruh
+            di luar bilah simpan supaya tidak bersaing dengan perubahan
+            cabang yang sedang dipilih.
+          */}
+          <CreateBranchPanel />
+        </div>
       </div>
     </div>
   );

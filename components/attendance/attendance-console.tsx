@@ -590,14 +590,26 @@ export function AttendanceConsole({
    * belum terpenuhi, sehingga yang sudah mengisi alasan dan memindai wajah
    * tetap bingung kenapa tombolnya tidak bisa ditekan.
    */
+  /*
+   * Syarat sebelum tombol kirim aktif.
+   *
+   * Dua hal tidak lagi menjadi syarat:
+   *
+   * Ambil foto. Toutinya sudah dibuktikan oleh lima tahap liveness, yaitu
+   * hadap lurus, kedip, buka mulut, putar kiri, dan putar kanan. Foto
+   * tambahan tidak menambah apa pun dan hanya menambah satu langkah yang harus
+   * dilewati setiap kali absen.
+   *
+   * Dekati cabang. Banyak staf melayani home service di rumah pelanggan, jadi
+   * mereka memang absen dari luar workshop. Lokasi tetap dicatat supaya
+   * managerial bisa melihat, tapi tidak lagi memblokir check-in maupun
+   * check-out. Server juga sudah tidak menolak, dan kolom outside_radius
+ * menandai absen mana yang dilakukan dari luar.
+   */
   const syaratSubmit: Syarat[] = [
     {
       terpenuhi: mode !== "done",
       label: "Sesi absensi sudah selesai",
-    },
-    {
-      terpenuhi: !!capturedBlob,
-      label: "Ambil foto wajah",
     },
     {
       terpenuhi: gps.status === "success",
@@ -607,19 +619,11 @@ export function AttendanceConsole({
           : "Tunggu lokasi GPS terdeteksi",
     },
     {
-      terpenuhi: branchConfigured,
-      label: "Koordinat cabang belum diatur oleh maintainer",
-    },
-    {
-      terpenuhi: insideRadius,
-      label: `Dekati cabang, maksimal ${formatDistance(branch.radius)} dari titik cabang`,
-    },
-    {
       terpenuhi: mode === "checkout" || liveSelesai,
       label:
         mode === "checkout"
           ? "Liveness hanya diperlukan saat check-in"
-          : "Selesaikan semua tahap liveness",
+          : "Selesaikan lima tahap liveness",
     },
     {
       terpenuhi: mode === "checkout" || lateReasonValid,
@@ -630,6 +634,21 @@ export function AttendanceConsole({
   ];
 
   const canSubmit = syaratSubmit.every((s) => s.terpenuhi);
+
+  /*
+   * Keterangan lokasi. Ini informasi, bukan syarat.
+   * Ditampilkan apa adanya supaya yang absen dari luar workshop tahu
+   * tercatat di mana, tanpa perlu ditebak dari absen yang sama sekali tidak
+   * muncul.
+   */
+  const keteranganLokasi = (() => {
+    if (!branchConfigured) return "Koordinat cabang belum diatur oleh maintainer.";
+    if (gps.status === "error") return "Lokasi tidak terbaca, absen tetap tercatat.";
+    if (gps.status !== "success") return "Mencari lokasi...";
+    if (insideRadius)
+      return `Di dalam lingkungan workshop, ${formatDistance(distance)} dari titik cabang.`;
+    return `Di luar lingkungan workshop, ${formatDistance(distance)} dari titik cabang. Ini normal untuk home service.`;
+  })();
 
   return (
     <div className="flex flex-col w-full pb-nav">
@@ -883,7 +902,7 @@ export function AttendanceConsole({
               /*
                * Gerbang mulai pindai. Halaman tetap punya jam, riwayat, dan
                * daftar syarat tanpa kamera menyala, jadi yang membuka
-               * absensi bukan pengganti dengan câmera yang menggantung.
+               * absensi bukan pengganti dengan kamera yang menggantung.
                */
               <div className="w-full h-full flex flex-col items-center justify-center gap-3 px-6 text-center">
                 <span className="material-symbols-outlined text-[36px] text-brand-200">
@@ -1111,22 +1130,37 @@ export function AttendanceConsole({
         </div>
       </section>
 
-      {/* Bar metadata GPS & waktu */}
+      {/* Keterangan lokasi, bukan syarat absen */}
       <section className="px-gutter pt-3">
-        <div className="bg-clay-overlay rounded-xl p-2.5 flex items-center justify-between text-[11px] text-text-secondary border border-border-subtle">
-          <div className="flex items-center gap-1 font-mono text-[11px] text-text-secondary">
-            <span className="material-symbols-outlined text-[15px] text-brand-500">
-              public
-            </span>
-            <span>
+        <div
+          className={`rounded-xl p-3 flex items-start gap-2 border ${
+            insideRadius
+              ? "bg-success-surface border-success-base/30"
+              : "bg-warning-surface border-warning-base/30"
+          }`}
+        >
+          <span
+            className={`material-symbols-outlined text-[18px] shrink-0 mt-0.5 ${
+              insideRadius ? "text-success-text" : "text-warning-text"
+            }`}
+          >
+            {insideRadius ? "gps_fixed" : "travel_explore"}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p
+              className={`font-caption text-caption ${
+                insideRadius ? "text-success-text" : "text-warning-text"
+              }`}
+            >
+              {keteranganLokasi}
+            </p>
+            <p className="font-micro-badge text-micro-badge text-text-secondary mt-0.5">
               {gps.lat !== null && gps.lng !== null
                 ? `${gps.lat.toFixed(5)}, ${gps.lng.toFixed(5)}`
-                : "--, --"}
-            </span>
+                : "Koordinat belum terbaca"}
+              {clock ? ` - ${clock.timeLabel} WIB` : ""}
+            </p>
           </div>
-          <span className="font-medium text-text-muted">
-            {clock ? `${clock.dateLabel} - ${clock.timeLabel} WIB` : "--:-- WIB"}
-          </span>
         </div>
       </section>
 

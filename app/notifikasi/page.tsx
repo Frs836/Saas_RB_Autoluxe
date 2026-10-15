@@ -1,4 +1,5 @@
 import { BottomNav } from "@/components/dashboard/bottom-nav";
+import { SubPageHeader } from "@/components/pos/sub-page-header";
 import { getSessionProfile } from "@/lib/rbac-guard";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
@@ -26,6 +27,13 @@ export default async function NotificationPage() {
 
   return (
     <div className="flex flex-col w-full min-h-screen">
+      {/* Tanpa header ini halaman notifikasi tidak punya jalan kembali, karena
+          lonceng hanya ada di dashboard. */}
+      <SubPageHeader
+        title="Notifikasi"
+        branchName="Semua Peringatan"
+        backHref="/dashboard"
+      />
       <main className="flex-1">
         <NotificationList
           awal={error ? [] : (data ?? [])}

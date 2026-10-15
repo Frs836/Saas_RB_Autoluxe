@@ -35,7 +35,7 @@ export function ProfilView({
   const initialsValue = initials(profile.fullName);
 
   return (
-    <div className="flex flex-col w-full pb-[calc(68px+env(safe-area-inset-bottom)+24px)]">
+    <div className="flex flex-col w-full pb-nav">
       {/* Kartu identitas */}
       <section className="px-gutter pt-4">
         <div className="relative overflow-hidden rounded-[24px] p-5 primary-gradient text-on-primary clay-glow">

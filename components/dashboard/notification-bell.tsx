@@ -16,7 +16,7 @@ import { createClient } from "@/lib/supabase/client";
  * menangani pencarian, saringan, isi pesan, dan tindakan.
  *
  * Lencana sengaja memakai angka, bukan titik, karena orang perlu tahu
- * 얼마나 pesan yang menunggu, bukan hanya bahwa ada pesan.
+ * berapa banyak pesan yang menunggu, bukan hanya bahwa ada pesan.
  */
 export function NotificationBell() {
   const router = useRouter();

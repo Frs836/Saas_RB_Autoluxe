@@ -219,7 +219,7 @@ export function ShiftConsole({
   }, [expectedOpen, handoff, notes, notesRequired, parseAmount, physical]);
 
   return (
-    <div className="flex flex-col w-full pb-[calc(68px+env(safe-area-inset-bottom)+24px)] print:hidden">
+    <div className="flex flex-col w-full pb-nav print:hidden">
       {/* Kartu status shift & kasir */}
       <section className="px-gutter pt-4">
         <div className="bg-surface rounded-[24px] p-5 clay-card border border-white/80 flex flex-col gap-4">

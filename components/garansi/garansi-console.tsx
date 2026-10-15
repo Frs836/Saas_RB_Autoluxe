@@ -155,7 +155,7 @@ export function GaransiConsole({
 
   return (
     <div className="min-h-screen bg-canvas">
-      <div className="pb-[calc(68px+env(safe-area-inset-bottom)+24px)] px-gutter pt-4 space-y-space-lg">
+      <div className="pb-nav px-gutter pt-4 space-y-space-lg">
         <section className="clay-card flex flex-col gap-space-md p-space-lg">
           <div className="flex items-center justify-between">
             <h2 className="font-headline-2 text-headline-2 text-text-primary">Klaim Garansi</h2>

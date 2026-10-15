@@ -38,6 +38,50 @@
   padding-top: env(safe-area-inset-top, 0px);
 }
 
+/*
+ * Tinggi navigasi bawah ditulis di satu tempat.
+ *
+ * Angka 68px dulu disalin ke setiap halaman, padahal tombol tambah order
+ * naik 20px di atas navigasi sehingga tinggi sebenarnya 88px. Selisih 20px
+ * itu yang menutupi bagian bawah isi di banyak halaman. Karena itu keduanya
+ * token di sini dan tidak boleh ditulis ulang sebagai angka.
+ */
+:root {
+  --nav-h: 68px;
+  --nav-h-fab: 88px;
+}
+
+/* Ruang aman agar isi tidak tertutup navigasi bawah. */
+.pb-nav {
+  padding-bottom: calc(
+    var(--nav-h-fab) + env(safe-area-inset-bottom, 0px) + 24px
+  );
+}
+
+/* Ruang aman untuk bilah aksi yang menempel di atas navigasi bawah. */
+.bottom-nav-offset {
+  bottom: calc(var(--nav-h-fab) + env(safe-area-inset-bottom, 0px));
+}
+
+/*
+ * Lapisan tetap untuk elemen yang saling menimpa.
+ * Nilai ini bukan arcane: navigasi bawah harus di atas bilah aksi supaya
+ * tombol di dalam navigasi selalu bisa diklik.
+ */
+.z-nav {
+  z-index: 50;
+}
+.z-action-bar {
+  z-index: 45;
+}
+.z-toast {
+  z-index: 60;
+}
+/* Modal harus menutupi navigasi bawah, bukan sebaliknya. */
+.z-modal {
+  z-index: 70;
+}
+
 .no-scrollbar {
   scrollbar-width: none;
   -ms-overflow-style: none;

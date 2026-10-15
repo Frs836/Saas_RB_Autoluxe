@@ -130,7 +130,7 @@ export function NotificationList({
   }, [baris, router, sibuk, toast]);
 
   return (
-    <div className="px-gutter pt-4 pb-[calc(68px+env(safe-area-inset-bottom)+24px)] flex flex-col gap-3">
+    <div className="px-gutter pt-4 pb-nav flex flex-col gap-3">
       <header className="flex items-start justify-between gap-2">
         <div>
           <h1 className="font-headline-1 text-headline-1 text-text-primary">Notifikasi</h1>

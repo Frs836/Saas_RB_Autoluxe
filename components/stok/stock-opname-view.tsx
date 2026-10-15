@@ -372,7 +372,7 @@ export function StockOpnameView({
       ) : null}
 
       {selected && !readOnly ? (
-        <div className="fixed bottom-0 left-0 right-0 z-40 px-gutter pb-[calc(68px+env(safe-area-inset-bottom))] pt-3 bg-surface/95 backdrop-blur-md border-t border-outline-variant flex gap-2">
+        <div className="fixed bottom-nav-offset left-0 right-0 z-action-bar px-gutter pb-3 pt-3 bg-surface/95 backdrop-blur-md border-t border-outline-variant flex gap-2">
           <button
             type="button"
             disabled={busy}

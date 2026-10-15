@@ -606,7 +606,7 @@ export function AttendanceConsole({
   const canSubmit = syaratSubmit.every((s) => s.terpenuhi);
 
   return (
-    <div className="flex flex-col w-full pb-[calc(68px+env(safe-area-inset-bottom)+24px)]">
+    <div className="flex flex-col w-full pb-nav">
       {/* Ringkasan shift hari ini (owner / admin_kasir / maintainer) */}
       {canAudit ? (
         <section className="px-gutter pt-4">

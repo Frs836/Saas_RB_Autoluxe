@@ -602,7 +602,7 @@ export function RekapConsole({
   ];
 
   return (
-    <div className="flex flex-col w-full pb-[calc(68px+env(safe-area-inset-bottom)+24px)]">
+    <div className="flex flex-col w-full pb-nav">
       {/* Micro-bar: status geofence + export */}
       <section className="px-gutter pt-3">
         <div className="bg-clay-overlay rounded-xl px-3 py-2.5 flex items-center justify-between border border-border-subtle">
@@ -1292,7 +1292,7 @@ function VerificationModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center"
+      className="fixed inset-0 z-modal bg-black/60 flex items-end sm:items-center justify-center"
       role="dialog"
       aria-modal="true"
     >

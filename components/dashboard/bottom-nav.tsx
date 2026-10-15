@@ -35,16 +35,23 @@ export function BottomNav({ role }: Props) {
   };
 
   return (
-    <nav className="fixed bottom-0 w-full z-50 pb-safe bg-surface rounded-t-[24px] clay-nav">
-      <div className="relative flex items-center justify-around h-[68px] px-space-xs">
+    <nav className="fixed bottom-0 w-full z-nav pb-safe bg-surface rounded-t-[24px] clay-nav">
+      <div className="relative flex items-center justify-around h-[var(--nav-h)] px-space-xs">
         {renderItem(items[0])}
         {renderItem(items[1])}
         {showFab ? (
-          <div className="relative -top-5 flex flex-col items-center justify-center">
+          /*
+           * Tombol tambah order duduk di dalam navigasi, tidak keluar dari
+           * container. Sebelumnya memakai -top-5 yang menambah 20px tinggi
+           * efektif navigasi tanpa ada halaman yang tahu, jadi isi di
+           * bawahnya tertutup. Sekarang tinggi navigasi tetap 68px dan
+           * ruang kosongnya disediakan oleh token --nav-h-fab.
+           */
+          <div className="relative flex flex-col items-center justify-center">
             <Link
               href="/pos"
               aria-label="Buat Order Baru"
-              className="w-14 h-14 rounded-full primary-gradient flex items-center justify-center text-on-primary clay-glow active:scale-95 transition-transform"
+              className="w-14 h-14 rounded-full primary-gradient flex items-center justify-center text-on-primary clay-fab active:scale-95 transition-transform"
             >
               <span className="material-symbols-outlined text-[28px]">add</span>
             </Link>

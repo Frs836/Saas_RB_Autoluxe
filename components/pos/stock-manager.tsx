@@ -76,7 +76,7 @@ const [tab, setTab] = useState<"items" | "claims">("items");
   const [inOpen, setInOpen] = useState(false);
   const [inItemId, setInItemId] = useState("");
   const [cariBarang, setCariBarang] = useState("");
-  // Penahan sinkron untuk 防 double-klik. State submitting baru berlaku
+  // Penahan sinkron untuk menahan double-klik. State submitting baru berlaku
   // setelah React selesai merender, jadi dua klik cepat bisa sama-sama lolos
   // sebelum tombol terlihat mati.
   const kirimSedangJalan = useRef(false);

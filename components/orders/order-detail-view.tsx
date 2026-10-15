@@ -76,6 +76,38 @@ const STATUS_META: Record<string, { label: string; cls: string; step: number }> 
 
 const STORAGE_PUBLIC_BASE = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/inspection-photos`;
 
+/*
+ * Mengubah pesan database menjadi kalimat yang menjelaskan siapa yang boleh
+ * mengunggah dan kenapa ditolak.
+ *
+ * Sebenarnya semua peran punya izin inspection.upload, tetapi server juga
+ * memeriksa can_view_order. Owner, maintainer, dan admin kasir boleh mengunggah
+ * di order mana pun, sedangkan karyawan hanya boleh di order yang ditugaskan
+ * kepadanya. Tanpa keterangan ini, karyawan hanya melihat "Order ini bukan
+ * tugas Anda" dan mengira halamannya rusak.
+ */
+function pesanInspeksi(pesan: string): string {
+  if (pesan.includes("bukan tugas Anda")) {
+    return "Order ini belum ditugaskan kepada Anda. Minta maintainer menambahkan Anda ke tim order ini lewat tombol Atur Tim. Foto inspeksi hanya bisa diunggah oleh orang yang mengerjakan order tersebut, atau oleh owner, maintainer, dan admin kasir.";
+  }
+  if (pesan.includes("sedang dikerjakan")) {
+    return "Order ini belum berstatus sedang dikerjakan. Mulai kerjakan ordernya dulu lewat tombol Kerjakan, baru foto inspeksi bisa diunggah.";
+  }
+  if (pesan.includes("wajib diunggah lebih dulu")) {
+    return "Foto kondisi awal (sebelum pengerjaan) harus diunggah lebih dulu baru foto berikutnya bisa ditambahkan.";
+  }
+  if (pesan.includes("minimal 5 karakter")) {
+    return "Catatan kondisi kendaraan wajib diisi minimal 5 karakter agar teknisi berikutnya tahu apa yang perlu diperhatikan.";
+  }
+  if (pesan.includes("Maksimal 5 foto")) {
+    return "Sudah ada 5 foto untuk tahap ini. Hapus salah satu bila ingin mengganti.";
+  }
+  if (pesan.includes("hanya bisa diunggah oleh")) {
+    return "Anda masuk dengan akun yang sedang tidak aktif atau sesi sudah kedaluwarsa. Masuk ulang lalu coba lagi.";
+  }
+  return pesan;
+}
+
 export function OrderDetailView({
   order,
   inspections,
@@ -200,7 +232,7 @@ export function OrderDetailView({
       });
       if (rpcError) {
         await supabase.storage.from("inspection-photos").remove([path]);
-        throw new Error(rpcError.message);
+        throw new Error(pesanInspeksi(rpcError.message));
       }
 
       setNotes("");

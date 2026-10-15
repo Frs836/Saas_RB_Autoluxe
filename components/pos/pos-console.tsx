@@ -190,7 +190,7 @@ export function PosConsole({
     try {
       const supabase = createClient();
       // service_id, name, dan price dikirim bersama karena server belum
-      // semuanya土地使用权 harga dari katalog: server lama memakai name dan
+      // semuanya memakai harga dari katalog: server lama memakai name dan
       // price, server baru mengabaikannya dan menghitung sendiri dari
       // service_id. Setelah migrasi 0022 terpasang, name dan price di sini
       // bisa dihapus.
@@ -209,6 +209,22 @@ export function PosConsole({
         (mainNames.length > 0 ? mainNames : resolved.map((l) => l.service.name))
           .join(", ")
           .trim() || "Layanan POS";
+
+      /*
+       * Paket layanan adalah gabungan semua nama yang dipilih kasir. Kolomnya
+       * dulu varchar(150), padahal satu nama layanan bisa 39 karakter, jadi
+       * empat layanan sudah melewati batas dan checkout gagal dengan pesan
+       * trigger yang tidak menjelaskan apa pun. Kolomnya sekarang 500
+       * karakter, dan batas ini hanya mencegah kasus yang tidak wajar agar
+       * pesannya bisa ditulis dalam bahasa manusia.
+       */
+      if (servicePackage.length > 500) {
+        setSubmitting(false);
+        setError(
+          `Daftar layanan yang dipilih terlalu panjang (${servicePackage.length} karakter, batas 500). Kurangi jumlah layanan atau pendekan nama layanannya.`,
+        );
+        return;
+      }
 
       const { data: orderRow, error: createError } = await supabase.rpc(
         "create_pos_order_with_hold",
@@ -447,10 +463,13 @@ export function PosConsole({
 
   if (step === "checkout") {
     return (
-// Ruang bawah mencadangkan navigasi (68px) ditambah bilah checkout yang
-    // menempel (~108px). Nilai sebelumnya 160px, jadi kartu layanan terakhir
-    // tertutup sebagian oleh bilah checkout ketika keranjang berisi.
-    <div className="pb-[calc(11rem+env(safe-area-inset-bottom))]">
+      /*
+       * Ruang bawah dihitung dari navigasi (88px termasuk ruang tombol
+       * tambah) ditambah bilah melayang yang lebih tinggi karena memuat
+       * jumlah layanan dan total, lalu diberi ruang bernapas supaya tidak
+       * ada yang menempel di baliknya.
+       */
+      <div className="pb-[calc(15rem+env(safe-area-inset-bottom))]">
         <div className="sticky top-0 z-40 bg-surface/90 backdrop-blur-md pt-safe shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
           <div className="h-16 px-gutter flex items-center gap-3">
             <button
@@ -761,12 +780,21 @@ export function PosConsole({
           ) : null}
         </div>
 
-        <div className="fixed bottom-[calc(68px+env(safe-area-inset-bottom))] left-0 right-0 z-40 px-gutter pb-3 pt-3 bg-surface/95 backdrop-blur-md border-t border-outline-variant">
+        {/*
+         * Tombol melayang, terpisah dari navigasi bawah.
+         *
+         * Sebelumnya bilahnya menempel tepat di tepi navigasi dengan latar
+         * yang sama, sehingga keduanya terbaca sebagai satu blok besar dan
+         * rincian di bawahnya tertutup. Sekarang bentuknya pil dengan
+         * bayangan sendiri, jaraknya diberikan oleh token --nav-h-fab. Tinggi
+         * navigasi sendiri 68px, jadi jaraknya selalu terlihat.
+         */}
+        <div className="fixed bottom-nav-offset left-0 right-0 z-action-bar px-gutter">
           <button
             type="button"
             disabled={submitting}
             onClick={submitOrder}
-            className="w-full py-4 rounded-2xl bg-primary text-white font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-60"
+            className="w-full py-4 rounded-full primary-gradient text-white font-body-bold text-body-bold flex items-center justify-center gap-2 clay-fab active:scale-95 transition-transform disabled:opacity-60"
           >
             <span className="material-symbols-outlined text-[22px]">
               {submitting ? "hourglass_top" : "check_circle"}
@@ -781,7 +809,7 @@ export function PosConsole({
   }
 
   return (
-    <div className="pb-40">
+      <div className="pb-[calc(14rem+env(safe-area-inset-bottom))]">
       <div className="sticky top-0 z-40 bg-surface/90 backdrop-blur-md pt-safe shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
         <div className="h-16 px-gutter flex items-center justify-between gap-space-sm">
           <div className="flex items-center gap-space-sm min-w-0">
@@ -1058,28 +1086,30 @@ export function PosConsole({
       </div>
 
       {itemCount > 0 ? (
-        <div className="fixed bottom-[calc(68px+env(safe-area-inset-bottom))] left-0 right-0 z-40 px-gutter pb-3 pt-3 bg-surface/95 backdrop-blur-md border-t border-outline-variant">
-          <div className="flex items-center justify-between mb-2">
-            <span className="font-caption text-caption text-text-secondary">
-              {itemCount} layanan dipilih
-            </span>
-            <span className="font-headline-2 text-headline-2 text-primary">
-              {formatRupiah(total)}
-            </span>
+        <div className="fixed bottom-nav-offset left-0 right-0 z-action-bar px-gutter">
+          <div className="bg-surface rounded-[24px] clay-fab px-4 py-3 border border-outline-variant">
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-caption text-caption text-text-secondary">
+                {itemCount} layanan dipilih
+              </span>
+              <span className="font-headline-2 text-headline-2 text-primary">
+                {formatRupiah(total)}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setError(null);
+                setStep("checkout");
+              }}
+              className="w-full py-4 rounded-full primary-gradient text-white font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform"
+            >
+              Lanjut ke Checkout
+              <span className="material-symbols-outlined text-[22px]">
+                arrow_forward
+              </span>
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={() => {
-              setError(null);
-              setStep("checkout");
-            }}
-            className="w-full py-4 rounded-2xl bg-primary text-white font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform"
-          >
-            Lanjut ke Checkout
-            <span className="material-symbols-outlined text-[22px]">
-              arrow_forward
-            </span>
-          </button>
         </div>
       ) : null}
     </div>

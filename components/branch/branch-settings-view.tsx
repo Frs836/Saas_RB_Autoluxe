@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { saveBranchSettings } from "@/app/actions/branch-settings";
 import {
@@ -71,6 +71,18 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
   } | null>(null);
 
   const [busy, setBusy] = useState(false);
+
+  /*
+   * Setelah simpan berhasil, router.refresh() mengambil data cabang terbaru
+   * dari server. Tanpa efek ini, isian form tetap memakai nilai yang dipresa
+   * saat komponen pertama kali dibuat, jadi layar memperlihatkan angka lama
+   * walaupun database sudah berubah.
+   */
+  useEffect(() => {
+    if (!initial) return;
+    setForm(toForm(initial));
+  }, [initial]);
+
   const [feedback, setFeedback] = useState<{
     tone: "ok" | "error";
     text: string;
@@ -518,7 +530,14 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
         ) : null}
       </section>
 
-      <div className="fixed bottom-0 left-0 right-0 z-40 px-gutter pb-[calc(68px+env(safe-area-inset-bottom))] pt-3 bg-surface/95 backdrop-blur-md border-t border-outline-variant">
+      {/*
+       * Bilah ini pernah memakai bottom-0 dengan z-40, sementara navigasi
+       * bawah memakai z-50. Tombol simpannya berada di dalam area yang
+       * sama dengan navigasi sehingga tertutup dan tidak bisa diklik.
+       * Sekarang posisinya di atas navigasi dengan z yang lebih rendah
+       * supaya navigasi tetap di atas dan tidak pernah menutupinya.
+       */}
+      <div className="fixed bottom-nav-offset left-0 right-0 z-action-bar px-gutter pb-3 pt-3">
         {feedback ? (
           <p
             className={`mb-2 p-2 rounded-xl font-caption text-caption ${
@@ -534,7 +553,7 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
           type="button"
           onClick={submit}
           disabled={busy || Boolean(validation)}
-          className="w-full py-3.5 rounded-2xl bg-primary-gradient text-on-primary font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-50"
+          className="w-full py-3.5 rounded-full primary-gradient text-on-primary font-body-bold text-body-bold flex items-center justify-center gap-2 clay-fab active:scale-95 transition-transform disabled:opacity-50"
         >
           <span className="material-symbols-outlined text-[20px]">save</span>
           {busy ? "Menyimpan..." : "Simpan Konfigurasi"}

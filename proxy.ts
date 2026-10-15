@@ -32,7 +32,13 @@ export const config = {
      * mengarahkan permintaan ke halaman masuk, dan pemanggilnya menerima
      * HTML padahal meminta WASM. Mesin pemindai wajah lalu gagal memuat tanpa
      * pesan yang jelas, karena yang gagal bukan halamannya.
+     *
+     * Daftar jenis berkas di bawah wajib lengkap. Font ikon dilayani dari
+     * /public sebagai woff2; waktu woff2 belum ikut, middleware mengalihkannya
+     * dengan 307, browser gagal mendekode berkas itu, dan setiap ikon berubah
+     * menjadi teks nama ikon apa adanya. Nama-nama itu jauh lebih lebar
+     * daripada glifnya, jadi seluruh tata letak ikut bergeser.
      */
-    "/((?!_next/static|_next/image|favicon.ico|mediapipe|sw\\.js|manifest\\.json|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|wasm|task)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|mediapipe|sw\\.js|manifest\\.json|fonts/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|wasm|task|woff2|woff|ttf|otf|eot)$).*)",
   ],
 };

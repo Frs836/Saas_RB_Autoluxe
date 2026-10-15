@@ -207,3 +207,55 @@ export function canvasToWebp(
     );
   });
 }
+
+/**
+ * Membaca berkas gambar, memotongnya jadi persegi dari tengah, lalu
+ * mengompresnya menjadi WebP.
+ *
+ * Dipakai sebagai jalan keluar ketika kamera tidak bisa dibuka, misalnya di
+ * komputer tanpa kamera web, ketika izin kamera ditolak, atau ketika halaman
+ * dibuka lewat alamat IP yang bukan konteks aman. Hasilnya melewati pipeline yang sama
+ * dengan hasil jepretan kamera, jadi tidak ada jalur yang berbeda di sisi
+ * server.
+ */
+export async function fileToSquareWebp(
+  file: File,
+  size = 1024,
+  quality = 0.8,
+): Promise<Blob> {
+  if (!file.type.startsWith("image/")) {
+    throw new Error("Berkas yang dipilih bukan gambar.");
+  }
+
+  const url = URL.createObjectURL(file);
+  try {
+    const gambar = new Image();
+    gambar.decoding = "async";
+    await new Promise<void>((resolve, reject) => {
+      gambar.onload = () => resolve();
+      gambar.onerror = () =>
+        reject(new Error("Gambar tidak bisa dibaca, mungkin berkas rusak."));
+      gambar.src = url;
+    });
+
+    const w = gambar.naturalWidth;
+    const h = gambar.naturalHeight;
+    if (!w || !h) {
+      throw new Error("Gambar tidak memiliki ukuran yang terbaca.");
+    }
+
+    const sisi = Math.min(w, h);
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      throw new Error("Konteks kanvas tidak tersedia.");
+    }
+    ctx.drawImage(gambar, (w - sisi) / 2, (h - sisi) / 2, sisi, sisi, 0, 0, size, size);
+
+    return await canvasToWebp(canvas, quality);
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}

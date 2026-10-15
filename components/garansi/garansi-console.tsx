@@ -164,38 +164,48 @@ export function GaransiConsole({
             </span>
           </div>
 
-          <form onSubmit={onSubmit} className="flex flex-col gap-space-md">
-            <div className="flex flex-col gap-space-xs">
-              <label className="font-caption text-caption text-text-secondary">
-                Cari order (plat atau nomor order)
-              </label>
-              <form action="/garansi" method="get" className="flex gap-2">
-                <input
-                  type="search"
-                  name="q"
-                  defaultValue={search ?? ""}
-                  placeholder="B 1234 XYZ atau RBA-2026..."
-                  className="flex-1 h-11 px-3 rounded-xl bg-surface-container-low font-body-regular text-body-regular text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
-                />
-                <button
-                  type="submit"
-                  className="h-11 px-4 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center gap-1 active:scale-95 transition-transform"
-                >
-                  <span className="material-symbols-outlined text-[16px]">search</span>
-                  Cari
-                </button>
-              </form>
-              {search ? (
-                <button
-                  type="button"
-                  onClick={() => router.push("/garansi")}
-                  className="self-start font-micro-badge text-micro-badge text-brand-700"
-                >
-                  Bersihkan pencarian
-                </button>
-              ) : null}
-            </div>
+          {/*
+           * Formulir pencarian sengaja diletakkan di luar formulir klaim.
+           *
+           * Sebelumnya keduanya bersarang, yaitu form di dalam form.
+           * HTML tidak memperbolehkan itu, dan browser menutup formulir luar
+           * secara otomatis saat membaca HTML. Akibatnya pohon yang dibaca
+           * browser tidak sama dengan yang diharap React, sehingga muncul
+           * "A tree hydrated but some attributes of the server rendered HTML
+           * did not match" beserta error "cannot be a descendant of form".
+           */}
+          <div className="flex flex-col gap-space-xs">
+            <label className="font-caption text-caption text-text-secondary">
+              Cari order (plat atau nomor order)
+            </label>
+            <form action="/garansi" method="get" className="flex gap-2">
+              <input
+                type="search"
+                name="q"
+                defaultValue={search ?? ""}
+                placeholder="B 1234 XYZ atau RBA-2026..."
+                className="flex-1 h-11 px-3 rounded-xl bg-surface-container-low font-body-regular text-body-regular text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+              />
+              <button
+                type="submit"
+                className="h-11 px-4 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center gap-1 active:scale-95 transition-transform"
+              >
+                <span className="material-symbols-outlined text-[16px]">search</span>
+                Cari
+              </button>
+            </form>
+            {search ? (
+              <button
+                type="button"
+                onClick={() => router.push("/garansi")}
+                className="self-start font-micro-badge text-micro-badge text-brand-700"
+              >
+                Bersihkan pencarian
+              </button>
+            ) : null}
+          </div>
 
+          <form onSubmit={onSubmit} className="flex flex-col gap-space-md">
             <div className="flex flex-col gap-space-xs">
               <label className="font-caption text-caption text-text-secondary">
                 Pilih Order (Completed)

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { saveBranchSettings } from "@/app/actions/branch-settings";
 import {
@@ -45,6 +45,20 @@ function toForm(branch: BranchRecord): FormState {
   };
 }
 
+/** Nilai awal saat daftar cabang kosong, dipakai sekali lalu tidak lagi. */
+const FORM_KOSONG: BranchRecord = {
+  id: "",
+  name: "",
+  address: "",
+  latitude: null,
+  longitude: null,
+  radiusMeters: 30,
+  openTime: "07:30:00",
+  closeTime: "21:00:00",
+  staffCount: 0,
+  isActive: true,
+};
+
 export function BranchSettingsView({ branches, activeBranchId }: Props) {
   const router = useRouter();
   const initial =
@@ -72,17 +86,6 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
 
   const [busy, setBusy] = useState(false);
 
-  /*
-   * Setelah simpan berhasil, router.refresh() mengambil data cabang terbaru
-   * dari server. Tanpa efek ini, isian form tetap memakai nilai yang dipresa
-   * saat komponen pertama kali dibuat, jadi layar memperlihatkan angka lama
-   * walaupun database sudah berubah.
-   */
-  useEffect(() => {
-    if (!initial) return;
-    setForm(toForm(initial));
-  }, [initial]);
-
   const [feedback, setFeedback] = useState<{
     tone: "ok" | "error";
     text: string;
@@ -92,6 +95,21 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
     () => branches.find((b) => b.id === selectedId) ?? null,
     [branches, selectedId],
   );
+
+  /*
+   * Setelah simpan berhasil, router.refresh() mengambil data cabang terbaru
+   * dari server dan initial berubah. Isian form diselaraskan saat render,
+   * bukan di dalam efek.
+   *
+   * Pola adjusting state saat properti berubah inilah yang Recomendasi React
+   * sendiri: SetState di dalam efek memaksa render kedua, sedangkan
+   * penyelarasan ini hanya terjadi pada render yang memang sudah berjalan.
+   */
+  const [terakhir, setTerakhir] = useState<BranchRecord | null>(initial);
+  if (initial !== terakhir) {
+    setTerakhir(initial);
+    setForm(initial ? toForm(initial) : toForm(FORM_KOSONG));
+  }
 
   const latitude = form.latitude.trim() === "" ? null : Number(form.latitude);
   const longitude = form.longitude.trim() === "" ? null : Number(form.longitude);

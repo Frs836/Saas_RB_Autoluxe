@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/toast";
@@ -38,6 +38,7 @@ const LABEL_KATEGORI: Record<string, string> = {
   time_off: "Izin",
 };
 
+/** Mengubah waktu ISO menjadi keterangan relatif, hanya untuk sisi klien. */
 function waktuPendek(iso: string): string {
   const d = new Date(iso);
   const selisih = Date.now() - d.getTime();
@@ -47,6 +48,29 @@ function waktuPendek(iso: string): string {
   const jam = Math.floor(menit / 60);
   if (jam < 24) return `${jam} jam lalu`;
   return d.toLocaleDateString("id-ID", { day: "2-digit", month: "short" });
+}
+
+/*
+ * Waktu relatif memakai useSyncExternalStore, bukan useEffect.
+ *
+ * Nilai "3 menit lalu" bergantung pada jam sekarang. Kalau dihitung saat
+ * render biasa, server memakai jam server dan browser memakai jam perangkat.
+ * Selisih beberapa detik sudah cukup untuk membuat teks berganti dari
+ * "Baru saja" jadi "1 menit lalu", sehingga pohon hasil render server tidak
+ * sama dengan yang diharap React dan muncul galat hidrasi.
+ *
+ * useSyncExternalStore memang dirancang untuk kasus ini: snapshot di server
+ * dikembalikan kosong, snapshot di browser mengembalikan waktu sebenarnya.
+ * React memakai nilai server untuk render pertama lalu menukarnya setelah
+ * menempel, tanpa perlu setState di dalam efek.
+ */
+const SNAPSHOT_KOSONG = () => "";
+const TANPA_LANGGANAN = () => () => {};
+
+function WaktuRelatif({ iso }: { iso: string }) {
+  const snapshot = useCallback(() => waktuPendek(iso), [iso]);
+  const teks = useSyncExternalStore(TANPA_LANGGANAN, snapshot, SNAPSHOT_KOSONG);
+  return <>{teks}</>;
 }
 
 /**
@@ -227,7 +251,7 @@ export function NotificationList({
                     </span>
                   ) : null}
                   <span className="font-micro-badge text-micro-badge text-text-muted">
-                    {waktuPendek(b.created_at)}
+                    {<WaktuRelatif iso={b.created_at} />}
                   </span>
                 </span>
               </button>
@@ -312,7 +336,7 @@ function DetailNotifikasi({
         <div className="flex items-start justify-between gap-2">
           <div className="flex flex-col gap-1">
             <span className="font-micro-badge text-micro-badge text-text-muted">
-              {LABEL_KATEGORI[baris.category ?? ""] ?? "Umum"} - {waktuPendek(baris.created_at)}
+              {LABEL_KATEGORI[baris.category ?? ""] ?? "Umum"} - <WaktuRelatif iso={baris.created_at} />
             </span>
             <h2 className="font-headline-2 text-headline-2 text-text-primary">{baris.title}</h2>
           </div>

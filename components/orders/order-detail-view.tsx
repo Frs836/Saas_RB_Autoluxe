@@ -3,7 +3,7 @@
 import { useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatDateWib, formatRupiah, formatTimeWib } from "@/lib/format";
-import { canvasToWebp, captureSquareCanvas } from "@/lib/attendance";
+import { canvasToWebp, captureSquareCanvas, fileToSquareWebp } from "@/lib/attendance";
 import { createClient } from "@/lib/supabase/client";
 import { PAYMENT_LABELS } from "@/lib/pos";
 
@@ -131,6 +131,7 @@ export function OrderDetailView({
   const [phase, setPhase] = useState<PhaseKey>("before");
   const [notes, setNotes] = useState("");
   const [cameraOpen, setCameraOpen] = useState(false);
+  const [kameraGagal, setKameraGagal] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -164,7 +165,11 @@ export function OrderDetailView({
 
   const openCamera = useCallback(async () => {
     setError(null);
+    setKameraGagal(false);
     try {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error("Browser ini tidak mendukung kamera.");
+      }
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "environment" },
         audio: false,
@@ -177,8 +182,36 @@ export function OrderDetailView({
           void videoRef.current.play();
         }
       });
-    } catch {
-      setError("Kamera tidak dapat dibuka. Pastikan izin kamera diberikan.");
+    } catch (err) {
+      /*
+       * Kamera tidak selalu bisa dibuka: di komputer tanpa kamera web, saat
+       * izin ditolak, atau saat halaman dibuka lewat alamat IP yang bukan
+       * konteks aman. Sebelumnya kasus ini hanya menampilkan pesan galat dan
+       * membuat teknisi buntu tanpa jalan lain. Sekarang jendela tetap dibuka
+       * dengan pemilih berkas, dan alasannya disebutkan.
+       */
+      setKameraGagal(true);
+      setCameraOpen(true);
+      setError(
+        err instanceof Error && err.name === "NotAllowedError"
+          ? "Izin kamera ditolak. Pilih foto dari galeri di bawah, atau izinkan akses kamera lewat pengaturan browser lalu muat ulang halaman ini."
+          : "Kamera tidak dapat dibuka di perangkat ini. Pilih foto dari galeri di bawah sebagai pengganti.",
+      );
+    }
+  }, []);
+
+  /*
+   * Memilih foto dari berkas perangkat. Jalur ini selalu ada, jadi teknisi
+   * tidak pernah kehilangan cara mengirim foto hanya karena kamera bermasalah.
+   */
+  const pilihBerkas = useCallback(async (file: File) => {
+    setError(null);
+    try {
+      const blob = await fileToSquareWebp(file, 1024, 0.8);
+      photoBlobRef.current = blob;
+      setPreview(URL.createObjectURL(blob));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Gagal membaca berkas foto.");
     }
   }, []);
 
@@ -683,6 +716,20 @@ export function OrderDetailView({
               alt="Pratinjau foto inspeksi"
               className="w-full max-w-[420px] aspect-square object-cover rounded-3xl"
             />
+          ) : kameraGagal ? (
+            /*
+             * Kamera tidak hidup, dulu tampilkan kotak video hitam yang
+             * tidak pernah berisi apa pun dan tombol jepret yang tidak
+             * melakukan apa-apa. Sekarang jelas keadaannya.
+             */
+            <div className="w-full max-w-[420px] aspect-square rounded-3xl bg-white/10 flex flex-col items-center justify-center gap-2 px-gutter text-center">
+              <span className="material-symbols-outlined text-[40px] text-white/70">
+                no_photography
+              </span>
+              <span className="font-caption text-caption text-white/80">
+                Kamera tidak aktif. Pilih foto dari perangkat di bawah.
+              </span>
+            </div>
           ) : (
             <video
               ref={videoRef}
@@ -700,6 +747,7 @@ export function OrderDetailView({
             >
               Batal
             </button>
+
             {preview ? (
               <button
                 type="button"
@@ -710,15 +758,44 @@ export function OrderDetailView({
                 {busy ? "Menyimpan..." : "Simpan Foto"}
               </button>
             ) : (
-              <button
-                type="button"
-                onClick={capture}
-                disabled={busy}
-                aria-label="Ambil foto"
-                className="h-14 w-14 rounded-full bg-brand-500 text-white flex items-center justify-center clay-glow disabled:opacity-60"
-              >
-                <span className="material-symbols-outlined text-[28px]">photo_camera</span>
-              </button>
+              <>
+                {!kameraGagal ? (
+                  <button
+                    type="button"
+                    onClick={capture}
+                    disabled={busy}
+                    aria-label="Ambil foto"
+                    className="h-14 w-14 rounded-full bg-brand-500 text-white flex items-center justify-center clay-glow disabled:opacity-60"
+                  >
+                    <span className="material-symbols-outlined text-[28px]">
+                      photo_camera
+                    </span>
+                  </button>
+                ) : null}
+
+                {/*
+                 * Jalur kedua selalu ada. Atribut capture membuat perangkat
+                 * seluler membuka kamera, sementara di komputer ia membuka
+                 * pemilih berkas.
+                 */}
+                <label className="h-12 px-5 rounded-full bg-white/15 text-white font-body-bold text-body-bold flex items-center gap-2 cursor-pointer active:scale-95 transition-transform">
+                  <span className="material-symbols-outlined text-[20px]">
+                    photo_library
+                  </span>
+                  Pilih Foto
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    className="sr-only"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      e.target.value = "";
+                      if (file) void pilihBerkas(file);
+                    }}
+                  />
+                </label>
+              </>
             )}
           </div>
         </div>

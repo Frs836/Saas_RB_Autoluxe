@@ -53,5 +53,9 @@ opencode.json
 /test-results/
 /e2e-report.json
 /playwright-report/
-temp-next-start.logtemp-start.log
+temp-next-start.log
+temp-start.log
+temp-dev.log
 tmp-*.mjs
+tmp-*.webp
+tmp-*.png

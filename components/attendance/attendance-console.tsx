@@ -455,8 +455,8 @@ export function AttendanceConsole({
   const handleSubmit = useCallback(async () => {
     setError(null);
     setInfo(null);
-    if (!capturedBlob || !capturedDescriptor) {
-      setError("Ambil foto selfie terlebih dahulu.");
+    if (!capturedDescriptor) {
+      setError("Selesaikan pemindaian wajah terlebih dahulu.");
       return;
     }
     if (gps.status !== "success" || gps.lat === null || gps.lng === null) {
@@ -469,14 +469,6 @@ export function AttendanceConsole({
       );
       return;
     }
-    if (!insideRadius) {
-      setError(
-        `Anda berada ${formatDistance(distance)} dari cabang, di luar radius ${Math.round(
-          branch.radius,
-        )} meter.`,
-      );
-      return;
-    }
     if (mode === "checkin" && !lateReasonValid) {
       setError("Alasan keterlambatan wajib diisi minimal 5 karakter.");
       return;
@@ -484,7 +476,11 @@ export function AttendanceConsole({
 
     try {
       setBusy("submit");
-      const photoPath = await uploadPhoto(capturedBlob);
+      // Foto adalah lampiran bukti, bukan syarat. Kalau perangkat tidak
+      // menghasilkan berkas, absensi tetap dicatat dan kolom foto diisi null.
+      // Yang wajib ada adalah vektor wajah, karena itu yang dibandingkan
+      // server dengan sampel tersimpan.
+      const photoPath = capturedBlob ? await uploadPhoto(capturedBlob) : null;
       const supabase = createClient();
 
       // Yang dikirim adalah vektor hasil pindai, bukan angka kemiripan.
@@ -524,13 +520,10 @@ export function AttendanceConsole({
       setBusy(null);
     }
   }, [
-    branch.radius,
     branchConfigured,
     capturedBlob,
     capturedDescriptor,
-    distance,
     gps,
-    insideRadius,
     isLate,
     lateReason,
     lateReasonValid,

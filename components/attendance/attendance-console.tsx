@@ -213,10 +213,15 @@ export function AttendanceConsole({
         streamRef.current = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-          await videoRef.current.play().catch(() => undefined);
+          try {
+            await videoRef.current.play();
+            setCameraReady(true);
+            setCameraError(null);
+          } catch (playErr) {
+            const msg = playErr instanceof Error ? playErr.message : String(playErr);
+            setCameraError(`Kamera dinyalakan tapi gagal diputar: ${msg}`);
+          }
         }
-        setCameraReady(true);
-        setCameraError(null);
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         setCameraError(`Kamera tidak dapat diakses: ${message}`);

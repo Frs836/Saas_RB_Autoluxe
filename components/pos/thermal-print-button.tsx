@@ -41,15 +41,22 @@ export function ThermalPrintButton({
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    setSupport(bluetoothSupport());
-    void listPairedPrinters()
-      .then((found) => {
-        setPrinters(found);
-        if (found.length === 1) setSelectedId(found[0].id);
-      })
-      .catch(() => {
-        setPrinters([]);
-      });
+    let active = true;
+    // Dukungan Web Bluetooth adalah API peramban, jadi baru bisa dibaca setelah
+    // mount. Semua setState terjadi setelah await supaya tidak ada render
+    // berantai langsung di badan effect.
+    async function init() {
+      const supportInfo = bluetoothSupport();
+      const found = await listPairedPrinters().catch(() => [] as PrinterInfo[]);
+      if (!active) return;
+      setSupport(supportInfo);
+      setPrinters(found);
+      if (found.length === 1) setSelectedId(found[0].id);
+    }
+    void init();
+    return () => {
+      active = false;
+    };
   }, []);
 
   const pair = useCallback(async () => {

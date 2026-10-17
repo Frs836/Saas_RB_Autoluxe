@@ -118,7 +118,7 @@ export function CreateBranchPanel() {
           type="button"
           onClick={() => setBuka(false)}
           aria-label="Batal membuat cabang"
-          className="w-11 h-11 rounded-xl bg-clay-overlay flex items-center justify-center text-text-secondary active:scale-95 transition-transform"
+          className="w-11 h-11 rounded-xl bg-danger-surface flex items-center justify-center text-white active:scale-95 transition-transform"
         >
           <Icon name="close" className="text-[20px]" />
         </button>
@@ -152,7 +152,7 @@ export function CreateBranchPanel() {
         className={`h-12 px-3 rounded-xl flex items-center justify-between gap-3 ${
           pakaiTitik
             ? "bg-success-surface text-success-text"
-            : "bg-surface-container text-text-secondary"
+            : "bg-primary-gradient text-white"
         }`}
       >
         <span className="flex items-center gap-2 font-body text-body">

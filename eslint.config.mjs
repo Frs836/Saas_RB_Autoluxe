@@ -23,6 +23,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Vendor runtime (MediaPipe WASM, service worker, dsb): berkas pihak
+    // ketiga yang sudah diminifikasi, bukan kode aplikasi.
+    "public/**",
   ]),
 ]);
 

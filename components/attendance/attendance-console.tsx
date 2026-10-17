@@ -237,6 +237,17 @@ export function AttendanceConsole({
     };
   }, [scanDiminta]);
 
+  // Saat foto ditampilkan, elemen video dilepas dari DOM. Sambungkan kembali
+  // ke stream yang sama ketika staf memilih "ulangi" supaya kamera langsung
+  // hidup tanpa meminta ulang izin.
+  useEffect(() => {
+    const video = videoRef.current;
+    const stream = streamRef.current;
+    if (!video || !stream || video.srcObject === stream) return;
+    video.srcObject = stream;
+    void video.play().catch(() => undefined);
+  }, [capturedDataUrl]);
+
   // Mesin pemindai dimuat setelah kamera benar-benar hidup, bukan saat halaman
   // dibuka. Statusnya ditampilkan supaya menunggu 16 MB tidak terasa
   // seperti halaman yang macet.
@@ -873,42 +884,58 @@ export function AttendanceConsole({
                 alt="Pratinjau selfie absensi"
                 className="w-full h-full object-cover"
               />
-            ) : !scanDiminta ? (
-              /*
-               * Gerbang mulai pindai. Halaman tetap punya jam, riwayat, dan
-               * daftar syarat tanpa kamera menyala, jadi yang membuka
-               * absensi bukan pengganti dengan kamera yang menggantung.
-               */
-              <div className="w-full h-full flex flex-col items-center justify-center gap-3 px-6 text-center">
-                <Icon name="face" className="text-[36px] text-brand-200" />
-                <p className="font-caption text-caption text-white/80">
-                  Kamera menyala setelah kamu menekan tombol di bawah.
-                </p>
-              </div>
-            ) : !cameraReady ? (
-              <div className="w-full h-full flex flex-col items-center justify-center gap-3 px-6 text-center">
-                <Icon name="progress_activity" className="text-[36px] text-brand-200 animate-spin" />
-                <p className="font-caption text-caption text-white/80">
-                  Menyalakan kamera...
-                </p>
-              </div>
-            ) : !mesinSiap ? (
-              <div className="w-full h-full flex flex-col items-center justify-center gap-3 px-6 text-center">
-                <Icon name="downloading" className="text-[36px] text-brand-200 animate-spin" />
-                <p className="font-caption text-caption text-white/80">
-                  Memuat mesin pemindai wajah, sekitar 16 MB.
-                </p>
-                <p className="font-micro-badge text-micro-badge text-white/60">
-                  Hanya perlu sekali. Setelahnya tersimpan di perangkat.
-                </p>
-              </div>
             ) : (
-              <video
-                ref={videoRef}
-                playsInline
-                muted
-                className="w-full h-full object-cover -scale-x-100"
-              />
+              <>
+                {/*
+                 * Elemen video selalu terpasang, bukan hanya pada cabang
+                 * terakhir. Sebelumnya video baru dirender setelah cameraReady
+                 * true, padahal cameraReady hanya jadi true setelah play()
+                 * sukses, dan play() butuh elemen video yang sudah ada. Akibatnya
+                 * layar berhenti selamanya di "Menyalakan kamera...". Status
+                 * menunggu sekarang ditumpuk sebagai lapisan di atas video.
+                 */}
+                <video
+                  ref={videoRef}
+                  playsInline
+                  muted
+                  className="w-full h-full object-cover -scale-x-100"
+                />
+                {!scanDiminta ? (
+                  /*
+                   * Gerbang mulai pindai. Halaman tetap punya jam, riwayat, dan
+                   * daftar syarat tanpa kamera menyala, jadi yang membuka
+                   * absensi bukan pengganti dengan kamera yang menggantung.
+                   */
+                  <div className="absolute inset-0 bg-[#0F172A] flex flex-col items-center justify-center gap-3 px-6 text-center">
+                    <Icon name="face" className="text-[36px] text-brand-200" />
+                    <p className="font-caption text-caption text-white/80">
+                      Kamera menyala setelah kamu menekan tombol di bawah.
+                    </p>
+                  </div>
+                ) : !cameraReady ? (
+                  <div className="absolute inset-0 bg-[#0F172A] flex flex-col items-center justify-center gap-3 px-6 text-center">
+                    <Icon name="progress_activity" className="text-[36px] text-brand-200 animate-spin" />
+                    <p className="font-caption text-caption text-white/80">
+                      Menyalakan kamera...
+                    </p>
+                    {cameraError ? (
+                      <p className="font-micro-badge text-micro-badge text-amber-300">
+                        {cameraError}
+                      </p>
+                    ) : null}
+                  </div>
+                ) : !mesinSiap ? (
+                  <div className="absolute inset-0 bg-[#0F172A] flex flex-col items-center justify-center gap-3 px-6 text-center">
+                    <Icon name="downloading" className="text-[36px] text-brand-200 animate-spin" />
+                    <p className="font-caption text-caption text-white/80">
+                      Memuat mesin pemindai wajah, sekitar 16 MB.
+                    </p>
+                    <p className="font-micro-badge text-micro-badge text-white/60">
+                      Hanya perlu sekali. Setelahnya tersimpan di perangkat.
+                    </p>
+                  </div>
+                ) : null}
+              </>
             )}
 
             <div className="absolute top-3 left-3 bg-[#0F172A]/80 backdrop-blur-md px-2.5 py-1.5 rounded-full flex items-center gap-1.5 border border-white/10">

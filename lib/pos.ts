@@ -107,7 +107,9 @@ export function buildReceiptText(params: {
 }): string {
   const lines: string[] = [];
   lines.push("*RB AUTOLUXE*");
-  lines.push(params.branchName);
+  if (params.branchName && params.branchName.trim().toUpperCase() !== "RB AUTOLUXE") {
+    lines.push(params.branchName.trim());
+  }
   lines.push("");
   lines.push(`No. Order : ${params.orderNumber}`);
   lines.push(`Kendaraan : ${params.vehicleModel} (${params.size})`);

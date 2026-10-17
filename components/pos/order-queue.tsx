@@ -64,7 +64,7 @@ const STATUS_META: Record<
     icon: "local_shipping",
   },
   diserahkan: {
-    label: "Sudah Diserah",
+    label: "Sudah Diserahkan",
     cls: "bg-success-surface text-success-text",
     icon: "verified",
   },

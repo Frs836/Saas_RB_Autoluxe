@@ -57,6 +57,17 @@ for (const f of files) {
 
   // icon: "nama" di data menu
   for (const p of src.matchAll(/\bicon:\s*["'`]([a-z][a-z0-9_]*)["'`]/g)) nama.add(p[1]);
+
+  /*
+   * Objek/map bernama mengandung "icon" (mis. CATEGORY_ICONS, PAYMENT_ICONS).
+   * Nilainya nama ikon, tapi kuncinya bukan, jadi hanya nilai yang diambil.
+   * Tanpa blok ini, ikon dari map semacam ini lolos dan tampil kosong.
+   */
+  for (const blok of src.matchAll(
+    /(?:const|let|var)\s+([A-Za-z_$][\w$]*icon[A-Za-z_$]*)\s*(?::[^=]+)?=\s*\{([\s\S]*?)\n\};/gi,
+  )) {
+    for (const l of blok[2].matchAll(/["'`]([a-z][a-z0-9_]*)["'`]/g)) if (TAKEN.test(l[1])) nama.add(l[1]);
+  }
 }
 
 const daftar = [...nama].sort();

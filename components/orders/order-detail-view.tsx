@@ -79,7 +79,7 @@ const STATUS_META: Record<string, { label: string; cls: string; step: number }> 
    * lacak pelanggan menampilkan "Diproses" terus-menerus.
    */
   menunggu_diambil: { label: "Siap Diambil", cls: "bg-success-surface text-success-text", step: 4 },
-  diserahkan: { label: "Sudah Diserah", cls: "bg-success-surface text-success-text", step: 5 },
+  diserahkan: { label: "Sudah Diserahkan", cls: "bg-success-surface text-success-text", step: 5 },
   cancelled: { label: "Dibatalkan", cls: "bg-danger-surface text-danger-text", step: -1 },
 };
 
@@ -373,7 +373,7 @@ export function OrderDetailView({
   }
   if (order.status === "menunggu_diambil") {
     primaryActions.push({
-      label: "Kendaraan Sudah Diserah",
+      label: "Kendaraan Sudah Diserahkan",
       icon: "task_alt",
       status: "diserahkan",
       cls: "bg-success-base text-white",

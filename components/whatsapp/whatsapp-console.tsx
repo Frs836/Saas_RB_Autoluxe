@@ -52,7 +52,7 @@ const STATUS_LABEL: Record<string, string> = {
   // Dua status di bawah ada sejak migrasi 0030. Tanpa entri, pesan yang
   // dikirim ke pelanggan menuliskan status kosong.
   menunggu_diambil: "Siap Diambil",
-  diserahkan: "Sudah Diserah",
+  diserahkan: "Sudah Diserahkan",
   cancelled: "Dibatalkan",
 };
 
@@ -123,10 +123,14 @@ export function WhatsappConsole({
 
     const greeting = `Halo ${selected.customerName || "Pelanggan"},`;
     const trackUrl = `${origin.replace(/\/$/, "")}/track/${selected.trackingToken}`;
+    const header =
+      branchName && branchName.trim().toUpperCase() !== "RB AUTOLUXE"
+        ? `*RB AUTOLUXE* - ${branchName.trim()}`
+        : "*RB AUTOLUXE*";
 
     if (template === "nota") {
       const lines = [
-        `*RB AUTOLUXE* ${branchName}`,
+        header,
         greeting,
         "",
         `No. Order  : ${selected.orderNumber}`,
@@ -158,7 +162,7 @@ export function WhatsappConsole({
 
     if (template === "status") {
       return [
-        `*RB AUTOLUXE* ${branchName}`,
+        header,
         greeting,
         "",
         `Unit ${selected.licensePlate} (${selected.vehicleModel})`,
@@ -172,7 +176,7 @@ export function WhatsappConsole({
 
     if (template === "lacak") {
       return [
-        `*RB AUTOLUXE* ${branchName}`,
+        header,
         greeting,
         "",
         `Berikut tautan pelacakan pengerjaan unit ${selected.licensePlate}:`,
@@ -185,7 +189,7 @@ export function WhatsappConsole({
     if (template === "garansi") {
       if (!selected.warranty) {
         return [
-          `*RB AUTOLUXE* ${branchName}`,
+          header,
           greeting,
           "",
           `Layanan ${selected.servicePackage} pada order ${selected.orderNumber} tidak didukung sertifikat garansi.`,
@@ -195,7 +199,7 @@ export function WhatsappConsole({
       }
 
       return [
-        `*RB AUTOLUXE* ${branchName}`,
+        header,
         greeting,
         "",
         `Sertifikat garansi untuk order ${selected.orderNumber}:`,
@@ -212,7 +216,7 @@ export function WhatsappConsole({
     const claim = claimByOrderId.get(selected.id);
     if (!claim) {
       return [
-        `*RB AUTOLUXE* ${branchName}`,
+        header,
         greeting,
         "",
         "Kami belum menerima klaim untuk unit ini.",
@@ -223,7 +227,7 @@ export function WhatsappConsole({
     }
 
     return [
-      `*RB AUTOLUXE* ${branchName}`,
+      header,
       greeting,
       "",
       `Klaim Anda untuk unit ${selected.licensePlate} (order ${selected.orderNumber})`,

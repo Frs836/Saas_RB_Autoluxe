@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ChangeEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { formatRupiah } from "@/lib/format";
 import { ThermalPrintButton } from "@/components/pos/thermal-print-button";
@@ -15,6 +15,7 @@ import {
   VEHICLE_TYPES,
   buildReceiptText,
   isAvailableForSize,
+  isValidWaNumber,
   priceForSize,
   sizeLabel,
   whatsappLink,
@@ -28,6 +29,13 @@ import { Icon } from "@/components/ui/icon";
 type CartLine = { serviceId: string; qty: number };
 
 type TeamOption = { id: string; full_name: string };
+
+/*
+ * Kesalahan validasi checkout diikat ke field-nya. Sebelumnya hanya ada satu
+ * string error yang dicetak di bawah "Rincian Pesanan", jauh dari input yang
+ * bermasalah dan tidak hilang setelah field diperbaiki.
+ */
+type FieldProblem = { field: string; message: string };
 
 type PaymentState = "paid" | "unpaid";
 
@@ -78,6 +86,7 @@ export function PosConsole({
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldError, setFieldError] = useState<FieldProblem | null>(null);
   const [result, setResult] = useState<OrderResult | null>(null);
 
   const effSize: VehicleSize = vehicleType === "motor" ? "Motor" : size;
@@ -171,21 +180,48 @@ export function PosConsole({
     setStep("catalog");
   }
 
-  function validate(): string | null {
-    if (resolved.length === 0) return "Belum ada layanan yang dipilih.";
-    if (licensePlate.trim() === "") return "Nomor plat kendaraan wajib diisi.";
-    if (vehicleModel.trim() === "") return "Model kendaraan wajib diisi.";
-    if (customerName.trim() === "") return "Nama pelanggan wajib diisi.";
-    if (customerPhone.trim() === "") return "Nomor WhatsApp wajib diisi.";
+  function validate(): FieldProblem | null {
+    if (resolved.length === 0)
+      return { field: "cart", message: "Belum ada layanan yang dipilih." };
+    if (licensePlate.trim() === "")
+      return { field: "licensePlate", message: "Nomor plat kendaraan wajib diisi." };
+    if (vehicleModel.trim() === "")
+      return { field: "vehicleModel", message: "Model kendaraan wajib diisi." };
+    if (customerName.trim() === "")
+      return { field: "customerName", message: "Nama pelanggan wajib diisi." };
+    if (customerPhone.trim() === "")
+      return { field: "customerPhone", message: "Nomor WhatsApp wajib diisi." };
+    if (!isValidWaNumber(customerPhone))
+      return {
+        field: "customerPhone",
+        message: "Nomor WhatsApp tidak valid. Contoh yang benar: 08123456789.",
+      };
     return null;
   }
 
+  // Setiap pengetikan menghapus penanda salah pada field itu, sehingga pesan
+  // tidak tertinggal setelah pengguna memperbaiki isian.
+  const ubahTeks =
+    (field: string, setter: (value: string) => void) =>
+    (e: ChangeEvent<HTMLInputElement>) => {
+      setter(e.target.value);
+      setFieldError((prev) => (prev?.field === field ? null : prev));
+    };
+
   async function submitOrder() {
-    const validationError = validate();
-    if (validationError) {
-      setError(validationError);
+    const problem = validate();
+    if (problem) {
+      // Masalah keranjang tidak punya input di layar ini, jadi tetap dicetak
+      // sebagai banner. Sisanya tampil tepat di bawah field yang bermasalah.
+      if (problem.field === "cart") {
+        setError(problem.message);
+      } else {
+        setFieldError(problem);
+        setError(null);
+      }
       return;
     }
+    setFieldError(null);
     setError(null);
     setSubmitting(true);
     try {
@@ -491,10 +527,17 @@ export function PosConsole({
                 </span>
                 <input
                   value={licensePlate}
-                  onChange={(e) => setLicensePlate(e.target.value)}
+                  onChange={ubahTeks("licensePlate", setLicensePlate)}
                   placeholder="B 1234 XYZ"
-                  className="h-12 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary uppercase outline-none focus:ring-2 focus:ring-brand-400"
+                  className={`h-12 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary uppercase outline-none focus:ring-2 focus:ring-brand-400 ${
+                    fieldError?.field === "licensePlate" ? "ring-2 ring-danger-base" : ""
+                  }`}
                 />
+                {fieldError?.field === "licensePlate" ? (
+                  <span className="font-caption text-caption text-danger-text">
+                    {fieldError.message}
+                  </span>
+                ) : null}
               </label>
               <label className="flex flex-col gap-1">
                 <span className="font-caption text-caption text-text-muted">
@@ -502,10 +545,17 @@ export function PosConsole({
                 </span>
                 <input
                   value={vehicleModel}
-                  onChange={(e) => setVehicleModel(e.target.value)}
+                  onChange={ubahTeks("vehicleModel", setVehicleModel)}
                   placeholder="Avanza"
-                  className="h-12 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+                  className={`h-12 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400 ${
+                    fieldError?.field === "vehicleModel" ? "ring-2 ring-danger-base" : ""
+                  }`}
                 />
+                {fieldError?.field === "vehicleModel" ? (
+                  <span className="font-caption text-caption text-danger-text">
+                    {fieldError.message}
+                  </span>
+                ) : null}
               </label>
             </div>
             <div className="flex items-center gap-2 text-text-secondary font-caption text-caption">
@@ -530,10 +580,17 @@ export function PosConsole({
               </span>
               <input
                 value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
+                onChange={ubahTeks("customerName", setCustomerName)}
                 placeholder="Nama pelanggan"
-                className="h-12 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+                className={`h-12 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400 ${
+                  fieldError?.field === "customerName" ? "ring-2 ring-danger-base" : ""
+                }`}
               />
+              {fieldError?.field === "customerName" ? (
+                <span className="font-caption text-caption text-danger-text">
+                  {fieldError.message}
+                </span>
+              ) : null}
             </label>
             <label className="flex flex-col gap-1">
               <span className="font-caption text-caption text-text-muted">
@@ -541,11 +598,18 @@ export function PosConsole({
               </span>
               <input
                 value={customerPhone}
-                onChange={(e) => setCustomerPhone(e.target.value)}
+                onChange={ubahTeks("customerPhone", setCustomerPhone)}
                 inputMode="tel"
                 placeholder="08123456789"
-                className="h-12 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+                className={`h-12 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400 ${
+                  fieldError?.field === "customerPhone" ? "ring-2 ring-danger-base" : ""
+                }`}
               />
+              {fieldError?.field === "customerPhone" ? (
+                <span className="font-caption text-caption text-danger-text">
+                  {fieldError.message}
+                </span>
+              ) : null}
             </label>
           </section>
 

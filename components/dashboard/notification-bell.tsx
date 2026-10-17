@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Icon } from "@/components/ui/icon";
 
@@ -22,12 +22,32 @@ import { Icon } from "@/components/ui/icon";
 export function NotificationBell() {
   const router = useRouter();
   const [belum, setBelum] = useState(0);
+  const idProfil = useRef<string | null>(null);
 
   const muatJumlah = useCallback(async () => {
     const supabase = createClient();
+
+    // Lencana menghitung notifikasi MILIK pengguna ini. Id profil diambil
+    // sekali lalu disimpan, supaya panggilan berulang (realtime, kembali ke
+    // tab) tidak menambah permintaan jaringan.
+    if (!idProfil.current) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: profil } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("auth_id", user.id)
+        .maybeSingle();
+      if (!profil?.id) return;
+      idProfil.current = profil.id as string;
+    }
+
     const { data, error } = await supabase
       .from("notifications")
       .select("id, is_read")
+      .eq("recipient_id", idProfil.current)
       .eq("is_read", false);
 
     // Kegagalan tidak mengubah lencana. Menampilkan angka nol saat query

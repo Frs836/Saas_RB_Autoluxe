@@ -18,10 +18,13 @@ export default async function NotificationPage() {
   const supabase = await createClient();
 
   // Notifikasi diambil di server supaya halaman sudah terisi saat dibuka.
-  // Diperoleh 60 baris terbaru; sisanya bisa dicari lewat filter unread.
+  // Difilter eksplisit ke penerima supaya tidak bergantung pada RLS saja:
+  // policy lama sempat memberi owner, admin kasir, dan maintainer akses ke
+  // notifikasi seluruh pengguna.
   const { data, error } = await supabase
     .from("notifications")
     .select("id, title, body, category, is_read, payload, created_at")
+    .eq("recipient_id", session.id)
     .order("created_at", { ascending: false })
     .limit(60);
 

@@ -81,6 +81,19 @@ export function normalizeWaNumber(input: string | null | undefined): string {
   return digits;
 }
 
+/*
+ * Nomor WhatsApp Indonesia yang wajar setelah dinormalkan ke awalan 62.
+ *
+ * Panjang seluler Indonesia adalah 10-13 digit lokal (08 + 8 s/d 11 angka).
+ * Setelah awalan 0 diganti 62, polanya menjadi 628 + 8..11 angka. Nomor
+ * seperti 08541236215421 (14 digit lokal) hampir pasti salah ketik, dan tanpa
+ * pemeriksaan ini ia tersimpan apa adanya lalu tautan lacak/nota dikirim ke
+ * nomor yang salah.
+ */
+export function isValidWaNumber(input: string | null | undefined): boolean {
+  return /^628\d{8,11}$/.test(normalizeWaNumber(input));
+}
+
 export function formatAngka(value: number): string {
   return Number(value ?? 0).toLocaleString("id-ID");
 }

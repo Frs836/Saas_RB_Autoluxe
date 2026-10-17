@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { formatRupiah, formatTimeWib, initials } from "@/lib/format";
@@ -62,6 +63,7 @@ export function ShiftConsole({
   const [history, setHistory] = useState<HistoryRow[]>([]);
   const [historyPending, setHistoryPending] = useState(false);
   const [nowClock, setNowClock] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const id = window.setTimeout(() => setNowClock(formatTimeWib(new Date())), 0);
@@ -213,11 +215,16 @@ export function ShiftConsole({
         hash,
       });
       setInfo("Audit shift berhasil ditutup. Bukti serah terima siap dicetak.");
+      // Segarkan data server supaya badge status shift di header ikut berubah
+      // dari "Aktif" menjadi "Selesai". router.refresh() mempertahankan kartu
+      // bukti (state `success`) yang sedang tampil, sedangkan reload penuh
+      // akan menghapusnya.
+      router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Gagal menutup audit shift.");
       setBusy(null);
     }
-  }, [expectedOpen, handoff, notes, notesRequired, parseAmount, physical]);
+  }, [expectedOpen, handoff, notes, notesRequired, parseAmount, physical, router]);
 
   return (
     <div className="flex flex-col w-full pb-nav print:hidden">

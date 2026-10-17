@@ -35,6 +35,12 @@ export default async function GaransiPage({
     "id, order_number, customer_name, license_plate, total_price, completed_at";
   const BASE_LIMIT = 200;
 
+  // Garansi diterbitkan saat QC disetujui (status "completed"), lalu order
+  // berpindah ke "menunggu_diambil" dan "diserahkan". Daftar klaim harus
+  // mencakup ketiganya; kalau hanya "completed" yang diambil, modul klaim
+  // tampak kosong padahal order sudah diserahkan dan garansinya aktif.
+  const SERVED_STATUSES = ["completed", "menunggu_diambil", "diserahkan"];
+
   type CompletedOrder = {
     id: string;
     order_number: string;
@@ -55,7 +61,7 @@ export default async function GaransiPage({
         branchId,
         "orders",
       )
-        .eq("status", "completed")
+        .in("status", SERVED_STATUSES)
         .ilike("license_plate", `%${search}%`)
         .order("completed_at", { ascending: false })
         .limit(BASE_LIMIT),
@@ -64,7 +70,7 @@ export default async function GaransiPage({
         branchId,
         "orders",
       )
-        .eq("status", "completed")
+        .in("status", SERVED_STATUSES)
         .ilike("order_number", `%${search}%`)
         .order("completed_at", { ascending: false })
         .limit(BASE_LIMIT),
@@ -84,7 +90,7 @@ export default async function GaransiPage({
       branchId,
       "orders",
     )
-      .eq("status", "completed")
+      .in("status", SERVED_STATUSES)
       .order("completed_at", { ascending: false })
       .limit(BASE_LIMIT);
     orderRows = (recent.data ?? []) as CompletedOrder[];

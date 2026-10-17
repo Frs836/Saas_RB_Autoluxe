@@ -578,7 +578,7 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
        * Sekarang posisinya di atas navigasi dengan z yang lebih rendah
        * supaya navigasi tetap di atas dan tidak pernah menutupinya.
        */}
-      <div className="fixed bottom-nav-offset left-0 right-0 z-action-bar px-gutter pb-3 pt-3">
+      <div className="fixed bottom-nav-offset left-0 right-0 z-action-bar px-gutter pb-3 pt-3 bg-surface/95 backdrop-blur-md border-t border-outline-variant">
         {feedback ? (
           <p
             className={`mb-2 p-2 rounded-xl font-caption text-caption ${

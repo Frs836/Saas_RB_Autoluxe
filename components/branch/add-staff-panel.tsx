@@ -91,7 +91,7 @@ export function AddStaffPanel({
       <button
         type="button"
         onClick={() => setBuka(true)}
-        className="w-full h-12 px-4 rounded-xl bg-primary-gradient text-white font-body-bold text-body-bold flex items-center justify-center gap-2 clay-fab active:scale-[0.98] transition-transform"
+        className="w-full h-12 px-4 rounded-xl primary-gradient text-on-primary font-body-bold text-body-bold flex items-center justify-center gap-2 clay-fab active:scale-[0.98] transition-transform"
       >
         <Icon name="person_add" className="text-[20px]" />
         Tambah Staf
@@ -103,7 +103,7 @@ export function AddStaffPanel({
     "w-full h-12 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400";
 
   return (
-    <div className="clay-card p-4 flex flex-col gap-3">
+    <div className="clay-card bg-surface p-4 flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <h3 className="font-headline-3 text-headline-3 text-text-primary">
           Akun Staf Baru

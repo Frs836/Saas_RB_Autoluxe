@@ -304,7 +304,7 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
               key={branch.id}
               type="button"
               onClick={() => pickBranch(branch.id)}
-              className={`px-3 py-2 rounded-xl font-caption text-caption whitespace-nowrap flex items-center gap-1 ${
+              className={`px-3 py-2 min-h-10 rounded-xl font-caption text-caption whitespace-nowrap flex items-center gap-1 ${
                 branch.id === selectedId
                   ? "bg-brand-50 text-brand-700"
                   : "bg-surface-container-low text-text-secondary"
@@ -372,7 +372,7 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
             role="switch"
             aria-checked={form.setCoordinates}
             onClick={() => setForm((f) => ({ ...f, setCoordinates: !f.setCoordinates }))}
-            className={`h-8 px-3 rounded-full font-caption text-caption flex items-center gap-1 ${
+            className={`h-10 px-3 rounded-full font-caption text-caption flex items-center gap-1 ${
               form.setCoordinates
                 ? "bg-success-surface text-success-text"
                 : "bg-surface-container text-text-secondary"
@@ -497,7 +497,7 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
                   href={mapLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="self-start mt-1 font-caption text-caption text-brand-600 flex items-center gap-1"
+                  className="self-start mt-1 min-h-10 font-caption text-caption text-brand-600 flex items-center gap-1"
                 >
                   <Icon name="map" className="text-[15px]" />
                   Buka di Google Maps

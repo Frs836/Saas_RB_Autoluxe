@@ -195,7 +195,7 @@ export function NotificationList({
             key={nilai}
             type="button"
             onClick={() => setSaring(nilai)}
-            className={`px-3 h-9 rounded-full font-caption text-caption ${
+            className={`px-3 h-10 rounded-full font-caption text-caption ${
               saring === nilai
                 ? "bg-primary text-white"
                 : "bg-surface-container-low text-text-secondary"

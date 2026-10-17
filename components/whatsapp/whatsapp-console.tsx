@@ -283,7 +283,7 @@ export function WhatsappConsole({
                 key={tpl.key}
                 type="button"
                 onClick={() => setTemplate(tpl.key)}
-                className={`px-3 py-2 rounded-xl font-caption text-caption whitespace-nowrap flex items-center gap-1 ${
+                className={`px-3 py-2 min-h-10 rounded-xl font-caption text-caption whitespace-nowrap flex items-center gap-1 ${
                   template === tpl.key
                     ? "bg-brand-50 text-brand-600"
                     : "bg-surface-container-low text-text-secondary"

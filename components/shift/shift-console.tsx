@@ -506,7 +506,7 @@ function BukaKasForm({
                 key={value}
                 type="button"
                 onClick={() => add(value)}
-                className="h-8 px-2.5 rounded-full bg-surface border border-border-strong text-text-secondary font-caption text-caption active:scale-95 transition-transform"
+                className="h-10 px-3 rounded-full bg-surface border border-border-strong text-text-secondary font-caption text-caption active:scale-95 transition-transform"
               >
                 +{formatRupiah(value)}
               </button>
@@ -515,7 +515,7 @@ function BukaKasForm({
               <button
                 type="button"
                 onClick={() => setOpening("")}
-                className="h-8 px-2.5 rounded-full bg-danger-surface text-danger-text font-caption text-caption active:scale-95 transition-transform"
+                className="h-10 px-3 rounded-full bg-danger-surface text-danger-text font-caption text-caption active:scale-95 transition-transform"
               >
                 Bersihkan
               </button>
@@ -703,7 +703,7 @@ function AuditForm({
                 key={value}
                 type="button"
                 onClick={() => add(value)}
-                className="h-8 px-2.5 rounded-full bg-surface border border-border-strong text-text-secondary font-caption text-caption active:scale-95 transition-transform"
+                className="h-10 px-3 rounded-full bg-surface border border-border-strong text-text-secondary font-caption text-caption active:scale-95 transition-transform"
               >
                 +{formatRupiah(value)}
               </button>
@@ -712,7 +712,7 @@ function AuditForm({
               <button
                 type="button"
                 onClick={() => setPhysical("")}
-                className="h-8 px-2.5 rounded-full bg-danger-surface text-danger-text font-caption text-caption active:scale-95 transition-transform"
+                className="h-10 px-3 rounded-full bg-danger-surface text-danger-text font-caption text-caption active:scale-95 transition-transform"
               >
                 Bersihkan
               </button>

@@ -155,7 +155,7 @@ export function BranchSwitcher({ branches, activeBranchId, scope, variant, onErr
                   role="option"
                   aria-selected={active}
                   onClick={() => pick(branch.id)}
-                  className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-left font-caption text-caption ${
+                  className={`flex items-center gap-2 px-3 py-2.5 min-h-10 rounded-xl text-left font-caption text-caption ${
                     active
                       ? "bg-brand-50 text-brand-700"
                       : "text-text-secondary hover:bg-surface-container-low"
@@ -174,7 +174,7 @@ export function BranchSwitcher({ branches, activeBranchId, scope, variant, onErr
 
             <a
               href="/pengaturan/cabang"
-              className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-left font-caption text-caption text-text-secondary hover:bg-surface-container-low"
+              className="flex items-center gap-2 px-3 py-2.5 min-h-10 rounded-xl text-left font-caption text-caption text-text-secondary hover:bg-surface-container-low"
             >
               <Icon name="tune" className="text-[16px]" />
               Pengaturan Cabang

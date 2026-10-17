@@ -12,6 +12,8 @@ export function RegisterForm() {
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -31,6 +33,23 @@ export function RegisterForm() {
       setError("Email wajib diisi.");
       return;
     }
+    const digitPhone = phone.replace(/\D/g, "");
+    const normalizedPhone = digitPhone.startsWith("0")
+      ? `62${digitPhone.slice(1)}`
+      : digitPhone;
+    if (!/^628\d{8,11}$/.test(normalizedPhone)) {
+      setError("Nomor WhatsApp tidak valid. Contoh: 0812 3456 7890.");
+      return;
+    }
+    if (!dateOfBirth) {
+      setError("Tanggal lahir wajib diisi.");
+      return;
+    }
+    const tanggalLahir = new Date(`${dateOfBirth}T00:00:00`);
+    if (Number.isNaN(tanggalLahir.getTime()) || tanggalLahir > new Date()) {
+      setError("Tanggal lahir tidak valid.");
+      return;
+    }
     if (password.length < 8) {
       setError("Kata sandi minimal 8 karakter.");
       return;
@@ -45,7 +64,11 @@ export function RegisterForm() {
       email: email.trim(),
       password,
       options: {
-        data: { full_name: fullName.trim() },
+        data: {
+          full_name: fullName.trim(),
+          phone_number: normalizedPhone,
+          date_of_birth: dateOfBirth,
+        },
         emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
       },
     });
@@ -143,6 +166,53 @@ export function RegisterForm() {
             onChange={(event) => setEmail(event.target.value)}
             className="w-full h-12 pl-11 pr-4 rounded-xl bg-slate-50 text-text-primary font-body-regular text-body-regular placeholder:text-text-muted focus:outline-none focus:bg-white focus:shadow-md transition-all duration-200"
             placeholder="nama@rbautoluxe.id"
+          />
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <label
+          className="font-body-bold text-body-bold text-text-primary text-xs tracking-wide uppercase"
+          htmlFor="reg-phone"
+        >
+          Nomor WhatsApp
+        </label>
+        <div className="relative flex items-center">
+          <div className="absolute left-3.5 flex items-center pointer-events-none text-outline">
+            <Icon name="chat" className="text-[20px]" />
+          </div>
+          <input
+            id="reg-phone"
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            value={phone}
+            onChange={(event) => setPhone(event.target.value)}
+            className="w-full h-12 pl-11 pr-4 rounded-xl bg-slate-50 text-text-primary font-body-regular text-body-regular placeholder:text-text-muted focus:outline-none focus:bg-white focus:shadow-md transition-all duration-200"
+            placeholder="0812 3456 7890"
+          />
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <label
+          className="font-body-bold text-body-bold text-text-primary text-xs tracking-wide uppercase"
+          htmlFor="reg-dob"
+        >
+          Tanggal Lahir
+        </label>
+        <div className="relative flex items-center">
+          <div className="absolute left-3.5 flex items-center pointer-events-none text-outline">
+            <Icon name="calendar_month" className="text-[20px]" />
+          </div>
+          <input
+            id="reg-dob"
+            type="date"
+            autoComplete="bday"
+            max={new Date().toISOString().slice(0, 10)}
+            value={dateOfBirth}
+            onChange={(event) => setDateOfBirth(event.target.value)}
+            className="w-full h-12 pl-11 pr-4 rounded-xl bg-slate-50 text-text-primary font-body-regular text-body-regular placeholder:text-text-muted focus:outline-none focus:bg-white focus:shadow-md transition-all duration-200"
           />
         </div>
       </div>

@@ -5,7 +5,6 @@ import {
   type StaffSchedule,
 } from "@/components/branch/staff-schedule-view";
 import { requirePermission, scopedBranchId } from "@/lib/rbac-guard";
-import { AddStaffPanel } from "@/components/branch/add-staff-panel";
 import { createClient } from "@/lib/supabase/server";
 
 export const instant = false;
@@ -122,8 +121,6 @@ export default async function StaffSchedulePage() {
             kantorPulang: jamKantorPulang,
           }}
           bisaUbah={Boolean(cabang)}
-          cabangId={cabangId}
-          bisaBuatMaintainer={session.role === "owner"}
         />
       </main>
       <BottomNav role={session.role} />

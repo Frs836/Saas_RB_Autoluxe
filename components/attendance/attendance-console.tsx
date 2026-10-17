@@ -92,6 +92,10 @@ export function AttendanceConsole({
 }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  // Penjaga agar ambil foto dan kirim absen otomatis hanya berjalan sekali per
+  // sesi pindai, sehingga tidak ada loop kirim saat render ulang.
+  const autoCaptureRef = useRef(false);
+  const autoSubmitRef = useRef(false);
 
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
@@ -415,6 +419,8 @@ export function AttendanceConsole({
     setLiveSelesai(false);
     setLiveTahap("center");
     setLiveTerpenuhi([]);
+    autoCaptureRef.current = false;
+    autoSubmitRef.current = false;
   }, []);
 
   const uploadPhoto = useCallback(async (blob: Blob): Promise<string> => {
@@ -601,20 +607,20 @@ export function AttendanceConsole({
    * tetap bingung kenapa tombolnya tidak bisa ditekan.
    */
   /*
-   * Syarat sebelum tombol kirim aktif.
+   * Syarat sebelum tombol kirim aktif. Tombol ini hanya cadangan: alur normal
+   * sudah mengirim otomatis begitu semua data lengkap.
    *
    * Dua hal tidak lagi menjadi syarat:
    *
-   * Ambil foto. Toutinya sudah dibuktikan oleh lima tahap liveness, yaitu
+   * Ambil foto. Wajah sudah dibuktikan oleh lima tahap liveness, yaitu
    * hadap lurus, kedip, buka mulut, putar kiri, dan putar kanan. Foto
-   * tambahan tidak menambah apa pun dan hanya menambah satu langkah yang harus
-   * dilewati setiap kali absen.
+   * diambil otomatis setelah liveness selesai, jadi tidak ada langkah manual.
    *
    * Dekati cabang. Banyak staf melayani home service di rumah pelanggan, jadi
    * mereka memang absen dari luar workshop. Lokasi tetap dicatat supaya
    * managerial bisa melihat, tapi tidak lagi memblokir check-in maupun
    * check-out. Server juga sudah tidak menolak, dan kolom outside_radius
- * menandai absen mana yang dilakukan dari luar.
+   * menandai absen mana yang dilakukan dari luar.
    */
   const syaratSubmit: Syarat[] = [
     {
@@ -629,10 +635,10 @@ export function AttendanceConsole({
           : "Tunggu lokasi GPS terdeteksi",
     },
     {
-      terpenuhi: mode === "checkout" || liveSelesai,
+      terpenuhi: liveSelesai,
       label:
         mode === "checkout"
-          ? "Liveness hanya diperlukan saat check-in"
+          ? "Selesaikan lima tahap liveness untuk absen keluar"
           : "Selesaikan lima tahap liveness",
     },
     {
@@ -644,6 +650,58 @@ export function AttendanceConsole({
   ];
 
   const canSubmit = syaratSubmit.every((s) => s.terpenuhi);
+
+  /*
+   * Foto diambil otomatis begitu lima tahap liveness selesai. Tombol "Ambil
+   * Foto" dihapus supaya wajah tidak lagi butuh aksi manual; foto hanya
+   * formalitas bukti, sedangkan yang menentukan lulus adalah vektor wajah
+   * yang dibandingkan server.
+   */
+  useEffect(() => {
+    if (autoCaptureRef.current) return;
+    if (!scanDiminta || !cameraReady || !mesinSiap) return;
+    if (!liveSelesai || capturedBlob || busy !== null) return;
+    autoCaptureRef.current = true;
+    // Ditunda satu putaran render supaya status "Menyiapkan data absen..."
+    // sempat tampil sebelum setState dari proses ambil foto dijalankan.
+    setTimeout(() => {
+      void handleCapture();
+    }, 250);
+  }, [
+    scanDiminta,
+    cameraReady,
+    mesinSiap,
+    liveSelesai,
+    capturedBlob,
+    busy,
+    handleCapture,
+  ]);
+
+  /*
+   * Absen dikirim otomatis setelah data lengkap: wajah tersimpan, GPS terbaca,
+   * dan alasan keterlambatan terisi bila staf telat. Tombol kirim di bagian
+   * bawah tetap ada sebagai cadangan bila proses otomatis gagal.
+   */
+  useEffect(() => {
+    if (autoSubmitRef.current) return;
+    if (busy !== null) return;
+    if (!capturedDescriptor) return;
+    if (gps.status !== "success") return;
+    if (!branchConfigured) return;
+    if (mode === "checkin" && !lateReasonValid) return;
+    autoSubmitRef.current = true;
+    setTimeout(() => {
+      void handleSubmit();
+    }, 150);
+  }, [
+    capturedDescriptor,
+    gps.status,
+    branchConfigured,
+    mode,
+    lateReasonValid,
+    busy,
+    handleSubmit,
+  ]);
 
   /*
    * Keterangan lokasi. Ini informasi, bukan syarat.
@@ -1070,7 +1128,8 @@ export function AttendanceConsole({
             </div>
           ) : null}
 
-            {/* Kontrol ambil foto */}
+            {/* Kontrol pindai. Tidak ada tombol ambil foto: foto diambil
+                otomatis setelah liveness selesai. */}
             <div className="flex items-center justify-center gap-3">
               {!scanDiminta ? (
                 <button
@@ -1078,9 +1137,17 @@ export function AttendanceConsole({
                   onClick={() => setScanDiminta(true)}
                   className="h-12 px-6 rounded-full primary-gradient text-white font-body-bold text-body-bold flex items-center gap-2 clay-glow active:scale-95 transition-transform"
                 >
-                  <Icon name="photo_camera" className="text-[18px]" />
-                  Mulai Pindai Wajah
+                  <Icon
+                    name={mode === "checkout" ? "logout" : "photo_camera"}
+                    className="text-[18px]"
+                  />
+                  {mode === "checkout" ? "Selesai Kerja" : "Mulai Pindai Wajah"}
                 </button>
+              ) : busy === "submit" ? (
+                <p className="font-caption text-caption text-text-secondary flex items-center gap-2">
+                  <Icon name="progress_activity" className="text-[18px] animate-spin" />
+                  Menyimpan absen otomatis...
+                </p>
               ) : capturedDataUrl ? (
                 <button
                   type="button"
@@ -1089,22 +1156,17 @@ export function AttendanceConsole({
                   className="h-11 px-5 rounded-full bg-surface-container-low text-text-secondary font-caption text-caption flex items-center gap-1.5 active:scale-95 transition-transform disabled:opacity-50"
                 >
                   <Icon name="restart_alt" className="text-[18px]" />
-                  Ulangi Foto
+                  Ulangi
                 </button>
               ) : (
-                <button
-                  type="button"
-                  onClick={handleCapture}
-                  disabled={!cameraReady || !mesinSiap || busy !== null}
-                  className="h-11 px-5 rounded-full primary-gradient text-white font-body-bold text-body-bold flex items-center gap-1.5 active:scale-95 transition-transform disabled:opacity-50"
-                >
-                  <Icon name="download" className="text-[18px]" />
+                <p className="font-caption text-caption text-text-secondary flex items-center gap-2 text-center">
+                  <Icon name="progress_activity" className="text-[18px] animate-spin" />
                   {busy === "capture"
-                    ? "Memproses..."
-                    : !mesinSiap
-                      ? "Menyiapkan..."
-                      : "Ambil Foto"}
-                </button>
+                    ? "Mengambil foto otomatis..."
+                    : liveSelesai
+                      ? "Menyiapkan data absen..."
+                      : "Ikuti lima tahap liveness, foto diambil otomatis."}
+                </p>
               )}
             </div>
 
@@ -1287,28 +1349,28 @@ export function AttendanceConsole({
           </button>
         ) : null}
 
-        {mode !== "done" ? (
+        {mode === "done" ? (
+          <div className="w-full h-[50px] rounded-full bg-success-surface text-success-text font-body-bold text-body-bold flex items-center justify-center gap-2.5">
+            <Icon name="verified" className="text-[22px]" />
+            Absensi hari ini sudah lengkap
+          </div>
+        ) : error ? (
           <button
             type="button"
             onClick={handleSubmit}
             disabled={!canSubmit || busy !== null}
             className="w-full h-[50px] rounded-full primary-gradient text-white font-bold text-[14px] flex items-center justify-center gap-2.5 clay-glow active:scale-[0.98] transition-all disabled:opacity-60"
           >
-            <Icon name={mode === "checkout" ? "logout" : "photo_camera"} className="text-[22px]" />
+            <Icon name="restart_alt" className="text-[22px]" />
             <span className="tracking-wide uppercase">
               {busy === "submit"
                 ? "Mengirim..."
                 : mode === "checkout"
-                  ? "Kirim Check-Out (Face ID)"
-                  : "Ambil Absen & Kirim Data (Face ID)"}
+                  ? "Coba Kirim Check-Out Lagi"
+                  : "Coba Kirim Absen Lagi"}
             </span>
           </button>
-        ) : (
-          <div className="w-full h-[50px] rounded-full bg-success-surface text-success-text font-body-bold text-body-bold flex items-center justify-center gap-2.5">
-            <Icon name="verified" className="text-[22px]" />
-            Absensi hari ini sudah lengkap
-          </div>
-        )}
+        ) : null}
 
         {error ? (
           <div className="p-3 rounded-xl bg-danger-surface text-danger-text font-body text-body flex items-center gap-2">

@@ -352,8 +352,16 @@ export function RekapConsole({
   }, [auditLogs]);
 
   const ringkasanBulan = useMemo(() => {
+    /*
+     * get_attendance_audit dipanggil tanpa filter cabang, jadi log orang
+     * yang tidak tampil di daftar staf ikut terhitung. Ringkasan bulanan
+     * memakai himpunan id yang sama dengan ringkasan harian supaya kedua
+     * angka tidak saling bertentangan.
+     */
+    const ids = new Set(staff.map((person) => person.id));
     const map = new Map<string, { hadir: number; late: number; izin: number }>();
     for (const log of auditLogs) {
+      if (!ids.has(log.profileId)) continue;
       const key = log.date.slice(0, 7);
       const cur = map.get(key) ?? { hadir: 0, late: 0, izin: 0 };
       if (log.status === "hadir") {
@@ -365,7 +373,7 @@ export function RekapConsole({
       map.set(key, cur);
     }
     return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0]));
-  }, [auditLogs]);
+  }, [auditLogs, staff]);
 
   const logByProfile = useMemo(() => {
     const map = new Map<string, Log>();
@@ -376,11 +384,21 @@ export function RekapConsole({
   const hasStatus = (log: Log, statuses: string[]) => statuses.includes(log.status);
 
   const summary = useMemo(() => {
+    /*
+     * Hanya log orang yang tampil di daftar ikut dihitung.
+     *
+     * Halaman ini menyembunyikan peran maintainer dari daftar staf, tapi
+     * log absen mereka tetap terbawa dari database. Kalau log itu ikut
+     * dihitung, angka "Terlambat" menunjuk ke orang yang tidak punya kartu,
+     * dan "Belum Absen" ikut berkurang padahal tidak ada staf yang absen.
+     */
+    const ids = new Set(staff.map((person) => person.id));
     let hadir = 0;
     let onTime = 0;
     let late = 0;
     let off = 0;
     for (const log of logs) {
+      if (!ids.has(log.profileId)) continue;
       if (log.status === "hadir") {
         hadir += 1;
         if (log.lateMinutes !== null && log.lateMinutes > 0) {
@@ -394,7 +412,7 @@ export function RekapConsole({
     }
     const belumAbsen = Math.max(0, staff.length - hadir - off);
     return { hadir, onTime, late, off, belumAbsen };
-  }, [logs, staff.length]);
+  }, [logs, staff]);
 
   const percent =
     staff.length > 0 ? Math.round((summary.hadir / staff.length) * 100) : 0;

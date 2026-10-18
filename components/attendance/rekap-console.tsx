@@ -611,7 +611,7 @@ export function RekapConsole({
             <Icon name="radar" className="text-[15px]" />
             {crossBranch
               ? "Geofence mengikuti cabang tiap staf"
-              : `Geofence ${Math.round(branch.radius)}m Aktif`}
+              : `Radius catatan ${Math.round(branch.radius)}m`}
           </span>
           <button
             type="button"
@@ -725,6 +725,14 @@ export function RekapConsole({
               </span>
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/15 backdrop-blur-md font-caption text-caption text-white">
                 Izin/Cuti {summary.off}
+              </span>
+              {/*
+                Belum absen sebelumnya dihitung tapi tidak pernah ditampilkan.
+                Tanpa angka ini, jumlah yang terlihat selalu lebih kecil dari
+                jumlah staf sehingga data terasa ada tapi tidak utuh.
+              */}
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/15 backdrop-blur-md font-caption text-caption text-white">
+                Belum Absen {summary.belumAbsen}
               </span>
             </div>
           </div>
@@ -917,11 +925,28 @@ export function RekapConsole({
                         ) : null}
 
                         <div className="flex flex-wrap gap-1.5 mt-2">
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-clay-overlay text-text-secondary font-caption text-caption">
-                            <Icon name="location_on" className="text-[13px] text-brand-500" />
+                          {/*
+                            Label GPS sebelumnya selalu menulis "Verified"
+                            apa pun jaraknya. Staf yang absen 20 kilometer dari
+                            workshop tetap terbaca terverifikasi, padahal
+                            geofence sudah berubah menjadi catatan dan jarak
+                            justru informasi yang paling berguna untuk atasan.
+                          */}
+                          <span
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-micro-badge text-micro-badge ${
+                              distance === null
+                                ? "bg-clay-overlay text-text-secondary font-caption text-caption"
+                                : config && distance > config.radius
+                                  ? "bg-warning-surface text-warning-text"
+                                  : "bg-success-surface text-success-text"
+                            }`}
+                          >
+                            <Icon name="location_on" className="text-[13px]" />
                             {distance === null
-                              ? "GPS -"
-                              : `GPS Verified (${formatDistance(distance)})`}
+                              ? "GPS tidak tercatat"
+                              : config && distance > config.radius
+                                ? `Di luar radius (${formatDistance(distance)})`
+                                : `Di dalam radius (${formatDistance(distance)})`}
                           </span>
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-clay-overlay text-text-secondary font-caption text-caption">
                             <Icon name="face" className="text-[13px] text-brand-500" />
@@ -1122,9 +1147,12 @@ function BulananPanel({
       {mode === "bulanan" && ringkasanBulan.length > 0 ? (
         <TabelRekap
           judul="Ringkasan Bulan Ini"
-          kolom={["Tanggal", "Hadir", "Terlambat", "Izin"]}
+          // Penanda kolom tertulis Tanggal padahal selnya berisi nama bulan, dan
+          // key.slice(8) selalu kosong sehingga selnya tampil seperti
+          // " Oktober" dengan spasi di depan.
+          kolom={["Bulan", "Hadir", "Terlambat", "Izin"]}
           baris={ringkasanBulan.map(([key, v]) => [
-            key.slice(8) + " " + monthLabel(key).split(" ")[0],
+            monthLabel(key),
             String(v.hadir),
             String(v.late),
             String(v.izin),

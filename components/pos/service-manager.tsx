@@ -299,7 +299,10 @@ export function ServiceManager({
       return;
     }
     setServices((prev) => prev.filter((s) => s.id !== row.id));
-    setSukses(`Jasa "${row.name}" dihapus dari katalog.`);
+    // Pesan sengaja tidak menyebut nama jasanya. Kalau nama itu ikut ditulis
+    // di sini, teks yang sama masih ada di layar walau kartunya sudah hilang,
+    // sehingga terbaca seolah hapus gagal.
+    setSukses("Jasa dihapus dari katalog.");
   }
 
   const bukaPanel = sunting !== null || buatBaru;

@@ -344,6 +344,7 @@ export const PROFILE_MENU: readonly ProfileMenuItem[] = [
   { label: "Klaim Stok", caption: "Ajukan & pantau stok obat", icon: "inventory_2", href: "/stok", permission: "stock.claim" },
   { label: "Kas Titipan Shift", caption: "Buka kas, rekap & tutup audit shift", icon: "payments", href: "/shift", permission: "cash.shift_manage" },
   { label: "Kas Keluar", caption: "Petty cash operasional + foto nota", icon: "receipt_long", href: "/kas", permission: "cash.petty_manage" },
+  { label: "Riwayat Invoice", caption: "Cari & cetak ulang nota pelanggan", icon: "print", href: "/invoice", permission: "reports.branch" },
   { label: "Klaim Garansi", caption: "Cek masa garansi & proses klaim", icon: "verified_user", href: "/garansi", permission: "warranty.manage" },
   { label: "Rekap Kehadiran Staf", caption: "Kalender bulanan, rekap 3 bulan, ekspor Excel", icon: "groups", href: "/rekap", permission: "attendance.audit" },
   { label: "Laporan Cabang", caption: "Finansial, omzet, komisi & stok", icon: "insights", href: "/laporan", permission: "reports.branch" },

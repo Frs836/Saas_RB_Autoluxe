@@ -11,16 +11,11 @@ export type LaporanData = {
     expense: number;
     net: number;
     monthly: Series[];
+    byCategory: { category: string; type: string; amount: number; count: number }[];
   };
   branchRevenue: { branchName: string; orders: number; revenue: number }[];
-  commission: {
-    name: string;
-    roleLabel: string;
-    orders: number;
-    revenue: number;
-    commission: number;
-    hasRule: boolean;
-  }[];
+  unitsSold: { name: string; qty: number; revenue: number }[];
+  receivables: { count: number; total: number };
   stock: {
     total: number;
     lowCount: number;
@@ -30,6 +25,13 @@ export type LaporanData = {
       current: number;
       unit: string;
       min: number;
+    }[];
+    movement: {
+      itemName: string;
+      logType: string;
+      quantity: number;
+      balanceAfter: number;
+      createdAt: string;
     }[];
   };
   generatedAt: string;
@@ -41,14 +43,6 @@ function rupiah(value: number) {
     currency: "IDR",
     maximumFractionDigits: 0,
   }).format(value);
-}
-
-function compact(value: number) {
-  if (Math.abs(value) >= 1_000_000)
-    return `Rp${(value / 1_000_000).toFixed(1).replace(".", ",")} jt`;
-  if (Math.abs(value) >= 1_000)
-    return `Rp${(value / 1_000).toFixed(0)} rb`;
-  return `Rp${value}`;
 }
 
 export function LaporanView({ data }: { data: LaporanData }) {
@@ -78,6 +72,14 @@ export function LaporanView({ data }: { data: LaporanData }) {
         [],
         ["Periode", "Pemasukan", "Pengeluaran"],
         ...data.finance.monthly.map((m) => [m.label, m.income, m.expense]),
+        [],
+        ["Rincian per Kategori", "Jenis", "Jumlah Transaksi", "Nominal"],
+        ...data.finance.byCategory.map((c) => [
+          c.category,
+          c.type === "in" ? "Masuk" : "Keluar",
+          c.count,
+          c.amount,
+        ]),
       ];
 
       const branchSheet = [
@@ -89,15 +91,15 @@ export function LaporanView({ data }: { data: LaporanData }) {
         ]),
       ];
 
-      const commissionSheet = [
-        ["Nama", "Peran", "Order Selesai", "Omzet Ditangani", "Komisi"],
-        ...data.commission.map((c) => [
-          c.name,
-          c.roleLabel,
-          c.orders,
-          c.revenue,
-          c.hasRule ? c.commission : 0,
-        ]),
+      const unitsSheet = [
+        ["Layanan", "Unit Terjual", "Omzet"],
+        ...data.unitsSold.map((u) => [u.name, u.qty, u.revenue]),
+      ];
+
+      const receivableSheet = [
+        ["Ringkasan Tagihan", ""],
+        ["Jumlah Order Belum Lunas", data.receivables.count],
+        ["Total Tagihan", data.receivables.total],
       ];
 
       const stockSheet = [
@@ -108,6 +110,17 @@ export function LaporanView({ data }: { data: LaporanData }) {
           s.current,
           s.unit,
           s.min,
+        ]),
+      ];
+
+      const movementSheet = [
+        ["Waktu", "Barang", "Jenis Mutasi", "Jumlah", "Saldo Setelah"],
+        ...data.stock.movement.map((m) => [
+          new Date(m.createdAt).toISOString(),
+          m.itemName,
+          m.logType,
+          m.quantity,
+          m.balanceAfter,
         ]),
       ];
 
@@ -124,13 +137,23 @@ export function LaporanView({ data }: { data: LaporanData }) {
       );
       XLSX.utils.book_append_sheet(
         wb,
-        XLSX.utils.aoa_to_sheet(commissionSheet),
-        "Komisi Tim",
+        XLSX.utils.aoa_to_sheet(unitsSheet),
+        "Unit Terjual",
+      );
+      XLSX.utils.book_append_sheet(
+        wb,
+        XLSX.utils.aoa_to_sheet(receivableSheet),
+        "Tagihan",
       );
       XLSX.utils.book_append_sheet(
         wb,
         XLSX.utils.aoa_to_sheet(stockSheet),
         "Stok Kritis",
+      );
+      XLSX.utils.book_append_sheet(
+        wb,
+        XLSX.utils.aoa_to_sheet(movementSheet),
+        "Mutasi Stok",
       );
 
       const stamp = new Date(data.generatedAt)
@@ -269,46 +292,92 @@ export function LaporanView({ data }: { data: LaporanData }) {
 
       <section className="bg-surface rounded-[20px] p-4 clay-card border border-white/80">
         <div className="flex items-center gap-2 mb-3">
-          <Icon name="groups" className="text-brand-600 text-[20px]" />
+          <Icon name="payments" className="text-brand-600 text-[20px]" />
           <span className="font-headline-2 text-headline-2 text-text-primary">
-            Rekap Komisi Tim
+            Rincian Keuangan per Kategori
           </span>
         </div>
-        <div className="flex flex-col gap-2.5">
-          {data.commission.length === 0 ? (
-            <p className="font-caption text-caption text-text-muted">
-              Belum ada staf dengan order selesai atau aturan komisi.
-            </p>
-          ) : (
-            data.commission.map((c) => (
+        {data.finance.byCategory.length === 0 ? (
+          <p className="font-caption text-caption text-text-muted">
+            Belum ada transaksi kas tercatat.
+          </p>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {data.finance.byCategory.map((c) => (
               <div
-                key={c.name}
-                className="rounded-2xl bg-surface-container/60 p-3"
+                key={`${c.type}-${c.category}`}
+                className="flex items-center justify-between rounded-xl bg-surface-container/60 px-3 py-2"
               >
-                <div className="flex items-center justify-between">
-                  <div className="min-w-0">
-                    <p className="font-body-bold text-body-bold text-text-primary truncate">
-                      {c.name}
-                    </p>
-                    <p className="font-caption text-caption text-text-muted">
-                      {c.roleLabel} · {c.orders} order
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-caption text-caption text-text-muted">
-                      Komisi
-                    </p>
-                    <p className="font-body-bold text-body-bold text-brand-600">
-                      {c.hasRule ? rupiah(c.commission) : "Tanpa aturan"}
-                    </p>
-                  </div>
+                <div className="min-w-0">
+                  <p className="font-body-bold text-caption text-text-primary">
+                    {c.category}
+                  </p>
+                  <p className="font-caption text-caption text-text-muted">
+                    {c.type === "in" ? "Masuk" : "Keluar"} · {c.count}×
+                  </p>
                 </div>
-                <p className="font-caption text-caption text-text-secondary mt-1">
-                  Omzet ditangani {compact(c.revenue)}
-                </p>
+                <span
+                  className={`font-body-bold text-body-bold shrink-0 ${
+                    c.type === "in" ? "text-success-text" : "text-danger-text"
+                  }`}
+                >
+                  {rupiah(c.amount)}
+                </span>
               </div>
-            ))
-          )}
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="bg-surface rounded-[20px] p-4 clay-card border border-white/80">
+        <div className="flex items-center gap-2 mb-3">
+          <Icon name="inventory_2" className="text-brand-600 text-[20px]" />
+          <span className="font-headline-2 text-headline-2 text-text-primary">
+            Unit Terjual per Layanan
+          </span>
+        </div>
+        {data.unitsSold.length === 0 ? (
+          <p className="font-caption text-caption text-text-muted">
+            Belum ada layanan terjual pada order selesai.
+          </p>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {data.unitsSold.map((u) => (
+              <div
+                key={u.name}
+                className="flex items-center justify-between rounded-xl bg-surface-container/60 px-3 py-2"
+              >
+                <p className="font-body-bold text-caption text-text-primary truncate">
+                  {u.name}
+                </p>
+                <div className="text-right shrink-0">
+                  <p className="font-body-bold text-body-bold text-brand-600">
+                    {u.qty} unit
+                  </p>
+                  <p className="font-caption text-caption text-text-muted">
+                    {rupiah(u.revenue)}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="bg-surface rounded-[20px] p-4 clay-card border border-white/80">
+        <div className="flex items-center gap-2 mb-3">
+          <Icon name="receipt_long" className="text-brand-600 text-[20px]" />
+          <span className="font-headline-2 text-headline-2 text-text-primary">
+            Tagihan Belum Lunas
+          </span>
+        </div>
+        <div className="rounded-2xl bg-warning-surface p-3 flex items-center justify-between">
+          <span className="font-caption text-caption text-warning-text">
+            {data.receivables.count} order belum lunas
+          </span>
+          <span className="font-body-bold text-body-bold text-warning-text">
+            {rupiah(data.receivables.total)}
+          </span>
         </div>
       </section>
 
@@ -363,6 +432,51 @@ export function LaporanView({ data }: { data: LaporanData }) {
             Semua stok di atas batas minimum.
           </p>
         )}
+
+        <div className="mt-4">
+          <p className="font-body-bold text-body-bold text-text-secondary mb-2">
+            Mutasi Stok Terakhir
+          </p>
+          {data.stock.movement.length === 0 ? (
+            <p className="font-caption text-caption text-text-muted">
+              Belum ada pergerakan stok tercatat.
+            </p>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {data.stock.movement.map((m) => (
+                <div
+                  key={`${m.createdAt}-${m.itemName}-${m.logType}`}
+                  className="flex items-center justify-between rounded-xl bg-surface-container/60 px-3 py-2"
+                >
+                  <div className="min-w-0">
+                    <p className="font-body-bold text-caption text-text-primary truncate">
+                      {m.itemName}
+                    </p>
+                    <p className="font-caption text-caption text-text-muted">
+                      {m.logType} · {new Date(m.createdAt).toLocaleString("id-ID", {
+                        timeZone: "Asia/Jakarta",
+                        dateStyle: "short",
+                        timeStyle: "short",
+                      })}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p
+                      className={`font-body-bold text-body-bold ${
+                        m.quantity < 0 ? "text-danger-text" : "text-success-text"
+                      }`}
+                    >
+                      {m.quantity > 0 ? `+${m.quantity}` : m.quantity}
+                    </p>
+                    <p className="font-caption text-caption text-text-muted">
+                      saldo {m.balanceAfter}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </section>
 
       <p className="font-caption text-caption text-text-muted text-center">

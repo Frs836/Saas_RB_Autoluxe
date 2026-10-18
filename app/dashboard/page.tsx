@@ -166,11 +166,21 @@ export default async function DashboardPage() {
     | MyCashHold
     | null;
 
-  const inProgress = activeOrders.filter((o) => o.status === "in_progress");
+    const inProgress = activeOrders.filter((o) => o.status === "in_progress");
   const queued = activeOrders.filter((o) => o.status === "queued");
   const qcReview = activeOrders.filter((o) => o.status === "qc_review");
 
-  const liveOrder = inProgress[0] ?? queued[0] ?? null;
+  /*
+   * Kartu order aktif memakai urutan stages: sedang dikerjakan lebih dulu,
+   * lalu antrean, lalu QC.
+   *
+   * Sebelumnya QC tidak pernah dipakai sebagai calon kartu. Padahal kartu
+   * penghitung menampilkan "1 QC", jadi order itu ada di daftar tetapi tidak
+   * pernah muncul sebagai kartu, dan tidak ada satupun tautan untuk
+   * membukanya. Urutan sekarang mencakup ketiganya sehingga kartu selalu
+   * muncul selama masih ada order yang belum selesai.
+   */
+  const liveOrder = inProgress[0] ?? queued[0] ?? qcReview[0] ?? null;
 
   let liveAssignee: string | null = null;
   if (liveOrder?.assigned_to) {

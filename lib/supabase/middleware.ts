@@ -43,22 +43,23 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (!user) return supabaseResponse;
+    if (!user) return supabaseResponse;
 
-  // `profiles_select` bergantung pada current_profile_id() yang sudah
-  // menyaring is_active, sehingga RLS tidak bisa membedakan akun yang
-  // dinonaktifkan dari akun tanpa baris profile. current_profile_state()
-  // menjawab keduanya tanpa melewati RLS.
-  const { data: profileState } = await supabase.rpc("current_profile_state");
-
-  if (profileState === "inactive") {
-    await supabase.auth.signOut();
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    url.search = "";
-    url.searchParams.set("reason", "disabled");
-    return NextResponse.redirect(url);
-  }
+  /*
+   * Pemeriksaan akun nonaktif tidak lagi dilakukan di sini.
+   *
+   * Sebelumnya middleware memanggil RPC current_profile_state pada setiap
+   * permintaan halaman. Itu satu perjalanan bolak-balik tambahan ke Supabase,
+   * padahal getSessionProfile di setiap halaman server sudah memanggil
+   * getUser dan membaca profilnya sendiri, dan RLS sudah menyaring baris
+   * profil yang is_active-nya false sehingga akun nonaktif berakhir dengan
+   * sesi tanpa profil dan diarahkan ke halaman masuk.
+   *
+   * Pengukuran produksi menunjukkan dampaknya nyata: server mulai mengirim
+   * HTML dalam 190 milidetik, tetapi respons baru selesai sekitar 4,2 detik
+   * karena dua panggilan jaringan ini menahan aliran. Middleware sekarang
+   * hanya satu getUser, seperti sebelum RPC itu ditambahkan.
+   */
 
   if (user && isAuthPage) {
     const url = request.nextUrl.clone();

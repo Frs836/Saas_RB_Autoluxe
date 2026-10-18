@@ -2,8 +2,10 @@
 import { BottomNav } from "@/components/dashboard/bottom-nav";
 import { SubPageHeader } from "@/components/pos/sub-page-header";
 import { LaporanView } from "@/components/laporan/laporan-view";
+import { BranchScopeBadges } from "@/components/branch/branch-scope-badges";
 import { requirePermission, scopedBranchId } from "@/lib/rbac-guard";
 import { queryError, scopeBranchQuery } from "@/lib/branch";
+import { can } from "@/lib/rbac";
 
 export const instant = false;
 
@@ -109,9 +111,18 @@ scopeBranchQuery(
   queryError(cashRes, "laporan.cash_flow");
 queryError(stockRes, "laporan.inventory_items");
 
-  const branchMap = new Map(
+const branchMap = new Map(
     (branchRes.data ?? []).map((b) => [b.id, b.branch_name]),
   );
+
+  // Badge cakupan cabang hanya relevan untuk yang boleh berpindah cabang.
+  // Admin kasir dan karyawan sudah terkunci ke cabang sendiri, jadi
+  // menampilkan daftar cabang hanya menambah pilihan yang tidak bisa dipakai.
+  const branchOptions = (branchRes.data ?? []).map((b) => ({
+    id: b.id as string,
+    name: (b.branch_name as string) ?? "Cabang",
+    isActive: true,
+  }));
 
 // Semua order cabang diambil tanpa filter status supaya tagihan (order belum
   // lunas) ikut terhitung. Omzet dan unit terjual tetap memakai order selesai.
@@ -268,6 +279,10 @@ const data = {
           branchId ? (branchMap.get(branchId) ?? "Cabang Utama") : "Seluruh Cabang"
         }
         backHref="/dashboard"
+      />
+      <BranchScopeBadges
+        branches={can(session.role, "branch.switch") ? branchOptions : []}
+        activeBranchId={branchId}
       />
       <LaporanView data={data} />
       <BottomNav role={session.role} />

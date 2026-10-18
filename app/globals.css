@@ -91,7 +91,17 @@
   display: none;
 }
 
+/*
+ * Kartu clazz: elevate lewat bayangan, dan selalu punya latar sendiri.
+ *
+ * Sebelumnya kelas ini hanya bayangan. Latar halaman adalah #f0f4fa, jadi
+ * setiap panel yang menulis clay-card tanpa bg-* ikut meneruskan warna
+ * tersebut dan terlihat tembus pandang. Form tambah cabang, pengaturan cabang,
+ * verifikasi wajah, dan beberapa panel lain terpengaruh. Memberi latar di
+ * sini menutup semuanya sekaligus dan tidak bisa terlewat di panel baru.
+ */
 .clay-card {
+  background-color: #ffffff;
   box-shadow: 0px 12px 28px -6px rgba(37, 99, 235, 0.12),
     0px 8px 12px -4px rgba(15, 23, 42, 0.03),
     inset 0px 2px 4px rgba(255, 255, 255, 0.95),

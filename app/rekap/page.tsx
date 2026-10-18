@@ -5,6 +5,8 @@ import { RekapConsole, type BranchConfig } from "@/components/attendance/rekap-c
 import { ATTENDANCE_ROLE_LABELS, wibNow } from "@/lib/attendance";
 import { requirePermission, scopedBranchId } from "@/lib/rbac-guard";
 import { scopeBranchQuery } from "@/lib/branch";
+import { can } from "@/lib/rbac";
+import { BranchScopeBadges } from "@/components/branch/branch-scope-badges";
 import { Icon } from "@/components/ui/icon";
 
 export const instant = false;
@@ -55,7 +57,8 @@ export default async function RekapPage() {
   const BRANCH_FIELDS =
     "id, branch_name, latitude, longitude, geofence_radius_meters, operating_open_time, operating_close_time";
 
-  const [branchRes, allBranchesRes, staffRes, handoffRes] = await Promise.all([
+  const [branchRes, allBranchesRes, staffRes, handoffRes, daftarCabangRes] =
+    await Promise.all([
     branchId
       ? supabase
           .from("branches")
@@ -87,6 +90,13 @@ export default async function RekapPage() {
           .limit(1)
           .maybeSingle()
       : Promise.resolve({ data: null }),
+    // Daftar cabang terpisah dari config geofence. Config hanya diambil saat
+    // lintas cabang, sedangkan badge harus tetap lengkap saat satu cabang
+    // sedang dipilih.
+    supabase
+      .from("branches")
+      .select("id, branch_name, is_active")
+      .order("branch_name"),
   ]);
 
   // attendance_logs tidak punya branch_id, jadi cakupan cabang dijaga lewat
@@ -158,6 +168,18 @@ export default async function RekapPage() {
           (session.branchScope === "all" ? "Seluruh Cabang" : "Cabang Utama")
         }
         backHref="/dashboard"
+      />
+      <BranchScopeBadges
+        branches={
+          can(role, "branch.switch")
+            ? (daftarCabangRes.data ?? []).map((b) => ({
+                id: b.id as string,
+                name: (b.branch_name as string) ?? "Cabang",
+                isActive: Boolean(b.is_active),
+              }))
+            : []
+        }
+        activeBranchId={branchId}
       />
       <RekapConsole
         profile={{

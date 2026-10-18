@@ -59,3 +59,5 @@ temp-dev.log
 tmp-*.mjs
 tmp-*.webp
 tmp-*.png
+tmp-*.mts
+e2e/tmp-*.spec.ts

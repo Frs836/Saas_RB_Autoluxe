@@ -18,7 +18,7 @@ export default function OfflinePage() {
         </p>
         <Link
           href="/dashboard"
-          className="h-11 px-5 rounded-xl bg-primary-gradient text-white font-body-bold text-body-bold flex items-center gap-2"
+          className="h-11 px-5 rounded-xl primary-gradient text-white font-body-bold text-body-bold flex items-center gap-2"
         >
           <Icon name="refresh" className="text-[18px]" />
           Coba Lagi

@@ -155,6 +155,29 @@ export function OrderDetailView({
 
   const hasBefore = inspections.some((i) => i.phase === "before");
 
+  /*
+   * Foto inspeksi mengikuti tahap pengerjaan.
+   *
+   * Kondisi awal dan proses diambil saat unit masih dikerjakan, karena itu
+   * bukti rakitan. Foto hasil akhir baru sah kalau pengerjaan sudah selesai
+   * atau unit sudah siap diambil. Mengambil foto "after" saat pekerjaan masih
+   * berjalan membuat bukti berantakan dan bercampur dengan pekerjaan yang
+   * belum selesai, sehingga keputusan assessor penerbitan garansi ikut
+   * bermasalah.
+   */
+  const pekerjaanBerjalan = order.status === "queued" || order.status === "in_progress";
+  const pekerjaanSelesai =
+    order.status === "completed" ||
+    order.status === "menunggu_diambil" ||
+    order.status === "diserahkan";
+
+  const faseBoleh = (key: PhaseKey): boolean => {
+    if (key === "after") return pekerjaanSelesai && hasBefore;
+    return pekerjaanBerjalan;
+  };
+
+  const adaFaseBoleh = PHASES.some((p) => faseBoleh(p.key));
+
   const grouped = PHASES.map((p) => ({
     ...p,
     photos: inspections
@@ -662,15 +685,29 @@ export function OrderDetailView({
             </div>
           ) : null}
 
-          {canUpload && !cameraOpen ? (
+          {canUpload && !cameraOpen && adaFaseBoleh ? (
             <button
               type="button"
-              onClick={openCamera}
+              // Fase dibuka langsung ke tahap yang sedang boleh. Kalau "after"
+              // yang boleh, membuka kamera dengan "before" terpilih membuat
+              // teknisi menekan tombol yang mati.
+              onClick={() => {
+                setPhase(pekerjaanSelesai && hasBefore ? "after" : "before");
+                void openCamera();
+              }}
               className="w-full py-3.5 rounded-2xl bg-primary/10 text-primary flex items-center justify-center gap-2 border border-primary/20 active:scale-95 transition-transform"
             >
               <Icon name="add_a_photo" className="text-[20px]" />
               Tambah Foto Inspeksi
             </button>
+          ) : null}
+
+          {canUpload && !cameraOpen && !adaFaseBoleh ? (
+            <p className="font-caption text-caption text-text-muted text-center">
+              {order.status === "cancelled"
+                ? "Order dibatalkan, inspeksi foto sudah tidak dibuka."
+                : "Foto kondisi awal diambil saat pengerjaan berjalan. Foto hasil akhir dibuka setelah pengerjaan selesai atau unit siap diambil."}
+            </p>
           ) : null}
         </div>
       ) : null}
@@ -687,7 +724,7 @@ export function OrderDetailView({
                   setPreview(null);
                   setPhase(p.key);
                 }}
-                disabled={p.key === "after" && !hasBefore}
+                disabled={!faseBoleh(p.key)}
                 className={`flex-1 py-2 rounded-xl font-caption text-caption flex items-center justify-center gap-1 disabled:opacity-40 ${
                   phase === p.key
                     ? "bg-brand-50 text-white"

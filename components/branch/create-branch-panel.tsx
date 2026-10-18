@@ -152,7 +152,7 @@ export function CreateBranchPanel() {
         className={`h-12 px-3 rounded-xl flex items-center justify-between gap-3 ${
           pakaiTitik
             ? "bg-success-surface text-success-text"
-            : "bg-primary-gradient text-white"
+            : "primary-gradient text-white"
         }`}
       >
         <span className="flex items-center gap-2 font-body text-body">

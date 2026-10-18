@@ -78,9 +78,24 @@ export function StockOpnameView({
     setBusy(true);
 
     const supabase = createClient();
+    /*
+     * Kolom periode memakai input type="month", jadi nilainya "2026-10"
+     * (tahun-bulan tanpa tanggal). open_stock_opname menerima date, bukan
+     * text, jadi hari pertama bulan harus ditambahkan sendiri. Tanpa ini
+     * Postgres menolak dengan "invalid input syntax for type date".
+     */
+    const periodeTanggal = /^\d{4}-\d{2}$/.test(period.trim())
+      ? `${period.trim()}-01`
+      : null;
+    if (!periodeTanggal) {
+      setBusy(false);
+      setError("Pilih periode opname terlebih dahulu.");
+      return;
+    }
+
     const { data, error: rpcError } = await supabase.rpc("open_stock_opname", {
       p_branch_id: branchId,
-      p_period_month: period,
+      p_period_month: periodeTanggal,
       p_notes: null,
     });
     setBusy(false);
@@ -217,7 +232,7 @@ export function StockOpnameView({
           type="button"
           disabled={busy}
           onClick={openOpname}
-          className="h-11 rounded-xl bg-primary-gradient text-on-primary font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-60"
+          className="h-11 rounded-xl primary-gradient text-on-primary font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-60"
         >
           <Icon name="add" className="text-[20px]" />
           {busy ? "Membuka..." : "Buka atau Lanjutkan Opname"}
@@ -381,7 +396,7 @@ export function StockOpnameView({
             type="button"
             disabled={busy}
             onClick={submit}
-            className="flex-1 py-3.5 rounded-2xl bg-primary-gradient text-on-primary font-body-bold text-body-bold flex items-center justify-center gap-1.5 active:scale-95 transition-transform disabled:opacity-60"
+            className="flex-1 py-3.5 rounded-2xl primary-gradient text-on-primary font-body-bold text-body-bold flex items-center justify-center gap-1.5 active:scale-95 transition-transform disabled:opacity-60"
           >
             <Icon name={busy ? "hourglass_top" : "task_alt"} className="text-[20px]" />
             Kirim dan Koreksi

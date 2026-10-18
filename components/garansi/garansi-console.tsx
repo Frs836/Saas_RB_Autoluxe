@@ -290,7 +290,7 @@ export function GaransiConsole({
             <button
               type="submit"
               disabled={!canSubmit || (eligibility ? !eligibility.ok : true)}
-              className="h-[50px] rounded-full bg-primary-gradient text-on-primary font-body-bold text-body-bold shadow-[0px_10px_22px_rgba(37,99,235,0.24)] disabled:opacity-60"
+              className="h-[50px] rounded-full primary-gradient text-on-primary font-body-bold text-body-bold shadow-[0px_10px_22px_rgba(37,99,235,0.24)] disabled:opacity-60"
             >
               {loading ? "Mengirim..." : "Ajukan Klaim Garansi"}
             </button>

@@ -376,7 +376,7 @@ export function KasConsole({
               <button
                 type="submit"
                 disabled={disabled}
-                className="h-[50px] rounded-full bg-primary-gradient text-on-primary font-body-bold text-body-bold shadow-[0px_10px_22px_rgba(37,99,235,0.24)] disabled:opacity-60"
+                className="h-[50px] rounded-full primary-gradient text-on-primary font-body-bold text-body-bold shadow-[0px_10px_22px_rgba(37,99,235,0.24)] disabled:opacity-60"
               >
                 {loading ? "Menyimpan..." : "Simpan Transaksi"}
               </button>
@@ -435,7 +435,7 @@ export function KasConsole({
               type="button"
               onClick={captureProof}
               disabled={loading}
-              className="h-14 w-14 rounded-full bg-primary-gradient text-on-primary flex items-center justify-center clay-glow disabled:opacity-60"
+              className="h-14 w-14 rounded-full primary-gradient text-on-primary flex items-center justify-center clay-glow disabled:opacity-60"
               aria-label="Ambil foto"
             >
               <Icon name="photo_camera" className="text-[28px]" />

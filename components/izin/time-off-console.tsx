@@ -375,7 +375,7 @@ export function TimeOffConsole({ requests, canDecide, todayIso }: Props) {
             type="button"
             onClick={submit}
             disabled={busy || Boolean(validationError)}
-            className="py-3.5 rounded-2xl bg-primary-gradient text-on-primary font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-50"
+            className="py-3.5 rounded-2xl primary-gradient text-on-primary font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-50"
           >
             <Icon name="send" className="text-[20px]" />
             {busy ? "Mengirim..." : "Kirim Pengajuan"}

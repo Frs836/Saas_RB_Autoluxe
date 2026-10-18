@@ -10,6 +10,7 @@ import {
 import { can } from "@/lib/rbac";
 import { getSessionProfile, scopedBranchId } from "@/lib/rbac-guard";
 import { scopeBranchQuery } from "@/lib/branch";
+import { BranchScopeBadges } from "@/components/branch/branch-scope-badges";
 
 export const instant = false;
 
@@ -23,7 +24,7 @@ export default async function StockPage() {
   const supabase = await createClient();
   const branchId = scopedBranchId(session);
 
-  const [branchRes, itemsRes, claimsRes] = await Promise.all([
+  const [branchRes, itemsRes, claimsRes, allBranchesRes] = await Promise.all([
     branchId
       ? supabase
           .from("branches")
@@ -49,6 +50,8 @@ export default async function StockPage() {
     )
       .order("created_at", { ascending: false })
       .limit(60),
+    // Daftar cabang diambil sekali saja untuk badge cakupan.
+    supabase.from("branches").select("id, branch_name, is_active").order("branch_name"),
   ]);
 
   const items = itemsRes.data ?? [];
@@ -92,12 +95,22 @@ export default async function StockPage() {
 
   const canManage = can(session.role, "stock.approve");
 
+  const branchOptions = (allBranchesRes.data ?? []).map((b) => ({
+    id: b.id as string,
+    name: (b.branch_name as string) ?? "Cabang",
+    isActive: Boolean(b.is_active),
+  }));
+
   return (
     <div className="flex flex-col w-full min-h-screen">
       <SubPageHeader
         title="Stok & Inventaris"
         branchName={branchRes.data?.branch_name ?? "Cabang Utama"}
         backHref="/dashboard"
+      />
+      <BranchScopeBadges
+        branches={can(session.role, "branch.switch") ? branchOptions : []}
+        activeBranchId={branchId}
       />
       <StockManager
         items={items as InventoryItem[]}

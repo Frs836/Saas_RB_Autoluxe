@@ -4,6 +4,11 @@ import {
   StaffScheduleView,
   type StaffSchedule,
 } from "@/components/branch/staff-schedule-view";
+import {
+  StaffManagement,
+  type ManagedStaff,
+} from "@/components/branch/staff-management";
+import { ATTENDANCE_ROLE_LABELS } from "@/lib/attendance";
 import { requirePermission, scopedBranchId } from "@/lib/rbac-guard";
 import { createClient } from "@/lib/supabase/server";
 
@@ -32,7 +37,9 @@ export default async function StaffSchedulePage() {
     (async () => {
       let q = supabase
         .from("profiles")
-        .select("id, full_name, role, branch_id, work_schedule, is_active")
+        .select(
+          "id, full_name, role, branch_id, work_schedule, is_active, face_reference_photo_url, face_verification",
+        )
         .order("full_name");
       if (cabangId) q = q.eq("branch_id", cabangId);
       return q;
@@ -104,6 +111,44 @@ export default async function StaffSchedulePage() {
     isActive: (row.is_active as boolean) ?? true,
   }));
 
+  const FACE_LABEL: Record<string, string> = {
+    verified: "Wajah Terverifikasi",
+    pending: "Menunggu Verifikasi",
+    rejected: "Wajah Ditolak",
+    none: "Belum Daftar",
+  };
+
+  const managedStaff: ManagedStaff[] = (stafRes.data ?? []).map((row) => ({
+    id: row.id as string,
+    fullName: (row.full_name as string) ?? "Staf",
+    role: (row.role as string) ?? "karyawan",
+    roleLabel:
+      ATTENDANCE_ROLE_LABELS[(row.role as string) ?? ""] ?? "Staf",
+    branchId: (row.branch_id as string | null) ?? null,
+    branchName: row.branch_id
+      ? (namaCabangMap.get(row.branch_id as string) ?? "-")
+      : "-",
+    workSchedule:
+      (row.work_schedule as ManagedStaff["workSchedule"]) ?? "field",
+    isActive: (row.is_active as boolean) ?? true,
+    facePhotoUrl: (row.face_reference_photo_url as string | null) ?? null,
+    faceStatus:
+      FACE_LABEL[(row.face_verification as string) ?? "none"] ?? "Belum Daftar",
+  }));
+
+  // Cabang tujuan dipindah staff diambil dari seluruh cabang, bukan hanya yang
+  // sedang dipakai. Kalau daftar dibatasi cabang aktif, memindahkan staf ke
+  // cabang lain jadi tidak mungkin sama sekali.
+  const { data: semuaCabang } = await supabase
+    .from("branches")
+    .select("id, branch_name")
+    .order("branch_name");
+
+  const branchOptions = (semuaCabang ?? []).map((b) => ({
+    id: b.id as string,
+    name: (b.branch_name as string) ?? "Cabang",
+  }));
+
   return (
     <div className="flex flex-col w-full min-h-screen">
       <SubPageHeader
@@ -121,6 +166,11 @@ export default async function StaffSchedulePage() {
             kantorPulang: jamKantorPulang,
           }}
           bisaUbah={Boolean(cabang)}
+        />
+        <StaffManagement
+          staff={managedStaff}
+          branches={branchOptions}
+          bisaUbahJabatan={session.role === "owner"}
         />
       </main>
       <BottomNav role={session.role} />

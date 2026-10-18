@@ -349,7 +349,7 @@ export const PROFILE_MENU: readonly ProfileMenuItem[] = [
   { label: "Rekap Kehadiran Staf", caption: "Kalender bulanan, rekap 3 bulan, ekspor Excel", icon: "groups", href: "/rekap", permission: "attendance.audit" },
   { label: "Laporan Cabang", caption: "Finansial, omzet, komisi & stok", icon: "insights", href: "/laporan", permission: "reports.branch" },
   { label: "Pengaturan Cabang", caption: "Alamat, titik GPS & jam operasional", icon: "tune", href: "/pengaturan/cabang", permission: "branch.manage" },
-  { label: "Jadwal Kerja Staf", caption: "Jam kantor 10-18, lapangan 07:30-21", icon: "schedule", href: "/pengaturan/karyawan", permission: "branch.manage" },
+  { label: "Kelola Staf", caption: "Foto, jabatan, jadwal, dan pindah cabang", icon: "schedule", href: "/pengaturan/karyawan", permission: "branch.manage" },
   { label: "Verifikasi Wajah", caption: "Tinjau sampel wajah staf", icon: "face_retouching_natural", href: "/pengaturan/wajah", permission: "branch.manage" },
   { label: "Opname Fisik Bulanan", caption: "Bandingkan stok gudang dengan sistem", icon: "fact_check", href: "/stok/opname", permission: "stock.approve" },
   { label: "Pesanan WhatsApp", caption: "Siapkan pesan nota pelanggan", icon: "chat", href: "/whatsapp", permission: "whatsapp.draft" },

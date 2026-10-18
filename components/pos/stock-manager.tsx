@@ -276,19 +276,31 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
   return (
     <div className="px-gutter py-4 pb-28 flex flex-col gap-4">
       {canManage ? (
-        <button
-          type="button"
-          onClick={() => {
-            setInOpen(true);
-            document
-              .getElementById("formulir-stok-masuk")
-              ?.scrollIntoView({ behavior: "smooth", block: "center" });
-          }}
-          className="w-full h-12 rounded-2xl bg-success-surface text-success-text font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform"
-        >
-          <Icon name="move_to_inbox" className="text-[20px]" />
-          Tambah Stok Masuk
-        </button>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setInOpen(true);
+              document
+                .getElementById("formulir-stok-masuk")
+                ?.scrollIntoView({ behavior: "smooth", block: "center" });
+            }}
+            className="flex-1 h-12 rounded-2xl bg-success-surface text-success-text font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform"
+          >
+            <Icon name="move_to_inbox" className="text-[20px]" />
+            Tambah Stok Masuk
+          </button>
+          {/* Opname ada di halamannya sendiri karena melibatkan banyak baris. Pintu
+              masuknya diletakkan di sini supaya tidak perlu mencari lewat menu
+              profil. */}
+          <a
+            href="/stok/opname"
+            className="flex-1 h-12 rounded-2xl bg-brand-50 text-brand-700 font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform"
+          >
+            <Icon name="fact_check" className="text-[20px]" />
+            Opname Stok
+          </a>
+        </div>
       ) : null}
       <div className="grid grid-cols-3 gap-2">
         <div className="clay-card p-3 flex flex-col items-center gap-0.5">

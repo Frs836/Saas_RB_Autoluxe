@@ -321,7 +321,7 @@ export function OrderQueue({
 
                 <div className="flex items-start gap-3">
                   <div className="w-12 h-12 rounded-xl bg-surface-container flex items-center justify-center shrink-0 text-brand-600">
-                    <Icon name={order.vehicle_size === "Motor"
+                    <Icon name={(order.vehicle_size ?? "").startsWith("Motor")
                         ? "two_wheeler"
                         : "directions_car"} className="text-[24px]" />
                   </div>

@@ -84,6 +84,10 @@ const [tab, setTab] = useState<"items" | "claims">("items");
   const [inQty, setInQty] = useState("1");
   const [inCost, setInCost] = useState("");
   const [inNote, setInNote] = useState("");
+  // Pencarian dan filter huruf untuk daftar barang. Tanpa ini, daftar barang
+  // yang panjang harus digulir satu per satu hanya untuk menemukan satu nama.
+  const [cariItem, setCariItem] = useState("");
+  const [huruf, setHuruf] = useState<string>("all");
 
 // Diturunkan setelah seluruh state dideklarasikan. Barisnya sebelumnya diletakkan
 // di atas deklarasi state sehingga memicu zona mati temporal dan membuat seluruh
@@ -97,6 +101,24 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
       item.item_name.toLowerCase().includes(q),
     );
   }, [items, cariBarang]);
+
+  const itemsTerfilter = useMemo(() => {
+    const q = cariItem.trim().toLowerCase();
+    return items
+      .filter((item) => {
+        if (huruf !== "all") {
+          const awal = item.item_name.trim().charAt(0).toUpperCase();
+          if (huruf === "#") {
+            if (/^[A-Z]/.test(awal)) return false;
+          } else if (awal !== huruf) {
+            return false;
+          }
+        }
+        if (!q) return true;
+        return item.item_name.toLowerCase().includes(q);
+      })
+      .sort((a, b) => a.item_name.localeCompare(b.item_name, "id"));
+  }, [items, cariItem, huruf]);
 
   const lowStock = items.filter(
     (item) => Number(item.current_stock) <= Number(item.min_stock_alert),
@@ -253,6 +275,21 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
 
   return (
     <div className="px-gutter py-4 pb-28 flex flex-col gap-4">
+      {canManage ? (
+        <button
+          type="button"
+          onClick={() => {
+            setInOpen(true);
+            document
+              .getElementById("formulir-stok-masuk")
+              ?.scrollIntoView({ behavior: "smooth", block: "center" });
+          }}
+          className="w-full h-12 rounded-2xl bg-success-surface text-success-text font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform"
+        >
+          <Icon name="move_to_inbox" className="text-[20px]" />
+          Tambah Stok Masuk
+        </button>
+      ) : null}
       <div className="grid grid-cols-3 gap-2">
         <div className="clay-card p-3 flex flex-col items-center gap-0.5">
           <span className="font-headline-2 text-headline-2 text-text-primary">
@@ -310,8 +347,51 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
             </p>
           </div>
         ) : (
-          <div className="flex flex-col gap-2">
-            {items.map((item) => {
+          <div className="flex flex-col gap-3">
+            <div className="clay-card p-3 flex flex-col gap-2">
+              <div className="relative flex items-center">
+                <div className="absolute left-3 flex items-center pointer-events-none text-text-muted">
+                  <Icon name="search" className="text-[18px]" />
+                </div>
+                <input
+                  value={cariItem}
+                  onChange={(e) => setCariItem(e.target.value)}
+                  type="search"
+                  placeholder="Cari nama barang..."
+                  className="w-full h-11 pl-10 pr-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+                />
+              </div>
+              <div className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1">
+                {["all", ..."ABCDEFGHIJKLMNOPQRSTUVWXYZ#".split("")].map((h) => (
+                  <button
+                    key={h}
+                    type="button"
+                    onClick={() => setHuruf(h)}
+                    className={`min-w-9 h-9 shrink-0 rounded-lg font-caption text-caption flex items-center justify-center active:scale-95 transition-transform ${
+                      huruf === h
+                        ? "bg-brand-600 text-white"
+                        : "bg-surface-container-low text-text-secondary"
+                    }`}
+                  >
+                    {h === "all" ? "All" : h}
+                  </button>
+                ))}
+              </div>
+              <p className="font-micro-badge text-micro-badge text-text-muted">
+                {itemsTerfilter.length} dari {items.length} barang
+              </p>
+            </div>
+
+            {itemsTerfilter.length === 0 ? (
+              <div className="clay-card p-6 flex flex-col items-center text-center gap-2">
+                <Icon name="inventory_2" className="text-[32px] text-text-muted" />
+                <p className="font-body text-body text-text-secondary">
+                  Tidak ada barang yang cocok dengan filter ini.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                {itemsTerfilter.map((item) => {
               const stock = Number(item.current_stock);
               const min = Number(item.min_stock_alert) || 1;
               const ratio = Math.max(
@@ -320,40 +400,36 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
               );
               const low = stock <= min;
               return (
-                <div key={item.id} className="clay-card p-4 flex flex-col gap-2">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div
-                        className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                          low
-                            ? "bg-danger-surface text-danger-text"
-                            : "bg-brand-50 text-brand-600"
-                        }`}
-                      >
-                        <Icon name="inventory_2" className="text-[22px]" />
-                      </div>
-                      <div className="flex flex-col min-w-0">
-                        <span className="font-body-bold text-body-bold text-text-primary truncate">
-                          {item.item_name}
-                        </span>
-                        <span className="font-caption text-caption text-text-muted">
-                          Min. {formatAngka(min)} {item.unit}
-                        </span>
-                      </div>
+                <div
+                  key={item.id}
+                  className="clay-card p-3 flex flex-col gap-2 min-w-0"
+                >
+                  <div className="flex items-start justify-between gap-1">
+                    <div
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                        low
+                          ? "bg-danger-surface text-danger-text"
+                          : "bg-brand-50 text-brand-600"
+                      }`}
+                    >
+                      <Icon name="inventory_2" className="text-[18px]" />
                     </div>
                     <div className="flex flex-col items-end shrink-0">
                       <span
-                        className={`font-headline-2 text-headline-2 ${
+                        className={`font-headline-3 text-headline-3 ${
                           low ? "text-danger-text" : "text-text-primary"
                         }`}
                       >
                         {formatAngka(stock)}
                       </span>
-                      <span className="font-caption text-caption text-text-muted">
+                      <span className="font-micro-badge text-micro-badge text-text-muted">
                         {item.unit}
                       </span>
                     </div>
                   </div>
+                  <span className="font-body-bold text-body-bold text-text-primary leading-tight">
+                    {item.item_name}
+                  </span>
                   <div className="w-full bg-surface-container rounded-full h-1.5 overflow-hidden">
                     <div
                       className={`h-1.5 rounded-full ${
@@ -362,29 +438,27 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
                       style={{ width: `${ratio}%` }}
                     />
                   </div>
-                  <div className="flex items-center justify-between pt-1">
-                    {low ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-danger-surface text-danger-text font-caption text-caption">
-                        <Icon name="warning" className="text-[13px]" />
-                        Perlu Restock
-                      </span>
-                    ) : (
-                      <span className="font-caption text-caption text-text-muted">
-                        Stok tersedia
-                      </span>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => openClaim(item)}
-                      className="px-3 min-h-11 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center gap-1 active:scale-95 transition-transform"
-                    >
-                      <Icon name="shopping_cart_checkout" className="text-[16px]" />
-                      Klaim Ambil
-                    </button>
-                  </div>
+                  <span
+                    className={`font-micro-badge text-micro-badge ${
+                      low ? "text-danger-text" : "text-text-muted"
+                    }`}
+                  >
+                    Min. {formatAngka(min)} {item.unit}
+                    {low ? " • Perlu restock" : ""}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => openClaim(item)}
+                    className="w-full min-h-11 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform"
+                  >
+                    <Icon name="shopping_cart_checkout" className="text-[16px]" />
+                    Klaim
+                  </button>
                 </div>
               );
             })}
+              </div>
+            )}
           </div>
         )
       ) : claims.length === 0 ? (
@@ -525,15 +599,20 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
 
       {/* Stok masuk dari supplier */}
       {canManage ? (
-        <section className="px-gutter pt-4">
-          <button
-            type="button"
-            onClick={() => setInOpen((v) => !v)}
-            className="w-full h-11 rounded-2xl bg-success-surface text-success-text font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
-          >
-            <Icon name="move_to_inbox" className="text-[18px]" />
-            {inOpen ? "Tutup formulir stok masuk" : "Catat stok masuk supplier"}
-          </button>
+        <section
+          id="formulir-stok-masuk"
+          className="px-gutter pt-4 scroll-mt-4"
+        >
+          {inOpen ? (
+            <button
+              type="button"
+              onClick={() => setInOpen(false)}
+              className="w-full h-11 rounded-2xl bg-surface-container text-text-secondary font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+            >
+              <Icon name="close" className="text-[18px]" />
+              Tutup formulir stok masuk
+            </button>
+          ) : null}
 
           {inOpen ? (
             <div className="mt-2 rounded-2xl bg-surface-container-low p-3 flex flex-col gap-2">

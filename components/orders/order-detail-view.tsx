@@ -426,7 +426,7 @@ export function OrderDetailView({
         <section className="clay-card p-4 flex flex-col gap-3">
           <div className="flex items-start gap-3">
             <div className="w-12 h-12 rounded-xl bg-surface-container flex items-center justify-center shrink-0 text-brand-600">
-              <Icon name={order.vehicleSize === "Motor" ? "two_wheeler" : "directions_car"} className="text-[26px]" />
+              <Icon name={(order.vehicleSize ?? "").startsWith("Motor") ? "two_wheeler" : "directions_car"} className="text-[26px]" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">

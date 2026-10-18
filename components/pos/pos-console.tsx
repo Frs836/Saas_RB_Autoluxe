@@ -89,7 +89,10 @@ export function PosConsole({
   const [fieldError, setFieldError] = useState<FieldProblem | null>(null);
   const [result, setResult] = useState<OrderResult | null>(null);
 
-  const effSize: VehicleSize = vehicleType === "motor" ? "Motor" : size;
+  // Ukuran motor memakai label sendiri di database (Motor S sampai Motor XL),
+  // jadi huruf ukuran yang dipilih diterjemahkan ke label motor tersebut.
+  const effSize: VehicleSize =
+    vehicleType === "motor" ? (`Motor ${size}` as VehicleSize) : size;
 
   const serviceById = useMemo(
     () => new Map(services.map((s) => [s.id, s])),
@@ -891,35 +894,33 @@ export function PosConsole({
           })}
         </div>
 
-        {vehicleType === "mobil" ? (
-          <div className="flex gap-2">
-            {MOBIL_SIZES.map((option) => {
-              const active = size === option;
-              return (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() => setSize(option)}
-                  // min-h-11 karena py-2.5 hanya menghasilkan 40px. Tombol ukuran kendaraan
-                  // ditekan di awal transaksi, sering dengan satu tangan sambil
-                  // memegang kunci unit.
-                  className={`flex-1 min-h-11 rounded-xl font-body-bold text-body-bold flex items-center justify-center active:scale-95 transition-transform ${
-                    active
-                      ? "bg-brand-600 text-white"
-                      : "bg-surface-container-low text-text-secondary"
-                  }`}
-                >
-                  {option}
-                </button>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="px-3 py-2.5 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center gap-2">
-            <Icon name="two_wheeler" className="text-[16px]" />
-            Semua layanan motor menggunakan tarif Motor.
-          </div>
-        )}
+        {/*
+          Ukuran ditampilkan untuk mobil maupun motor. Motor memakai huruf
+          ukuran yang sama (S/M/L/XL) tetapi disimpan sebagai label "Motor S"
+          sampai "Motor XL" supaya tiap ukuran punya tarif sendiri.
+        */}
+        <div className="flex gap-2">
+          {MOBIL_SIZES.map((option) => {
+            const active = size === option;
+            return (
+              <button
+                key={option}
+                type="button"
+                onClick={() => setSize(option)}
+                // min-h-11 karena py-2.5 hanya menghasilkan 40px. Tombol ukuran kendaraan
+                // ditekan di awal transaksi, sering dengan satu tangan sambil
+                // memegang kunci unit.
+                className={`flex-1 min-h-11 rounded-xl font-body-bold text-body-bold flex items-center justify-center active:scale-95 transition-transform ${
+                  active
+                    ? "bg-brand-600 text-white"
+                    : "bg-surface-container-low text-text-secondary"
+                }`}
+              >
+                {vehicleType === "motor" ? `Motor ${option}` : option}
+              </button>
+            );
+          })}
+        </div>
 
         <div className="relative">
           <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[20px]" />

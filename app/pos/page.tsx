@@ -25,7 +25,7 @@ export default async function PosPage() {
     supabase
       .from("services")
       .select(
-        "id, name, category, price_s, price_m, price_l, price_xl, price_motor, is_addon",
+        "id, name, category, price_s, price_m, price_l, price_xl, price_motor, price_motor_s, price_motor_m, price_motor_l, price_motor_xl, is_addon",
       )
       .eq("is_active", true)
       .order("category", { ascending: true })

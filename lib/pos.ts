@@ -1,8 +1,25 @@
-export type VehicleSize = "S" | "M" | "L" | "XL" | "Motor";
+export type VehicleSize =
+  | "S"
+  | "M"
+  | "L"
+  | "XL"
+  | "Motor"
+  | "Motor S"
+  | "Motor M"
+  | "Motor L"
+  | "Motor XL";
 
 export type VehicleType = "mobil" | "motor";
 
 export const MOBIL_SIZES: VehicleSize[] = ["S", "M", "L", "XL"];
+
+// Motor juga dipecah per ukuran, mengikuti label enum yang sama dengan database.
+export const MOTOR_SIZES: VehicleSize[] = [
+  "Motor S",
+  "Motor M",
+  "Motor L",
+  "Motor XL",
+];
 
 export const VEHICLE_TYPES: { value: VehicleType; label: string; icon: string }[] =
   [
@@ -19,6 +36,10 @@ export type PosService = {
   price_l: number;
   price_xl: number;
   price_motor: number;
+  price_motor_s: number;
+  price_motor_m: number;
+  price_motor_l: number;
+  price_motor_xl: number;
   is_addon: boolean;
 };
 
@@ -28,11 +49,21 @@ const PRICE_FIELD: Record<VehicleSize, keyof PosService> = {
   L: "price_l",
   XL: "price_xl",
   Motor: "price_motor",
+  "Motor S": "price_motor_s",
+  "Motor M": "price_motor_m",
+  "Motor L": "price_motor_l",
+  "Motor XL": "price_motor_xl",
 };
 
 export function priceForSize(service: PosService, size: VehicleSize): number {
-  const value = service[PRICE_FIELD[size]];
-  return typeof value === "number" ? value : Number(value ?? 0);
+  const field = PRICE_FIELD[size];
+  const value = field ? service[field] : 0;
+  const angka = typeof value === "number" ? value : Number(value ?? 0);
+  // Ukuran motor per label memakai kolomnya sendiri; kalau kolom itu nol,
+  // harga motor umum dipakai supaya layanan tetap bisa dijual.
+  if (angka > 0) return angka;
+  if (size.startsWith("Motor ")) return Number(service.price_motor ?? 0);
+  return angka;
 }
 
 export function isAvailableForSize(
@@ -43,7 +74,9 @@ export function isAvailableForSize(
 }
 
 export function sizeLabel(size: VehicleSize): string {
-  return size === "Motor" ? "Motor" : `Size ${size}`;
+  if (size === "Motor") return "Motor";
+  if (size.startsWith("Motor ")) return `Motor Size ${size.slice(6)}`;
+  return `Size ${size}`;
 }
 
 export const CATEGORY_LABELS: Record<string, string> = {

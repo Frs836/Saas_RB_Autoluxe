@@ -47,7 +47,7 @@ export function RegisterForm() {
     }
     const tanggalLahir = new Date(`${dateOfBirth}T00:00:00`);
     if (Number.isNaN(tanggalLahir.getTime()) || tanggalLahir > new Date()) {
-      setError("Tanggal lahir tidak valid.");
+      setError("Tanggal lahir tidak valid. Tanggal lahir tidak boleh di masa depan.");
       return;
     }
     if (password.length < 8) {
@@ -209,7 +209,6 @@ export function RegisterForm() {
             id="reg-dob"
             type="date"
             autoComplete="bday"
-            max={new Date().toISOString().slice(0, 10)}
             value={dateOfBirth}
             onChange={(event) => setDateOfBirth(event.target.value)}
             className="w-full h-12 pl-11 pr-4 rounded-xl bg-slate-50 text-text-primary font-body-regular text-body-regular placeholder:text-text-muted focus:outline-none focus:bg-white focus:shadow-md transition-all duration-200"

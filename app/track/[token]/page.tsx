@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import { InspectionPhoto } from "@/components/track/inspection-photo";
+import { PublicWarrantyClaim } from "@/components/track/public-warranty-claim";
 import { Icon } from "@/components/ui/icon";
 
 export const instant = false;
@@ -546,6 +547,16 @@ export default async function TrackPage({
                   ))}
                 </div>
               </div>
+            ) : null}
+
+            {/*
+              Klaim hanya ditawarkan ketika garansi masih aktif dan belum ada
+              klaim yang menunggu, supaya tombol tidak pernah mengarah ke
+              penolakan yang sudah pasti.
+            */}
+            {warranty.status === "active" &&
+            !claims.some((c) => c.status === "pending") ? (
+              <PublicWarrantyClaim token={token} />
             ) : null}
           </section>
         ) : null}

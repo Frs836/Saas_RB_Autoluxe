@@ -896,7 +896,12 @@ export function RekapConsole({
                 const openMin = parseTimeToMinutes(config.openTime);
                 const clockInMin = parseTimeToMinutes(formatTimeWib(log.clockIn));
                 const early = openMin - clockInMin;
-                clockInLine = early > 0 ? `${text} (${early}m awal)` : text;
+                /*
+                 * Selisih dua menit bisa menghasilkan 179.99999999999997,
+                 * dan angka itu ikut tampil mentah di layar staf.
+                 */
+                const menit = Math.round(early);
+                clockInLine = menit > 0 ? `${text} (${menit}m awal)` : text;
               } else {
                 clockInLine = text;
               }

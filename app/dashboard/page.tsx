@@ -204,7 +204,7 @@ const jamSekarang = wibNow();
   // Padding bawah memperhitungkan bilah navigasi dan safe area iPhone,
   // supaya kartu terakhir tidak tertutup menu.
   return (
-      <div className="flex flex-col w-full pb-nav min-h-screen">
+      <div className="flex flex-col w-full pb-nav-plain min-h-screen">
       <DashboardHeader
         branchName={branch?.branch_name ?? "Cabang Utama"}
         fullName={profile.fullName}
@@ -436,7 +436,15 @@ const jamSekarang = wibNow();
         </section>
 
         {liveOrder && (
-          <section className="col-span-2 rounded-[20px] p-4 bg-surface clay-card">
+          // Kartu ini adalah order yang sedang dikerjakan, jadi harus bisa
+          // diklik untuk membuka detailnya. Sebelumnya berupa section biasa
+          // tanpa tautan sama sekali, sehingga satu-satunya jalan ke detail
+          // order harus lewat menu Antrean.
+          <Link
+            href={`/pos/orders/${liveOrder.id}`}
+            aria-label={`Buka detail order ${liveOrder.order_number}`}
+            className="col-span-2 rounded-[20px] p-4 bg-surface clay-card active:scale-[0.99] transition-transform"
+          >
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <span className="relative flex h-2 w-2">
@@ -502,7 +510,10 @@ const jamSekarang = wibNow();
                 {formatRupiah(liveOrder.total_price)}
               </span>
             </div>
-          </section>
+            <p className="mt-2 font-micro-badge text-micro-badge text-brand-600 text-right">
+              Ketuk untuk membuka detail pengerjaan
+            </p>
+          </Link>
         )}
 
         {note && (

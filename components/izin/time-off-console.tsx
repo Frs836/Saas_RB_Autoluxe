@@ -40,6 +40,7 @@ const STATUS_META: Record<string, { label: string; cls: string; icon: string }> 
   pending: { label: "Menunggu", cls: "bg-warning-surface text-warning-text", icon: "hourglass_top" },
   approved: { label: "Disetujui", cls: "bg-success-surface text-success-text", icon: "task_alt" },
   rejected: { label: "Ditolak", cls: "bg-danger-surface text-danger-text", icon: "cancel" },
+  cancelled: { label: "Dibatalkan", cls: "bg-surface-container text-text-secondary", icon: "undo" },
 };
 
 function dayCount(start: string, end: string) {
@@ -195,6 +196,40 @@ export function TimeOffConsole({ requests, canDecide, todayIso }: Props) {
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Gagal menyimpan keputusan.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /**
+   * Menarik pengajuan milik sendiri yang masih menunggu.
+   *
+   * Sebelumnya tidak ada jalur ini sama sekali. Halaman menampilkan kalimat
+   * bahwa pengajuan hanya bisa dibatalkan oleh pemohon, tanpa memberi tombol
+   * apa pun untuk melakukannya.
+   */
+  async function cancelOwn(id: string, ringkas: string) {
+    if (busy) return;
+    const ya = window.confirm(
+      `Tarik pengajuan ${ringkas}? Pengajuan yang sudah ditarik tidak bisa dipulihkan.`,
+    );
+    if (!ya) return;
+
+    setBusy(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const supabase = createClient();
+      const { error: rpcError } = await supabase.rpc("cancel_time_off_request", {
+        p_id: id,
+      });
+      if (rpcError) throw new Error(rpcError.message);
+      setSuccess("Pengajuan ditarik.");
+      router.refresh();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Gagal menarik pengajuan.",
+      );
     } finally {
       setBusy(false);
     }
@@ -465,6 +500,29 @@ export function TimeOffConsole({ requests, canDecide, todayIso }: Props) {
                       </p>
                     ) : null}
 
+                    {/*
+                      Pemohon sendiri yang menarik pengajuannya. Tombol ini
+                      berlaku untuk semua peran, bukan hanya yang punya hak
+                      memutuskan; sebelumnya pesan yang muncul justru hanya
+                      untuk yang punya hak memutuskan, dan tanpa tombol.
+                    */}
+                    {row.isOwn && row.status === "pending" ? (
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() =>
+                          cancelOwn(
+                            row.id,
+                            `${row.type === "izin" ? "izin" : row.type} ${formatDateWib(row.startDate)}`,
+                          )
+                        }
+                        className="w-full py-2.5 rounded-xl bg-surface-container text-text-secondary font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform disabled:opacity-60"
+                      >
+                        <Icon name="undo" className="text-[16px]" />
+                        Tarik Pengajuan
+                      </button>
+                    ) : null}
+
                     {canDecide && !row.isOwn && row.status === "pending" ? (
                       <div className="flex gap-2 pt-1">
                         <button
@@ -486,12 +544,6 @@ export function TimeOffConsole({ requests, canDecide, todayIso }: Props) {
                           Tolak
                         </button>
                       </div>
-                    ) : null}
-
-                    {canDecide && row.isOwn && row.status === "pending" ? (
-                      <p className="font-micro-badge text-micro-badge text-text-muted">
-                        Pengajuan ini milik Anda sendiri, jadi hanya bisa Anda batalkan.
-                      </p>
                     ) : null}
                   </div>
                 );

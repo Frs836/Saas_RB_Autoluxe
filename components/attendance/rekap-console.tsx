@@ -603,7 +603,7 @@ export function RekapConsole({
   ];
 
   return (
-    <div className="flex flex-col w-full pb-nav">
+    <div className="flex flex-col w-full pb-nav-plain">
       {/* Micro-bar: status geofence + export */}
       <section className="px-gutter pt-3">
         <div className="bg-clay-overlay rounded-xl px-3 py-2.5 flex items-center justify-between border border-border-subtle">

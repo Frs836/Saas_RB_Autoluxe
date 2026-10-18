@@ -168,7 +168,7 @@ export function LaporanView({ data }: { data: LaporanData }) {
   }
 
   return (
-    <div className="flex-1 px-gutter pt-4 pb-nav flex flex-col gap-4">
+    <div className="flex-1 px-gutter pt-4 pb-nav-plain flex flex-col gap-4">
       <section className="bg-surface rounded-[20px] p-4 clay-card border border-white/80">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">

@@ -22,7 +22,7 @@ export default async function IzinPage() {
   const { data: rows } = await supabase
     .from("time_off_requests")
     .select(
-      "id, profile_id, type, start_date, end_date, reason, proof_photo_url, status, approver_id, decided_at, created_at",
+      "id, profile_id, type, start_date, end_date, reason, proof_photo_url, status, approver_id, decided_at, created_at, cancelled_at",
     )
     .order("created_at", { ascending: false })
     .limit(200);

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMemo, useState, type ChangeEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { formatRupiah } from "@/lib/format";
@@ -68,6 +69,7 @@ export function PosConsole({
   roleLabel,
 }: Props) {
   const isEmployee = role === "karyawan";
+  const router = useRouter();
   const [step, setStep] = useState<"catalog" | "checkout" | "done">("catalog");
   const [vehicleType, setVehicleType] = useState<VehicleType>("mobil");
   const [size, setSize] = useState<VehicleSize>("M");
@@ -353,6 +355,10 @@ export function PosConsole({
       });
       setStep("done");
       if (teamWarning) setError(teamWarning);
+      // Antrean order perlu disegarkan setelah order dibuat. Tanpa ini, kartu
+      // "Lihat Antrean Order" membuka daftar yang belum memuat order yang baru
+      // saja dibuat, dan kasir mengira order-nya hilang.
+      router.refresh();
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Terjadi kesalahan, coba lagi.",
@@ -389,7 +395,7 @@ export function PosConsole({
 
   if (step === "done" && result) {
     return (
-      <div className="px-gutter py-6 pb-28">
+      <div className="px-gutter py-6 pb-nav">
         <div className="clay-card p-6 flex flex-col items-center text-center gap-3">
           <div className="w-16 h-16 rounded-full bg-success-surface flex items-center justify-center">
             <Icon name="check_circle" className="text-success-text text-[34px]" />

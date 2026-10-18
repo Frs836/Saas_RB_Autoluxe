@@ -612,7 +612,7 @@ export function AttendanceConsole({
    *
    * Dua hal tidak lagi menjadi syarat:
    *
-   * Ambil foto. Wajah sudah dibuktikan oleh lima tahap liveness, yaitu
+   * Ambil foto. Wajah sudah dibuktikan oleh tiga tahap liveness, yaitu
    * hadap lurus, kedip, buka mulut, putar kiri, dan putar kanan. Foto
    * diambil otomatis setelah liveness selesai, jadi tidak ada langkah manual.
    *
@@ -638,8 +638,8 @@ export function AttendanceConsole({
       terpenuhi: liveSelesai,
       label:
         mode === "checkout"
-          ? "Selesaikan lima tahap liveness untuk absen keluar"
-          : "Selesaikan lima tahap liveness",
+          ? "Selesaikan tiga tahap liveness untuk absen keluar"
+          : "Selesaikan tiga tahap liveness",
     },
     {
       terpenuhi: mode === "checkout" || lateReasonValid,
@@ -652,7 +652,7 @@ export function AttendanceConsole({
   const canSubmit = syaratSubmit.every((s) => s.terpenuhi);
 
   /*
-   * Foto diambil otomatis begitu lima tahap liveness selesai. Tombol "Ambil
+   * Foto diambil otomatis begitu tiga tahap liveness selesai. Tombol "Ambil
    * Foto" dihapus supaya wajah tidak lagi butuh aksi manual; foto hanya
    * formalitas bukti, sedangkan yang menentukan lulus adalah vektor wajah
    * yang dibandingkan server.
@@ -719,7 +719,7 @@ export function AttendanceConsole({
   })();
 
   return (
-    <div className="flex flex-col w-full pb-nav">
+    <div className="flex flex-col w-full pb-nav-plain">
       {/* Ringkasan shift hari ini (owner / admin_kasir / maintainer) */}
       {canAudit ? (
         <section className="px-gutter pt-4">
@@ -1165,7 +1165,7 @@ export function AttendanceConsole({
                     ? "Mengambil foto otomatis..."
                     : liveSelesai
                       ? "Menyiapkan data absen..."
-                      : "Ikuti lima tahap liveness, foto diambil otomatis."}
+                      : "Ikuti tiga tahap liveness, foto diambil otomatis."}
                 </p>
               )}
             </div>

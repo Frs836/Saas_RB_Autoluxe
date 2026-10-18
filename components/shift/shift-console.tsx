@@ -902,7 +902,7 @@ function ClosedSummary({
           className="w-full h-[50px] rounded-full primary-gradient text-white font-bold text-[14px] tracking-wide uppercase flex items-center justify-center gap-2.5 clay-glow active:scale-[0.98] transition-all"
         >
           <Icon name="print" className="text-[22px]" />
-          Cetak Bukti Serah Terima Kas (Thermal)
+          Cetak Bukti (Opsional)
         </button>
       </div>
     </section>
@@ -986,22 +986,38 @@ function SuccessCard({
           </div>
         ) : null}
 
-        <button
-          type="button"
-          onClick={handlePrint}
-          className="w-full h-[50px] rounded-full primary-gradient text-white font-bold text-[14px] tracking-wide uppercase flex items-center justify-center gap-2.5 clay-glow active:scale-[0.98] transition-all"
-        >
-          <Icon name="print" className="text-[22px]" />
-          Cetak Bukti Serah Terima Kas (Thermal)
-        </button>
-        <button
-          type="button"
-          onClick={onReload}
-          className="w-full h-11 rounded-full bg-surface-container-low text-text-secondary font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform"
-        >
-          <Icon name="refresh" className="text-[18px]" />
-          Muat Ringkasan Terbaru
-        </button>
+        {/*
+          Bukti cetak thermal adalah opsional, bukan tahap terakhir. Kalau
+          printer thermal tidak tersedia, sebelumnya kasir hanya punya tombol
+          cetak dan tombol muat ulang, sehingga tidak ada jalan keluar yang
+          jelas dari layar ini. Urutannya ditutup dengan dua pilihan yang
+          selalu bisa dipakai: kembali ke beranda atau cetak bukti.
+        */}
+        <div className="flex flex-col gap-2">
+          <button
+            type="button"
+            onClick={handlePrint}
+            className="w-full h-12 rounded-full bg-surface-container text-text-secondary font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
+          >
+            <Icon name="print" className="text-[20px]" />
+            Cetak Bukti (Opsional)
+          </button>
+          <button
+            type="button"
+            onClick={onReload}
+            className="w-full h-11 rounded-full bg-surface-container-low text-text-secondary font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform"
+          >
+            <Icon name="refresh" className="text-[18px]" />
+            Muat Ringkasan Terbaru
+          </button>
+          <a
+            href="/dashboard"
+            className="w-full h-[50px] rounded-full primary-gradient text-white font-bold text-[14px] tracking-wide uppercase flex items-center justify-center gap-2.5 clay-glow active:scale-[0.98] transition-all"
+          >
+            <Icon name="home" className="text-[22px]" />
+            Selesai, Kembali ke Beranda
+          </a>
+        </div>
       </div>
     </section>
   );

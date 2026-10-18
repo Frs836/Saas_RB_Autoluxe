@@ -308,7 +308,7 @@ export function ServiceManager({
   const bukaPanel = sunting !== null || buatBaru;
 
   return (
-    <main className="flex-1 px-gutter pt-4 pb-nav flex flex-col gap-3">
+    <main className="flex-1 px-gutter pt-4 pb-nav-plain flex flex-col gap-3">
       <div className="grid grid-cols-3 gap-2">
         <div className="clay-card p-3 flex flex-col items-center gap-0.5">
           <span className="font-headline-2 text-headline-2 text-text-primary">

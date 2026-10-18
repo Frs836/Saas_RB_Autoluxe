@@ -49,10 +49,34 @@
 :root {
   --nav-h: 68px;
   --nav-h-fab: 88px;
+  /* Tinggi bilah aksi yang menempel di atas navigasi bawah: tombol 56px
+     ditambah padding atas dan bawah 12px. */
+  --action-bar-h: 80px;
 }
 
-/* Ruang aman agar isi tidak tertutup navigasi bawah. */
+/*
+ * Ruang aman agar isi tidak tertutup navigasi bawah maupun bilah aksi.
+ *
+ * Nilai sebelumnya hanya memperhitungkan tinggi navigasi bawah. Halaman yang
+ * punya bilah aksi menempel di atas navigasi--opname, kas, pengaturan
+ * cabang, checkout POS--memakai kelas pb-nav yang sama, sehingga ruangnya
+ * kurang dari tinggi bilah aksi dan baris terakhir tertutup. Input terakhir
+ * menjadi tidak bisa diketuk karena tertutup tombol yang melayang.
+ *
+ * Ruang di sini sekarang menjumlahkan keduanya. Halaman tanpa bilah aksi
+ * memakai pb-nav-plain supaya tidak menyisakan ruang kosong yang tidak perlu.
+ */
 .pb-nav {
+  padding-bottom: calc(
+    var(--nav-h-fab) +
+      env(safe-area-inset-bottom, 0px) +
+      24px +
+      var(--action-bar-h)
+  );
+}
+
+/* Untuk halaman tanpa bilah aksi menempel. */
+.pb-nav-plain {
   padding-bottom: calc(
     var(--nav-h-fab) + env(safe-area-inset-bottom, 0px) + 24px
   );

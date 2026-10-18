@@ -232,13 +232,18 @@ function sudutKepala(m: { data: number[] } | undefined): {
 
 export type Tahap = "center" | "blink" | "mouth" | "left" | "right";
 
-export const URUTAN_TAHAP: Tahap[] = [
-  "center",
-  "blink",
-  "mouth",
-  "left",
-  "right",
-];
+/*
+ * Tahap liveness yang diminta.
+ *
+ * Tengok kiri dan kanan dihapus. Alasannya bukan sekadar ringkas: banyak
+ * staf absen sambil memegang kunci unit atau menelepon, dan gerakan kepala
+ * justru membuat deteksi gagal. Tiga tahap ini sudah cukup membuktikan
+ * bahwa orangnya hidup dan sedang memegang kamera, sedangkan descriptor
+ * wajah tetap dipakai sebagai bukti keaslian. Nilai kiri dan kanan tetap
+ * ada di tipe Tahap supaya jejak lama yang tersimpan di database tidak jadi
+ * tidak terbaca.
+ */
+export const URUTAN_TAHAP: Tahap[] = ["center", "blink", "mouth"];
 
 export const LABEL_TAHAP: Record<Tahap, string> = {
   center: "Hadap lurus ke kamera",

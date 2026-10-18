@@ -100,13 +100,28 @@ const TRANSITIONS: Record<
 
 const STATUS_SERAH_TERIMA = new Set(["menunggu_diambil", "diserahkan"]);
 
+/*
+ * Tab antrean.
+ *
+ * Sebelumnya hanya ada queued, in_progress, qc_review, dan completed.
+ * Migrasi 0030 menambah menunggu_diambil dan diserahkan ke enum status, dan
+ * keduanya punya aksi di halaman ini, tetapi tidak punya tab. Filter memakai
+ * pencocokan status yang persis, jadi begitu satu order berhenti di
+ * menunggu_diambil, order itu tidak cocok dengan tab mana pun dan hilang
+ * dari layar walaupun datanya masih ada. Tab "Selesai" sengaja dibuat
+ * mencakup tiga status pascapengerjaan supaya tidak ada order yang tidak bisa
+ * ditemukan.
+ */
 const FILTERS = [
   { key: "all", label: "Semua" },
   { key: "queued", label: "Antrean" },
   { key: "in_progress", label: "Dikerjakan" },
   { key: "qc_review", label: "QC Review" },
-  { key: "completed", label: "Selesai" },
+  { key: "selesai", label: "Selesai" },
 ];
+
+/* Status pascapengerjaan yang dikumpulkan pada tab Selesai. */
+const STATUS_SELESAI = new Set(["completed", "menunggu_diambil", "diserahkan"]);
 
 function initials(name: string | null) {
   if (!name) return "RB";
@@ -141,7 +156,11 @@ export function OrderQueue({
     () =>
       orders.filter((order) => {
         const matchFilter =
-          filter === "all" ? order.status !== "cancelled" : order.status === filter;
+          filter === "all"
+            ? order.status !== "cancelled"
+            : filter === "selesai"
+              ? STATUS_SELESAI.has(order.status)
+              : order.status === filter;
         const matchQuery =
           query === "" ||
           (order.order_number ?? "").toLowerCase().includes(query) ||
@@ -158,7 +177,7 @@ export function OrderQueue({
       queued: orders.filter((o) => o.status === "queued").length,
       in_progress: orders.filter((o) => o.status === "in_progress").length,
       qc_review: orders.filter((o) => o.status === "qc_review").length,
-      completed: orders.filter((o) => o.status === "completed").length,
+      selesai: orders.filter((o) => STATUS_SELESAI.has(o.status)).length,
     }),
     [orders],
   );
@@ -218,13 +237,13 @@ export function OrderQueue({
   }
 
   return (
-    <div className="px-gutter py-4 pb-28 flex flex-col gap-4">
+    <div className="px-gutter py-4 pb-nav-plain flex flex-col gap-4">
       <div className="grid grid-cols-4 gap-2">
         {[
           { key: "queued", label: "Antrean", value: counts.queued },
           { key: "in_progress", label: "Kerja", value: counts.in_progress },
           { key: "qc_review", label: "QC", value: counts.qc_review },
-          { key: "completed", label: "Selesai", value: counts.completed },
+          { key: "selesai", label: "Selesai", value: counts.selesai },
         ].map((stat) => (
           <div
             key={stat.key}

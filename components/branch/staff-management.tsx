@@ -15,6 +15,7 @@ export type ManagedStaff = {
   branchName: string;
   workSchedule: "field" | "office";
   isActive: boolean;
+  defaultOffDay: number | null;
   facePhotoUrl: string | null;
   faceStatus: string;
 };
@@ -34,6 +35,15 @@ const HARI: { value: number; label: string }[] = [
   { value: 5, label: "Jumat" },
   { value: 6, label: "Sabtu" },
 ];
+
+function hariLabel(nilai: number): string {
+  return HARI.find((h) => h.value === nilai)?.label ?? "Tidak diketahui";
+}
+
+/* Nilai select harus berupa string; hari yang belum ada disiarkan kosong. */
+function hariLiburAktif(s: ManagedStaff): string {
+  return s.defaultOffDay === null ? "" : String(s.defaultOffDay);
+}
 
 /**
  * Daftar staf yang bisa ditata: status aktif, jabatan, jadwal kerja, dan
@@ -56,13 +66,25 @@ export function StaffManagement({
   const [terbuka, setTerbuka] = useState<string | null>(null);
   const [sibuk, setSibuk] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [sukses, setSukses] = useState<string | null>(null);
 
+  /**
+   * Menyimpan perubahan staf.
+   *
+   * Setiap perubahan selalu menghasilkan umpan balik. Sebelumnya select hari
+   * libur memanggil fungsi ini tanpa pesan apa pun, sehingga ketika gagal
+   * tidak ada yang bergerak dan tidak ada yang tahu alasannya. Sekarang nama
+   * field diterjemahkan jadi kalimat, dan hasilnya ditulis baik saat berhasil
+   * maupun saat gagal.
+   */
   async function simpan(
     profileId: string,
     perubahan: Record<string, unknown>,
+    keterangan: string,
   ) {
     setSibuk(profileId);
     setError(null);
+    setSukses(null);
     const supabase = createClient();
     const { error: rpcError } = await supabase.rpc("update_staff_profile", {
       p_profile_id: profileId,
@@ -70,9 +92,10 @@ export function StaffManagement({
     });
     setSibuk(null);
     if (rpcError) {
-      setError(rpcError.message);
+      setError(`${keterangan} gagal: ${rpcError.message}`);
       return;
     }
+    setSukses(`${keterangan} tersimpan.`);
     router.refresh();
   }
 
@@ -91,6 +114,13 @@ export function StaffManagement({
         <div className="p-3 rounded-xl bg-danger-surface text-danger-text font-caption text-caption flex items-center gap-2">
           <Icon name="error" className="text-[18px] shrink-0" />
           <span className="flex-1">{error}</span>
+        </div>
+      ) : null}
+
+      {sukses ? (
+        <div className="p-3 rounded-xl bg-success-surface text-success-text font-caption text-caption flex items-center gap-2">
+          <Icon name="check_circle" className="text-[18px] shrink-0" />
+          <span className="flex-1">{sukses}</span>
         </div>
       ) : null}
 
@@ -156,7 +186,11 @@ export function StaffManagement({
                 type="button"
                 disabled={sibukBaris}
                 onClick={() =>
-                  simpan(s.id, { p_is_active: !s.isActive })
+                  simpan(
+                    s.id,
+                    { p_is_active: !s.isActive },
+                    s.isActive ? "Penonaktifan staf" : "Pengaktifan staf",
+                  )
                 }
                 className={`flex-1 min-h-11 rounded-xl font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform disabled:opacity-60 ${
                   s.isActive
@@ -182,7 +216,11 @@ export function StaffManagement({
                     defaultValue={s.role}
                     disabled={!bisaUbahJabatan || sibukBaris}
                     onChange={(e) =>
-                      simpan(s.id, { p_role: e.target.value })
+                      simpan(
+                        s.id,
+                        { p_role: e.target.value },
+                        "Perubahan jabatan",
+                      )
                     }
                     className="h-11 px-3 rounded-xl bg-surface-container font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400 disabled:opacity-60"
                   >
@@ -207,7 +245,11 @@ export function StaffManagement({
                     defaultValue={s.workSchedule}
                     disabled={sibukBaris}
                     onChange={(e) =>
-                      simpan(s.id, { p_work_schedule: e.target.value })
+                      simpan(
+                        s.id,
+                        { p_work_schedule: e.target.value },
+                        "Perubahan jadwal kerja",
+                      )
                     }
                     className="h-11 px-3 rounded-xl bg-surface-container font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400 disabled:opacity-60"
                   >
@@ -224,7 +266,11 @@ export function StaffManagement({
                     defaultValue={s.branchId ?? ""}
                     disabled={sibukBaris}
                     onChange={(e) =>
-                      simpan(s.id, { p_branch_id: e.target.value })
+                      simpan(
+                        s.id,
+                        { p_branch_id: e.target.value },
+                        "Pemindahan cabang",
+                      )
                     }
                     className="h-11 px-3 rounded-xl bg-surface-container font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400 disabled:opacity-60"
                   >
@@ -240,15 +286,26 @@ export function StaffManagement({
                   <span className="font-micro-badge text-micro-badge text-text-muted">
                     Hari Libur Rutin
                   </span>
+                  {/*
+                    Select ini menampilkan hari yang sedang berlaku, bukan
+                    selalu "Pilih hari". Kalau selalu kosong, pengelola tidak
+                    pernah bisa memastikan hari libur yang lalu benar-benar
+                    tersimpan, dan select yang kembali kosong membuat perubahan
+                    terasa tidak terjadi sama sekali.
+                  */}
                   <select
-                    defaultValue=""
+                    value={hariLiburAktif(s)}
                     disabled={sibukBaris}
                     onChange={(e) => {
                       if (e.target.value === "") return;
-                      simpan(s.id, {
-                        p_default_off_day: Number(e.target.value),
-                      });
-                      e.target.value = "";
+                      const terpilih = HARI.find(
+                        (h) => h.value === Number(e.target.value),
+                      );
+                      simpan(
+                        s.id,
+                        { p_default_off_day: Number(e.target.value) },
+                        `Setelan hari libur ${terpilih?.label ?? ""}`.trim(),
+                      );
                     }}
                     className="h-11 px-3 rounded-xl bg-surface-container font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400 disabled:opacity-60"
                   >
@@ -259,6 +316,11 @@ export function StaffManagement({
                       </option>
                     ))}
                   </select>
+                  <span className="font-micro-badge text-micro-badge text-text-muted">
+                    {s.defaultOffDay === null
+                      ? "Belum ada hari libur rutin."
+                      : `Setiap ${hariLabel(s.defaultOffDay)}, sistem menandai kehadiran sebagai libur shift.`}
+                  </span>
                 </label>
               </div>
             ) : null}

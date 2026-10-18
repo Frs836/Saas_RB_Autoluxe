@@ -9,7 +9,7 @@ import {
 } from "@/components/pos/order-queue";
 import { can } from "@/lib/rbac";
 import { getSessionProfile, scopedBranchId } from "@/lib/rbac-guard";
-import { scopeBranchQuery } from "@/lib/branch";
+import { queryError, scopeBranchQuery } from "@/lib/branch";
 
 export const instant = false;
 
@@ -41,8 +41,17 @@ export default async function OrderQueuePage() {
       "orders",
     )
       .order("created_at", { ascending: false })
-      .limit(60),
+      // Batas 60 pernah membuat order yang sedang dikerjakan tersingkir begitu
+      // ada checkout baru yang lebih baru, sehingga unit yang sedang dikerjakan
+      // ikut hilang dari layar. 300 memberi ruang untuk antrean panjang tanpa
+      // menarik seluruh tabel.
+      .limit(300),
   ]);
+
+  // Kegagalan kueri di sini berarti layar menampilkan antrean kosong yang
+  // terbaca seperti tidak ada order sama sekali. Kesalahan dicatat supaya bisa
+  // ditelusuri, bukan disamarkan jadi daftar kosong.
+  queryError(ordersRes, "pos.orders");
 
   const orders = ordersRes.data ?? [];
   const orderIds = orders.map((o) => o.id);

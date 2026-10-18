@@ -38,7 +38,7 @@ export default async function StaffSchedulePage() {
       let q = supabase
         .from("profiles")
         .select(
-          "id, full_name, role, branch_id, work_schedule, is_active, face_reference_photo_url, face_verification",
+          "id, full_name, role, branch_id, work_schedule, is_active, default_off_day, face_reference_photo_url, face_verification",
         )
         .order("full_name");
       if (cabangId) q = q.eq("branch_id", cabangId);
@@ -131,6 +131,10 @@ export default async function StaffSchedulePage() {
     workSchedule:
       (row.work_schedule as ManagedStaff["workSchedule"]) ?? "field",
     isActive: (row.is_active as boolean) ?? true,
+    defaultOffDay:
+      row.default_off_day === null || row.default_off_day === undefined
+        ? null
+        : Number(row.default_off_day),
     facePhotoUrl: (row.face_reference_photo_url as string | null) ?? null,
     faceStatus:
       FACE_LABEL[(row.face_verification as string) ?? "none"] ?? "Belum Daftar",

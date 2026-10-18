@@ -265,7 +265,7 @@ export function WhatsappConsole({
 
   return (
     <div className="min-h-screen bg-canvas">
-      <div className="pb-nav px-gutter pt-4 space-y-space-lg">
+      <div className="pb-nav-plain px-gutter pt-4 space-y-space-lg">
         <section className="clay-card flex flex-col gap-space-md p-space-lg">
           <div className="flex items-center justify-between gap-3">
             <div>

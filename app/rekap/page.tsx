@@ -107,7 +107,7 @@ export default async function RekapPage() {
   const todayLogsRes = await supabase
     .from("attendance_logs")
     .select(
-      "id, profile_id, date, clock_in, clock_out, status, late_minutes, late_reason, face_similarity_score, gps_lat, gps_lng, gps_accuracy_meters, face_photo_url, clock_out_photo_url, notes, validation_score",
+      "id, profile_id, date, clock_in, clock_out, status, late_minutes, late_reason, face_similarity_score, gps_lat, gps_lng, gps_accuracy_meters, face_photo_url, clock_out_photo_url, notes, validation_score, distance_from_branch_meters, geofence_radius_meters, outside_radius, clock_out_gps_lat, clock_out_gps_lng",
     )
     .eq("date", today)
     .in("profile_id", branchProfileIds.length > 0 ? branchProfileIds : ["00000000-0000-0000-0000-000000000000"]);
@@ -154,6 +154,23 @@ export default async function RekapPage() {
     gpsLng: row.gps_lng === null ? null : Number(row.gps_lng),
     gpsAccuracy:
       row.gps_accuracy_meters === null ? null : Number(row.gps_accuracy_meters),
+    /*
+     * Jarak, radius, dan penanda luar radius sudah dihitung server saat
+     * check-in dan disimpan. Nilai inilah yang dipakai atasan saat menilai
+     * kehadiran, jadi laporan harus menampilkan angka yang sama, bukan
+     * hasil hitung ulang di peramban.
+     */
+    distanceFromBranch:
+      row.distance_from_branch_meters === null
+        ? null
+        : Number(row.distance_from_branch_meters),
+    storedRadius:
+      row.geofence_radius_meters === null ? null : Number(row.geofence_radius_meters),
+    outsideRadius: row.outside_radius === null ? null : Boolean(row.outside_radius),
+    clockOutGpsLat:
+      row.clock_out_gps_lat === null ? null : Number(row.clock_out_gps_lat),
+    clockOutGpsLng:
+      row.clock_out_gps_lng === null ? null : Number(row.clock_out_gps_lng),
     facePhotoUrl: row.face_photo_url as string | null,
     clockOutPhotoUrl: row.clock_out_photo_url as string | null,
     notes: row.notes as string | null,

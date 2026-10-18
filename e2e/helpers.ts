@@ -56,18 +56,38 @@ export async function login(page: Page, role: string) {
       await page.context().clearCookies();
     }
 
-    await page.goto("/login", { waitUntil: "domcontentloaded" });
+    /*
+     * Tunggu sampai event load, bukan hanya domcontentloaded.
+     *
+     * Halaman login memakai onSubmit milik React. domcontentloaded selesai
+     * sebelum bundel hidrasi dieksekusi, jadi tombol masih bisa diklik
+     * sementara belum ada satu pun penangan yang menempel. Formulirnya
+     * terlihat terisi, kliknya diterima browser, dan tidak terjadi apa pun.
+     *
+     * Di produksi render server butuh beberapa detik, jadi celah ini bukan
+     * hal sepele. Setelah load, React sudah memasang penangan dan klik
+     * benar-benar memanggil signInWithPassword.
+     */
+    await page.goto("/login", { waitUntil: "load" });
+    await page.waitForFunction(
+      () =>
+        document.querySelector('input[type="email"]') !== null &&
+        document.readyState === "complete",
+    );
     await page.fill('input[type="email"]', user.email);
     await page.fill('input[type="password"]', user.password);
     await page.click('button[type="submit"]');
 
-    // Menunggu dengan networkidle tidak dapat diandalkan karena koneksi
-    // realtime Supabase menahan koneksi tetap terbuka. Syarat yang benar-benar
-    // menentukan keberhasilan login adalah cookie sesi sudah ditulis.
+    /*
+     * Syarat keberhasilan henceforth dua: cookie sesi tertulis, atau URL
+     * sudah pindah ke /dashboard. Dulu hanya cookie yang diperiksa, padahal
+     * sesi bisa sudah terbentuk sebelum cookie-nya terlihat.
+     */
     const mulai = Date.now();
     while (Date.now() - mulai < 30_000) {
       const cookies = await page.context().cookies();
-      if (cookies.some((item) => item.name.includes("auth-token"))) {
+      const sudahMasuk = !page.url().includes("/login");
+      if (cookies.some((item) => item.name.includes("auth-token")) || sudahMasuk) {
         await page.waitForTimeout(500);
         return;
       }

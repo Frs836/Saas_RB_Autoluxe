@@ -59,6 +59,18 @@ type Log = {
   gpsLat: number | null;
   gpsLng: number | null;
   gpsAccuracy: number | null;
+  /*
+   * Nilai yang sudah dihitung server saat check-in. Jarak hasil hitung ulang
+   * di peramban bisa berbeda sedikit karena Garis bumi dan pembulatan, jadi
+   * yang ditampilkan ke atasan harus angka yang sama dengan yang tercatat
+   * di log. outsideRadius tetap dipakai walau koordinat kosong, karena
+   * penandanya sudah disimpan terpisah.
+   */
+  distanceFromBranch: number | null;
+  storedRadius: number | null;
+  outsideRadius: boolean | null;
+  clockOutGpsLat: number | null;
+  clockOutGpsLng: number | null;
   facePhotoUrl: string | null;
   clockOutPhotoUrl: string | null;
   notes: string | null;
@@ -121,7 +133,7 @@ function mapAudit(row: Record<string, unknown>): AuditLog {
 }
 
 const LOG_COLUMNS =
-  "id, profile_id, clock_in, clock_out, status, late_minutes, late_reason, face_similarity_score, gps_lat, gps_lng, gps_accuracy_meters, face_photo_url, clock_out_photo_url, notes";
+  "id, profile_id, clock_in, clock_out, status, late_minutes, late_reason, face_similarity_score, gps_lat, gps_lng, gps_accuracy_meters, face_photo_url, clock_out_photo_url, notes, distance_from_branch_meters, geofence_radius_meters, outside_radius, clock_out_gps_lat, clock_out_gps_lng";
 
 function mapLog(row: Record<string, unknown>): Log {
   return {
@@ -138,6 +150,17 @@ function mapLog(row: Record<string, unknown>): Log {
     gpsLng: row.gps_lng === null ? null : Number(row.gps_lng),
     gpsAccuracy:
       row.gps_accuracy_meters === null ? null : Number(row.gps_accuracy_meters),
+    distanceFromBranch:
+      row.distance_from_branch_meters === null
+        ? null
+        : Number(row.distance_from_branch_meters),
+    storedRadius:
+      row.geofence_radius_meters === null ? null : Number(row.geofence_radius_meters),
+    outsideRadius: row.outside_radius === null ? null : Boolean(row.outside_radius),
+    clockOutGpsLat:
+      row.clock_out_gps_lat === null ? null : Number(row.clock_out_gps_lat),
+    clockOutGpsLng:
+      row.clock_out_gps_lng === null ? null : Number(row.clock_out_gps_lng),
     facePhotoUrl: row.face_photo_url as string | null,
     clockOutPhotoUrl: row.clock_out_photo_url as string | null,
     notes: row.notes as string | null,
@@ -820,11 +843,10 @@ export function RekapConsole({
           visibleStaff.map((person) => {
             const log = logByProfile.get(person.id);
             const config = configFor(person);
-            const distance =
-              log?.gpsLat !== null &&
-              log?.gpsLat !== undefined &&
-              log?.gpsLng !== null &&
-              log?.gpsLng !== undefined &&
+            const radius = log?.storedRadius ?? config?.radius ?? null;
+            const hitungUlang =
+              log?.gpsLat != null &&
+              log?.gpsLng != null &&
               config?.latitude != null &&
               config?.longitude != null
                 ? haversineMeters(
@@ -834,6 +856,15 @@ export function RekapConsole({
                     log.gpsLng,
                   )
                 : null;
+            /*
+             * Jarak yang disimpan server yang ditampilkan. Hitung ulang
+             * hanya dipakai untuk log lama yang belum punya kolomnya, dan
+             * penanda luar radius tetap dipakai walau jaraknya null karena
+             * koordinat bisa sengaja tidak disimpan.
+             */
+            const distance = log?.distanceFromBranch ?? hitungUlang;
+            const diLuarRadius =
+              log?.outsideRadius ?? (distance !== null && radius !== null ? distance > radius : null);
             const isLate = log?.status === "hadir" && (log.lateMinutes ?? 0) > 0;
             const hasPhoto = Boolean(log?.facePhotoUrl ?? log?.clockOutPhotoUrl);
 
@@ -936,15 +967,17 @@ export function RekapConsole({
                             className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-micro-badge text-micro-badge ${
                               distance === null
                                 ? "bg-clay-overlay text-text-secondary font-caption text-caption"
-                                : config && distance > config.radius
+                                : diLuarRadius
                                   ? "bg-warning-surface text-warning-text"
                                   : "bg-success-surface text-success-text"
                             }`}
                           >
                             <Icon name="location_on" className="text-[13px]" />
                             {distance === null
-                              ? "GPS tidak tercatat"
-                              : config && distance > config.radius
+                              ? diLuarRadius === true
+                                ? "Di luar radius, koordinat tidak disimpan"
+                                : "GPS tidak tercatat"
+                              : diLuarRadius
                                 ? `Di luar radius (${formatDistance(distance)})`
                                 : `Di dalam radius (${formatDistance(distance)})`}
                           </span>
@@ -1292,19 +1325,24 @@ function VerificationModal({
     latitude: number | null;
     longitude: number | null;
     radius: number;
+    name?: string;
     openTime: string;
     closeTime: string;
   };
   onClose: () => void;
 }) {
   const log = modal.log;
-  const distance =
+  const radius = log.storedRadius ?? branch.radius;
+  const hitungUlang =
     log.gpsLat !== null &&
     log.gpsLng !== null &&
     branch.latitude !== null &&
     branch.longitude !== null
       ? haversineMeters(branch.latitude, branch.longitude, log.gpsLat, log.gpsLng)
       : null;
+  const distance = log.distanceFromBranch ?? hitungUlang;
+  const diLuarRadius =
+    log.outsideRadius ?? (distance !== null ? distance > radius : null);
 
   return (
     <div
@@ -1368,19 +1406,58 @@ function VerificationModal({
         </div>
 
         <div className="px-4 py-4 space-y-2">
-          <div className="bg-surface-container-low rounded-2xl p-3 flex items-center justify-between">
+          <div className="bg-surface-container-low rounded-2xl p-3 flex items-center justify-between gap-3">
             <span className="font-caption text-caption text-text-secondary flex items-center gap-1.5">
               <Icon name="location_on" className="text-[15px] text-brand-500" />
-              Geofence {Math.round(branch.radius)}m
+              Radius catatan
             </span>
-            <span className="font-caption text-caption text-text-primary">
+            <span className="font-caption text-caption text-text-primary text-right">
               {distance === null
-                ? "GPS tidak tersedia"
-                : distance <= branch.radius
-                  ? `Di dalam radius (${formatDistance(distance)})`
-                  : `${formatDistance(distance)} di luar radius`}
+                ? diLuarRadius === true
+                  ? "Di luar radius, koordinat tidak disimpan"
+                  : "GPS tidak tersedia"
+                : diLuarRadius
+                  ? `${formatDistance(distance)} di luar radius ${Math.round(radius)}m`
+                  : `${formatDistance(distance)} di dalam radius ${Math.round(radius)}m`}
             </span>
           </div>
+
+          {/*
+            Titik perangkat dan titik cabang ditampilkan apa adanya. Jarak
+            saja belum cukup untuk memeriksa laporan, karena angka yang sama
+            bisa muncul dari titik yang berbeda.
+          */}
+          {log.gpsLat !== null && log.gpsLng !== null ? (
+            <div className="bg-surface-container-low rounded-2xl p-3 flex items-center justify-between gap-3">
+              <span className="font-caption text-caption text-text-secondary">
+                Titik perangkat saat masuk
+              </span>
+              <span className="font-caption text-caption text-text-primary text-right tabular-nums">
+                {log.gpsLat.toFixed(5)}, {log.gpsLng.toFixed(5)}
+                {log.gpsAccuracy !== null ? ` +/-${Math.round(log.gpsAccuracy)}m` : ""}
+              </span>
+            </div>
+          ) : null}
+          {log.clockOutGpsLat !== null && log.clockOutGpsLng !== null ? (
+            <div className="bg-surface-container-low rounded-2xl p-3 flex items-center justify-between gap-3">
+              <span className="font-caption text-caption text-text-secondary">
+                Titik perangkat saat keluar
+              </span>
+              <span className="font-caption text-caption text-text-primary text-right tabular-nums">
+                {log.clockOutGpsLat.toFixed(5)}, {log.clockOutGpsLng.toFixed(5)}
+              </span>
+            </div>
+          ) : null}
+          {branch.latitude !== null && branch.longitude !== null ? (
+            <div className="bg-surface-container-low rounded-2xl p-3 flex items-center justify-between gap-3">
+              <span className="font-caption text-caption text-text-secondary">
+                Titik acuan {branch.name ?? "cabang"}
+              </span>
+              <span className="font-caption text-caption text-text-primary text-right tabular-nums">
+                {branch.latitude.toFixed(5)}, {branch.longitude.toFixed(5)}
+              </span>
+            </div>
+          ) : null}
           <div className="bg-surface-container-low rounded-2xl p-3 flex items-center justify-between">
             <span className="font-caption text-caption text-text-secondary flex items-center gap-1.5">
               <Icon name="face" className="text-[15px] text-brand-500" />

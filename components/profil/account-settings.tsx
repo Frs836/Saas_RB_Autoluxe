@@ -12,6 +12,7 @@ import {
   type AccountActionResult,
 } from "@/app/actions/account";
 import { Icon } from "@/components/ui/icon";
+import { AvatarCropper } from "@/components/profil/avatar-cropper";
 import { initials } from "@/lib/format";
 import { urlAvatar } from "@/lib/avatar";
 
@@ -55,7 +56,7 @@ export function AccountSettings({
   });
   const [sandiTerlihat, setSandiTerlihat] = useState(false);
   const [avatar, setAvatar] = useState<string | null>(avatarUrl);
-  const [pratinjau, setPratinjau] = useState<string | null>(null);
+  const [berkasCrop, setBerkasCrop] = useState<File | null>(null);
 
   const [pesan, setPesan] = useState<AccountActionResult | null>(null);
   const [sibuk, setSibuk] = useState<"data" | "email" | "sandi" | "foto" | null>(null);
@@ -122,7 +123,12 @@ export function AccountSettings({
       setPesan({ ok: false, message: "Ukuran foto maksimal 2 MB." });
       return;
     }
+    // Bingkai diatur pengguna sebelum berkas diunggah, bukan dipotong dari tengah.
+    setBerkasCrop(berkas);
+  };
 
+  const unggahFoto = async (gambar: Blob) => {
+    setBerkasCrop(null);
     setSibuk("foto");
     setPesan(null);
     try {
@@ -132,11 +138,6 @@ export function AccountSettings({
       } = await supabase.auth.getUser();
       if (!user) throw new Error("Sesi berakhir.");
 
-      /*
-       * Berkas dikompres lewat canvas sebelum diunggah. Foto dari kamera
-       * ponsel sering 3 sampai 5 MB, sedangkan bucket dibatasi 2 MB.
-       */
-      const gambar = await perkecil(berkas);
       const jalur = `${user.id}/avatar-${Date.now()}.webp`;
 
       const { error: upErr } = await supabase.storage
@@ -156,7 +157,6 @@ export function AccountSettings({
     } catch (e) {
       setPesan({ ok: false, message: `Gagal mengunggah foto: ${(e as Error).message}` });
     } finally {
-      setPratinjau(null);
       setSibuk(null);
       if (fileRef.current) fileRef.current.value = "";
     }
@@ -168,7 +168,7 @@ export function AccountSettings({
     if (hasil.ok) setAvatar(null);
   };
 
-  const tampilFoto = pratinjau ?? (avatar ? urlAvatar(avatar) : null);
+  const tampilFoto = avatar ? urlAvatar(avatar) : null;
 
   return (
     /*
@@ -423,37 +423,19 @@ export function AccountSettings({
           </button>
         </div>
       </section>
+
+      {berkasCrop ? (
+        <AvatarCropper
+          berkas={berkasCrop}
+          onBatal={() => {
+            setBerkasCrop(null);
+            if (fileRef.current) fileRef.current.value = "";
+          }}
+          onSimpan={(hasil) => void unggahFoto(hasil)}
+        />
+      ) : null}
     </div>
   );
 }
 
-/** Mengubah foto asli apa adanya jadi WebP dengan sisi terpanjang 512px. */
-async function perkecil(berkas: File): Promise<Blob> {
-  const gambar = await createImageBitmap(berkas);
-  const sisi = Math.min(gambar.width, gambar.height, 512);
-  const kanvas = document.createElement("canvas");
-  kanvas.width = sisi;
-  kanvas.height = sisi;
-
-  const kuas = kanvas.getContext("2d");
-  if (!kuas) throw new Error("Peramban tidak bisa memproses gambar.");
-  kuas.drawImage(
-    gambar,
-    (gambar.width - sisi) / 2,
-    (gambar.height - sisi) / 2,
-    sisi,
-    sisi,
-    0,
-    0,
-    sisi,
-    sisi,
-  );
-  gambar.close();
-
-  const blob = await new Promise<Blob | null>((selesai) =>
-    kanvas.toBlob(selesai, "image/webp", 0.85),
-  );
-  if (!blob) throw new Error("Gagal memproses gambar.");
-  return blob;
-}
 

@@ -170,7 +170,13 @@ export function AccountSettings({
   const tampilFoto = pratinjau ?? (avatar ? urlAvatar(avatar) : null);
 
   return (
-    <div className="flex flex-col gap-2.5 px-gutter pt-2.5 pb-2">
+    /*
+     * Ruang bawah memakai pb-nav, bukan pb-2. Bagian ini berada di luar
+     * wadah ProfilView yang sudah membawa pb-nav-plain-nya sendiri, jadi
+     * tanpa tambahan ruang di sini tombol terakhir tepat tertutup navigasi
+     * bawah dan tidak bisa diketuk.
+     */
+    <div className="flex flex-col gap-2.5 px-gutter pt-2.5 pb-nav">
       {/* Pesan hasil aksi */}
       {pesan ? (
         <div

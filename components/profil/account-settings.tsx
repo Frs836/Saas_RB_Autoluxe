@@ -417,7 +417,7 @@ export function AccountSettings({
             {sibuk === "sandi" ? (
               <Icon name="progress_activity" className="text-[18px] animate-spin" />
             ) : (
-              <Icon name="key" className="text-[18px]" />
+              <Icon name="lock_reset" className="text-[18px]" />
             )}
             Ganti Kata Sandi
           </button>

@@ -3,7 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { BottomNav } from "@/components/dashboard/bottom-nav";
 import { SubPageHeader } from "@/components/pos/sub-page-header";
 import { ProfilView } from "@/components/profil/profil-view";
-import { AccountSettings, urlAvatar } from "@/components/profil/account-settings";
+import { AccountSettings } from "@/components/profil/account-settings";
+import { urlAvatar } from "@/lib/avatar";
 import { can, profileMenuFor, roleLabel, toRole } from "@/lib/rbac";
 import { getSessionProfile } from "@/lib/rbac-guard";
 

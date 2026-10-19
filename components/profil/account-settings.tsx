@@ -13,6 +13,7 @@ import {
 } from "@/app/actions/account";
 import { Icon } from "@/components/ui/icon";
 import { initials } from "@/lib/format";
+import { urlAvatar } from "@/lib/avatar";
 
 const MAKS_FOTO = 2 * 1024 * 1024;
 const JENIS_FOTO = ["image/webp", "image/jpeg", "image/png"];
@@ -456,12 +457,3 @@ async function perkecil(berkas: File): Promise<Blob> {
   return blob;
 }
 
-/** Bucket foto profil bersifat publik, jadi jalurnya diterjemahkan ke URL. */
-function urlAvatar(jalur: string): string {
-  const dasar =
-    process.env.NEXT_PUBLIC_SUPABASE_URL ??
-    "https://qidtfssldidzvehssevk.supabase.co";
-  return `${dasar}/storage/v1/object/public/profile-avatars/${jalur}`;
-}
-
-export { urlAvatar };

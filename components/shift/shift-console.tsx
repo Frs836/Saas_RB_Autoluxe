@@ -551,7 +551,7 @@ function BukaKasForm({
           className="w-full h-[50px] rounded-full primary-gradient text-white font-bold text-[14px] tracking-wide uppercase flex items-center justify-center gap-2.5 clay-glow active:scale-[0.98] transition-all disabled:opacity-60"
         >
           <Icon name="play_arrow" className="text-[22px]" />
-          {busy ? "Membuka..." : "Buka &amp; Catat Kas Titipan"}
+          {busy ? "Membuka..." : "Buka & Catat Kas Titipan"}
         </button>
       </div>
     </section>
@@ -803,7 +803,7 @@ function AuditForm({
           className="w-full h-[50px] rounded-full primary-gradient text-white font-bold text-[14px] tracking-wide uppercase flex items-center justify-center gap-2.5 clay-glow active:scale-[0.98] transition-all disabled:opacity-60"
         >
           <Icon name="savings" className="text-[22px]" />
-          {busy ? "Menutup Audit..." : "Simpan &amp; Tutup Audit Shift"}
+          {busy ? "Menutup Audit..." : "Simpan & Tutup Audit Shift"}
         </button>
       </div>
     </section>

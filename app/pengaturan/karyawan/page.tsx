@@ -118,6 +118,27 @@ export default async function StaffSchedulePage() {
     none: "Belum Daftar",
   };
 
+  /*
+   * Foto sampel wajah disimpan di bucket privat, jadi harus lewat URL
+   * bertanda tangan. Sebelumnya jalur mentah dipakai langsung sebagai src,
+   * sehingga peramban meminta /pengaturan/<auth_id>/<file>.webp dan selalu
+   * mendapat 404. Tanda tangan dibuat sekali untuk seluruh staf, bukan satu
+   * demi satu, supaya halaman ini tidak menambah satu perjalanan jaringan per
+   * wajah.
+   */
+  const fotoPaths = (stafRes.data ?? [])
+    .map((row) => row.face_reference_photo_url as string | null)
+    .filter((p): p is string => typeof p === "string" && p.length > 0);
+  const fotoUrlMap = new Map<string, string>();
+  if (fotoPaths.length > 0) {
+    const { data: signed } = await supabase.storage
+      .from("attendance-photos")
+      .createSignedUrls(fotoPaths, 60 * 30);
+    for (const item of signed ?? []) {
+      if (item.path && item.signedUrl) fotoUrlMap.set(item.path, item.signedUrl);
+    }
+  }
+
   const managedStaff: ManagedStaff[] = (stafRes.data ?? []).map((row) => ({
     id: row.id as string,
     fullName: (row.full_name as string) ?? "Staf",
@@ -135,7 +156,10 @@ export default async function StaffSchedulePage() {
       row.default_off_day === null || row.default_off_day === undefined
         ? null
         : Number(row.default_off_day),
-    facePhotoUrl: (row.face_reference_photo_url as string | null) ?? null,
+    facePhotoUrl: (() => {
+      const p = row.face_reference_photo_url as string | null;
+      return p ? (fotoUrlMap.get(p) ?? null) : null;
+    })(),
     faceStatus:
       FACE_LABEL[(row.face_verification as string) ?? "none"] ?? "Belum Daftar",
   }));

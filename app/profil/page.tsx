@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { BottomNav } from "@/components/dashboard/bottom-nav";
 import { SubPageHeader } from "@/components/pos/sub-page-header";
 import { ProfilView } from "@/components/profil/profil-view";
+import { AccountSettings, urlAvatar } from "@/components/profil/account-settings";
 import { can, profileMenuFor, roleLabel, toRole } from "@/lib/rbac";
 import { getSessionProfile } from "@/lib/rbac-guard";
 
@@ -18,7 +19,7 @@ export default async function ProfilPage() {
   const supabase = await createClient();
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, phone_number")
+    .select("id, phone_number, date_of_birth, avatar_path")
     .eq("auth_id", session.authId)
     .maybeSingle();
 
@@ -64,6 +65,18 @@ export default async function ProfilPage() {
         }}
         menu={profileMenuFor(role)}
         canManageLocation={can(role, "attendance.manage_location")}
+        avatarUrl={profile?.avatar_path ? urlAvatar(profile.avatar_path) : null}
+      />
+      <AccountSettings
+        nama={session.fullName}
+        telepon={profile?.phone_number ? String(profile.phone_number) : ""}
+        tanggalLahir={
+          profile?.date_of_birth
+            ? String(profile.date_of_birth).slice(0, 10)
+            : ""
+        }
+        email={session.email}
+        avatarUrl={profile?.avatar_path ? urlAvatar(profile.avatar_path) : null}
       />
       <BottomNav role={toRole(role)} />
     </div>

@@ -12,6 +12,7 @@ export function ProfilView({
   branch,
   menu,
   canManageLocation,
+  avatarUrl,
 }: {
   profile: {
     id: string;
@@ -30,6 +31,7 @@ export function ProfilView({
   };
   menu: MenuItem[];
   canManageLocation: boolean;
+  avatarUrl: string | null;
 }) {
   const branchConfigured = branch.latitude !== null && branch.longitude !== null;
   const visibleMenu = menu;
@@ -44,8 +46,16 @@ export function ProfilView({
             <Icon name="account_circle" className="text-[130px]" />
           </div>
           <div className="relative z-10 flex items-center gap-4">
-            <div className="w-16 h-16 rounded-[22px] bg-white/20 backdrop-blur-md flex items-center justify-center font-headline-1 text-headline-1 text-white shrink-0">
-              {initialsValue}
+            <div className="w-16 h-16 rounded-[22px] bg-white/20 backdrop-blur-md flex items-center justify-center font-headline-1 text-headline-1 text-white shrink-0 overflow-hidden">
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt=""
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                initialsValue
+              )}
             </div>
             <div className="flex-1 min-w-0">
               <h1 className="font-headline-2 text-headline-2 text-white leading-tight truncate">

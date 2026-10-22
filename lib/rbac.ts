@@ -352,6 +352,7 @@ export const PROFILE_MENU: readonly ProfileMenuItem[] = [
   { label: "Pengaturan Cabang", caption: "Alamat, titik GPS & jam operasional", icon: "tune", href: "/pengaturan/cabang", permission: "branch.manage" },
   { label: "Kelola Staf", caption: "Foto, jabatan, jadwal, dan pindah cabang", icon: "schedule", href: "/pengaturan/karyawan", permission: "branch.manage" },
   { label: "Kelola Jasa POS", caption: "Nama, harga per ukuran, dan status", icon: "edit_note", href: "/pengaturan/jasa", permission: "services.manage" },
+  { label: "Resep Bahan Jasa", caption: "Bahan gudang yang terpotong saat checkout", icon: "inventory_2", href: "/pengaturan/resep", permission: "services.manage" },
   { label: "Verifikasi Wajah", caption: "Tinjau sampel wajah staf", icon: "face_retouching_natural", href: "/pengaturan/wajah", permission: "branch.manage" },
   { label: "Opname Fisik Bulanan", caption: "Bandingkan stok gudang dengan sistem", icon: "fact_check", href: "/stok/opname", permission: "stock.approve" },
   { label: "Pesanan WhatsApp", caption: "Siapkan pesan nota pelanggan", icon: "chat", href: "/whatsapp", permission: "whatsapp.draft" },

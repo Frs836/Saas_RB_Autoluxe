@@ -1375,12 +1375,23 @@ const { data: recipeItem } = await adminClient
 const { data: recipeService } = await adminClient
   .from("services")
   .select("id, name")
+  .gt("price_m", 0)
   .limit(1)
   .maybeSingle();
 
 if (!recipeItem || !recipeService) {
   suite.check("bahan dan layanan tersedia untuk uji resep", false, "data kurang");
 } else {
+  // Simpan resep asli (kalau ada) supaya pengujian tidak menghapus
+  // konfigurasi nyata milik cabang.
+  const { data: existingRecipe } = await adminClient
+    .from("service_material_recipes")
+    .select("quantity")
+    .eq("branch_id", recipeItem.branch_id)
+    .eq("service_id", recipeService.id)
+    .eq("item_id", recipeItem.id)
+    .maybeSingle();
+
   const karyawanSetRecipe = await karyawan.client.rpc("set_service_recipe", {
     p_branch_id: recipeItem.branch_id,
     p_service_id: recipeService.id,
@@ -1412,8 +1423,6 @@ if (!recipeItem || !recipeService) {
   });
   suite.check("kuantitas resep nol ditolak", Boolean(badQuantity.error), badQuantity.error?.message);
 
-  // Pemotongan manual lewat fungsi yang sama, supaya tidak perlu membuat
-  // order utuh hanya untuk menguji resep.
   const { data: stockBefore } = await adminClient
     .from("inventory_items")
     .select("current_stock")
@@ -1421,37 +1430,27 @@ if (!recipeItem || !recipeService) {
     .maybeSingle();
   const before = Number(stockBefore?.current_stock ?? 0);
 
-  // Buat order uji dengan satu baris layanan yang memakai resep di atas.
-  const orderForRecipe = await adminClient
-    .from("orders")
-    .insert({
-      license_plate: `${TEST_PLATE}RESEP`,
-      vehicle_model: "Uji Resep",
-      customer_name: TEST_MARKER,
-      service_package: "Cuci Reguler",
-      status: "in_progress",
-      total_price: 1000,
-      branch_id: recipeItem.branch_id,
-    })
-    .select("id, order_number")
-    .maybeSingle();
+  // Checkout nyata lewat RPC, supaya pemotongan otomatis saat checkout ikut
+  // diuji, bukan hanya fungsi consume yang dipanggil manual.
+  const orderRecipe = singleRow(
+    await karyawan.client.rpc("create_pos_order_with_hold", {
+      p_license_plate: `${TEST_PLATE}RESEP`,
+      p_vehicle_model: "Uji Resep",
+      p_vehicle_size: "M",
+      p_customer_name: TEST_MARKER,
+      p_customer_phone: "081200000000",
+      p_service_package: "Cuci Reguler",
+      p_items: [{ service_id: recipeService.id, qty: 3 }],
+      p_payment_method: "cash",
+      p_payment_state: "paid",
+      p_start_work: false,
+    }),
+  );
 
-  if (orderForRecipe?.id) {
-    cleanupOrderIds.push(orderForRecipe.id);
-
-    await adminClient.from("order_items").insert({
-      order_id: orderForRecipe.id,
-      service_id: recipeService.id,
-      item_name: recipeService.name,
-      price: 1000,
-      quantity: 3,
-    });
-
-    const consumed = await admin.client.rpc("consume_order_materials", {
-      p_order_id: orderForRecipe.id,
-    });
-    suite.check("pemotongan bahan berjalan", !consumed.error, consumed.error?.message);
-    suite.check("jumlah bahan terpotong sesuai resep", Number(consumed.data) === 1, String(consumed.data));
+  if (!orderRecipe?.id) {
+    suite.check("order uji resep dibuat", false, "checkout gagal");
+  } else {
+    cleanupOrderIds.push(orderRecipe.id);
 
     const { data: stockAfter } = await adminClient
       .from("inventory_items")
@@ -1459,20 +1458,16 @@ if (!recipeItem || !recipeService) {
       .eq("id", recipeItem.id)
       .maybeSingle();
     suite.check(
-      "saldo berkurang sesuai resep dikali jumlah layanan",
+      "checkout memotong bahan sesuai resep dikali jumlah layanan",
       Number(stockAfter?.current_stock) === before - 2 * 3,
       `${before} -> ${stockAfter?.current_stock}`,
     );
 
-    const repeat = await admin.client.rpc("consume_order_materials", {
-      p_order_id: orderForRecipe.id,
-    });
-    suite.check("pemotongan tidak dilakukan dua kali", Number(repeat.data) === 0, String(repeat.data));
-
     const { data: autoLog } = await adminClient
       .from("stock_logs")
       .select("log_type, quantity, note, reference_id")
-      .eq("reference_id", orderForRecipe.id)
+      .eq("reference_id", orderRecipe.id)
+      .eq("log_type", "out")
       .limit(1)
       .maybeSingle();
     suite.check(
@@ -1480,17 +1475,90 @@ if (!recipeItem || !recipeService) {
       autoLog?.log_type === "out" && Number(autoLog?.quantity) === 6,
       `${autoLog?.log_type} ${autoLog?.quantity}`,
     );
+    suite.check(
+      "catatan pemotongan menyebut item, jumlah, plat, ukuran, dan order",
+      Boolean(
+        autoLog?.note?.includes(recipeItem.item_name) &&
+          autoLog?.note?.includes("6") &&
+          autoLog?.note?.includes(`${TEST_PLATE}RESEP`) &&
+          autoLog?.note?.includes(", M)") &&
+          autoLog?.note?.includes(orderRecipe.order_number),
+      ),
+      autoLog?.note,
+    );
 
-    await adminClient.from("stock_logs").delete().eq("reference_id", orderForRecipe.id);
+    const repeat = await adminClient.rpc("consume_order_materials", {
+      p_order_id: orderRecipe.id,
+    });
+    const { data: stockRepeat } = await adminClient
+      .from("inventory_items")
+      .select("current_stock")
+      .eq("id", recipeItem.id)
+      .maybeSingle();
+    suite.check(
+      "pemotongan tidak dilakukan dua kali",
+      Number(repeat.data) === 0 && Number(stockRepeat?.current_stock) === before - 6,
+      `${repeat.data} / ${stockRepeat?.current_stock}`,
+    );
+
+    const cancelled = await owner.client.rpc("cancel_order", {
+      p_order_id: orderRecipe.id,
+      p_reason: `${TEST_REASON_PREFIX} batal resep`,
+    });
+    const { data: stockRestored } = await adminClient
+      .from("inventory_items")
+      .select("current_stock")
+      .eq("id", recipeItem.id)
+      .maybeSingle();
+    suite.check(
+      "pembatalan order mengembalikan bahan ke saldo awal",
+      !cancelled.error && Number(stockRestored?.current_stock) === before,
+      `${before} -> ${stockRestored?.current_stock}`,
+    );
+
+    const { data: restoreLog } = await adminClient
+      .from("stock_logs")
+      .select("log_type, quantity, note")
+      .eq("reference_id", orderRecipe.id)
+      .eq("log_type", "in")
+      .limit(1)
+      .maybeSingle();
+    suite.check(
+      "pengembalian bahan tercatat dengan alasan pembatalan",
+      restoreLog?.note?.startsWith("auto: pembatalan order"),
+      restoreLog?.note,
+    );
+
+    const repeatRestore = await adminClient.rpc("restore_order_materials", {
+      p_order_id: orderRecipe.id,
+    });
+    suite.check(
+      "pengembalian bahan tidak dilakukan dua kali",
+      Number(repeatRestore.data) === 0,
+      String(repeatRestore.data),
+    );
+
+    await adminClient.from("stock_logs").delete().eq("reference_id", orderRecipe.id);
+    await adminClient.from("cash_flow").delete().eq("order_id", orderRecipe.id);
   }
 
-  await admin.client.rpc("set_service_recipe", {
-    p_branch_id: recipeItem.branch_id,
-    p_service_id: recipeService.id,
-    p_item_id: recipeItem.id,
-    p_quantity: 1,
-    p_remove: true,
-  });
+  if (existingRecipe) {
+    await admin.client.rpc("set_service_recipe", {
+      p_branch_id: recipeItem.branch_id,
+      p_service_id: recipeService.id,
+      p_item_id: recipeItem.id,
+      p_quantity: existingRecipe.quantity,
+      p_remove: false,
+    });
+  } else {
+    await admin.client.rpc("set_service_recipe", {
+      p_branch_id: recipeItem.branch_id,
+      p_service_id: recipeService.id,
+      p_item_id: recipeItem.id,
+      p_quantity: 1,
+      p_remove: true,
+    });
+  }
 }
 
 /* -------------------------------------------------------------------------- */

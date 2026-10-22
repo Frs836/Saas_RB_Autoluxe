@@ -195,6 +195,7 @@ const paidOrder = singleRow(
     p_payment_method: "cash",
     p_payment_state: "paid",
     p_start_work: true,
+    p_team_ids: [karyawanProfile.id],
   }),
 );
 cleanupOrderIds.push(paidOrder?.id);
@@ -268,6 +269,13 @@ suite.check("karyawan ditolak create_warranty_claim", Boolean(denyClaim.error), 
 
 suite.section("4. Memulai pekerjaan order");
 
+// Pengerjaan wajib punya teknisi, jadi order milik karyawan ditugaskan ke
+// dirinya sendiri lebih dulu.
+await admin.client.rpc("set_order_team", {
+  p_order_id: unpaidOrder?.id,
+  p_profile_ids: [karyawanProfile.id],
+});
+
 const startOwn = await karyawan.client.rpc("start_order_work", { p_order_id: unpaidOrder?.id });
 suite.check("karyawan boleh memulai order miliknya", !startOwn.error, startOwn.error?.message);
 
@@ -286,6 +294,26 @@ const foreignOrder = singleRow(
   }),
 );
 cleanupOrderIds.push(foreignOrder?.id);
+
+// Order orang lain tetap harus punya teknisi supaya penolakan yang diuji
+// benar-benar soal kepemilikan, bukan soal tim yang kosong.
+const otherStaff = (
+  await admin.client
+    .from("profiles")
+    .select("id")
+    .eq("role", "karyawan")
+    .eq("is_active", true)
+    .eq("branch_id", foreignOrder?.branch_id)
+    .neq("id", karyawanProfile.id)
+    .limit(1)
+).data?.[0];
+
+if (otherStaff) {
+  await admin.client.rpc("set_order_team", {
+    p_order_id: foreignOrder?.id,
+    p_profile_ids: [otherStaff.id],
+  });
+}
 
 const steal = await karyawan.client.rpc("start_order_work", { p_order_id: foreignOrder?.id });
 suite.check("karyawan ditolak memulai order orang lain", Boolean(steal.error), steal.error?.message);
@@ -418,6 +446,7 @@ if (!claimable) {
     p_payment_method: "cash",
     p_payment_state: "paid",
     p_start_work: true,
+    p_team_ids: [karyawanProfile.id],
   });
   const orderId = orderGaransi.data?.id;
   if (orderId) {
@@ -739,6 +768,7 @@ const qcOrder = singleRow(
     p_payment_method: "cash",
     p_payment_state: "paid",
     p_start_work: true,
+    p_team_ids: [karyawanProfile.id],
   }),
 );
 cleanupOrderIds.push(qcOrder?.id);

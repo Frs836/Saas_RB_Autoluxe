@@ -3,20 +3,16 @@
 import { useEffect, useRef, useState } from "react";
 import { Icon } from "@/components/ui/icon";
 
-const UKURAN = 512;
-const SISI_BINGKAI = 260;
+const UKURAN_OUTPUT = 512;
+const SISI_BINGKAI = 200;
+const PREVIEW_SIZE = 80;
 
 /**
  * Penentu bingkai foto profil.
  *
- * Versi sebelumnya memotong dari tengah secara otomatis, jadi wajah orang
- * yang tidak persis di tengah terpotong dahi atau dagunya tanpa ada cara
- * memperbaikinya. Di sini gambar bisa digeser dan diperbesar, dan hanya
- * bagian yang berada di dalam bingkai yang ikut tersimpan.
- *
- * Gambar selalu menutupi bingkai saat pertama dibuka. Pengguna boleh
- * memperkecil sampai seluruh gambar terlihat di dalam bingkai, tetapi tidak
- * boleh memperkecil lebih kecil dari itu karena hasilnya akan berlubang.
+ * Frame cropper 200×200px (nyaman edit mobile), preview live 80×80px
+ * persis mirip avatar holder: rounded-[20px], border 1px, aspect 1:1.
+ * Hasil crop 512×512px WebP 0.85 quality.
  */
 export function AvatarCropper({
   berkas,
@@ -50,11 +46,11 @@ export function AvatarCropper({
     img.onload = () => {
       if (!hidup) return;
       gambarRef.current = img;
-      // Skala dasar dipilih agar sisi terpanjang menutupi bingkai.
+      // Skala dasar: sisi terpanjang menutupi frame 200px
       const dasar = Math.max(SISI_BINGKAI / img.width, SISI_BINGKAI / img.height);
       setSkalaAwal(dasar);
       setSkala(dasar);
-      // Gambar selalu terpusat di dalam bingkai saat pertama dibuka.
+      // Gambar terpusat di frame saat pertama dibuka
       setGeser({
         x: (SISI_BINGKAI - img.width * dasar) / 2,
         y: (SISI_BINGKAI - img.height * dasar) / 2,
@@ -99,21 +95,23 @@ export function AvatarCropper({
     if (!img || !kanvas) return;
 
     setSibuk(true);
-    kanvas.width = UKURAN;
-    kanvas.height = UKURAN;
+    kanvas.width = UKURAN_OUTPUT;
+    kanvas.height = UKURAN_OUTPUT;
     const k = kanvas.getContext("2d");
     if (k) {
       k.imageSmoothingQuality = "high";
+      // Koordinat sumber dalam ruang gambar asli:
+      // geser adalah kiri-atas gambar dalam ruang frame (200px).
+      // Frame 0,0 = -geser di ruang tampilan; bagi skala untuk ruang asli.
+      const sx = -geser.x / skala;
+      const sy = -geser.y / skala;
+      const sWidth = SISI_BINGKAI / skala;
+      const sHeight = SISI_BINGKAI / skala;
+      k.imageSmoothingQuality = "high";
       k.drawImage(
         img,
-        geser.x,
-        geser.y,
-        img.width * skala,
-        img.height * skala,
-        0,
-        0,
-        UKURAN,
-        UKURAN,
+        sx, sy, sWidth, sHeight,
+        0, 0, UKURAN_OUTPUT, UKURAN_OUTPUT,
       );
     }
 
@@ -131,39 +129,64 @@ export function AvatarCropper({
     <div className="fixed inset-0 z-[70] bg-black/90 flex flex-col items-center justify-center gap-3.5 p-gutter">
       <p className="font-body-bold text-body-bold text-white">Atur Bingkai Foto</p>
       <p className="font-caption text-caption text-white/70 text-center">
-        Geser foto supaya wajah berada tepat di dalam bingkai.
+        Geser & zoom foto supaya wajah berada tepat di dalam bingkai.
       </p>
 
       {galat ? (
         <p className="font-caption text-caption text-danger-text">{galat}</p>
       ) : null}
 
-      <div
-        className="relative overflow-hidden rounded-[20px] border-2 border-white/80 touch-none select-none"
-        style={{
-          width: SISI_BINGKAI,
-          height: SISI_BINGKAI,
-          cursor: siap ? "grab" : "wait",
-        }}
-        onPointerDown={mulaiGeser}
-        onPointerMove={geserGambar}
-        onPointerUp={lepasGeser}
-        onPointerCancel={lepasGeser}
-      >
-        {siap && gambar ? (
-          <img
-            src={gambar.src}
-            alt=""
-            draggable={false}
-            className="pointer-events-none absolute max-w-none select-none"
-            style={{
-              width: gambar.width * skala,
-              height: gambar.height * skala,
-              left: geser.x,
-              top: geser.y,
-            }}
-          />
-        ) : null}
+      <div className="flex flex-col md:flex-row items-center justify-center gap-4">
+        {/* Frame Cropper 200×200px */}
+        <div
+          className="relative overflow-hidden rounded-[20px] border border-white/80 touch-none select-none"
+          style={{
+            width: SISI_BINGKAI,
+            height: SISI_BINGKAI,
+            cursor: siap ? "grab" : "wait",
+          }}
+          onPointerDown={mulaiGeser}
+          onPointerMove={geserGambar}
+          onPointerUp={lepasGeser}
+          onPointerCancel={lepasGeser}
+        >
+          {siap && gambar ? (
+            <img
+              src={gambar.src}
+              alt=""
+              draggable={false}
+              className="pointer-events-none absolute max-w-none select-none"
+              style={{
+                width: gambar.width * skala,
+                height: gambar.height * skala,
+                left: geser.x,
+                top: geser.y,
+              }}
+            />
+          ) : null}
+        </div>
+
+        {/* Preview Live 80×80px — mirip avatar holder */}
+        <div className="flex flex-col items-center gap-2">
+          <span className="font-caption text-caption text-white/70">Preview (80×80)</span>
+          <div className="relative overflow-hidden rounded-[20px] border border-white/80">
+            {siap && gambar ? (
+              <img
+                src={gambar.src}
+                alt="Preview avatar"
+                className="pointer-events-none select-none"
+                style={{
+                  width: gambar.width * skala,
+                  height: gambar.height * skala,
+                  left: geser.x,
+                  top: geser.y,
+                  position: "absolute",
+                }}
+              />
+            ) : null}
+          </div>
+          <span className="font-caption text-caption text-white/60">80×80 • radius 20px</span>
+        </div>
       </div>
 
       <canvas ref={kanvasRef} className="hidden" />

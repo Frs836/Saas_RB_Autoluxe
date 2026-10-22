@@ -54,7 +54,9 @@ export default async function ServiceRecipePage({
       .order("item_name", { ascending: true }),
     supabase
       .from("service_material_recipes")
-      .select("service_id, item_id, quantity")
+      .select(
+        "service_id, item_id, qty_s, qty_m, qty_l, qty_xl, qty_motor_s, qty_motor_m, qty_motor_l, qty_motor_xl"
+      )
       .eq("branch_id", branchId),
   ]);
 
@@ -73,7 +75,14 @@ export default async function ServiceRecipePage({
   const recipes: RecipeRow[] = (recipesRes.data ?? []).map((row) => ({
     service_id: row.service_id as string,
     item_id: row.item_id as string,
-    quantity: Number(row.quantity ?? 0),
+    qty_s: row.qty_s !== null && row.qty_s !== undefined ? Number(row.qty_s) : undefined,
+    qty_m: row.qty_m !== null && row.qty_m !== undefined ? Number(row.qty_m) : undefined,
+    qty_l: row.qty_l !== null && row.qty_l !== undefined ? Number(row.qty_l) : undefined,
+    qty_xl: row.qty_xl !== null && row.qty_xl !== undefined ? Number(row.qty_xl) : undefined,
+    qty_motor_s: row.qty_motor_s !== null && row.qty_motor_s !== undefined ? Number(row.qty_motor_s) : undefined,
+    qty_motor_m: row.qty_motor_m !== null && row.qty_motor_m !== undefined ? Number(row.qty_motor_m) : undefined,
+    qty_motor_l: row.qty_motor_l !== null && row.qty_motor_l !== undefined ? Number(row.qty_motor_l) : undefined,
+    qty_motor_xl: row.qty_motor_xl !== null && row.qty_motor_xl !== undefined ? Number(row.qty_motor_xl) : undefined,
   }));
 
   const branchName =

@@ -76,7 +76,8 @@ async function katalogCoating(client) {
     .from("services")
     .select("id, name, price_m")
     .eq("is_active", true)
-    .ilike("name", "%Coating%")
+    .or("name.ilike.%Package%,name.ilike.%Coating%,name.ilike.%Ceramic%,name.ilike.%Nano%")
+    .gt("price_m", 0)
     .limit(1)
     .maybeSingle();
   if (error || !data) throw new Error(`Tidak ada layanan coating untuk diuji: ${error?.message}`);
@@ -790,7 +791,7 @@ const qcOrder = singleRow(
     p_vehicle_size: "M",
     p_customer_name: `${TEST_MARKER} QC`,
     p_customer_phone: "081200000011",
-    p_service_package: "Coating Nano Ceramic 1 Layer",
+    p_service_package: coatingUji.name,
     p_items: [{ service_id: coatingUji.id, name: coatingUji.name, price: Number(coatingUji.price_m), qty: 1 }],
     p_payment_method: "cash",
     p_payment_state: "paid",

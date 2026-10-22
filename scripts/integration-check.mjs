@@ -833,27 +833,16 @@ const beforePhoto = await admin.client.rpc("add_order_inspection", {
 });
 suite.check("foto before diterima", !beforePhoto.error, beforePhoto.error?.message);
 
-const afterPhoto = await admin.client.rpc("add_order_inspection", {
+// Coba upload after saat status masih in_progress (harus gagal)
+const afterEarly = await admin.client.rpc("add_order_inspection", {
   p_order_id: qcOrder?.id,
   p_phase: "after",
   p_photo_path: `${TEST_PLATE}/after.webp`,
   p_notes: "hasil akhir pekerjaan memuaskan",
 });
-suite.check("foto after diterima setelah before ada", !afterPhoto.error, afterPhoto.error?.message);
+suite.check("foto after ditolak saat status belum selesai", Boolean(afterEarly.error), afterEarly.error?.message);
 
-const foreignInspection = await karyawan.client.rpc("add_order_inspection", {
-  p_order_id: qcOrder?.id,
-  p_phase: "process",
-  p_photo_path: `${TEST_PLATE}/proses.webp`,
-  p_notes: "mencoba mengunggah di luar tugas",
-});
-suite.check(
-  "karyawan tidak bisa mengunggah inspeksi order yang bukan tugasnya",
-  Boolean(foreignInspection.error),
-  foreignInspection.error?.message,
-);
-
-// QC hanya boleh diputuskan tim manajerial.
+// Lanjutkan flow QC hingga selesai
 await admin.client.rpc("apply_order_status", {
   p_order_id: qcOrder?.id,
   p_status: "qc_review",
@@ -871,6 +860,28 @@ suite.check(
 const adminQc = await admin.client.rpc("apply_order_status", {
   p_order_id: qcOrder?.id,
   p_status: "completed",
+});
+suite.check("admin kasir bisa menyetujui QC", !adminQc.error, adminQc.error?.message);
+suite.check(
+  "garansi 180 hari terbit untuk layanan coating",
+  typeof adminQc.data === "string" && adminQc.data.startsWith("WRT-"),
+  String(adminQc.data),
+);
+
+// Sekarang status completed, upload after harus berhasil
+const afterPhoto = await admin.client.rpc("add_order_inspection", {
+  p_order_id: qcOrder?.id,
+  p_phase: "after",
+  p_photo_path: `${TEST_PLATE}/after.webp`,
+  p_notes: "hasil akhir pekerjaan memuaskan",
+});
+suite.check("foto after diterima setelah before ada dan status selesai", !afterPhoto.error, afterPhoto.error?.message);
+
+const foreignInspection = await karyawan.client.rpc("add_order_inspection", {
+  p_order_id: qcOrder?.id,
+  p_phase: "process",
+  p_photo_path: `${TEST_PLATE}/proses.webp`,
+  p_notes: "mencoba mengunggah di luar tugas",
 });
 suite.check("admin kasir bisa menyetujui QC", !adminQc.error, adminQc.error?.message);
 suite.check(

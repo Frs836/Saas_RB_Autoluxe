@@ -30,7 +30,7 @@ import { useSingleFlight } from "@/lib/use-single-flight";
 
 type CartLine = { serviceId: string; qty: number };
 
-type TeamOption = { id: string; full_name: string };
+type TeamOption = { id: string; full_name: string; busy?: boolean };
 
 /*
  * Kesalahan validasi checkout diikat ke field-nya. Sebelumnya hanya ada satu
@@ -167,6 +167,8 @@ export function PosConsole({
   }
 
   function toggleMember(id: string) {
+    const member = teamOptions.find((m) => m.id === id);
+    if (member?.busy && !selectedTeam.includes(id)) return;
     const next = selectedTeam.includes(id)
       ? selectedTeam.filter((x) => x !== id)
       : [...selectedTeam, id];
@@ -641,26 +643,42 @@ export function PosConsole({
                 {teamOptions.map((member) => {
                   const index = selectedTeam.indexOf(member.id);
                   const selected = index >= 0;
+                  const locked = Boolean(member.busy) && !selected;
                   return (
                     <button
                       key={member.id}
                       type="button"
                       onClick={() => toggleMember(member.id)}
+                      disabled={locked}
+                      title={
+                        locked
+                          ? "Sedang mengerjakan unit lain. Selesaikan unit itu dulu."
+                          : undefined
+                      }
                       className={`px-3 min-h-11 rounded-full font-caption text-caption flex items-center gap-1 active:scale-95 transition-transform ${
                         selected
                           ? "bg-primary text-white"
-                          : "bg-surface-container-low text-text-secondary"
+                          : locked
+                            ? "bg-surface-container-low text-text-muted opacity-60"
+                            : "bg-surface-container-low text-text-secondary"
                       }`}
                     >
                       {selected && index === 0 ? (
                         <Icon name="star" className="text-[14px]" />
                       ) : null}
                       {member.full_name}
+                      {locked ? " (sibuk)" : ""}
                     </button>
                   );
                 })}
               </div>
             )}
+            {teamOptions.some((m) => m.busy) ? (
+              <p className="font-caption text-caption text-text-muted">
+                Teknisi bertanda sibuk sedang mengerjakan unit lain dan baru bisa dipilih
+                setelah unit itu selesai.
+              </p>
+            ) : null}
             {selectedTeam.length > 0 ? (
               <p className="font-caption text-caption text-text-muted">
                 Lead: {teamOptions.find((m) => m.id === selectedTeam[0])?.full_name}

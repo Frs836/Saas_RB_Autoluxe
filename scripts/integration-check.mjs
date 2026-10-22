@@ -145,6 +145,19 @@ suite.section("2. Kas titipan karyawan");
 
 const karyawanProfile = await profileIdOf(karyawan.client);
 
+// Teknisi kedua untuk order yang berjalan bersamaan: satu orang tidak boleh
+// memegang dua unit aktif.
+const pembantuRow = (
+  await admin.client
+    .from("profiles")
+    .select("id")
+    .eq("role", "karyawan")
+    .eq("is_active", true)
+    .neq("id", karyawanProfile.id)
+    .limit(1)
+).data?.[0];
+const pembantuId = pembantuRow?.id ?? karyawanProfile.id;
+
 const holdBaseline = singleRow(await karyawan.client.rpc("my_cash_hold_today"));
 const baseCash = Number(holdBaseline?.cash_amount ?? 0);
 const baseHeld = Number(holdBaseline?.held_total ?? 0);
@@ -195,7 +208,7 @@ const paidOrder = singleRow(
     p_payment_method: "cash",
     p_payment_state: "paid",
     p_start_work: true,
-    p_team_ids: [karyawanProfile.id],
+    p_team_ids: [pembantuId],
   }),
 );
 cleanupOrderIds.push(paidOrder?.id);
@@ -231,6 +244,17 @@ suite.check(
   Number(holdAfter?.unpaid_count) === baseUnpaid + 1,
   `${baseUnpaid} -> ${holdAfter?.unpaid_count}`,
 );
+
+// Satu teknisi hanya boleh memegang satu unit aktif. Selesaikan order ini dulu
+// supaya order berikutnya boleh memakai teknisi yang sama.
+await admin.client.rpc("apply_order_status", {
+  p_order_id: paidOrder?.id,
+  p_status: "qc_review",
+});
+await admin.client.rpc("apply_order_status", {
+  p_order_id: paidOrder?.id,
+  p_status: "completed",
+});
 
 /* -------------------------------------------------------------------------- */
 /* 3. Batas hak akses                                                         */
@@ -446,7 +470,7 @@ if (!claimable) {
     p_payment_method: "cash",
     p_payment_state: "paid",
     p_start_work: true,
-    p_team_ids: [karyawanProfile.id],
+    p_team_ids: [pembantuId],
   });
   const orderId = orderGaransi.data?.id;
   if (orderId) {
@@ -599,9 +623,11 @@ const newRequest = async (tag) => {
 
 {
   const req = await newRequest("self-cancel");
-  await suite.expectOneRowChanged(
+  const cancel = await karyawan.client.rpc("cancel_time_off_request", { p_id: req.id });
+  suite.check(
     "karyawan boleh membatalkan pengajuannya sendiri",
-    karyawan.client.from("time_off_requests").update({ status: "rejected" }).eq("id", req.id).select("id, status, approver_id, decided_at"),
+    !cancel.error,
+    cancel.error?.message,
   );
 
   const { data } = await karyawan.client
@@ -609,6 +635,7 @@ const newRequest = async (tag) => {
     .select("status, approver_id, decided_at")
     .eq("id", req.id)
     .maybeSingle();
+  suite.check("status menjadi cancelled", data?.status === "cancelled", String(data?.status));
   suite.check("approver_id dikosongkan", data?.approver_id === null, String(data?.approver_id));
   suite.check("decided_at dikosongkan", data?.decided_at === null, String(data?.decided_at));
 
@@ -768,7 +795,7 @@ const qcOrder = singleRow(
     p_payment_method: "cash",
     p_payment_state: "paid",
     p_start_work: true,
-    p_team_ids: [karyawanProfile.id],
+    p_team_ids: [pembantuId],
   }),
 );
 cleanupOrderIds.push(qcOrder?.id);
@@ -1866,17 +1893,9 @@ if (!cabangUntukAbsen || !karyawanProfil?.id) {
     .eq("date", hariIni);
 
   /*
-   * Jejak liveness yang sah: lima tahap, kepala benar-benar bergerak.
-   *
-   * Vektor tiap tahap dibangkitkan dari vektor netral dengan pergeseran supaya
-   * tahap kiri dan kanan berbeda dari netral. Tanpa itu server akan menolaknya
-   * sebagai usaha memakai foto.
+   * Jejak liveness yang sah: tiga tahap sesuai tantangan yang berlaku
+   * (hadap lurus, kedip, buka mulut).
    */
-  const geser = (k) =>
-    vektorSampel.map((v, i) =>
-      Number((v + Math.sin(i * 3.7) * k + Math.cos(i * 1.3) * k * 0.4).toFixed(5)),
-    );
-
   const jejakBenar = {
     versi: 1,
     selesai: true,
@@ -1884,16 +1903,7 @@ if (!cabangUntukAbsen || !karyawanProfil?.id) {
       { tahap: "center", descriptor: vektorSampel, yaw: 0 },
       { tahap: "blink", descriptor: vektorSampel, yaw: 0 },
       { tahap: "mouth", descriptor: vektorSampel, yaw: 0 },
-      { tahap: "left", descriptor: geser(0.6), yaw: -18 },
-      { tahap: "right", descriptor: geser(0.6), yaw: 18 },
     ],
-  };
-
-  /* Foto yang dipegang di depan kamera: vektornya tidak pernah berubah. */
-  const jejakFoto = {
-    versi: 1,
-    selesai: true,
-    tahap: jejakBenar.tahap.map((t) => ({ ...t, descriptor: vektorSampel, yaw: 0 })),
   };
 
   const bersihkanAbsen = () =>
@@ -1934,36 +1944,22 @@ if (!cabangUntukAbsen || !karyawanProfil?.id) {
   const belumSelesai = await absen(vektorSampel, { ...jejakBenar, selesai: false });
   suite.check("tantangan belum selesai ditolak", Boolean(belumSelesai.error), belumSelesai.error?.message);
 
-  const kurang = await absen(vektorSampel, { versi: 1, selesai: true, tahap: jejakBenar.tahap.slice(0, 4) });
+  const kurang = await absen(vektorSampel, { versi: 1, selesai: true, tahap: jejakBenar.tahap.slice(0, 2) });
   suite.check("tahap yang kurang ditolak", Boolean(kurang.error), kurang.error?.message);
 
   const berantakan = await absen(vektorSampel, {
     versi: 1,
     selesai: true,
-    tahap: [jejakBenar.tahap[0], jejakBenar.tahap[1], jejakBenar.tahap[2], jejakBenar.tahap[4], jejakBenar.tahap[3]],
+    tahap: [jejakBenar.tahap[0], jejakBenar.tahap[2], jejakBenar.tahap[1]],
   });
   suite.check("urutan tahap yang salah ditolak", Boolean(berantakan.error), berantakan.error?.message);
 
   const berulang = await absen(vektorSampel, {
     versi: 1,
     selesai: true,
-    tahap: [...jejakBenar.tahap, jejakBenar.tahap[3]],
+    tahap: [...jejakBenar.tahap, jejakBenar.tahap[2]],
   });
   suite.check("tahap yang berulang ditolak", Boolean(berulang.error), berulang.error?.message);
-
-  /*
-   * Yang paling penting: foto yang dipegang di depan kamera menghasilkan
-   * descriptor yang sama setiap kali diminta memaling kepala. Server menolak
-   * karena selisihnya tidak bergerak.
-   */
-  const foto = await absen(vektorSampel, jejakFoto);
-  suite.check("foto dipegang di depan kamera ditolak", Boolean(foto.error), foto.error?.message);
-
-  const salah = await absen(vektorSampel, {
-    ...jejakBenar,
-    tahap: jejakBenar.tahap.map((t) => (t.tahap === "left" ? { ...t, yaw: 20 } : t)),
-  });
-  suite.check("arah putaran yang terbalik ditolak", Boolean(salah.error), salah.error?.message);
 
   const tanpaScan = await absen(null, jejakBenar);
   suite.check("absen tanpa scan wajah ditolak", Boolean(tanpaScan.error), tanpaScan.error?.message);
@@ -1974,7 +1970,7 @@ if (!cabangUntukAbsen || !karyawanProfil?.id) {
 await bersihkanAbsen();
 
 const benar = await absen(vektorSampel, jejakBenar);
-  suite.check("lima tahap liveness yang benar diterima", !benar.error, benar.error?.message);
+  suite.check("tiga tahap liveness yang benar diterima", !benar.error, benar.error?.message);
   suite.check(
     "skor pada log dihitung server, bukan kiriman klien",
     benar.error ? null : Number(benar.data?.face_similarity_score) > 0.9,

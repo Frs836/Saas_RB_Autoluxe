@@ -21,7 +21,7 @@ export default async function PosPage() {
   // sedang dipilih manajer, supaya kas titipan tidak masuk ke cabang lain.
   const staffBranchId = profile.homeBranchId;
 
-  const [servicesRes, teamRes, branchRes] = await Promise.all([
+  const [servicesRes, teamRes, busyRes, branchRes] = await Promise.all([
     supabase
       .from("services")
       .select(
@@ -39,6 +39,15 @@ export default async function PosPage() {
           .eq("branch_id", staffBranchId)
           .order("full_name", { ascending: true })
       : Promise.resolve({ data: [] }),
+    // Teknisi yang masih memegang unit aktif tidak boleh dipilih untuk unit
+    // baru. Pemeriksaan tetap dilakukan server; ini hanya tampilan.
+    staffBranchId
+      ? supabase
+          .from("order_team_members")
+          .select("profile_id, order_id, orders!inner(status, branch_id)")
+          .in("orders.status", ["in_progress", "qc_review"])
+          .eq("orders.branch_id", staffBranchId)
+      : Promise.resolve({ data: [] }),
     branchId
       ? supabase
           .from("branches")
@@ -49,7 +58,13 @@ export default async function PosPage() {
   ]);
 
   const services = (servicesRes.data ?? []) as PosService[];
-  const teamOptions = teamRes.data ?? [];
+  const busyIds = new Set(
+    (busyRes.data ?? []).map((row) => row.profile_id as string),
+  );
+  const teamOptions = (teamRes.data ?? []).map((member) => ({
+    ...member,
+    busy: busyIds.has(member.id),
+  }));
   const branchName =
     branchRes.data?.branch_name ??
     (profile.branchScope === "all" ? "Seluruh Cabang" : "Cabang Utama");

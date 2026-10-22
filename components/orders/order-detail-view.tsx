@@ -47,7 +47,7 @@ export type OrderDetailWarranty = {
   status: string;
 };
 
-export type TeamCandidate = { id: string; full_name: string };
+export type TeamCandidate = { id: string; full_name: string; busy?: boolean };
 
 type Props = {
   order: OrderDetailOrder;
@@ -813,10 +813,17 @@ export function OrderDetailView({
                 {teamCandidates.map((candidate) => {
                   const selected = teamDraft.includes(candidate.id);
                   const isLead = teamDraft[0] === candidate.id;
+                  const locked = Boolean(candidate.busy) && !selected;
                   return (
                     <button
                       key={candidate.id}
                       type="button"
+                      disabled={locked}
+                      title={
+                        locked
+                          ? "Sedang mengerjakan unit lain. Selesaikan unit itu dulu."
+                          : undefined
+                      }
                       onClick={() =>
                         setTeamDraft((prev) =>
                           prev.includes(candidate.id)
@@ -827,7 +834,9 @@ export function OrderDetailView({
                       className={`min-h-12 px-3 rounded-xl flex items-center gap-2 text-left ${
                         selected
                           ? "bg-brand-50 text-brand-700"
-                          : "bg-surface-container-low text-text-secondary"
+                          : locked
+                            ? "bg-surface-container-low text-text-muted opacity-60"
+                            : "bg-surface-container-low text-text-secondary"
                       }`}
                     >
                       <Icon
@@ -836,6 +845,7 @@ export function OrderDetailView({
                       />
                       <span className="font-body text-body flex-1 truncate">
                         {candidate.full_name}
+                        {locked ? " (sibuk)" : ""}
                       </span>
                       {isLead ? (
                         <span className="font-micro-badge text-micro-badge px-1.5 py-0.5 rounded bg-brand-500 text-white">
@@ -847,6 +857,13 @@ export function OrderDetailView({
                 })}
               </div>
             )}
+
+            {teamCandidates.some((c) => c.busy) ? (
+              <p className="font-caption text-caption text-text-muted">
+                Teknisi bertanda sibuk sedang mengerjakan unit lain dan baru bisa dipilih
+                setelah unit itu selesai.
+              </p>
+            ) : null}
 
             <div className="flex gap-2 pt-1">
               <button

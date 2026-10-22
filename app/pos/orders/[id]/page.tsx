@@ -50,8 +50,16 @@ export default async function OrderDetailPage({ params }: { params: Params }) {
     redirect("/pos/orders");
   }
 
-  const [itemsRes, teamRes, photoRes, warrantyRes, branchRes, creatorRes, candidateRes] =
-    await Promise.all([
+  const [
+    itemsRes,
+    teamRes,
+    photoRes,
+    warrantyRes,
+    branchRes,
+    creatorRes,
+    candidateRes,
+    busyRes,
+  ] = await Promise.all([
       supabase
         .from("order_items")
         .select("item_name, price, quantity")
@@ -96,9 +104,21 @@ export default async function OrderDetailPage({ params }: { params: Params }) {
             .eq("branch_id", order.branch_id)
             .order("full_name", { ascending: true })
         : Promise.resolve({ data: [] }),
+      // Karyawan yang masih memegang unit aktif tidak boleh dipilih lagi.
+      can(session.role, "order.manage_status") && order.branch_id
+        ? supabase
+            .from("order_team_members")
+            .select("profile_id, order_id, orders!inner(status, branch_id)")
+            .in("orders.status", ["in_progress", "qc_review"])
+            .eq("orders.branch_id", order.branch_id)
+            .neq("order_id", order.id)
+        : Promise.resolve({ data: [] }),
     ]);
 
   const teamRows = teamRes.data ?? [];
+  const busyIds = new Set(
+    (busyRes.data ?? []).map((row) => row.profile_id as string),
+  );
   const profileIds = teamRows
     .map((row) => row.profile_id as string)
     .filter(Boolean);
@@ -201,6 +221,7 @@ export default async function OrderDetailPage({ params }: { params: Params }) {
         teamCandidates={(candidateRes.data ?? []).map((row) => ({
           id: row.id as string,
           full_name: (row.full_name as string) ?? "Karyawan",
+          busy: busyIds.has(row.id as string),
         }))}
         viewerId={session.id}
         branchName={branchRes.data?.branch_name ?? "Cabang Utama"}

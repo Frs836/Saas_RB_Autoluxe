@@ -315,6 +315,8 @@ export function OrderQueue({
             // Pengerjaan tidak boleh dimulai tanpa teknisi. Server menolaknya,
             // dan tombolnya di sini dimatikan supaya alasannya terlihat.
             const perluTeknisi = order.status === "queued" && order.team.length === 0;
+            // Bisa claim order jika: karyawan, status queued, tidak ada tim, dan karyawan free
+            const canClaimOrder = order.status === "queued" && order.team.length === 0 && !busy;
             const waHref = order.customer_phone
               ? whatsappLink(
                   order.customer_phone,
@@ -479,20 +481,24 @@ export function OrderQueue({
                       <Icon name="cancel" className="text-[20px]" />
                     </button>
                   ) : null}
-                  {!canManage && canStartWork && order.status === "queued" ? (
+                  {canStartWork && order.status === "queued" && !canManage ? (
                     <button
                       type="button"
-                      disabled={busy || perluTeknisi}
+                      disabled={busy || perluTeknisi && !canClaimOrder}
                       title={
-                        perluTeknisi
+                        perluTeknisi && !canClaimOrder
                           ? "Pilih teknisi dulu sebelum memulai pengerjaan."
+                          : perluTeknisi && canClaimOrder
+                          ? undefined
+                          : busy
+                          ? "Sedang memproses..."
                           : undefined
                       }
                       onClick={() => startWork(order)}
                       className="flex-1 py-2.5 rounded-xl bg-primary text-white font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform disabled:opacity-60"
                     >
                       <Icon name="engineering" className="text-[18px]" />
-                      Kerjakan Sekarang
+                      {perluTeknisi ? "Kerjakan Antrian Ini" : "Kerjakan Sekarang"}
                     </button>
                   ) : null}
                   <Link

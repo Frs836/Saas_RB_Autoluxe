@@ -1393,11 +1393,11 @@ if (!recipeItem || !recipeService) {
     .eq("item_id", recipeItem.id)
     .maybeSingle();
 
-  const karyawanSetRecipe = await karyawan.client.rpc("set_service_recipe", {
+const karyawanSetRecipe = await karyawan.client.rpc("set_service_recipe", {
     p_branch_id: recipeItem.branch_id,
     p_service_id: recipeService.id,
     p_item_id: recipeItem.id,
-    p_quantity: 1,
+    p_qty_s: 1,
     p_remove: false,
   });
   suite.check(
@@ -1410,7 +1410,7 @@ if (!recipeItem || !recipeService) {
     p_branch_id: recipeItem.branch_id,
     p_service_id: recipeService.id,
     p_item_id: recipeItem.id,
-    p_quantity: 2,
+    p_qty_s: 2,
     p_remove: false,
   });
   suite.check("admin kasir bisa membuat resep bahan", !adminSetRecipe.error, adminSetRecipe.error?.message);
@@ -1419,7 +1419,7 @@ if (!recipeItem || !recipeService) {
     p_branch_id: recipeItem.branch_id,
     p_service_id: recipeService.id,
     p_item_id: recipeItem.id,
-    p_quantity: 0,
+    p_qty_s: 0,
     p_remove: false,
   });
   suite.check("kuantitas resep nol ditolak", Boolean(badQuantity.error), badQuantity.error?.message);
@@ -1548,7 +1548,7 @@ if (!recipeItem || !recipeService) {
       p_branch_id: recipeItem.branch_id,
       p_service_id: recipeService.id,
       p_item_id: recipeItem.id,
-      p_quantity: existingRecipe.quantity,
+      p_qty_s: existingRecipe.qty_s ?? 1,
       p_remove: false,
     });
   } else {
@@ -1556,7 +1556,7 @@ if (!recipeItem || !recipeService) {
       p_branch_id: recipeItem.branch_id,
       p_service_id: recipeService.id,
       p_item_id: recipeItem.id,
-      p_quantity: 1,
+      p_qty_s: 1,
       p_remove: true,
     });
   }

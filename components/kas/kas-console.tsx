@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { formatRupiah, formatTimeWib } from "@/lib/format";
 import { canvasToWebp, captureSquareCanvas } from "@/lib/attendance";
 import { createClient } from "@/lib/supabase/client";
+import { useSingleFlight } from "@/lib/use-single-flight";
 import { Icon } from "@/components/ui/icon";
 
 type PettyCashRow = {
@@ -70,6 +71,7 @@ export function KasConsole({
     paymentMethod: "cash",
   });
   const [loading, setLoading] = useState(false);
+  const kirimSekali = useSingleFlight();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [cameraOpen, setCameraOpen] = useState(false);
@@ -161,6 +163,8 @@ export function KasConsole({
         return;
       }
 
+      if (!kirimSekali.mulai()) return;
+
       setLoading(true);
       try {
         const supabase = createClient();
@@ -197,10 +201,11 @@ export function KasConsole({
           err instanceof Error ? err.message : "Terjadi kesalahan, coba lagi.",
         );
       } finally {
+        kirimSekali.selesai();
         setLoading(false);
       }
     },
-    [form, handoffId, needsProof, proofPath, router],
+    [form, handoffId, needsProof, proofPath, kirimSekali, router],
   );
 
   return (

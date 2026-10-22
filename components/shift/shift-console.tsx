@@ -6,6 +6,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { formatRupiah, formatTimeWib, initials } from "@/lib/format";
 import { Icon } from "@/components/ui/icon";
+import { useSingleFlight } from "@/lib/use-single-flight";
 
 type Handoff = {
   id: string;
@@ -51,6 +52,8 @@ export function ShiftConsole({
   const [physical, setPhysical] = useState("");
   const [notes, setNotes] = useState("");
   const [busy, setBusy] = useState<null | "open" | "close">(null);
+  const kunciBuka = useSingleFlight();
+  const kunciTutup = useSingleFlight();
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [success, setSuccess] = useState<{
@@ -150,6 +153,7 @@ export function ShiftConsole({
       setError("Kas awal tidak boleh negatif.");
       return;
     }
+    if (!kunciBuka.mulai()) return;
     try {
       setBusy("open");
       const supabase = createClient();
@@ -165,8 +169,10 @@ export function ShiftConsole({
     } catch (err) {
       setError(err instanceof Error ? err.message : "Gagal membuka serah terima kas.");
       setBusy(null);
+    } finally {
+      kunciBuka.selesai();
     }
-  }, [notes, opening, parseAmount, today]);
+  }, [notes, opening, parseAmount, today, kunciBuka]);
 
   const handleClose = useCallback(async () => {
     setError(null);
@@ -181,6 +187,7 @@ export function ShiftConsole({
       setError("Catatan wajib diisi minimal 3 karakter saat ada selisih.");
       return;
     }
+    if (!kunciTutup.mulai()) return;
     try {
       setBusy("close");
       const supabase = createClient();
@@ -223,8 +230,10 @@ export function ShiftConsole({
     } catch (err) {
       setError(err instanceof Error ? err.message : "Gagal menutup audit shift.");
       setBusy(null);
+    } finally {
+      kunciTutup.selesai();
     }
-  }, [expectedOpen, handoff, notes, notesRequired, parseAmount, physical, router]);
+  }, [expectedOpen, handoff, notes, notesRequired, parseAmount, physical, router, kunciTutup]);
 
   return (
     <div className="flex flex-col w-full pb-nav print:hidden">

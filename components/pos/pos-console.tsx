@@ -26,6 +26,7 @@ import {
 } from "@/lib/pos";
 import type { Role } from "@/lib/rbac";
 import { Icon } from "@/components/ui/icon";
+import { useSingleFlight } from "@/lib/use-single-flight";
 
 type CartLine = { serviceId: string; qty: number };
 
@@ -87,6 +88,7 @@ export function PosConsole({
   const [selectedTeam, setSelectedTeam] = useState<string[]>([]);
 
   const [submitting, setSubmitting] = useState(false);
+  const kirimSekali = useSingleFlight();
   const [error, setError] = useState<string | null>(null);
   const [fieldError, setFieldError] = useState<FieldProblem | null>(null);
   const [result, setResult] = useState<OrderResult | null>(null);
@@ -228,6 +230,7 @@ export function PosConsole({
     }
     setFieldError(null);
     setError(null);
+    if (!kirimSekali.mulai()) return;
     setSubmitting(true);
     try {
       const supabase = createClient();
@@ -364,6 +367,7 @@ export function PosConsole({
         err instanceof Error ? err.message : "Terjadi kesalahan, coba lagi.",
       );
     } finally {
+      kirimSekali.selesai();
       setSubmitting(false);
     }
   }

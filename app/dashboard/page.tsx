@@ -13,7 +13,7 @@ import {
   todayWibIso,
 } from "@/lib/format";
 import { can, quickActionsFor, roleLabel } from "@/lib/rbac";
-import { getSessionProfile, scopedBranchId } from "@/lib/rbac-guard";
+import { lookupSession, scopedBranchId } from "@/lib/rbac-guard";
 import { scopeBranchQuery } from "@/lib/branch";
 import { Icon } from "@/components/ui/icon";
 
@@ -58,18 +58,13 @@ function statusBadge(status: string) {
 }
 
 export default async function DashboardPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const session = await lookupSession();
 
-  if (!user) {
+  if (session.kind === "anonymous") {
     redirect("/login");
   }
 
-  const profile = await getSessionProfile();
-
-  if (!profile) {
+  if (session.kind === "no-profile") {
     return (
       <PendingVerification
         action={
@@ -86,10 +81,14 @@ export default async function DashboardPage() {
     );
   }
 
+  const profile = session.profile;
+
   const role = profile.role;
   // null berarti pengguna memilih "Seluruh Cabang" lewat branch switcher.
   const branchId = scopedBranchId(profile);
   const today = todayWibIso();
+
+  const supabase = await createClient();
 
   const canSeeBranchCash = can(role, "cash.view_branch");
   const canSeeOwnHold = can(role, "cash.view_own_hold");
@@ -135,7 +134,7 @@ export default async function DashboardPage() {
         supabase
           .from("orders")
           .select(
-            "id, order_number, license_plate, vehicle_model, service_package, status, total_price, created_at, assigned_to",
+            "id, order_number, license_plate, vehicle_model, service_package, status, total_price, created_at, assigned_to, petugas:profiles!orders_assigned_to_fkey(full_name)",
           ),
         branchId,
         "orders",
@@ -183,13 +182,20 @@ export default async function DashboardPage() {
   const liveOrder = inProgress[0] ?? queued[0] ?? qcReview[0] ?? null;
 
   let liveAssignee: string | null = null;
-  if (liveOrder?.assigned_to) {
-    const { data: assignee } = await supabase
-      .from("profiles")
-      .select("full_name")
-      .eq("id", liveOrder.assigned_to)
-      .maybeSingle();
-    liveAssignee = assignee?.full_name ?? null;
+  if (liveOrder) {
+    /*
+     * Nama petugas ikut terambil bersama order, jadi tidak perlu kueri kedua
+     * yang harus menunggu daftar order selesai lebih dulu.
+     *
+     * Bentuk balasannya bisa objek (relasi banyak-ke-satu) atau array berisi
+     * satu baris, tergantung bagaimana PostgREST menyimpulkan relasinya, jadi
+     * keduanya ditangani.
+     */
+    const mentah = (liveOrder as unknown as {
+      petugas?: { full_name: string | null }[] | { full_name: string | null } | null;
+    }).petugas;
+    const petugas = Array.isArray(mentah) ? (mentah[0] ?? null) : (mentah ?? null);
+    liveAssignee = petugas?.full_name ?? null;
   }
 
   const badge = statusBadge(attendance?.status ?? "");

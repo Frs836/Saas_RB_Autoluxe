@@ -81,6 +81,7 @@ const [tab, setTab] = useState<"items" | "claims">("items");
   // setelah React selesai merender, jadi dua klik cepat bisa sama-sama lolos
   // sebelum tombol terlihat mati.
   const kirimSedangJalan = useRef(false);
+  const klaimSedangJalan = useRef(false);
   const [inQty, setInQty] = useState("1");
   const [inCost, setInCost] = useState("");
   const [inNote, setInNote] = useState("");
@@ -139,23 +140,30 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
       setError("Jumlah harus lebih dari 0.");
       return;
     }
+    // Penahan disetel sebelum awaits apa pun, jadi klik kedua yang datang
+    // secepat apa pun berhenti di sini dan tidak membuat klaim ganda.
+    if (klaimSedangJalan.current) return;
+    klaimSedangJalan.current = true;
     setSubmitting(true);
     setError(null);
-    const supabase = createClient();
-    const { error: rpcError } = await supabase.rpc("create_stock_claim", {
-      p_item_id: selected.id,
-      p_quantity: quantity,
-      p_note: note.trim() === "" ? null : note.trim(),
-    });
-    setSubmitting(false);
-    if (rpcError) {
-      setError(rpcError.message);
-      return;
+    try {
+      const supabase = createClient();
+      const { error: rpcError } = await supabase.rpc("create_stock_claim", {
+        p_item_id: selected.id,
+        p_quantity: quantity,
+        p_note: note.trim() === "" ? null : note.trim(),
+      });
+      setSubmitting(false);
+      if (rpcError) {
+        setError(rpcError.message);
+        return;
+      }
+      setSelected(null);
+      router.refresh();
+    } finally {
+      klaimSedangJalan.current = false;
     }
-    setSelected(null);
-    router.refresh();
   }
-
   async function submitStockIn() {
     // Pengaman pertama: penahan disetel sebelum awaits apa pun, jadi klik
     // kedua yang datang secepat apa pun akan berhenti di sini.

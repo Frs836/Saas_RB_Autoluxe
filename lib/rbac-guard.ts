@@ -1,6 +1,8 @@
-import { cookies } from "next/headers";
+import { cache } from "react";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { USER_EMAIL_HEADER, USER_ID_HEADER } from "@/lib/session-headers";
 import {
   can,
   toRole,
@@ -39,32 +41,60 @@ export type SessionProfile = {
  * ulang terhadap daftar cabang aktif, jadi cookie basi atau UUID yang
  * dipalsukan tidak dapat membuat pengguna membaca cabang yang tidak berwenang.
  */
-export async function getSessionProfile(): Promise<SessionProfile | null> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+/**
+ * Hasil pencarian sesi, dibedakan antara "belum masuk" dan "sudah masuk tetapi
+ * profilnya belum ada".
+ *
+ * Pembedaan ini penting karena dua keadaan itu berujung pada halaman berbeda:
+ * yang belum masuk diarahkan ke /login, sedangkan yang belum punya profil
+ * melihat halaman menunggu verifikasi. Kalau keduanya disamakan menjadi null,
+ * halaman yang butuh membedakannya terpaksa memanggil getUser sendiri lagi.
+ */
+export type SessionLookup =
+  | { kind: "anonymous" }
+  | { kind: "no-profile"; email: string }
+  | { kind: "ok"; profile: SessionProfile };
 
-  if (!user) return null;
+/**
+ * Dibungkus `cache` supaya satu permintaan render hanya sekali menyentuh
+ * database, seberapa banyak pun komponen memanggilnya.
+ */
+export const lookupSession = cache(async (): Promise<SessionLookup> => {
+  const supabase = await createClient();
+
+  /*
+   * Identitas diambil dari header yang sudah diverifikasi proxy pada permintaan
+   * yang sama, jadi tidak perlu memanggil layanan auth untuk kedua kalinya.
+   * Bila header tidak ada (misalnya rute yang tidak dilalui proxy), jatuh
+   * kembali ke pemeriksaan sesi biasa.
+   */
+  const requestHeaders = await headers();
+  let userId = requestHeaders.get(USER_ID_HEADER);
+  let email = requestHeaders.get(USER_EMAIL_HEADER) ?? "";
+
+  if (!userId) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return { kind: "anonymous" };
+
+    userId = user.id;
+    email = user.email ?? "";
+  }
 
   /*
    * Profil dan daftar cabang diambil sekaligus, bukan berurutan.
    *
-   * Sebelumnya profil dibaca dulu, lalu Percabangan menentukan apakah daftar
-   * cabang perlu diambil, sehingga owner dan maintainer selalu membayar dua
-   * perjalanan berurutan sebelum kueri halaman apa pun dimulai. Pengukuran
-   * produksi menunjukkan render server baru selesai 2,6 sampai 3,3 detik
-   * setelah header terkirim.
-   *
    * Daftar cabang dikirim bersama pada tahap yang sama, lalu dibuang lagi
-   * kalau peran ternyata tidak boleh berpindah cabang. Data yang dibuang
-   * hanya ada di memori server, jadi tidak menambah beban ke database.
+   * kalau peran ternyata tidak boleh berpindah cabang. Data yang dibuang hanya
+   * ada di memori server, jadi tidak menambah beban ke database.
    */
   const [profileRes, branchRes] = await Promise.all([
     supabase
       .from("profiles")
       .select("id, auth_id, full_name, role, branch_id, shift_id")
-      .eq("auth_id", user.id)
+      .eq("auth_id", userId)
       .maybeSingle(),
     supabase
       .from("branches")
@@ -73,7 +103,7 @@ export async function getSessionProfile(): Promise<SessionProfile | null> {
   ]);
 
   const data = profileRes.data;
-  if (!data) return null;
+  if (!data) return { kind: "no-profile", email };
 
   const role = toRole(data.role);
   const canSwitchBranch = can(role, "branch.switch");
@@ -105,18 +135,26 @@ export async function getSessionProfile(): Promise<SessionProfile | null> {
   }
 
   return {
-    id: data.id,
-    authId: data.auth_id,
-    email: user.email ?? "",
-    fullName: data.full_name ?? user.email ?? "Staf",
-    role,
-    branchId,
-    homeBranchId,
-    branchScope,
-    canSwitchBranch,
-    branches,
-    shiftId: (data.shift_id as string | null) ?? null,
+    kind: "ok",
+    profile: {
+      id: data.id,
+      authId: data.auth_id,
+      email,
+      fullName: data.full_name ?? email ?? "Staf",
+      role,
+      branchId,
+      homeBranchId,
+      branchScope,
+      canSwitchBranch,
+      branches,
+      shiftId: (data.shift_id as string | null) ?? null,
+    },
   };
+});
+
+export async function getSessionProfile(): Promise<SessionProfile | null> {
+  const result = await lookupSession();
+  return result.kind === "ok" ? result.profile : null;
 }
 
 /**

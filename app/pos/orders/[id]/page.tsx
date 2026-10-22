@@ -50,7 +50,7 @@ export default async function OrderDetailPage({ params }: { params: Params }) {
     redirect("/pos/orders");
   }
 
-  const [itemsRes, teamRes, photoRes, warrantyRes, branchRes, creatorRes] =
+  const [itemsRes, teamRes, photoRes, warrantyRes, branchRes, creatorRes, candidateRes] =
     await Promise.all([
       supabase
         .from("order_items")
@@ -85,6 +85,17 @@ export default async function OrderDetailPage({ params }: { params: Params }) {
             .eq("id", order.created_by)
             .maybeSingle()
         : Promise.resolve({ data: null }),
+      // Hanya pengelola yang bisa menugaskan tim, jadi daftar kandidat pun
+      // tidak perlu diambil untuk karyawan biasa.
+      can(session.role, "order.manage_status") && order.branch_id
+        ? supabase
+            .from("profiles")
+            .select("id, full_name")
+            .eq("role", "karyawan")
+            .eq("is_active", true)
+            .eq("branch_id", order.branch_id)
+            .order("full_name", { ascending: true })
+        : Promise.resolve({ data: [] }),
     ]);
 
   const teamRows = teamRes.data ?? [];
@@ -186,6 +197,11 @@ export default async function OrderDetailPage({ params }: { params: Params }) {
         canUpload={can(session.role, "inspection.upload")}
         canDecideQc={can(session.role, "qc.review")}
         canDeleteAny={can(session.role, "inspection.delete_any")}
+        canManageTeam={can(session.role, "order.manage_status")}
+        teamCandidates={(candidateRes.data ?? []).map((row) => ({
+          id: row.id as string,
+          full_name: (row.full_name as string) ?? "Karyawan",
+        }))}
         viewerId={session.id}
         branchName={branchRes.data?.branch_name ?? "Cabang Utama"}
       />

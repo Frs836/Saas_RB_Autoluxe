@@ -167,9 +167,13 @@ export function PosConsole({
   }
 
   function toggleMember(id: string) {
-    setSelectedTeam((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-    );
+    const next = selectedTeam.includes(id)
+      ? selectedTeam.filter((x) => x !== id)
+      : [...selectedTeam, id];
+    setSelectedTeam(next);
+    // Tanpa teknisi tidak ada yang bisa langsung mengerjakan order, jadi opsi
+    // itu ikut dimatikan agar tidak tertinggal dalam keadaan menyala.
+    if (next.length === 0) setStartWork(false);
   }
 
   function resetOrder() {
@@ -230,6 +234,15 @@ export function PosConsole({
     }
     setFieldError(null);
     setError(null);
+    // Pengerjaan wajib punya orang yang mengerjakan. Server juga menolaknya,
+    // tetapi pesan di sini muncul sebelum order dibuat sehingga kasir tidak
+    // perlu menebak kenapa penyimpanan gagal.
+    if (startWork && selectedTeam.length === 0) {
+      setError(
+        "Pilih minimal satu teknisi sebelum memulai pengerjaan, atau matikan opsi Kerjakan Sekarang.",
+      );
+      return;
+    }
     if (!kirimSekali.mulai()) return;
     setSubmitting(true);
     try {
@@ -284,6 +297,7 @@ export function PosConsole({
           p_payment_method: paymentMethod,
           p_payment_state: effectivePaymentState,
           p_start_work: startWork,
+          p_team_ids: selectedTeam,
         },
       );
       if (createError) throw new Error(createError.message);
@@ -291,21 +305,6 @@ export function PosConsole({
       const order = Array.isArray(orderRow) ? orderRow[0] : orderRow;
       if (!order || !order.order_number) {
         throw new Error("Order tidak dapat dibuat.");
-      }
-
-      // Order sudah tersimpan pada titik ini. Kegagalan set tim tidak boleh
-// dilempar sebagai error, karena kasir akan menekan ulang dan membuat order
-      // ganda. Tim teknisi bisa diperbaiki dari antrean order.
-      let teamWarning: string | null = null;
-      if (selectedTeam.length > 0) {
-        const { error: teamError } = await supabase.rpc("set_order_team", {
-          p_order_id: order.id,
-          p_member_ids: selectedTeam,
-          p_lead_id: selectedTeam[0],
-        });
-        if (teamError) {
-          teamWarning = `Order ${order.order_number} tersimpan, tetapi tim teknisi gagal ditugaskan: ${teamError.message}`;
-        }
       }
 
       const recordedState: PaymentState =
@@ -357,7 +356,6 @@ export function PosConsole({
             : whatsappLink(customerPhone.trim(), receipt),
       });
       setStep("done");
-      if (teamWarning) setError(teamWarning);
       // Antrean order perlu disegarkan setelah order dibuat. Tanpa ini, kartu
       // "Lihat Antrean Order" membuka daftar yang belum memuat order yang baru
       // saja dibuat, dan kasir mengira order-nya hilang.
@@ -631,7 +629,7 @@ export function PosConsole({
               <Icon name="groups" className="text-[20px] text-brand-600" />
               Tim Teknisi
               <span className="font-caption text-caption text-text-muted ml-auto">
-                opsional, maks 5
+                maks 5
               </span>
             </h2>
             {teamOptions.length === 0 ? (
@@ -765,8 +763,9 @@ export function PosConsole({
             <button
               type="button"
               onClick={() => setStartWork((prev) => !prev)}
+              disabled={selectedTeam.length === 0}
               aria-pressed={startWork}
-              className={`px-3 py-3 rounded-xl flex items-center gap-3 active:scale-95 transition-transform ${
+              className={`px-3 py-3 rounded-xl flex items-center gap-3 active:scale-95 transition-transform disabled:opacity-50 ${
                 startWork
                   ? "bg-success-surface text-success-text"
                   : "bg-surface-container-low text-text-secondary"
@@ -778,7 +777,9 @@ export function PosConsole({
                   Kerjakan Sekarang
                 </span>
                 <span className="font-micro-badge text-micro-badge opacity-80">
-                  Langsung berstatus &ldquo;Sedang Dikerjakan&rdquo;
+                  {selectedTeam.length === 0
+                    ? "Pilih teknisi dulu"
+                    : "Langsung berstatus “Sedang Dikerjakan”"}
                 </span>
               </span>
             </button>

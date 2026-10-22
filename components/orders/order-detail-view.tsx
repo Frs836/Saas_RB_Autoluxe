@@ -47,6 +47,8 @@ export type OrderDetailWarranty = {
   status: string;
 };
 
+export type TeamCandidate = { id: string; full_name: string };
+
 type Props = {
   order: OrderDetailOrder;
   inspections: InspectionPhoto[];
@@ -55,6 +57,8 @@ type Props = {
   canUpload: boolean;
   canDecideQc: boolean;
   canDeleteAny: boolean;
+  canManageTeam: boolean;
+  teamCandidates: TeamCandidate[];
   viewerId: string;
   branchName: string;
 };
@@ -125,6 +129,8 @@ export function OrderDetailView({
   canUpload,
   canDecideQc,
   canDeleteAny,
+  canManageTeam,
+  teamCandidates,
   viewerId,
   branchName,
 }: Props) {
@@ -146,6 +152,10 @@ export function OrderDetailView({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [brokenImages, setBrokenImages] = useState<Record<string, boolean>>({});
+  const [teamOpen, setTeamOpen] = useState(false);
+  const [teamDraft, setTeamDraft] = useState<string[]>([]);
+  const [teamBusy, setTeamBusy] = useState(false);
+  const [teamError, setTeamError] = useState<string | null>(null);
 
   const meta = STATUS_META[order.status] ?? STATUS_META.queued;
   const trackUrl = `${origin.replace(/\/$/, "")}/track/${order.trackingToken}`;
@@ -349,6 +359,31 @@ export function OrderDetailView({
     }
   }
 
+  async function simpanTim() {
+    if (teamBusy) return;
+    setTeamBusy(true);
+    setTeamError(null);
+    try {
+      const supabase = createClient();
+      const { error: rpcError } = await supabase.rpc("set_order_team", {
+        p_order_id: order.id,
+        p_profile_ids: teamDraft,
+      });
+      if (rpcError) throw new Error(rpcError.message);
+      setTeamOpen(false);
+      setSuccess(
+        teamDraft.length === 0
+          ? "Tim teknisi dikosongkan."
+          : `Tim teknisi diperbarui (${teamDraft.length} orang).`,
+      );
+      router.refresh();
+    } catch (err) {
+      setTeamError(err instanceof Error ? err.message : "Gagal menyimpan tim.");
+    } finally {
+      setTeamBusy(false);
+    }
+  }
+
   async function deletePhoto(id: string) {
     setBusy(true);
     setError(null);
@@ -368,6 +403,9 @@ export function OrderDetailView({
   }
 
   const primaryActions: { label: string; icon: string; status: string; cls: string }[] = [];
+  // Pengerjaan wajib punya teknisi. Tombol Mulai Pengerjaan dimatikan dan
+  // alasannya ditulis, karena server juga akan menolak permintaannya.
+  const butuhTeknisi = order.status === "queued" && order.team.length === 0;
   if (order.status === "queued" && canUpload) {
     primaryActions.push({
       label: "Mulai Pengerjaan",
@@ -505,7 +543,7 @@ export function OrderDetailView({
             </div>
           ) : null}
 
-          <div className="flex flex-wrap gap-2 pt-1">
+          <div className="flex flex-wrap items-center gap-2 pt-1">
             {order.team.length > 0 ? (
               <span className="px-2 py-1 rounded-full bg-surface-container text-text-secondary font-caption text-caption">
                 Tim: {order.team.map((m) => m.full_name).join(", ")}
@@ -515,6 +553,20 @@ export function OrderDetailView({
                 Belum ada teknisi
               </span>
             )}
+            {canManageTeam ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setTeamDraft(order.team.map((m) => m.id));
+                  setTeamError(null);
+                  setTeamOpen(true);
+                }}
+                className="min-h-9 px-3 rounded-full bg-brand-50 text-brand-700 font-caption text-caption flex items-center gap-1 active:scale-95 transition-transform"
+              >
+                <Icon name="group_add" className="text-[16px]" />
+                Atur Tim
+              </button>
+            ) : null}
             <span className="px-2 py-1 rounded-full bg-surface-container text-text-secondary font-caption text-caption">
               Dibuat {formatDateWib(order.createdAt)} {formatTimeWib(order.createdAt)}
             </span>
@@ -674,7 +726,12 @@ export function OrderDetailView({
                 <button
                   key={action.status}
                   type="button"
-                  disabled={busy}
+                  disabled={busy || (butuhTeknisi && action.status === "in_progress")}
+                  title={
+                    butuhTeknisi && action.status === "in_progress"
+                      ? "Pilih teknisi dulu lewat tombol Atur Tim."
+                      : undefined
+                  }
                   onClick={() => changeStatus(action.status)}
                   className={`flex-1 py-3 rounded-2xl font-body-bold text-body-bold flex items-center justify-center gap-1.5 active:scale-95 transition-transform disabled:opacity-60 ${action.cls}`}
                 >
@@ -683,6 +740,13 @@ export function OrderDetailView({
                 </button>
               ))}
             </div>
+          ) : null}
+
+          {butuhTeknisi ? (
+            <p className="mb-2 px-0.5 font-caption text-caption text-warning-text flex items-center gap-1">
+              <Icon name="info" className="text-[16px]" />
+              Pilih minimal satu teknisi lewat Atur Tim sebelum memulai pengerjaan.
+            </p>
           ) : null}
 
           {canUpload && !cameraOpen && adaFaseBoleh ? (
@@ -709,6 +773,99 @@ export function OrderDetailView({
                 : "Foto kondisi awal diambil saat pengerjaan berjalan. Foto hasil akhir dibuka setelah pengerjaan selesai atau unit siap diambil."}
             </p>
           ) : null}
+        </div>
+      ) : null}
+
+      {teamOpen ? (
+        <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center">
+          <div className="w-full max-w-[440px] max-h-[85vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl bg-surface p-4 flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <h2 className="font-headline-2 text-headline-2 text-text-primary">
+                Atur Tim Teknisi
+              </h2>
+              <button
+                type="button"
+                onClick={() => setTeamOpen(false)}
+                aria-label="Tutup"
+                className="w-10 h-10 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary"
+              >
+                <Icon name="close" className="text-[20px]" />
+              </button>
+            </div>
+
+            <p className="font-caption text-caption text-text-muted">
+              Pilih karyawan lapangan yang mengerjakan order ini. Orang pertama
+              menjadi lead dan tercatat sebagai petugas order.
+            </p>
+
+            {teamError ? (
+              <p className="p-2 rounded-xl bg-danger-surface text-danger-text font-caption text-caption">
+                {teamError}
+              </p>
+            ) : null}
+
+            {teamCandidates.length === 0 ? (
+              <p className="font-body text-body text-text-secondary">
+                Belum ada karyawan aktif di cabang order ini.
+              </p>
+            ) : (
+              <div className="flex flex-col gap-1">
+                {teamCandidates.map((candidate) => {
+                  const selected = teamDraft.includes(candidate.id);
+                  const isLead = teamDraft[0] === candidate.id;
+                  return (
+                    <button
+                      key={candidate.id}
+                      type="button"
+                      onClick={() =>
+                        setTeamDraft((prev) =>
+                          prev.includes(candidate.id)
+                            ? prev.filter((id) => id !== candidate.id)
+                            : [...prev, candidate.id],
+                        )
+                      }
+                      className={`min-h-12 px-3 rounded-xl flex items-center gap-2 text-left ${
+                        selected
+                          ? "bg-brand-50 text-brand-700"
+                          : "bg-surface-container-low text-text-secondary"
+                      }`}
+                    >
+                      <Icon
+                        name={selected ? "check_box" : "check_box_outline_blank"}
+                        className="text-[20px]"
+                      />
+                      <span className="font-body text-body flex-1 truncate">
+                        {candidate.full_name}
+                      </span>
+                      {isLead ? (
+                        <span className="font-micro-badge text-micro-badge px-1.5 py-0.5 rounded bg-brand-500 text-white">
+                          Lead
+                        </span>
+                      ) : null}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            <div className="flex gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setTeamOpen(false)}
+                className="flex-1 h-12 rounded-xl bg-surface-container text-text-secondary font-body-bold text-body-bold"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={() => void simpanTim()}
+                disabled={teamBusy}
+                className="flex-1 h-12 rounded-xl bg-primary text-white font-body-bold text-body-bold disabled:opacity-60"
+              >
+                {teamBusy ? "Menyimpan..." : "Simpan Tim"}
+              </button>
+            </div>
+          </div>
         </div>
       ) : null}
 

@@ -312,6 +312,9 @@ export function OrderQueue({
             const canCancel =
               canManage &&
               (order.status === "queued" || order.status === "in_progress");
+            // Pengerjaan tidak boleh dimulai tanpa teknisi. Server menolaknya,
+            // dan tombolnya di sini dimatikan supaya alasannya terlihat.
+            const perluTeknisi = order.status === "queued" && order.team.length === 0;
             const waHref = order.customer_phone
               ? whatsappLink(
                   order.customer_phone,
@@ -368,9 +371,19 @@ export function OrderQueue({
                 <div className="flex items-center justify-between gap-2 bg-surface-container-low rounded-xl px-3 py-2">
                   <div className="flex items-center gap-1.5 min-w-0">
                     {order.team.length === 0 ? (
-                      <span className="font-caption text-caption text-text-muted">
-                        Belum ada teknisi
-                      </span>
+                      perluTeknisi ? (
+                        <Link
+                          href={`/pos/orders/${order.id}`}
+                          className="font-caption text-caption text-brand-600 flex items-center gap-1 min-h-9"
+                        >
+                          <Icon name="group_add" className="text-[16px]" />
+                          Belum ada teknisi — atur dulu
+                        </Link>
+                      ) : (
+                        <span className="font-caption text-caption text-text-muted">
+                          Belum ada teknisi
+                        </span>
+                      )
                     ) : (
                       <>
                         <div className="flex -space-x-1.5">
@@ -436,7 +449,12 @@ export function OrderQueue({
                         <button
                           key={action.status}
                           type="button"
-                          disabled={busy}
+                          disabled={busy || (perluTeknisi && action.status === "in_progress")}
+                          title={
+                            perluTeknisi && action.status === "in_progress"
+                              ? "Pilih teknisi dulu sebelum memulai pengerjaan."
+                              : undefined
+                          }
                           onClick={() => transition(order, action.status)}
                           className={`flex-1 py-2.5 rounded-xl font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform disabled:opacity-60 ${
                             action.status === "completed"
@@ -464,7 +482,12 @@ export function OrderQueue({
                   {!canManage && canStartWork && order.status === "queued" ? (
                     <button
                       type="button"
-                      disabled={busy}
+                      disabled={busy || perluTeknisi}
+                      title={
+                        perluTeknisi
+                          ? "Pilih teknisi dulu sebelum memulai pengerjaan."
+                          : undefined
+                      }
                       onClick={() => startWork(order)}
                       className="flex-1 py-2.5 rounded-xl bg-primary text-white font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform disabled:opacity-60"
                     >

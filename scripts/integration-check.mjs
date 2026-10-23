@@ -294,6 +294,13 @@ suite.check("karyawan ditolak create_warranty_claim", Boolean(denyClaim.error), 
 
 suite.section("4. Memulai pekerjaan order");
 
+// Reset karyawan profile state: complete any in-progress orders
+await adminClient
+  .from("orders")
+  .update({ status: "completed", started_by: null })
+  .eq("started_by", karyawanProfile.id)
+  .in("status", ["in_progress", "qc_review"]);
+
 // Pengerjaan wajib punya teknisi, jadi order milik karyawan ditugaskan ke
 // dirinya sendiri lebih dulu.
 await admin.client.rpc("set_order_team", {
@@ -332,6 +339,13 @@ const otherStaff = (
     .neq("id", karyawanProfile.id)
     .limit(1)
 ).data?.[0];
+
+// Pastikan karyawan free sebelum test steal (cleanup order sebelumnya)
+  await adminClient
+    .from("orders")
+    .update({ status: "completed", started_by: null })
+    .eq("started_by", karyawanProfile.id)
+    .in("status", ["in_progress", "qc_review"]);
 
 if (otherStaff) {
   await admin.client.rpc("set_order_team", {
@@ -782,6 +796,19 @@ suite.check("akun aktif kembali setelah diaktifkan ulang", restored.data === "ac
 
 suite.section("11. Inspeksi foto dan QC");
 
+// Cari teknisi bebas untuk QC test (hindari pembantuId yang dipakai seksi lain)
+const qcStaffRow = (
+  await admin.client
+    .from("profiles")
+    .select("id")
+    .eq("role", "karyawan")
+    .eq("is_active", true)
+    .neq("id", karyawanProfile.id)
+    .neq("id", pembantuId)
+    .limit(1)
+).data?.[0];
+const qcStaffId = qcStaffRow?.id ?? pembantuId;
+
 const coatingUji = await katalogCoating(admin.client);
 
 const qcOrder = singleRow(
@@ -796,7 +823,7 @@ const qcOrder = singleRow(
     p_payment_method: "cash",
     p_payment_state: "paid",
     p_start_work: true,
-    p_team_ids: [pembantuId],
+    p_team_ids: [qcStaffId],
   }),
 );
 cleanupOrderIds.push(qcOrder?.id);

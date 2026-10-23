@@ -45,16 +45,6 @@ BEGIN
     RAISE EXCEPTION 'Order ini berada di luar cabang Anda.';
   END IF;
 
-  IF NOT v_is_staff THEN
-    IF v_order.created_by IS DISTINCT FROM v_profile_id
-       AND NOT EXISTS (
-         SELECT 1 FROM public.order_team_members t
-          WHERE t.order_id = v_order.id AND t.profile_id = v_profile_id
-       ) THEN
-      RAISE EXCEPTION 'Anda hanya bisa memulai order yang Anda buat atau menjadi anggota timnya.';
-    END IF;
-  END IF;
-
   -- Ambil tim yang sudah ada (jika ada)
   SELECT array_agg(t.profile_id) INTO v_team
     FROM public.order_team_members t
@@ -72,7 +62,7 @@ BEGIN
       AND o.id <> p_order_id
   ) INTO v_caller_busy;
 
-  -- Jika belum ada tim, coba auto-assign caller sebagai lead
+  -- Jika belum ada tim, coba auto-assign caller sebagai lead (untuk karyawan free)
   IF array_length(v_team, 1) IS NULL THEN
     -- Harus karyawan (bukan staff)
     IF v_is_staff THEN
@@ -108,6 +98,17 @@ BEGIN
     VALUES (v_order.id, v_profile_id, true);
 
     v_team := ARRAY[v_profile_id];
+  ELSE
+    -- Sudah ada tim: caller HARUS menjadi anggota tim (atau pembuat order)
+    IF NOT v_is_staff THEN
+      IF v_order.created_by IS DISTINCT FROM v_profile_id
+         AND NOT EXISTS (
+           SELECT 1 FROM public.order_team_members t
+            WHERE t.order_id = v_order.id AND t.profile_id = v_profile_id
+         ) THEN
+        RAISE EXCEPTION 'Anda hanya bisa memulai order yang Anda buat atau menjadi anggota timnya.';
+      END IF;
+    END IF;
   END IF;
 
   -- Validasi tim tidak kosong

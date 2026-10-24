@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { formatRupiah, formatTimeWib, formatDateWib } from "@/lib/format";
 import { PAYMENT_LABELS, whatsappLink } from "@/lib/pos";
 import { Icon } from "@/components/ui/icon";
+import { useSingleFlight } from "@/lib/use-single-flight";
 
 export type TeamMember = { id: string; full_name: string; is_lead: boolean };
 
@@ -26,6 +27,7 @@ export type QueueOrder = {
   completed_at: string | null;
   assigned_to: string | null;
   cancellation_reason: string | null;
+  branch_id: string | null;
   team: TeamMember[];
 };
 
@@ -143,11 +145,19 @@ export function OrderQueue({
   canStartWork?: boolean;
 }) {
   const router = useRouter();
+  const kirimSekali = useSingleFlight();
 
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Modal pilih tim untuk claim order
+  const [showTeamModal, setShowTeamModal] = useState(false);
+  const [claimOrder, setClaimOrder] = useState<QueueOrder | null>(null);
+  const [availableStaff, setAvailableStaff] = useState<{ id: string; full_name: string; busy: boolean }[]>([]);
+  const [selectedStaff, setSelectedStaff] = useState<string[]>([]);
+  const [teamModalLoading, setTeamModalLoading] = useState(false);
 
   const orders = initialOrders;
 
@@ -234,6 +244,77 @@ export function OrderQueue({
       return;
     }
     router.refresh();
+  }
+
+  // Buka modal pilih tim untuk claim order
+  async function openTeamModal(order: QueueOrder) {
+    setClaimOrder(order);
+    setSelectedStaff([]);
+    setTeamModalLoading(true);
+    try {
+      const supabase = createClient();
+      // Ambil karyawan aktif cabang yang sama, exclude yang busy
+      const { data: staffData } = await supabase
+        .from("profiles")
+        .select("id, full_name")
+        .eq("role", "karyawan")
+        .eq("is_active", true)
+        .eq("branch_id", order.branch_id ?? null);
+
+      // Ambil yang busy di order lain in_progress/qc_review
+      const { data: busyData } = await supabase
+        .from("order_team_members")
+        .select("profile_id, orders!inner(status, branch_id)")
+        .in("orders.status", ["in_progress", "qc_review"])
+        .eq("orders.branch_id", order.branch_id ?? null);
+
+      const busyIds = new Set((busyData ?? []).map((r) => r.profile_id as string));
+
+      const staff = (staffData ?? []).map((s) => ({
+        id: s.id,
+        full_name: s.full_name,
+        busy: busyIds.has(s.id),
+      }));
+      setAvailableStaff(staff);
+    } catch {
+      setAvailableStaff([]);
+    } finally {
+      setTeamModalLoading(false);
+      setShowTeamModal(true);
+    }
+  }
+
+  function toggleStaff(id: string) {
+    const staff = availableStaff.find((s) => s.id === id);
+    if (staff?.busy) return;
+    setSelectedStaff((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  }
+
+  async function submitClaimWithTeam() {
+    if (!claimOrder) return;
+    if (!kirimSekali.mulai()) return;
+
+    setTeamModalLoading(true);
+    setError(null);
+    try {
+      const supabase = createClient();
+      const { error: rpcError } = await supabase.rpc("start_order_work", {
+        p_order_id: claimOrder.id,
+        p_team_ids: selectedStaff,
+      });
+      if (rpcError) throw new Error(rpcError.message);
+
+      setShowTeamModal(false);
+      setClaimOrder(null);
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Gagal claim order, coba lagi.");
+    } finally {
+      kirimSekali.selesai();
+      setTeamModalLoading(false);
+    }
   }
 
   return (
@@ -481,26 +562,35 @@ export function OrderQueue({
                       <Icon name="cancel" className="text-[20px]" />
                     </button>
                   ) : null}
-                  {canStartWork && order.status === "queued" && !canManage ? (
-                    <button
-                      type="button"
-                      disabled={busy || perluTeknisi && !canClaimOrder}
-                      title={
-                        perluTeknisi && !canClaimOrder
-                          ? "Pilih teknisi dulu sebelum memulai pengerjaan."
-                          : perluTeknisi && canClaimOrder
-                          ? undefined
-                          : busy
-                          ? "Sedang memproses..."
-                          : undefined
-                      }
-                      onClick={() => startWork(order)}
-                      className="flex-1 py-2.5 rounded-xl bg-primary text-white font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform disabled:opacity-60"
-                    >
-                      <Icon name="engineering" className="text-[18px]" />
-                      {perluTeknisi ? "Kerjakan Antrian Ini" : "Kerjakan Sekarang"}
-                    </button>
-                  ) : null}
+{canStartWork && order.status === "queued" && !canManage ? (
+                      perluTeknisi ? (
+                        <button
+                          type="button"
+                          disabled={busy || !canClaimOrder}
+                          title={
+                            !canClaimOrder
+                              ? "Kamu sedang mengerjakan order lain. Selesaikan dulu."
+                              : "Pilih rekan kerja lalu mulai pengerjaan"
+                          }
+                          onClick={() => openTeamModal(order)}
+                          className="flex-1 py-2.5 rounded-xl bg-primary text-white font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform disabled:opacity-60"
+                        >
+                          <Icon name="engineering" className="text-[18px]" />
+                          Kerjakan Antrian Ini
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled={busy}
+                          title={busy ? "Sedang memproses..." : undefined}
+                          onClick={() => startWork(order)}
+                          className="flex-1 py-2.5 rounded-xl bg-primary text-white font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform disabled:opacity-60"
+                        >
+                          <Icon name="engineering" className="text-[18px]" />
+                          Kerjakan Sekarang
+                        </button>
+                      )
+                    ) : null}
                   <Link
                     href={`/pos/orders/${order.id}`}
                     className="min-h-11 px-3 rounded-xl bg-surface-container text-text-secondary flex items-center gap-1 font-caption text-caption shrink-0"
@@ -521,4 +611,99 @@ export function OrderQueue({
       )}
     </div>
   );
+
+  // Modal Pilih Tim untuk Claim Order
+  if (showTeamModal) {
+    const order = claimOrder as any;
+    const maxTeam = order.vehicle_size?.startsWith("Motor") ? 3 : 4;
+    const canSelectMore = selectedStaff.length < maxTeam - 1; // -1 karena caller otomatis jadi lead
+    return (
+      <>
+        <div className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4" onClick={() => setShowTeamModal(false)} />
+        <div className="fixed z-[61] w-full max-w-md bg-surface rounded-2xl p-6 clay-card shadow-xl animate-in slide-in-from-bottom-4 duration-200" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-headline-2 text-headline-2 text-text-primary">Pilih Rekan Kerja</h3>
+            <button
+              type="button"
+              onClick={() => setShowTeamModal(false)}
+              className="w-10 h-10 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary active:scale-95"
+              aria-label="Tutup"
+            >
+              <Icon name="close" className="text-[22px]" />
+            </button>
+          </div>
+          <p className="font-caption text-caption text-text-secondary mb-4">
+            Order <b>{(order as any).order_number}</b> ({(order as any).vehicle_model ?? "Kendaraan"})<br />
+            Maksimal <b>{maxTeam}</b> orang (termasuk Anda sebagai lead). Sudah dipilih: <b>{selectedStaff.length}</b> rekan.
+          </p>
+          {teamModalLoading ? (
+            <div className="h-40 flex items-center justify-center">
+              <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : (
+            <div className="max-h-64 overflow-y-auto space-y-2">
+              {availableStaff.length === 0 ? (
+                <p className="font-body text-body text-text-secondary text-center py-8">
+                  Tidak ada karyawan aktif di cabang ini.
+                </p>
+              ) : (
+                availableStaff.map((staff) => (
+                  <button
+                    key={staff.id}
+                    type="button"
+                    disabled={staff.busy || (!canSelectMore && !selectedStaff.includes(staff.id))}
+                    onClick={() => toggleStaff(staff.id)}
+                    className={`w-full px-4 py-3 rounded-xl flex items-center justify-between gap-2 text-left transition-colors ${
+                      selectedStaff.includes(staff.id)
+                        ? "bg-primary text-white"
+                        : staff.busy
+                        ? "bg-surface-container-low text-text-muted opacity-60"
+                        : "bg-surface-container-low text-text-secondary hover:bg-surface-container"
+                    }`}
+                  >
+                    <span className="font-body text-body truncate">{staff.full_name}</span>
+                    {staff.busy && (
+                      <span className="font-micro-badge text-micro-badge bg-warning-surface text-warning-text px-2 py-0.5 rounded-full shrink-0">
+                        Sibuk
+                      </span>
+                    )}
+                    {selectedStaff.includes(staff.id) && (
+                      <Icon name="check_circle" className="text-[20px] text-white shrink-0" />
+                    )}
+                  </button>
+                ))
+              )}
+            </div>
+          )}
+          <div className="mt-6 flex gap-3">
+            <button
+              type="button"
+              onClick={() => setShowTeamModal(false)}
+              className="flex-1 py-3 rounded-xl bg-surface-container-low text-text-secondary font-body-bold text-body-bold active:scale-95"
+            >
+              Batal
+            </button>
+            <button
+              type="button"
+              disabled={teamModalLoading || selectedStaff.length > maxTeam - 1}
+              onClick={submitClaimWithTeam}
+              className="flex-1 py-3 rounded-xl primary-gradient text-white font-body-bold text-body-bold active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2"
+            >
+              {teamModalLoading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Memproses...
+                </>
+              ) : (
+                <>
+                  <Icon name="play_arrow" className="text-[20px]" />
+                  Mulai Pengerjaan
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </>
+    );
+  }
 }

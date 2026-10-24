@@ -35,7 +35,7 @@ export default async function OrderQueuePage() {
       supabase
         .from("orders")
         .select(
-          "id, order_number, license_plate, vehicle_model, vehicle_size, customer_name, customer_phone, service_package, status, total_price, payment_method, payment_state, created_at, completed_at, assigned_to, cancellation_reason",
+          "id, order_number, license_plate, vehicle_model, vehicle_size, customer_name, customer_phone, service_package, status, total_price, payment_method, payment_state, created_at, completed_at, assigned_to, cancellation_reason, branch_id",
         ),
       branchId,
       "orders",

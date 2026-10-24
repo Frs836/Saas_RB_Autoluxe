@@ -2132,16 +2132,24 @@ suite.section("19. Kebersihan data uji");
 
 const ids = cleanupOrderIds.filter(Boolean);
 
-if (ids.length > 0) {
-  await adminClient.from("order_team_members").delete().in("order_id", ids);
-  await adminClient.from("order_inspections").delete().in("order_id", ids);
-  await adminClient.from("warranties").delete().in("order_id", ids);
-  await adminClient.from("order_items").delete().in("order_id", ids);
+/* Hapus semua data terkait order uji (license_plate ZZTEST%), bukan hanya yang tercatat di cleanupOrderIds.
+ * Banyak order dibuat di tengah test tanpa ditambahkan ke array, jadi pakai pattern matching. */
+const { data: allTestOrders } = await adminClient
+  .from("orders")
+  .select("id")
+  .like("license_plate", `${TEST_PLATE}%`);
+const allTestOrderIds = (allTestOrders ?? []).map((o) => o.id);
+
+if (allTestOrderIds.length > 0) {
+  await adminClient.from("order_team_members").delete().in("order_id", allTestOrderIds);
+  await adminClient.from("order_inspections").delete().in("order_id", allTestOrderIds);
+  await adminClient.from("warranties").delete().in("order_id", allTestOrderIds);
+  await adminClient.from("order_items").delete().in("order_id", allTestOrderIds);
   await adminClient.from("cash_flow").delete().ilike("description", `%${TEST_PLATE}%`);
   await adminClient.from("cash_flow").delete().eq("category", "ZZTEST Dengan Bukti");
   await adminClient.from("cash_flow").delete().ilike("description", `%$TEST_MARKER%`);
   await adminClient.from("warranty_claims").delete().ilike("problem_description", `${TEST_REASON_PREFIX}%`);
-  await adminClient.from("orders").delete().in("id", ids);
+  await adminClient.from("orders").delete().in("id", allTestOrderIds);
 }
 await adminClient.from("time_off_requests").delete().like("reason", `${TEST_REASON_PREFIX}%`);
 await adminClient.from("activity_logs").delete().eq("entity", "time_off_request");

@@ -200,11 +200,8 @@ export function PosConsole({
       return { field: "licensePlate", message: "Nomor plat kendaraan wajib diisi." };
     if (vehicleModel.trim() === "")
       return { field: "vehicleModel", message: "Model kendaraan wajib diisi." };
-    if (customerName.trim() === "")
-      return { field: "customerName", message: "Nama pelanggan wajib diisi." };
-    if (customerPhone.trim() === "")
-      return { field: "customerPhone", message: "Nomor WhatsApp wajib diisi." };
-    if (!isValidWaNumber(customerPhone))
+    // customerName & customerPhone opsional (hanya admin/owner/maintainer yang lihat)
+    if (customerPhone.trim() !== "" && !isValidWaNumber(customerPhone))
       return {
         field: "customerPhone",
         message: "Nomor WhatsApp tidak valid. Contoh yang benar: 08123456789.",
@@ -588,13 +585,14 @@ export function PosConsole({
               Data Pelanggan
             </h2>
             <label className="flex flex-col gap-1">
-              <span className="font-caption text-caption text-text-muted">
+              <span className="font-caption text-caption text-text-muted flex items-center gap-1">
                 Nama Pelanggan
+                <span className="text-text-muted/50 text-[11px]">(opsional)</span>
               </span>
               <input
                 value={customerName}
                 onChange={ubahTeks("customerName", setCustomerName)}
-                placeholder="Nama pelanggan"
+                placeholder="Nama pelanggan (opsional)"
                 className={`h-12 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400 ${
                   fieldError?.field === "customerName" ? "ring-2 ring-danger-base" : ""
                 }`}
@@ -606,14 +604,15 @@ export function PosConsole({
               ) : null}
             </label>
             <label className="flex flex-col gap-1">
-              <span className="font-caption text-caption text-text-muted">
+              <span className="font-caption text-caption text-text-muted flex items-center gap-1">
                 Nomor WhatsApp
+                <span className="text-text-muted/50 text-[11px]">(opsional)</span>
               </span>
               <input
                 value={customerPhone}
                 onChange={ubahTeks("customerPhone", setCustomerPhone)}
                 inputMode="tel"
-                placeholder="08123456789"
+                placeholder="08123456789 (opsional)"
                 className={`h-12 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400 ${
                   fieldError?.field === "customerPhone" ? "ring-2 ring-danger-base" : ""
                 }`}

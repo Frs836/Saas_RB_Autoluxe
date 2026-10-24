@@ -25,13 +25,27 @@ export default async function KasPage() {
     supabase
       .from("petty_cash")
       .select(
-"id, created_at, amount, category, description, proof_photo_url, payment_method",
-        ),
-        branchId,
-        "petty_cash",
-      )
+        "id, created_at, amount, category, description, proof_photo_url, payment_method",
+      ),
+    branchId,
+    "petty_cash",
+  )
     .order("created_at", { ascending: false })
     .limit(50);
+
+  // Fetch unpaid orders (Bayar Nanti) - orders with payment_state = 'unpaid' and cash_hold_amount > 0
+  const { data: unpaidOrders } = await scopeBranchQuery(
+    supabase
+      .from("orders")
+      .select(
+        "id, order_number, license_plate, vehicle_model, customer_name, total_price, cash_hold_amount, cash_hold_payment_method, created_at",
+      )
+      .eq("payment_state", "unpaid")
+      .gt("cash_hold_amount", 0),
+    branchId,
+    "orders",
+  )
+    .order("created_at", { ascending: false });
 
   // Handoff adalah satu catatan aktif per cabang, jadi tidak ada makna saat
   // manajer sedang melihat seluruh cabang sekaligus.
@@ -68,6 +82,17 @@ export default async function KasPage() {
             description: row.description,
             paymentMethod: row.payment_method,
             proofPhotoUrl: row.proof_photo_url,
+          }))}
+          unpaidOrders={(unpaidOrders ?? []).map((row) => ({
+            id: row.id,
+            orderNumber: row.order_number,
+            licensePlate: row.license_plate,
+            vehicleModel: row.vehicle_model,
+            customerName: row.customer_name,
+            totalPrice: Number(row.total_price),
+            cashHoldAmount: Number(row.cash_hold_amount),
+            cashHoldPaymentMethod: row.cash_hold_payment_method,
+            createdAt: row.created_at,
           }))}
           handoff={
             handoff

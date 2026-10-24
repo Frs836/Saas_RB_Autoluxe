@@ -26,6 +26,18 @@ type Handoff = {
   actual: number | null;
 };
 
+type UnpaidOrder = {
+  id: string;
+  orderNumber: string;
+  licensePlate: string;
+  vehicleModel: string;
+  customerName: string;
+  totalPrice: number;
+  cashHoldAmount: number;
+  cashHoldPaymentMethod: string;
+  createdAt: string;
+};
+
 type FormState = {
   type: "in" | "out";
   amount: string;
@@ -33,6 +45,8 @@ type FormState = {
   description: string;
   paymentMethod: string;
 };
+
+type Tab = "kas" | "bayar_nanti";
 
 const CATEGORIES_OUT = [
   "Perlengkapan Wash",
@@ -53,16 +67,19 @@ export function KasConsole({
   handoff,
   canManage,
   branchName,
+  unpaidOrders,
 }: {
   pettyCash: PettyCashRow[];
   handoff: Handoff | null;
   canManage: boolean;
   branchName: string;
+  unpaidOrders?: UnpaidOrder[];
 }) {
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
+  const [activeTab, setActiveTab] = useState<Tab>("kas");
   const [form, setForm] = useState<FormState>({
     type: "out",
     amount: "",
@@ -211,6 +228,41 @@ export function KasConsole({
   return (
     <div className="min-h-screen bg-canvas">
       <div className="pb-nav px-gutter pt-4 space-y-space-lg">
+        {/* Tab Navigation */}
+        <div className="flex gap-2 bg-surface rounded-xl p-1 clay-card border border-white/80">
+          <button
+            type="button"
+            onClick={() => setActiveTab("kas")}
+            className={`flex-1 h-10 rounded-lg font-caption text-caption transition-colors ${
+              activeTab === "kas"
+                ? "bg-white text-text-primary shadow-sm"
+                : "text-text-secondary hover:bg-surface-container-low"
+            }`}
+          >
+            <Icon name="payments" className="text-[16px] mx-auto" />
+            Kas
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("bayar_nanti")}
+            className={`flex-1 h-10 rounded-lg font-caption text-caption transition-colors ${
+              activeTab === "bayar_nanti"
+                ? "bg-white text-text-primary shadow-sm"
+                : "text-text-secondary hover:bg-surface-container-low"
+            }`}
+          >
+            <Icon name="schedule" className="text-[16px] mx-auto" />
+            Bayar Nanti
+            {unpaidOrders && unpaidOrders.length > 0 && (
+              <span className="ml-1.5 px-1.5 py-0.5 text-[10px] rounded-full bg-brand-500 text-white">
+                {unpaidOrders.length}
+              </span>
+            )}
+          </button>
+        </div>
+
+        {activeTab === "kas" && (
+          <>
         <section className="clay-card flex flex-col gap-space-md p-space-lg">
           <div className="flex items-center justify-between">
             <h2 className="font-headline-2 text-headline-2 text-text-primary">Ringkasan Kas</h2>
@@ -418,6 +470,15 @@ export function KasConsole({
             )}
           </div>
         </section>
+        </>)}
+        
+        {activeTab === "bayar_nanti" && (
+          <BayarNantiTab
+            unpaidOrders={unpaidOrders ?? []}
+            canManage={canManage}
+            branchName={branchName}
+          />
+        )}
       </div>
 
       {cameraOpen ? (
@@ -448,6 +509,131 @@ export function KasConsole({
           </div>
         </div>
       ) : null}
+    </div>
+  );
+}
+
+function BayarNantiTab({
+  unpaidOrders,
+  canManage,
+  branchName,
+}: {
+  unpaidOrders: UnpaidOrder[];
+  canManage: boolean;
+  branchName: string;
+}) {
+  const router = useRouter();
+  const [loading, setLoading] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const kirimSekali = useSingleFlight();
+
+  const onSettle = useCallback(
+    async (order: UnpaidOrder) => {
+      setError(null);
+      setSuccess(null);
+      setLoading(order.id);
+
+      if (!kirimSekali.mulai()) return;
+
+      try {
+        const supabase = createClient();
+        const { error: rpcError } = await supabase.rpc("settle_order_payment", {
+          p_order_id: order.id,
+          p_paid_amount: order.cashHoldAmount,
+          p_payment_method: order.cashHoldPaymentMethod,
+        });
+
+        if (rpcError) {
+          setError(rpcError.message);
+          return;
+        }
+
+        setSuccess(
+          `Order ${order.orderNumber} (${order.licensePlate}) lunas. Uang titipan ${formatRupiah(
+            order.cashHoldAmount
+          )} tercatat ke kas.`
+        );
+        router.refresh();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Gagal menyelesaikan pembayaran.");
+      } finally {
+        kirimSekali.selesai();
+        setLoading(null);
+      }
+    },
+    [kirimSekali, router]
+  );
+
+  if (unpaidOrders.length === 0) {
+    return (
+      <div className="py-12 text-center">
+        <Icon name="check_circle" className="text-[48px] text-success-text mx-auto mb-3" />
+        <p className="font-body-bold text-body-bold text-text-primary">Semua Order Lunas</p>
+        <p className="font-caption text-caption text-text-secondary mt-1">
+          Tidak ada order "Bayar Nanti" yang perlu diselesaikan.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-space-md">
+      <section className="clay-card flex flex-col gap-space-md p-space-lg">
+        <div className="flex items-center justify-between">
+          <h2 className="font-headline-2 text-headline-2 text-text-primary">Order Bayar Nanti</h2>
+          <span className="font-caption text-caption text-text-muted">
+            {unpaidOrders.length} order menunggu settlement
+          </span>
+        </div>
+        <div className="flex flex-col gap-space-sm">
+          {unpaidOrders.map((order) => (
+            <div
+              key={order.id}
+              className="flex items-center justify-between gap-space-md p-4 bg-surface rounded-xl border border-border-subtle"
+            >
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-body-bold text-body-bold text-text-primary truncate">
+                    {order.orderNumber}
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full bg-warning-surface text-warning-text font-micro-badge text-micro-badge">
+                    Bayar Nanti
+                  </span>
+                </div>
+                <p className="font-caption text-caption text-text-muted mt-1">
+                  {order.licensePlate} &bull; {order.vehicleModel} &bull; {order.customerName}
+                </p>
+                <p className="font-caption text-caption text-text-muted">
+                  Dibuat: {formatTimeWib(order.createdAt)} WIB
+                </p>
+              </div>
+              <div className="flex items-center gap-3 shrink-0">
+                <div className="text-right">
+                  <p className="font-body-bold text-body-bold text-text-primary">
+                    {formatRupiah(order.totalPrice)}
+                  </p>
+                  <p className="font-caption text-caption text-brand-600">
+                    Uang titipan: {formatRupiah(order.cashHoldAmount)}
+                  </p>
+                </div>
+                {canManage && (
+                  <button
+                    type="button"
+                    onClick={() => onSettle(order)}
+                    disabled={loading === order.id}
+                    className="h-10 px-4 rounded-lg primary-gradient text-white font-body-bold text-body-bold shadow-[0px_8px_16px_rgba(37,99,235,0.25)] disabled:opacity-60 active:scale-[0.98] transition-transform"
+                  >
+                    {loading === order.id ? "Memproses..." : "Selesaikan Bayar"}
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+        {error && <p className="font-caption text-caption text-danger-text">{error}</p>}
+        {success && <p className="font-caption text-caption text-success-text">{success}</p>}
+      </section>
     </div>
   );
 }

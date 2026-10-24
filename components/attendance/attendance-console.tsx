@@ -526,12 +526,7 @@ export function AttendanceConsole({
         setInfo("Check-in berhasil dicatat.");
       } else {
         const { error: rpcErr } = await supabase.rpc("attendance_check_out", {
-          p_latitude: gps.lat,
-          p_longitude: gps.lng,
-          p_accuracy_meters: gps.accuracy,
-          p_photo_url: photoPath,
-          p_face_similarity_score:
-            similarity === null ? null : Number(similarity.toFixed(4)),
+          p_notes: null,
         });
         if (rpcErr) throw new Error(rpcErr.message);
         setInfo("Check-out berhasil dicatat.");

@@ -139,10 +139,12 @@ export function OrderQueue({
   orders: initialOrders,
   canManage,
   canStartWork,
+  role,
 }: {
   orders: QueueOrder[];
   canManage: boolean;
   canStartWork?: boolean;
+  role: string;
 }) {
   const router = useRouter();
   const kirimSekali = useSingleFlight();
@@ -162,6 +164,7 @@ export function OrderQueue({
   const orders = initialOrders;
 
   const query = search.trim().toLowerCase();
+  const isStaff = role === "karyawan";
   const filtered = useMemo(
     () =>
       orders.filter((order) => {
@@ -175,11 +178,11 @@ export function OrderQueue({
           query === "" ||
           (order.order_number ?? "").toLowerCase().includes(query) ||
           (order.license_plate ?? "").toLowerCase().includes(query) ||
-          (order.customer_name ?? "").toLowerCase().includes(query) ||
+          (!isStaff && (order.customer_name ?? "").toLowerCase().includes(query)) ||
           (order.vehicle_model ?? "").toLowerCase().includes(query);
         return matchFilter && matchQuery;
       }),
-    [orders, filter, query],
+    [orders, filter, query, isStaff],
   );
 
   const counts = useMemo(
@@ -398,7 +401,7 @@ export function OrderQueue({
             const perluTeknisi = order.status === "queued" && order.team.length === 0;
             // Bisa claim order jika: karyawan, status queued, tidak ada tim, dan karyawan free
             const canClaimOrder = order.status === "queued" && order.team.length === 0 && !busy;
-            const waHref = order.customer_phone
+            const waHref = !isStaff && order.customer_phone
               ? whatsappLink(
                   order.customer_phone,
                   `Halo ${order.customer_name ?? ""}, ini RB AUTOLUXE. Terkait order ${order.order_number} (${order.license_plate ?? ""}), `,
@@ -445,8 +448,14 @@ export function OrderQueue({
                       {order.service_package ?? "Paket layanan"}
                     </p>
                     <p className="font-caption text-caption text-text-muted mt-0.5 truncate">
-                      {order.customer_name ?? "-"}
-                      {order.customer_phone ? ` • ${order.customer_phone}` : ""}
+                      {!isStaff ? (
+                        <>
+                          {order.customer_name ?? "-"}
+                          {order.customer_phone ? ` • ${order.customer_phone}` : ""}
+                        </>
+                      ) : (
+                        "Data pelanggan disembunyikan"
+                      )}
                     </p>
                   </div>
                 </div>

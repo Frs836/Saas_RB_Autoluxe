@@ -579,51 +579,53 @@ export function PosConsole({
             </div>
           </section>
 
-          <section className="clay-card p-4 flex flex-col gap-3">
-            <h2 className="font-body-bold text-body-bold text-text-primary flex items-center gap-2">
-              <Icon name="person" className="text-[20px] text-brand-600" />
-              Data Pelanggan
-            </h2>
-            <label className="flex flex-col gap-1">
-              <span className="font-caption text-caption text-text-muted flex items-center gap-1">
-                Nama Pelanggan
-                <span className="text-text-muted/50 text-[11px]">(opsional)</span>
-              </span>
-              <input
-                value={customerName}
-                onChange={ubahTeks("customerName", setCustomerName)}
-                placeholder="Nama pelanggan (opsional)"
-                className={`h-12 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400 ${
-                  fieldError?.field === "customerName" ? "ring-2 ring-danger-base" : ""
-                }`}
-              />
-              {fieldError?.field === "customerName" ? (
-                <span className="font-caption text-caption text-danger-text">
-                  {fieldError.message}
+          {role !== "karyawan" && (
+            <section className="clay-card p-4 flex flex-col gap-3">
+              <h2 className="font-body-bold text-body-bold text-text-primary flex items-center gap-2">
+                <Icon name="person" className="text-[20px] text-brand-600" />
+                Data Pelanggan
+              </h2>
+              <label className="flex flex-col gap-1">
+                <span className="font-caption text-caption text-text-muted flex items-center gap-1">
+                  Nama Pelanggan
+                  <span className="text-text-muted/50 text-[11px]">(opsional)</span>
                 </span>
-              ) : null}
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="font-caption text-caption text-text-muted flex items-center gap-1">
-                Nomor WhatsApp
-                <span className="text-text-muted/50 text-[11px]">(opsional)</span>
-              </span>
-              <input
-                value={customerPhone}
-                onChange={ubahTeks("customerPhone", setCustomerPhone)}
-                inputMode="tel"
-                placeholder="08123456789 (opsional)"
-                className={`h-12 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400 ${
-                  fieldError?.field === "customerPhone" ? "ring-2 ring-danger-base" : ""
-                }`}
-              />
-              {fieldError?.field === "customerPhone" ? (
-                <span className="font-caption text-caption text-danger-text">
-                  {fieldError.message}
+                <input
+                  value={customerName}
+                  onChange={ubahTeks("customerName", setCustomerName)}
+                  placeholder="Nama pelanggan (opsional)"
+                  className={`h-12 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400 ${
+                    fieldError?.field === "customerName" ? "ring-2 ring-danger-base" : ""
+                  }`}
+                />
+                {fieldError?.field === "customerName" ? (
+                  <span className="font-caption text-caption text-danger-text">
+                    {fieldError.message}
+                  </span>
+                ) : null}
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className="font-caption text-caption text-text-muted flex items-center gap-1">
+                  Nomor WhatsApp
+                  <span className="text-text-muted/50 text-[11px]">(opsional)</span>
                 </span>
-              ) : null}
-            </label>
-          </section>
+                <input
+                  value={customerPhone}
+                  onChange={ubahTeks("customerPhone", setCustomerPhone)}
+                  inputMode="tel"
+                  placeholder="08123456789 (opsional)"
+                  className={`h-12 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400 ${
+                    fieldError?.field === "customerPhone" ? "ring-2 ring-danger-base" : ""
+                  }`}
+                />
+                {fieldError?.field === "customerPhone" ? (
+                  <span className="font-caption text-caption text-danger-text">
+                    {fieldError.message}
+                  </span>
+                ) : null}
+              </label>
+            </section>
+          )}
 
           <section className="clay-card p-4 flex flex-col gap-3">
             <h2 className="font-body-bold text-body-bold text-text-primary flex items-center gap-2">

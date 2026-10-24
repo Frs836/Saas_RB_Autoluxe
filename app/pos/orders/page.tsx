@@ -112,6 +112,7 @@ export default async function OrderQueuePage() {
         orders={queueOrders}
         canManage={canManage}
         canStartWork={can(session.role, "order.start_work")}
+        role={session.role}
       />
       <BottomNav role={session.role} />
     </div>

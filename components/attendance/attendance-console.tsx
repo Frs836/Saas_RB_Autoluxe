@@ -808,6 +808,22 @@ export function AttendanceConsole({
                   ? "Anda sudah menyelesaikan check-in dan check-out hari ini."
                   : "Sudah check-in hari ini. Ambil selfie untuk mencatat jam pulang."}
               </span>
+              {(today?.clockIn || today?.clockOut) && (
+                <div className="flex items-center gap-3 mt-1 flex-wrap">
+                  {today?.clockIn && (
+                    <span className="font-caption text-caption text-text-primary flex items-center gap-1">
+                      <Icon name="login" className="text-[13px] text-success-text" />
+                      Masuk: {new Date(today.clockIn).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jakarta" })} WIB
+                    </span>
+                  )}
+                  {today?.clockOut && (
+                    <span className="font-caption text-caption text-text-primary flex items-center gap-1">
+                      <Icon name="logout" className="text-[13px] text-danger-text" />
+                      Pulang: {new Date(today.clockOut).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jakarta" })} WIB
+                    </span>
+                  )}
+                </div>
+              )}
               {today?.lateMinutes ? (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-warning-surface text-warning-text font-caption text-caption w-fit">
                   <Icon name="running_with_errors" className="text-[13px]" />

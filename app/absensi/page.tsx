@@ -82,16 +82,24 @@ export default async function AbsensiPage() {
   ) as "pending" | "approved" | "rejected" | null;
 
   const todayRow = todayRes.data;
-  const history = (historyRes.data ?? [])
-    .filter((row) => row.date !== today)
-    .slice(0, 5)
-    .map((row) => ({
-      date: row.date as string,
-      clockIn: row.clock_in as string | null,
-      clockOut: row.clock_out as string | null,
-      status: row.status as string,
-      lateMinutes: row.late_minutes === null ? null : Number(row.late_minutes),
-    }));
+  // Include today in history (at top) + previous 5 days
+  const historyRows = (historyRes.data ?? []).map((row) => ({
+    date: row.date as string,
+    clockIn: row.clock_in as string | null,
+    clockOut: row.clock_out as string | null,
+    status: row.status as string,
+    lateMinutes: row.late_minutes === null ? null : Number(row.late_minutes),
+  }));
+  const todayHistory = todayRow
+    ? [{
+        date: today,
+        clockIn: todayRow.clock_in as string | null,
+        clockOut: todayRow.clock_out as string | null,
+        status: todayRow.status as string,
+        lateMinutes: todayRow.late_minutes === null ? null : Number(todayRow.late_minutes),
+      }]
+    : [];
+  const history = [...todayHistory, ...historyRows.filter((r) => r.date !== today)].slice(0, 6);
 
   return (
     <div className="flex flex-col w-full min-h-screen">

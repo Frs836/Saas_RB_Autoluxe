@@ -2,6 +2,15 @@ import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 import { getClientIp, rateLimit } from "@/lib/rate-limit";
 
+/**
+ * Next.js 16 di project ini mengenali file ini sebagai middleware lewat nama
+ * "proxy.ts", bukan "middleware.ts" standar. Fungsi harus diekspor sebagai
+ * `middleware` agar Next.js menjalankannya sebagai edge middleware.
+ */
+export async function middleware(request: NextRequest) {
+  return proxy(request);
+}
+
 export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
 

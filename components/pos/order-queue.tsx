@@ -9,7 +9,7 @@ import { PAYMENT_LABELS, whatsappLink } from "@/lib/pos";
 import { Icon } from "@/components/ui/icon";
 import { useSingleFlight } from "@/lib/use-single-flight";
 
-export type TeamMember = { id: string; full_name: string; is_lead: boolean };
+export type TeamMember = { id: string; user_id: string; full_name: string; is_lead: boolean };
 
 export type QueueOrder = {
   id: string;
@@ -189,23 +189,25 @@ export function OrderQueue({
 
   const query = search.trim().toLowerCase();
   const isStaff = role === "karyawan";
-  const filtered = useMemo(
+const filtered = useMemo(
     () =>
-      orders.filter((order) => {
-        const matchFilter =
-          filter === "all"
-            ? order.status !== "cancelled"
-            : filter === "selesai"
+      orders
+        .filter((order) => {
+          const matchFilter =
+            filter === "all"
+              ? order.status !== "cancelled"
+              : filter === "selesai"
               ? STATUS_SELESAI.has(order.status)
               : order.status === filter;
-        const matchQuery =
-          query === "" ||
-          (order.order_number ?? "").toLowerCase().includes(query) ||
-          (order.license_plate ?? "").toLowerCase().includes(query) ||
-          (!isStaff && (order.customer_name ?? "").toLowerCase().includes(query)) ||
-          (order.vehicle_model ?? "").toLowerCase().includes(query);
-        return matchFilter && matchQuery;
-      }),
+          const matchQuery =
+            query === "" ||
+            (order.order_number ?? "").toLowerCase().includes(query) ||
+            (order.license_plate ?? "").toLowerCase().includes(query) ||
+            (!isStaff && (order.customer_name ?? "").toLowerCase().includes(query)) ||
+            (order.vehicle_model ?? "").toLowerCase().includes(query);
+          return matchFilter && matchQuery;
+        })
+        .sort((a, b) => (a.order_number ?? "").localeCompare(b.order_number ?? "")),
     [orders, filter, query, isStaff],
   );
 
@@ -235,11 +237,17 @@ export function OrderQueue({
   }
 
   async function startWork(order: QueueOrder) {
+    // Jika belum ada tim, buka modal pilih tim
+    if (order.team.length === 0) {
+      openTeamModal(order);
+      return;
+    }
     setBusyId(order.id);
     setError(null);
     const supabase = createClient();
     const { error: rpcError } = await supabase.rpc("start_order_work", {
       p_order_id: order.id,
+      p_team_ids: order.team.map((m) => m.user_id),
     });
     setBusyId(null);
     if (rpcError) {
@@ -472,13 +480,13 @@ export function OrderQueue({
                       {order.service_package ?? "Paket layanan"}
                     </p>
                     <p className="font-caption text-caption text-text-muted mt-0.5 truncate">
-                      {!isStaff ? (
+                      {order.customer_name ? (
                         <>
-                          {order.customer_name ?? "-"}
+                          {order.customer_name}
                           {order.customer_phone ? ` • ${order.customer_phone}` : ""}
                         </>
                       ) : (
-                        "Data pelanggan disembunyikan"
+                        "Data pelanggan belum diisi"
                       )}
                     </p>
                   </div>
@@ -503,9 +511,9 @@ export function OrderQueue({
                     ) : (
                       <>
                         <div className="flex -space-x-1.5">
-                          {order.team.slice(0, 4).map((member) => (
+                          {order.team.slice(0, 4).map((member, idx) => (
                             <div
-                              key={member.id}
+                              key={member.user_id ?? idx}
                               className={`w-6 h-6 rounded-full flex items-center justify-center font-micro-badge text-micro-badge border-2 border-surface ${
                                 member.is_lead
                                   ? "bg-brand-500 text-white"

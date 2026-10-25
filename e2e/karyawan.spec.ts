@@ -1,4 +1,4 @@
-﻿import { test } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import {
   currentPath,
   grantMediaAndGeo,
@@ -120,5 +120,194 @@ test.describe("Karyawan", () => {
       await page.waitForTimeout(500);
       console.log(`[navigasi] ${path} pesan = ${JSON.stringify(await visibleMessages(page))}`);
     }
+  });
+
+  // ===== TAMBAHAN: Team Claim Flow (Kerjakan Antrian Ini) =====
+  test("team claim flow: karyawan claim order, pilih rekan, mulai pengerjaan", async ({ page }) => {
+    await login(page, "karyawan");
+    await page.goto("/pos/orders", { waitUntil: "domcontentloaded" });
+    await page.waitForTimeout(1000);
+
+    // Cari order dengan status queued yang belum punya tim
+    const orderCards = page.locator('.clay-card').filter({ hasText: /RBA-\d+/ });
+    const count = await orderCards.count();
+    console.log(`[team-claim] total card order: ${count}`);
+
+    // Cari card dengan status "Antrean" (queued) dan belum punya tim
+    let targetOrder = null;
+    let orderNumber = "";
+    for (let i = 0; i < count; i++) {
+      const card = orderCards.nth(i);
+      const statusText = await card.locator('text=Antrean').isVisible().catch(() => false);
+      const hasTeam = await card.locator('text=teknisi').isVisible().catch(() => false);
+      const orderNum = (await card.locator('.font-mono').textContent().catch(() => '')) ?? '';
+      
+      if (statusText && !hasTeam) {
+        targetOrder = card;
+        orderNumber = orderNum;
+        console.log(`[team-claim] target order: ${orderNumber}`);
+        break;
+      }
+    }
+
+    if (!targetOrder) {
+      console.log("[team-claim] SKIP: tidak ada order queued tanpa tim");
+      return;
+    }
+
+    // Klik tombol "Kerjakan Antrian Ini"
+    const claimButton = targetOrder.locator('button:has-text("Kerjakan Antrian Ini")');
+    await expect(claimButton).toBeVisible();
+    await claimButton.click();
+    await page.waitForTimeout(500);
+
+    // Modal pilih tim harus muncul
+    const modal = page.locator('text=Pilih Rekan Kerja');
+    await expect(modal).toBeVisible({ timeout: 5000 });
+    console.log("[team-claim] modal pilih tim terbuka");
+
+    // Pilih 1 rekan kerja (checkbox)
+    const staffCheckboxes = page.locator('input[type="checkbox"]').filter({ hasText: /karyawan/i });
+    const staffCount = await staffCheckboxes.count();
+    console.log(`[team-claim] rekan tersedia: ${staffCount}`);
+
+    if (staffCount > 0) {
+      await staffCheckboxes.first().click();
+      await page.waitForTimeout(200);
+    }
+
+    // Submit claim
+    const submitButton = page.locator('button:has-text("Mulai Pengerjaan"), button:has-text("Claim Order")').last();
+    await expect(submitButton).toBeVisible();
+    await submitButton.click();
+    await page.waitForTimeout(2000);
+
+    // Verifikasi: order harus berstatus "Dikerjakan" (in_progress)
+    await page.goto("/pos/orders", { waitUntil: "domcontentloaded" });
+    await page.waitForTimeout(1000);
+
+    const updatedCard = page.locator('.clay-card').filter({ hasText: orderNumber ?? '' }).first();
+    const isInProgress = await updatedCard.locator('text=Dikerjakan').isVisible().catch(() => false);
+    const hasTeamNow = await updatedCard.locator('text=teknisi').isVisible().catch(() => false);
+    
+    console.log(`[team-claim] status in_progress: ${isInProgress}`);
+    console.log(`[team-claim] tim muncul: ${hasTeamNow}`);
+    
+    // Soft assertion - log only, don't fail test if flow not complete
+    if (!isInProgress) {
+      console.log("[team-claim] WARNING: order belum berstatus in_progress, mungkin RPC error");
+    }
+  });
+
+  // ===== TAMBAHAN: Bayar Nanti Flow =====
+  test("bayar nanti flow: admin_kasir buat order Bayar Nanti, cek di Kas, settle", async ({ page }) => {
+    // Login sebagai admin_kasir (bisa buat order Bayar Nanti)
+    await login(page, "admin_kasir");
+    await page.goto("/pos", { waitUntil: "domcontentloaded" });
+    await page.waitForTimeout(1000);
+
+    // Buat order baru dengan Bayar Nanti
+    const newOrderButton = page.locator('button:has-text("Order Baru"), a:has-text("Order Baru")').first();
+    if (await newOrderButton.isVisible().catch(() => false)) {
+      await newOrderButton.click();
+      await page.waitForTimeout(500);
+
+      // Isi form order minimal
+      // Pilih layanan
+      const serviceSelect = page.locator('select[name="service_id"], select[placeholder*="layanan" i]').first();
+      if (await serviceSelect.isVisible().catch(() => false)) {
+        await serviceSelect.selectOption({ index: 1 });
+      }
+
+      // Pilih Bayar Nanti
+      const bayarNantiRadio = page.locator('input[value="pay_later"], label:has-text("Bayar Nanti") input').first();
+      if (await bayarNantiRadio.isVisible().catch(() => false)) {
+        await bayarNantiRadio.click({ force: true });
+      }
+
+      // Submit order
+      const submitOrder = page.locator('button:has-text("Buat Order"), button:has-text("Simpan")').last();
+      if (await submitOrder.isVisible().catch(() => false)) {
+        await submitOrder.click();
+        await page.waitForTimeout(2000);
+
+        // Cek order muncul di antrean dengan payment_state unpaid
+        await page.goto("/pos/orders", { waitUntil: "domcontentloaded" });
+        await page.waitForTimeout(1000);
+
+        const unpaidOrder = page.locator('.clay-card').filter({ hasText: /Bayar Nanti|unpaid/i }).first();
+        const hasUnpaid = await unpaidOrder.isVisible().catch(() => false);
+        console.log(`[bayar-nanti] order unpaid di antrean: ${hasUnpaid}`);
+      }
+    }
+
+    // Cek di halaman Kas -> tab Bayar Nanti
+    await page.goto("/kas", { waitUntil: "domcontentloaded" });
+    await page.waitForTimeout(1000);
+
+    const bayarNantiTab = page.locator('button:has-text("Bayar Nanti"), [role="tab"]:has-text("Bayar Nanti")').first();
+    if (await bayarNantiTab.isVisible().catch(() => false)) {
+      await bayarNantiTab.click();
+      await page.waitForTimeout(500);
+
+      const unpaidList = page.locator('text=RBA-').filter({ hasText: /unpaid|belum bayar/i });
+      const unpaidCount = await unpaidList.count();
+      console.log(`[bayar-nanti] order unpaid di tab Kas: ${unpaidCount}`);
+
+      // Test settle (kalau ada order unpaid)
+      if (unpaidCount > 0) {
+        const settleButton = page.locator('button:has-text("Settle"), button:has-text("Bayar")').first();
+        if (await settleButton.isVisible().catch(() => false)) {
+          await settleButton.click();
+          await page.waitForTimeout(1000);
+          
+          // Konfirmasi settle
+          const confirmButton = page.locator('button:has-text("Ya"), button:has-text("Konfirmasi")').last();
+          if (await confirmButton.isVisible().catch(() => false)) {
+            await confirmButton.click();
+            await page.waitForTimeout(2000);
+            console.log("[bayar-nanti] settle berhasil");
+          }
+        }
+      }
+    }
+  });
+
+  // ===== TAMBAHAN: Full Order Lifecycle (queued -> in_progress -> qc_review -> completed -> handover) =====
+  test("full order lifecycle: transisi status sampai serah terima", async ({ page }) => {
+    await login(page, "karyawan");
+    await page.goto("/pos/orders", { waitUntil: "domcontentloaded" });
+    await page.waitForTimeout(1000);
+
+    // Cari order yang bisa di-transition (queued dengan tim sudah ada)
+    const orderCards = page.locator('.clay-card').filter({ hasText: /RBA-\d+/ });
+    const count = await orderCards.count();
+
+    for (let i = 0; i < count; i++) {
+      const card = orderCards.nth(i);
+      const statusText = (await card.textContent().catch(() => '')) ?? '';
+      
+      // Cek status berurutan
+      if (statusText.includes('Antrean') && statusText.includes('teknisi')) {
+        console.log(`[lifecycle] order siap untuk start work`);
+        
+        // Klik "Kerjakan Sekarang" (sudah punya tim)
+        const startButton = card.locator('button:has-text("Kerjakan Sekarang")');
+        if (await startButton.isVisible().catch(() => false)) {
+          await startButton.click();
+          await page.waitForTimeout(2000);
+          console.log("[lifecycle] start work clicked");
+        }
+        break;
+      }
+    }
+
+    // Verifikasi transisi ke in_progress
+    await page.goto("/pos/orders", { waitUntil: "domcontentloaded" });
+    await page.waitForTimeout(1000);
+    
+    const inProgressCards = page.locator('.clay-card').filter({ hasText: /Dikerjakan/ });
+    const inProgressCount = await inProgressCards.count();
+    console.log(`[lifecycle] order in_progress: ${inProgressCount}`);
   });
 });

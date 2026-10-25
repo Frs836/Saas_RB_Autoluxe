@@ -5,7 +5,6 @@ import { GaransiConsole } from "@/components/garansi/garansi-console";
 import { requirePermission, scopedBranchId } from "@/lib/rbac-guard";
 import { scopeBranchQuery } from "@/lib/branch";
 
-export const instant = false;
 
 export default async function GaransiPage({
   searchParams,
@@ -39,7 +38,7 @@ export default async function GaransiPage({
   // berpindah ke "menunggu_diambil" dan "diserahkan". Daftar klaim harus
   // mencakup ketiganya; kalau hanya "completed" yang diambil, modul klaim
   // tampak kosong padahal order sudah diserahkan dan garansinya aktif.
-  const SERVED_STATUSES = ["completed", "menunggu_diambil", "diserahkan"];
+  const SERVED_STATUSES = ["completed", "menunggu_diambil", "diserahkan"] as const;
 
   type CompletedOrder = {
     id: string;
@@ -117,7 +116,7 @@ export default async function GaransiPage({
     : { data: [] as { order_id: string; claim_date: string; status: string; problem_description: string }[] };
 
   return (
-    <>
+    <div className="flex flex-col w-full min-h-screen">
       <SubPageHeader
         title="Klaim Garansi"
         subtitle={
@@ -155,6 +154,6 @@ export default async function GaransiPage({
         />
       </main>
       <BottomNav role={session.role} />
-    </>
+    </div>
   );
 }

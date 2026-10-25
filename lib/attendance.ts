@@ -125,6 +125,10 @@ export function formatDuration(minutes: number): string {
  * Ambil potongan persegi tengah dari sumber video lalu perkecil menjadi
  * matriks keabuan grid x grid (default 16x16 = 256 dimensi). Vektor ini
  * dipakai sebagai "sampel wajah" untuk perbandingan kemiripan sederhana.
+ *
+ * ⚠️  Fungsi ini dan semua di bawahnya memakai Canvas API (browser-only).
+ * Jangan import fungsi ini dari Server Component atau server action.
+ * Mereka sudah di-import hanya dari file yang di-mark "use client".
  */
 export function extractFaceDescriptor(
   source: CanvasImageSource,
@@ -132,6 +136,11 @@ export function extractFaceDescriptor(
   sourceHeight: number,
   grid = 16,
 ): number[] {
+  if (typeof document === "undefined") {
+    throw new Error(
+      "extractFaceDescriptor hanya bisa dipanggil di browser. Pastikan komponen pemanggil di-mark 'use client'.",
+    );
+  }
   const side = Math.min(sourceWidth, sourceHeight);
   const sx = (sourceWidth - side) / 2;
   const sy = (sourceHeight - side) / 2;
@@ -174,6 +183,11 @@ export function captureSquareCanvas(
   video: HTMLVideoElement,
   size = 512,
 ): HTMLCanvasElement {
+  if (typeof document === "undefined") {
+    throw new Error(
+      "captureSquareCanvas hanya bisa dipanggil di browser. Pastikan komponen pemanggil di-mark 'use client'.",
+    );
+  }
   const side = Math.min(video.videoWidth, video.videoHeight);
   const sx = (video.videoWidth - side) / 2;
   const sy = (video.videoHeight - side) / 2;

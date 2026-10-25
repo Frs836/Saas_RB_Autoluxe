@@ -333,11 +333,11 @@ export function OrderDetailView({
       const { data, error: rpcError } = serahTerima
         ? await supabase.rpc("advance_handover", {
             p_order_id: order.id,
-            p_next: next,
+            p_next: next as "queued" | "in_progress" | "qc_review" | "completed" | "cancelled" | "menunggu_diambil" | "diserahkan",
           })
         : await supabase.rpc("apply_order_status", {
             p_order_id: order.id,
-            p_status: next,
+            p_status: next as "queued" | "in_progress" | "qc_review" | "completed" | "cancelled" | "menunggu_diambil" | "diserahkan",
           });
       if (rpcError) throw new Error(rpcError.message);
 

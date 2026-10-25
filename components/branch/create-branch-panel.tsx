@@ -67,8 +67,8 @@ export function CreateBranchPanel() {
       const { data, error } = await supabase.rpc("create_branch", {
         p_branch_name: nama.trim(),
         p_address: alamat.trim(),
-        p_latitude: pakaiTitik ? latitude : null,
-        p_longitude: pakaiTitik ? longitude : null,
+        p_latitude: pakaiTitik ? (latitude ?? undefined) : undefined,
+        p_longitude: pakaiTitik ? (longitude ?? undefined) : undefined,
         p_radius_meters: radiusAngka,
         p_open_time: lapanganMasuk + ":00",
         p_close_time: lapanganPulang + ":00",

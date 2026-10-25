@@ -6,7 +6,6 @@ import { can, roleLabel } from "@/lib/rbac";
 import { getSessionProfile, scopedBranchId } from "@/lib/rbac-guard";
 import type { PosService } from "@/lib/pos";
 
-export const instant = false;
 
 export default async function PosPage() {
   const profile = await getSessionProfile();

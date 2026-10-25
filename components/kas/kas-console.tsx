@@ -189,10 +189,10 @@ export function KasConsole({
           p_type: form.type,
           p_amount: amount,
           p_category: form.category,
-          p_description: form.description.trim() || null,
-          p_payment_method: form.paymentMethod,
-          p_proof_photo_url: proofPath,
-          p_shift_handoff_id: handoffId,
+          p_description: form.description.trim() || undefined,
+          p_payment_method: form.paymentMethod as "cash" | "qris" | "bank_transfer",
+          p_proof_photo_url: proofPath ?? undefined,
+          p_shift_handoff_id: handoffId ?? undefined,
         });
 
         if (rpcError) {
@@ -541,7 +541,7 @@ function BayarNantiTab({
         const { error: rpcError } = await supabase.rpc("settle_order_payment", {
           p_order_id: order.id,
           p_paid_amount: order.cashHoldAmount,
-          p_payment_method: order.cashHoldPaymentMethod,
+          p_payment_method: order.cashHoldPaymentMethod as "cash" | "qris" | "bank_transfer",
         });
 
         if (rpcError) {

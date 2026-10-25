@@ -12,7 +12,6 @@ export function LoginForm() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [remember, setRemember] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -131,18 +130,7 @@ export function LoginForm() {
         </div>
       </div>
 
-      <div className="flex items-center justify-between pt-0.5">
-        <label className="flex items-center gap-2 cursor-pointer select-none">
-          <input
-            type="checkbox"
-            checked={remember}
-            onChange={(event) => setRemember(event.target.checked)}
-            className="w-4 h-4 rounded text-brand-500 focus:ring-0 focus:outline-none accent-brand-500 cursor-pointer"
-          />
-          <span className="font-caption text-caption text-text-secondary hover:text-text-primary transition-colors">
-            Ingat Sesi di Perangkat
-          </span>
-        </label>
+      <div className="flex items-center justify-end pt-0.5">
         <button
           type="button"
           onClick={handleReset}

@@ -34,6 +34,8 @@ export type LaporanData = {
       createdAt: string;
     }[];
   };
+  /** true bila rincian unit terjual hanya mencakup 500 order terbaru */
+  unitsSoldCapped?: boolean;
   generatedAt: string;
 };
 
@@ -336,6 +338,15 @@ export function LaporanView({ data }: { data: LaporanData }) {
             Unit Terjual per Layanan
           </span>
         </div>
+        {data.unitsSoldCapped ? (
+          <div className="flex items-start gap-2 rounded-xl bg-warning-surface px-3 py-2 mb-3">
+            <Icon name="info" className="text-warning-text text-[16px] shrink-0 mt-0.5" />
+            <p className="font-caption text-caption text-warning-text">
+              Data rincian layanan hanya mencakup 500 order selesai terbaru.
+              Untuk laporan lengkap, gunakan filter tanggal atau ekspor Excel.
+            </p>
+          </div>
+        ) : null}
         {data.unitsSold.length === 0 ? (
           <p className="font-caption text-caption text-text-muted">
             Belum ada layanan terjual pada order selesai.

@@ -10,7 +10,6 @@ import {
 import { requirePermission, scopedBranchId } from "@/lib/rbac-guard";
 import { scopeBranchQuery } from "@/lib/branch";
 
-export const instant = false;
 
 export default async function WhatsappPage() {
   const session = await requirePermission("whatsapp.draft");

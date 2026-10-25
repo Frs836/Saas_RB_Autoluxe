@@ -148,7 +148,7 @@ export function FaceVerificationList({
       const { error: rpcError } = await supabase.rpc("review_staff_face", {
         p_profile_id: profileId,
         p_approved: approved,
-        p_note: note[profileId]?.trim() ? note[profileId].trim() : null,
+        p_note: note[profileId]?.trim() ? note[profileId].trim() : undefined,
       });
       setBusyId(null);
 

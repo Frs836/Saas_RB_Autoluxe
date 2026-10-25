@@ -33,7 +33,7 @@ export function PublicWarrantyClaim({ token }: { token: string }) {
     const { error: rpcError } = await supabase.rpc("create_public_warranty_claim", {
       p_token: token,
       p_problem_description: deskripsi.trim(),
-      p_proof_photo_url: null,
+      p_proof_photo_url: undefined,
     });
     setMengirim(false);
 

@@ -96,7 +96,7 @@ export function StockOpnameView({
     const { data, error: rpcError } = await supabase.rpc("open_stock_opname", {
       p_branch_id: branchId,
       p_period_month: periodeTanggal,
-      p_notes: null,
+      p_notes: undefined,
     });
     setBusy(false);
 

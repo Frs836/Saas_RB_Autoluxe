@@ -196,6 +196,11 @@ export type ThermalReceipt = {
   paymentMethod: string;
   paid: boolean;
   trackingUrl: string;
+  /**
+   * Nomor WhatsApp untuk saran & keluhan, format internasional tanpa "+".
+   * Contoh: "6281122334455". Bila tidak diisi, baris keluhan tidak ditampilkan.
+   */
+  complaintWa?: string | null;
 };
 
 function rupiah(value: number): string {
@@ -255,7 +260,7 @@ export function buildThermalReceipt(receipt: ThermalReceipt): string {
     "",
   ]);
 
-  push(ESC_POS.alignCenter, ["", "Saran & Keluhan:", "wa.me/6281122334455"]);
+  push(ESC_POS.alignCenter, ["", "Saran & Keluhan:", `wa.me/${receipt.complaintWa ?? "6281122334455"}`]);
   push(ESC_POS.alignLeft, ["", "", ""]);
   push(ESC_POS.cutPaper, ["", ""]);
 

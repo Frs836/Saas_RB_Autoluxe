@@ -57,13 +57,13 @@ export async function saveBranchSettings(payload: Payload): Promise<BranchSettin
     p_branch_id: payload.branchId,
     p_branch_name: payload.branchName,
     p_address: payload.address,
-    p_latitude: payload.latitude,
-    p_longitude: payload.longitude,
-    p_radius_meters: payload.radiusMeters,
+    p_latitude: payload.latitude ?? undefined,
+    p_longitude: payload.longitude ?? undefined,
+    p_radius_meters: payload.radiusMeters ?? undefined,
     p_open_time: toTime(payload.openTime),
     p_close_time: toTime(payload.closeTime),
     p_set_coordinates: payload.setCoordinates,
-    p_is_active: payload.isActive,
+    p_is_active: payload.isActive ?? undefined,
   });
 
   if (error) {

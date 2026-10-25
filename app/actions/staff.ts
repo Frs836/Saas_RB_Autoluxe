@@ -63,20 +63,59 @@ export async function createStaffAccount(input: {
     };
   }
   const admin = adminClient();
+
+  /*
+   * Idempotency check: email mungkin sudah ada di auth.users karena
+   * percobaan sebelumnya crash setelah createUser tapi sebelum profil
+   * diperbarui (orphaned user). Dalam kondisi itu, error "already registered"
+   * adalah sinyal untuk memeriksa apakah profil masih berisi data default
+   * dari trigger dan memperbaikinya, bukan langsung menolak permintaan.
+   */
+  let authUserId: string | null = null;
+
   const { data: dibuat, error: buatError } = await admin.auth.admin.createUser({
     email,
     password: input.password,
     email_confirm: true,
     user_metadata: { full_name: fullName },
   });
+
   if (buatError) {
     if (/already been registered|already exists/i.test(buatError.message)) {
-      return { ok: false, message: "Email ini sudah terdaftar." };
+      // Coba temukan user yang sudah ada dan periksa apakah profilnya
+      // masih berisi data default (orphaned dari crash sebelumnya).
+      const { data: existingUsers } = await admin.auth.admin.listUsers();
+      const existing = existingUsers?.users?.find((u) => u.email === email);
+      if (!existing) {
+        return { ok: false, message: "Email ini sudah terdaftar." };
+      }
+      const { data: existingProfile } = await admin
+        .from("profiles")
+        .select("id, role, branch_id, is_active")
+        .eq("auth_id", existing.id)
+        .maybeSingle();
+      const ep = existingProfile as { id: string; role: string; branch_id: string | null; is_active: boolean } | null;
+      // Profil yang sudah aktif dan punya role yang benar berarti
+      // akun ini memang sudah dibuat sepenuhnya — tolak sebagai duplikat.
+      if (ep && ep.is_active && ep.role !== "karyawan") {
+        return { ok: false, message: "Email ini sudah terdaftar." };
+      }
+      // Profil masih default (role "karyawan", is_active false, atau
+      // branch_id kosong) → ini orphaned user dari crash sebelumnya.
+      // Lanjutkan dengan memperbaiki profilnya.
+      authUserId = existing.id;
+    } else {
+      return { ok: false, message: buatError.message };
     }
-    return { ok: false, message: buatError.message };
+  } else {
+    if (!dibuat?.user) {
+      return { ok: false, message: "Akun dibuat tetapi tidak mengembalikan id." };
+    }
+    authUserId = dibuat.user.id;
   }
-  if (!dibuat?.user) {
-    return { ok: false, message: "Akun dibuat tetapi tidak mengembalikan id." };
+
+  if (!authUserId) {
+    return { ok: false, message: "Gagal menentukan ID akun." };
   }
   const { data: profilPemanggil } = await sesi
     .from("profiles")
@@ -106,11 +145,11 @@ export async function createStaffAccount(input: {
       work_schedule: input.workSchedule,
       is_active: true,
     } as never)
-    .eq("auth_id", dibuat.user.id);
+    .eq("auth_id", authUserId);
 
   if (profilError) {
     // Jangan tinggalkan akun yatim di tabel auth kalau profilnya gagal.
-    await admin.auth.admin.deleteUser(dibuat.user.id);
+    await admin.auth.admin.deleteUser(authUserId);
     return { ok: false, message: profilError.message };
   }
 
@@ -119,13 +158,13 @@ export async function createStaffAccount(input: {
   const { data: profilBaru } = await admin
     .from("profiles")
     .select("id")
-    .eq("auth_id", dibuat.user.id)
+    .eq("auth_id", authUserId)
     .maybeSingle();
 
   const adaProfil = profilBaru as { id: string } | null;
 
   if (!adaProfil) {
-    await admin.auth.admin.deleteUser(dibuat.user.id);
+    await admin.auth.admin.deleteUser(authUserId);
     return {
       ok: false,
       message:
@@ -147,6 +186,6 @@ export async function createStaffAccount(input: {
   return {
     ok: true,
     message: `Akun ${fullName} dibuat. Beri kata sandi ini kepada yang bersangkutan.`,
-    userId: dibuat.user.id,
+    userId: authUserId,
   };
 }

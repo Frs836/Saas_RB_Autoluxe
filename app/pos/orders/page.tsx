@@ -9,9 +9,8 @@ import {
 } from "@/components/pos/order-queue";
 import { can } from "@/lib/rbac";
 import { getSessionProfile, scopedBranchId } from "@/lib/rbac-guard";
-import { queryError, scopeBranchQuery } from "@/lib/branch";
+import { queryError } from "@/lib/branch";
 
-export const instant = false;
 
 export default async function OrderQueuePage() {
   const session = await getSessionProfile();
@@ -23,7 +22,7 @@ export default async function OrderQueuePage() {
   const supabase = await createClient();
   const branchId = scopedBranchId(session);
 
-  const [branchRes, ordersRes] = await Promise.all([
+  const [branchRes, queueRes] = await Promise.all([
     branchId
       ? supabase
           .from("branches")
@@ -31,69 +30,19 @@ export default async function OrderQueuePage() {
           .eq("id", branchId)
           .maybeSingle()
       : Promise.resolve({ data: null }),
-    scopeBranchQuery(
-      supabase
-        .from("orders")
-        .select(
-          "id, order_number, license_plate, vehicle_model, vehicle_size, customer_name, customer_phone, service_package, status, total_price, payment_method, payment_state, created_at, completed_at, assigned_to, cancellation_reason, branch_id",
-        ),
-      branchId,
-      "orders",
-    )
-      .order("created_at", { ascending: false })
-      // Batas 60 pernah membuat order yang sedang dikerjakan tersingkir begitu
-      // ada checkout baru yang lebih baru, sehingga unit yang sedang dikerjakan
-      // ikut hilang dari layar. 300 memberi ruang untuk antrean panjang tanpa
-      // menarik seluruh tabel.
-      .limit(300),
+    supabase.rpc("get_order_queue_with_team", {
+      p_branch_id: branchId ?? undefined,
+      p_limit: 300,
+      p_status_filter: "all",
+    }),
   ]);
 
-  // Kegagalan kueri di sini berarti layar menampilkan antrean kosong yang
-  // terbaca seperti tidak ada order sama sekali. Kesalahan dicatat supaya bisa
-  // ditelusuri, bukan disamarkan jadi daftar kosong.
-  queryError(ordersRes, "pos.orders");
+  queryError(queueRes, "pos.orders.queue");
 
-  const orders = ordersRes.data ?? [];
-  const orderIds = orders.map((o) => o.id);
-
-  const teamByOrder: Record<string, TeamMember[]> = {};
-  if (orderIds.length > 0) {
-    const { data: teamRows } = await supabase
-      .from("order_team_members")
-      .select("order_id, profile_id, is_lead")
-      .in("order_id", orderIds);
-
-    const rows = teamRows ?? [];
-    const profileIds = Array.from(
-      new Set(rows.map((r) => r.profile_id).filter(Boolean)),
-    );
-    let nameById: Record<string, string> = {};
-    if (profileIds.length > 0) {
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, full_name")
-        .in("id", profileIds);
-      nameById = Object.fromEntries(
-        (profiles ?? []).map((p) => [p.id, p.full_name as string]),
-      );
-    }
-    rows.forEach((row) => {
-      const list = teamByOrder[row.order_id] ?? [];
-      list.push({
-        id: row.profile_id,
-        full_name: nameById[row.profile_id] ?? "Teknisi",
-        is_lead: Boolean(row.is_lead),
-      });
-      teamByOrder[row.order_id] = list;
-    });
-    Object.values(teamByOrder).forEach((list) =>
-      list.sort((a, b) => Number(b.is_lead) - Number(a.is_lead)),
-    );
-  }
-
-  const queueOrders: QueueOrder[] = orders.map((o) => ({
+  const queueData = queueRes.data ?? [];
+  const queueOrders: QueueOrder[] = queueData.map((o: typeof queueData[0]) => ({
     ...o,
-    team: teamByOrder[o.id] ?? [],
+    team: (o.team as TeamMember[]) ?? [],
   })) as QueueOrder[];
 
   const canManage = can(session.role, "order.manage_status");

@@ -9,8 +9,6 @@ import {
 import { can } from "@/lib/rbac";
 import { requireSession } from "@/lib/rbac-guard";
 
-export const instant = false;
-
 type Params = Promise<{ id: string }>;
 
 export async function generateMetadata() {

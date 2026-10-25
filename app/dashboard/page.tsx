@@ -17,7 +17,6 @@ import { lookupSession, scopedBranchId } from "@/lib/rbac-guard";
 import { scopeBranchQuery } from "@/lib/branch";
 import { Icon } from "@/components/ui/icon";
 
-export const instant = false;
 
 const ORDER_STAGE: Record<string, { label: string; progress: number }> = {
   queued: { label: "Dalam Antrean", progress: 10 },

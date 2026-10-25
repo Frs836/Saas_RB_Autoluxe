@@ -12,7 +12,6 @@ import { getSessionProfile, scopedBranchId } from "@/lib/rbac-guard";
 import { scopeBranchQuery } from "@/lib/branch";
 import { BranchScopeBadges } from "@/components/branch/branch-scope-badges";
 
-export const instant = false;
 
 export default async function StockPage() {
   const session = await getSessionProfile();

@@ -1,12 +1,20 @@
-import path from "node:path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  cacheComponents: true,
-  partialPrefetching: true,
-  turbopack: {
-    root: path.join(__dirname, ".."),
+  images: {
+    remotePatterns: [
+      // Supabase Storage (avatars, proof photos, dll.)
+      {
+        protocol: "https",
+        hostname: "*.supabase.co",
+        pathname: "/storage/v1/object/public/**",
+      },
+      // Cloudinary (upload foto profil / aset lainnya)
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+      },
+    ],
   },
 };
 

@@ -8,7 +8,6 @@ import {
 import { requirePermission, scopedBranchId } from "@/lib/rbac-guard";
 import { queryError, scopeBranchQuery } from "@/lib/branch";
 
-export const instant = false;
 
 /**
  * Riwayat invoice.

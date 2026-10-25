@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { Icon } from "@/components/ui/icon";
 
-export const instant = false;
 
 export default function OfflinePage() {
   return (

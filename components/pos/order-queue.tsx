@@ -200,8 +200,8 @@ export function OrderQueue({
     setError(null);
     const supabase = createClient();
     const { error: rpcErr } = STATUS_SERAH_TERIMA.has(status)
-      ? await supabase.rpc("advance_handover", { p_order_id: order.id, p_next: status })
-      : await supabase.rpc("apply_order_status", { p_order_id: order.id, p_status: status });
+      ? await supabase.rpc("advance_handover", { p_order_id: order.id, p_next: status as "queued" | "in_progress" | "qc_review" | "completed" | "cancelled" | "menunggu_diambil" | "diserahkan" })
+      : await supabase.rpc("apply_order_status", { p_order_id: order.id, p_status: status as "queued" | "in_progress" | "qc_review" | "completed" | "cancelled" | "menunggu_diambil" | "diserahkan" });
     setBusyId(null);
     if (rpcErr) {
       setError(rpcErr.message);
@@ -262,14 +262,14 @@ export function OrderQueue({
         .select("id, full_name")
         .eq("role", "karyawan")
         .eq("is_active", true)
-        .eq("branch_id", order.branch_id ?? null);
+        .eq("branch_id", order.branch_id ?? "");
 
       // Ambil yang busy di order lain in_progress/qc_review
       const { data: busyData } = await supabase
         .from("order_team_members")
         .select("profile_id, orders!inner(status, branch_id)")
         .in("orders.status", ["in_progress", "qc_review"])
-        .eq("orders.branch_id", order.branch_id ?? null);
+        .eq("orders.branch_id", order.branch_id ?? "");
 
       const busyIds = new Set((busyData ?? []).map((r) => r.profile_id as string));
 

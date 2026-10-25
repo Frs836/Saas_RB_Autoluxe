@@ -516,17 +516,17 @@ export function AttendanceConsole({
         const { error: rpcErr } = await supabase.rpc("attendance_check_in", {
           p_latitude: gps.lat,
           p_longitude: gps.lng,
-          p_accuracy_meters: gps.accuracy,
-          p_photo_url: photoPath,
+          p_accuracy_meters: gps.accuracy ?? undefined,
+          p_photo_url: photoPath ?? undefined,
           p_face_descriptor: scanWajah,
           p_liveness_trace: liveRef.current.jejak(),
-          p_late_reason: isLate ? lateReason.trim() : null,
+          p_late_reason: isLate ? lateReason.trim() : undefined,
         });
         if (rpcErr) throw new Error(rpcErr.message);
         setInfo("Check-in berhasil dicatat.");
       } else {
         const { error: rpcErr } = await supabase.rpc("attendance_check_out", {
-          p_notes: null,
+          p_notes: undefined,
         });
         if (rpcErr) throw new Error(rpcErr.message);
         setInfo("Check-out berhasil dicatat.");

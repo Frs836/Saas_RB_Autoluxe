@@ -1,3 +1,21 @@
+/**
+ * Rate limiter berbasis in-memory.
+ *
+ * ⚠️  DEVELOPMENT / SINGLE-INSTANCE ONLY
+ *
+ * Implementasi ini memakai Map yang hidup di memori proses. Di lingkungan
+ * serverless (Vercel, AWS Lambda, dll.) setiap cold start memulai Map baru
+ * dan instance berbeda tidak berbagi state, sehingga rate limiter ini
+ * TIDAK EFEKTIF di production serverless.
+ *
+ * Untuk production deployment, ganti dengan penyimpanan terdistribusi:
+ *   - Upstash Redis  : https://upstash.com  (ada free tier, serverless-native)
+ *   - Vercel KV      : https://vercel.com/storage/kv
+ *   - Cloudflare WAF : rate limiting di layer CDN tanpa kode tambahan
+ *
+ * Selama belum diganti, rate limiter ini masih berguna di development lokal
+ * dan deployment single-instance (PM2, Docker tunggal, VPS).
+ */
 const WINDOW_MS = 60_000;
 const MAX_REQUESTS = 30;
 

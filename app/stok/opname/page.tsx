@@ -1,4 +1,4 @@
-﻿import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { BottomNav } from "@/components/dashboard/bottom-nav";
 import { SubPageHeader } from "@/components/pos/sub-page-header";
 import {
@@ -9,7 +9,6 @@ import {
 import { requirePermission, scopedBranchId } from "@/lib/rbac-guard";
 import { queryError, scopeBranchQuery } from "@/lib/branch";
 
-export const instant = false;
 
 export default async function StockOpnamePage() {
   const session = await requirePermission("stock.approve");

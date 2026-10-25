@@ -23,6 +23,8 @@ export type InvoiceRow = {
   servicePackage: string;
   issuedAt: string;
   branchName: string;
+  /** Nomor WA saran & keluhan untuk struk thermal, format "628xxx". */
+  complaintWa?: string | null;
   trackingToken: string;
   items: { name: string; quantity: number; total: number }[];
 };
@@ -57,6 +59,7 @@ function toReceipt(row: InvoiceRow): ThermalReceipt {
     trackingUrl: row.trackingToken
       ? `${typeof window === "undefined" ? "" : window.location.origin}/track/${row.trackingToken}`
       : "",
+    complaintWa: row.complaintWa ?? null,
   };
 }
 

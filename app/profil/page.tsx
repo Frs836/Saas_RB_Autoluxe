@@ -8,7 +8,6 @@ import { urlAvatar } from "@/lib/avatar";
 import { can, profileMenuFor, roleLabel, toRole } from "@/lib/rbac";
 import { getSessionProfile } from "@/lib/rbac-guard";
 
-export const instant = false;
 
 export default async function ProfilPage() {
   const session = await getSessionProfile();

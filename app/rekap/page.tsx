@@ -9,7 +9,6 @@ import { can } from "@/lib/rbac";
 import { BranchScopeBadges } from "@/components/branch/branch-scope-badges";
 import { Icon } from "@/components/ui/icon";
 
-export const instant = false;
 
 export default async function RekapPage() {
   const session = await requirePermission("attendance.audit");

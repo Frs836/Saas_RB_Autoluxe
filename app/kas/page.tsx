@@ -5,7 +5,6 @@ import { KasConsole } from "@/components/kas/kas-console";
 import { requirePermission, scopedBranchId } from "@/lib/rbac-guard";
 import { scopeBranchQuery } from "@/lib/branch";
 
-export const instant = false;
 
 export default async function KasPage() {
   const session = await requirePermission("cash.petty_manage");
@@ -75,12 +74,12 @@ export default async function KasPage() {
           branchName={branch?.branch_name ?? "RB AUTOLUXE"}
           canManage={true}
           pettyCash={(pettyCash ?? []).map((row) => ({
-            id: row.id,
-            createdAt: row.created_at,
+            id: row.id ?? "",
+            createdAt: row.created_at ?? "",
             amount: Number(row.amount),
-            category: row.category,
+            category: row.category ?? "",
             description: row.description,
-            paymentMethod: row.payment_method,
+            paymentMethod: row.payment_method ?? "",
             proofPhotoUrl: row.proof_photo_url,
           }))}
           unpaidOrders={(unpaidOrders ?? []).map((row) => ({
@@ -88,10 +87,10 @@ export default async function KasPage() {
             orderNumber: row.order_number,
             licensePlate: row.license_plate,
             vehicleModel: row.vehicle_model,
-            customerName: row.customer_name,
+            customerName: row.customer_name ?? "",
             totalPrice: Number(row.total_price),
             cashHoldAmount: Number(row.cash_hold_amount),
-            cashHoldPaymentMethod: row.cash_hold_payment_method,
+            cashHoldPaymentMethod: row.cash_hold_payment_method ?? "",
             createdAt: row.created_at,
           }))}
           handoff={

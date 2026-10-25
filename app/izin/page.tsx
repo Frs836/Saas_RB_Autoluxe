@@ -9,7 +9,6 @@ import { can } from "@/lib/rbac";
 import { requirePermission } from "@/lib/rbac-guard";
 import { wibNow } from "@/lib/attendance";
 
-export const instant = false;
 
 export default async function IzinPage() {
   const session = await requirePermission("time_off.request");

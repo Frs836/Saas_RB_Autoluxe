@@ -1,4 +1,5 @@
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/lib/supabase/database.types";
 
 /**
  * Klien Supabase dengan kunci service role, khusus di sisi server.
@@ -18,7 +19,7 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
  * server action, tidak pernah dari komponen klien.
  */
 
-let cached: ReturnType<typeof createSupabaseClient> | null = null;
+let cached: ReturnType<typeof createSupabaseClient<Database>> | null = null;
 
 export function adminClient() {
   if (cached) return cached;
@@ -32,14 +33,10 @@ export function adminClient() {
     );
   }
 
-  // Skema database sengaja dibiarkan longgar. Klien ini hanya dipakai untuk
-  // membuat akun dan mengisi dua tabel, dan tanpa skema yang digenerate
-  // TypeScript menyimpulkan tipe baris_insert sebagai never sehingga setiap
-  // kolom yang ditulis dianggap tidak dikenal.
-  cached = createSupabaseClient(url, kunci, {
+  cached = createSupabaseClient<Database>(url, kunci, {
     auth: { persistSession: false, autoRefreshToken: false },
     db: { schema: "public" },
-  }) as unknown as ReturnType<typeof createSupabaseClient>;
+  });
 
   return cached;
 }

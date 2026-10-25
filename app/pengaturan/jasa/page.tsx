@@ -4,7 +4,6 @@ import { SubPageHeader } from "@/components/pos/sub-page-header";
 import { ServiceManager, type ServiceRow } from "@/components/pos/service-manager";
 import { requirePermission } from "@/lib/rbac-guard";
 
-export const instant = false;
 
 /**
  * Halaman pengelolaan jasa POS.

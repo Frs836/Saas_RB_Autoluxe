@@ -11,7 +11,6 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { requirePermission } from "@/lib/rbac-guard";
 
-export const instant = false;
 
 /**
  * Resep bahan per layanan.

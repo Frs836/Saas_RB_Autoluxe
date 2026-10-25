@@ -195,7 +195,7 @@ export function RecipeManager({
       });
     }
 
-    const { data, error: rpcError } = await supabase.rpc("set_service_recipe", payload);
+    const { data, error: rpcError } = await supabase.rpc("set_service_recipe", payload as never);
 
     setSibuk(false);
 

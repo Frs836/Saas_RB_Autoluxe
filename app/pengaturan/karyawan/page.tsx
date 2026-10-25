@@ -12,7 +12,6 @@ import { ATTENDANCE_ROLE_LABELS } from "@/lib/attendance";
 import { requirePermission, scopedBranchId } from "@/lib/rbac-guard";
 import { createClient } from "@/lib/supabase/server";
 
-export const instant = false;
 
 export default async function StaffSchedulePage() {
   const session = await requirePermission("branch.manage");
@@ -194,6 +193,7 @@ export default async function StaffSchedulePage() {
             kantorPulang: jamKantorPulang,
           }}
           bisaUbah={Boolean(cabang)}
+          branchId={cabangId ?? null}
         />
         <StaffManagement
           staff={managedStaff}

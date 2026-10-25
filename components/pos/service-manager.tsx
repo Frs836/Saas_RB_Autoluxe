@@ -193,9 +193,9 @@ export function ServiceManager({
     setSukses(null);
 
     const { error: rpcError } = await supabase.rpc("set_service", {
-      p_service_id: sunting?.id ?? null,
+      p_service_id: sunting?.id ?? undefined,
       p_name: draft.name.trim(),
-      p_category: draft.category,
+      p_category: draft.category as "wash" | "coating" | "detailing" | "other",
       p_price_s: draft.priceS,
       p_price_m: draft.priceM,
       p_price_l: draft.priceL,
@@ -260,7 +260,7 @@ export function ServiceManager({
     const { error: rpcError } = await supabase.rpc("set_service", {
       p_service_id: row.id,
       p_name: row.name,
-      p_category: row.category,
+      p_category: row.category as "wash" | "coating" | "detailing" | "other",
       p_price_s: row.priceS,
       p_price_m: row.priceM,
       p_price_l: row.priceL,

@@ -151,7 +151,7 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
       const { error: rpcError } = await supabase.rpc("create_stock_claim", {
         p_item_id: selected.id,
         p_quantity: quantity,
-        p_note: note.trim() === "" ? null : note.trim(),
+        p_note: note.trim() === "" ? undefined : note.trim(),
       });
       setSubmitting(false);
       if (rpcError) {
@@ -209,8 +209,8 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
       const { error: rpcError } = await supabase.rpc("record_stock_in", {
         p_item_id: inItem.id,
         p_quantity: quantity,
-        p_unit_cost: cost,
-        p_note: inNote.trim() === "" ? null : inNote.trim(),
+        p_unit_cost: cost ?? undefined,
+        p_note: inNote.trim() === "" ? undefined : inNote.trim(),
       });
 
       if (rpcError) {

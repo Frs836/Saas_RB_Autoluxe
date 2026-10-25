@@ -38,10 +38,12 @@ export function StaffScheduleView({
   staff,
   jam,
   bisaUbah,
+  branchId,
 }: {
   staff: StaffSchedule[];
   jam: JamKerja;
   bisaUbah: boolean;
+  branchId: string | null;
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -88,6 +90,7 @@ export function StaffScheduleView({
     try {
       const supabase = createClient();
       const { error: err } = await supabase.rpc("update_branch_office_hours", {
+        p_branch_id: branchId ?? "",
         p_open_time: jamKantor.masuk + ":00",
         p_close_time: jamKantor.pulang + ":00",
       });
@@ -104,7 +107,7 @@ export function StaffScheduleView({
     } finally {
       setSibuk(null);
     }
-  }, [jamKantor, router, toast]);
+  }, [branchId, jamKantor, router, toast]);
 
   return (
     <div className="px-gutter py-4 flex flex-col gap-4 pb-nav-plain">

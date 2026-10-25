@@ -4,8 +4,6 @@ import { InspectionPhoto } from "@/components/track/inspection-photo";
 import { PublicWarrantyClaim } from "@/components/track/public-warranty-claim";
 import { Icon } from "@/components/ui/icon";
 
-export const instant = false;
-
 type TrackingOrder = {
   order_number: string | null;
   status: string | null;

@@ -6,7 +6,6 @@ import { ATTENDANCE_ROLE_LABELS, wibNow } from "@/lib/attendance";
 import { requirePermission, scopedBranchId } from "@/lib/rbac-guard";
 import { Icon } from "@/components/ui/icon";
 
-export const instant = false;
 
 function cashBreakdown(rows: { type: string; amount: number; payment_method: string | null }[]) {
   let cashInCash = 0;

@@ -45,6 +45,8 @@ type Props = {
   services: PosService[];
   teamOptions: TeamOption[];
   branchName: string;
+  /** Nomor WA untuk saran & keluhan di struk thermal, format "628xxx". */
+  complaintWa?: string | null;
   canCreate: boolean;
   role: Role;
   roleLabel: string;
@@ -65,6 +67,7 @@ export function PosConsole({
   services,
   teamOptions,
   branchName,
+  complaintWa,
   canCreate,
   role,
   roleLabel,
@@ -293,7 +296,7 @@ export function PosConsole({
           p_customer_phone: customerPhone.trim(),
           p_service_package: servicePackage,
           p_items: items,
-          p_payment_method: paymentMethod,
+          p_payment_method: paymentMethod as "cash" | "qris" | "bank_transfer",
           p_payment_state: effectivePaymentState,
           p_start_work: startWork,
           p_team_ids: selectedTeam,
@@ -348,6 +351,7 @@ export function PosConsole({
           paymentMethod,
           paid: recordedState === "paid",
           trackingUrl: `${window.location.origin}/track/${order.tracking_token}`,
+          complaintWa: complaintWa ?? null,
         },
         waHref:
           customerPhone.trim() === ""

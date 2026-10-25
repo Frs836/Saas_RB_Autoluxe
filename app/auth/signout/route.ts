@@ -27,6 +27,12 @@ export async function POST(request: NextRequest) {
   return keluar(request);
 }
 
-export async function GET(request: NextRequest) {
-  return keluar(request);
-}
+/**
+ * GET sign-out sengaja dihapus.
+ *
+ * Mengekspos sign-out lewat GET membuka celah CSRF: tautan biasa atau tag
+ * <img src="/auth/signout"> dari halaman pihak ketiga dapat men-sign-out
+ * pengguna tanpa tindakan eksplisit dari mereka. Sign-out hanya boleh
+ * dipicu oleh tindakan eksplisit (form submit / fetch POST) dengan
+ * SameSite=Lax cookie yang sudah menjadi perlindungan default Supabase.
+ */

@@ -7,7 +7,6 @@ import {
 import { requirePermission } from "@/lib/rbac-guard";
 import { createClient } from "@/lib/supabase/server";
 
-export const instant = false;
 
 export default async function FaceVerificationPage() {
   const session = await requirePermission("branch.manage");

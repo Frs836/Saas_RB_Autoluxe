@@ -5,7 +5,6 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { NotificationList } from "@/components/dashboard/notification-list";
 
-export const instant = false;
 
 export const metadata = { title: "Notifikasi" };
 
@@ -39,7 +38,7 @@ export default async function NotificationPage() {
       />
       <main className="flex-1">
         <NotificationList
-          awal={error ? [] : (data ?? [])}
+          awal={error ? [] : (data ?? []).map((row) => ({ ...row, payload: row.payload as Record<string, unknown> | null }))}
           bisaTandaiSemua={!error}
           role={session.role}
         />

@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { USER_EMAIL_HEADER, USER_ID_HEADER } from "@/lib/session-headers";
+import type { Database } from "@/lib/supabase/database.types";
 
 const AUTH_PAGES = ["/login", "/register"];
 const PUBLIC_PAGES = ["/track"];
@@ -24,7 +25,7 @@ export async function updateSession(request: NextRequest) {
   // respons, karena header permintaan baru ditentukan setelah getUser selesai.
   const pendingCookies: { name: string; value: string; options?: Record<string, unknown> }[] = [];
 
-  const supabase = createServerClient(
+  const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {

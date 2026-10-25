@@ -1,4 +1,4 @@
-ï»¿import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { BottomNav } from "@/components/dashboard/bottom-nav";
 import { SubPageHeader } from "@/components/pos/sub-page-header";
 import { LaporanView } from "@/components/laporan/laporan-view";
@@ -7,7 +7,6 @@ import { requirePermission, scopedBranchId } from "@/lib/rbac-guard";
 import { queryError, scopeBranchQuery } from "@/lib/branch";
 import { can } from "@/lib/rbac";
 
-export const instant = false;
 
 const MONTH_LABELS = [
   "Jan",
@@ -136,12 +135,22 @@ const branchMap = new Map(
   // Rincian laporan memakai baris turunan: unit terjual per layanan diambil dari
   // order_items milik order yang sudah selesai (sudah tercakup cabang lewat
   // order induknya), dan mutasi stok dari stock_logs yang punya branch_id.
+  //
+  // Batasan 500 ID di query .in() mencegah HTTP 414 URI Too Long pada
+  // PostgREST. Untuk laporan skala besar, pindahkan aggregasi ini ke RPC
+  // atau view di database. Angka 500 dipilih sebagai batas aman karena
+  // setiap UUID 36-karakter + separator berarti ~37 * 500 ˜ 18 KB URL
+  // yang masih di bawah batas 64 KB header sebagian besar reverse proxy.
+  const MAX_IDS_PER_QUERY = 500;
+  const completedIdsCapped = completedIds.slice(0, MAX_IDS_PER_QUERY);
+  const isCapped = completedIds.length > MAX_IDS_PER_QUERY;
+
   const [itemsRes, logRes] = await Promise.all([
-    completedIds.length > 0
+    completedIdsCapped.length > 0
       ? supabase
           .from("order_items")
           .select("item_name, quantity, price")
-          .in("order_id", completedIds)
+          .in("order_id", completedIdsCapped)
       : Promise.resolve({
           data: [] as { item_name: string; quantity: number; price: number }[],
           error: null,
@@ -268,6 +277,9 @@ const data = {
       low: lowStock,
       movement: stockMovement,
     },
+    // Tandai apakah rincian unit terjual hanya mencakup sebagian order karena
+    // pembatasan query. Komponen penerima bisa menampilkan peringatan ini.
+    unitsSoldCapped: isCapped,
     generatedAt: new Date().toISOString(),
   };
 

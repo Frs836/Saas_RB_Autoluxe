@@ -84,23 +84,16 @@ export const lookupSession = cache(async (): Promise<SessionLookup> => {
   }
 
   /*
-   * Profil dan daftar cabang diambil sekaligus, bukan berurutan.
-   *
-   * Daftar cabang dikirim bersama pada tahap yang sama, lalu dibuang lagi
-   * kalau peran ternyata tidak boleh berpindah cabang. Data yang dibuang hanya
-   * ada di memori server, jadi tidak menambah beban ke database.
+   * Profil diambil dulu, lalu `canSwitchBranch` dievaluasi dari role-nya.
+   * Daftar cabang hanya di-fetch bila role memang boleh berpindah cabang.
+   * Untuk karyawan dan admin_kasir, query ini dilewati sepenuhnya sehingga
+   * tidak ada perjalanan jaringan yang terbuang per halaman.
    */
-  const [profileRes, branchRes] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select("id, auth_id, full_name, role, branch_id, shift_id")
-      .eq("auth_id", userId)
-      .maybeSingle(),
-    supabase
-      .from("branches")
-      .select("id, branch_name, is_active")
-      .order("branch_name", { ascending: true }),
-  ]);
+  const profileRes = await supabase
+    .from("profiles")
+    .select("id, auth_id, full_name, role, branch_id, shift_id")
+    .eq("auth_id", userId)
+    .maybeSingle();
 
   const data = profileRes.data;
   if (!data) return { kind: "no-profile", email };
@@ -114,6 +107,13 @@ export const lookupSession = cache(async (): Promise<SessionLookup> => {
   let branches: BranchOption[] = [];
 
   if (canSwitchBranch) {
+    // Query cabang hanya dijalankan untuk role yang boleh switch cabang
+    // (owner, maintainer). Untuk role lain, array kosong sudah cukup.
+    const branchRes = await supabase
+      .from("branches")
+      .select("id, branch_name, is_active")
+      .order("branch_name", { ascending: true });
+
     branches = (branchRes.data ?? []).map((row) => ({
       id: row.id as string,
       name: (row.branch_name as string) ?? "Cabang",

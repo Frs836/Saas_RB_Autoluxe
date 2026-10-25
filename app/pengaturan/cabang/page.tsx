@@ -5,7 +5,6 @@ import { BranchSettingsView } from "@/components/branch/branch-settings-view";
 import { requirePermission } from "@/lib/rbac-guard";
 import type { BranchRecord } from "@/lib/branch";
 
-export const instant = false;
 
 export default async function BranchSettingsPage() {
   const session = await requirePermission("branch.manage");

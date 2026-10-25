@@ -6,7 +6,6 @@ import { ATTENDANCE_ROLE_LABELS, wibNow } from "@/lib/attendance";
 import { can } from "@/lib/rbac";
 import { requirePermission, scopedBranchId } from "@/lib/rbac-guard";
 
-export const instant = false;
 
 export default async function AbsensiPage() {
   const session = await requirePermission("attendance.self");

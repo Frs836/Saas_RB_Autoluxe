@@ -9,7 +9,6 @@ export const metadata: Metadata = {
 
 // searchParams dipakai untuk membaca alasan penolakan akun, jadi halaman ini
 // tidak boleh di-prerender dan ditandai sebagai route blocking.
-export const instant = false;
 
 export default async function LoginPage({
   searchParams,

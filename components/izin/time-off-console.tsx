@@ -156,7 +156,7 @@ export function TimeOffConsole({ requests, canDecide, todayIso }: Props) {
         p_start_date: startDate,
         p_end_date: endDate,
         p_reason: reason.trim(),
-        p_proof_path: path,
+        p_proof_path: path ?? undefined,
       });
 
       if (rpcError) {

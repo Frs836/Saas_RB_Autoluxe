@@ -27,6 +27,8 @@ export type BranchRecord = BranchOption & {
   openTime: string;
   closeTime: string;
   staffCount: number;
+  /** Nomor WhatsApp untuk saran & keluhan di struk, format "628xxx". */
+  complaintWa?: string | null;
 };
 
 const UUID_PATTERN =
@@ -153,6 +155,7 @@ const BRANCH_SCOPED_TABLES = new Set([
   "commission_settings",
   "inventory_items",
   "orders",
+  "petty_cash",
   "profiles",
   "service_material_recipes",
   "shift_handoffs",

@@ -56,9 +56,15 @@ async function konteksPemilik() {
 /**
  * Memverifikasi password lama.
  *
- * Klien dibuat dengan persistSession dimatikan supaya sesi hasil verifikasi
- * tidak menimpa cookie sesi yang sedang dipakai. Tanpa ini, sesi pengguna
- * akan sempat diganti oleh sesi verifikasi di sisi server.
+ * `signInWithPassword` membuat session baru di Supabase Auth bahkan dengan
+ * `persistSession: false` (yang hanya menonaktifkan penyimpanan lokal, bukan
+ * pembuatan session di server). Session tersebut langsung di-revoke setelah
+ * verifikasi agar tidak mengonsumsi slot session pengguna dan tidak
+ * memengaruhi sesi yang sedang aktif.
+ *
+ * Pendekatan ini tetap mengonsumsi satu slot dari rate limit Supabase Auth
+ * (60 sign-in/jam per email di free tier). Jika kelak rate limit menjadi
+ * masalah, pertimbangkan migrasi ke flow reauthenticate() + OTP.
  */
 async function verifikasiPasswordLama(
   email: string,
@@ -72,8 +78,15 @@ async function verifikasiPasswordLama(
     { auth: { persistSession: false, autoRefreshToken: false } },
   );
 
-  const { error } = await cek.auth.signInWithPassword({ email, password: passwordLama });
+  const { data, error } = await cek.auth.signInWithPassword({ email, password: passwordLama });
   if (error) return { ok: false, pesan: "Password lama tidak cocok." };
+
+  // Revoke session yang baru saja dibuat agar tidak meninggalkan session
+  // aktif yang tidak terpakai di Supabase Auth.
+  if (data.session?.access_token) {
+    await cek.auth.signOut({ scope: "local" });
+  }
+
   return { ok: true };
 }
 

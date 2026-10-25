@@ -31,7 +31,7 @@ export default async function OrderQueuePage() {
           .maybeSingle()
       : Promise.resolve({ data: null }),
     supabase.rpc("get_order_queue_with_team", {
-      p_branch_id: branchId ?? undefined,
+      ...(branchId !== null ? { p_branch_id: branchId } : {}),
       p_limit: 300,
       p_status_filter: "all",
     }),

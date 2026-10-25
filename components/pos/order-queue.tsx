@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
@@ -162,6 +162,30 @@ export function OrderQueue({
   const [teamModalLoading, setTeamModalLoading] = useState(false);
 
   const orders = initialOrders;
+
+  // Realtime subscription: perbarui antrian otomatis saat ada order baru
+  // atau status order berubah, tanpa perlu refresh manual.
+  // Pola ini konsisten dengan NotificationBell di components/dashboard/.
+  useEffect(() => {
+    const supabase = createClient();
+    const channel = supabase
+      .channel("order-queue-changes")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "orders" },
+        () => router.refresh(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "orders" },
+        () => router.refresh(),
+      )
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [router]);
 
   const query = search.trim().toLowerCase();
   const isStaff = role === "karyawan";

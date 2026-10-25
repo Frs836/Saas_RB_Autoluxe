@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, type ChangeEvent } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { createPosOrder } from "@/app/actions/pos";
 import { formatRupiah } from "@/lib/format";
 import { ThermalPrintButton } from "@/components/pos/thermal-print-button";
 import type { ThermalReceipt } from "@/lib/thermal";
@@ -248,7 +248,6 @@ export function PosConsole({
     if (!kirimSekali.mulai()) return;
     setSubmitting(true);
     try {
-      const supabase = createClient();
       // service_id, name, dan price dikirim bersama karena server belum
       // semuanya memakai harga dari katalog: server lama memakai name dan
       // price, server baru mengabaikannya dan menghitung sendiri dari
@@ -286,26 +285,23 @@ export function PosConsole({
         return;
       }
 
-      const { data: orderRow, error: createError } = await supabase.rpc(
-        "create_pos_order_with_hold",
-        {
-          p_license_plate: licensePlate.trim().toUpperCase(),
-          p_vehicle_model: vehicleModel.trim(),
-          p_vehicle_size: effSize,
-          p_customer_name: customerName.trim(),
-          p_customer_phone: customerPhone.trim(),
-          p_service_package: servicePackage,
-          p_items: items,
-          p_payment_method: paymentMethod as "cash" | "qris" | "bank_transfer",
-          p_payment_state: effectivePaymentState,
-          p_start_work: startWork,
-          p_team_ids: selectedTeam,
-        },
-      );
-      if (createError) throw new Error(createError.message);
+      const result = await createPosOrder({
+        p_license_plate: licensePlate.trim().toUpperCase(),
+        p_vehicle_model: vehicleModel.trim(),
+        p_vehicle_size: effSize,
+        p_customer_name: customerName.trim(),
+        p_customer_phone: customerPhone.trim(),
+        p_service_package: servicePackage,
+        p_items: items,
+        p_payment_method: paymentMethod as "cash" | "qris" | "bank_transfer",
+        p_payment_state: effectivePaymentState,
+        p_start_work: startWork,
+        p_team_ids: selectedTeam,
+      });
+      if (!result.ok) throw new Error(result.message);
 
-      const order = Array.isArray(orderRow) ? orderRow[0] : orderRow;
-      if (!order || !order.order_number) {
+      const order = result.data;
+      if (!order.order_number) {
         throw new Error("Order tidak dapat dibuat.");
       }
 
@@ -313,7 +309,7 @@ export function PosConsole({
         (order.payment_state as PaymentState | null) ?? effectivePaymentState;
 
       const receipt = buildReceiptText({
-        orderNumber: order.order_number,
+        orderNumber: order.order_number as string,
         branchName,
         vehicleModel: vehicleModel.trim(),
         licensePlate: licensePlate.trim().toUpperCase(),
@@ -326,19 +322,19 @@ export function PosConsole({
         })),
         total: Number(order.total_price ?? total),
         paymentMethod,
-        trackingToken: order.tracking_token,
+        trackingToken: order.tracking_token as string,
       });
 
       setResult({
-        orderNumber: order.order_number,
-        trackingToken: order.tracking_token,
+        orderNumber: order.order_number as string,
+        trackingToken: order.tracking_token as string,
         total: Number(order.total_price ?? total),
         paymentState: recordedState,
         startedImmediately: startWork,
         receipt,
         thermal: {
           branchName,
-          orderNumber: order.order_number,
+          orderNumber: order.order_number as string,
           vehicleModel: vehicleModel.trim(),
           licensePlate: licensePlate.trim().toUpperCase(),
           customerName: customerName.trim(),
@@ -350,7 +346,7 @@ export function PosConsole({
           total: Number(order.total_price ?? total),
           paymentMethod,
           paid: recordedState === "paid",
-          trackingUrl: `${window.location.origin}/track/${order.tracking_token}`,
+          trackingUrl: `${window.location.origin}/track/${order.tracking_token as string}`,
           complaintWa: complaintWa ?? null,
         },
         waHref:

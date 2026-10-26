@@ -1,11 +1,30 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { initials } from "@/lib/format";
 import type { ProfileMenuItem } from "@/lib/rbac";
 import { Icon } from "@/components/ui/icon";
 
 type MenuItem = ProfileMenuItem;
+
+const CATEGORY_LABELS: Record<string, string> = {
+  staf_cabang: "Staf & Cabang",
+  keuangan: "Keuangan",
+  operasional: "Operasional",
+  kehadiran: "Kehadiran",
+  layanan_order: "Layanan & Order",
+};
+
+const CATEGORY_ICONS: Record<string, string> = {
+  staf_cabang: "groups",
+  keuangan: "payments",
+  operasional: "build",
+  kehadiran: "event",
+  layanan_order: "local_shipping",
+};
+
+const CATEGORY_ORDER = ["staf_cabang", "keuangan", "operasional", "kehadiran", "layanan_order"] as const;
 
 export function ProfilView({
   profile,
@@ -34,8 +53,22 @@ export function ProfilView({
   avatarUrl: string | null;
 }) {
   const branchConfigured = branch.latitude !== null && branch.longitude !== null;
-  const visibleMenu = menu;
   const initialsValue = initials(profile.fullName);
+
+  // Group menu by category
+  const menuByCategory = menu.reduce((acc, item) => {
+    const cat = item.category || "operasional";
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(item);
+    return acc;
+  }, {} as Record<string, MenuItem[]>);
+
+  // Sort items within each category by label
+  Object.values(menuByCategory).forEach((items) => {
+    items.sort((a, b) => a.label.localeCompare(b.label));
+  });
+
+  const [openCategory, setOpenCategory] = useState<string | null>(null);
 
   return (
     <div className="flex flex-col w-full pb-nav-plain">
@@ -103,7 +136,7 @@ export function ProfilView({
         </div>
       </section>
 
-      {/* Menu modul */}
+      {/* Menu modul - Tabs dengan Dropdown per kategori */}
       <section className="px-gutter pt-2.5">
         <div className="bg-surface rounded-[20px] p-2 clay-card border border-white/80">
           <div className="flex items-center gap-2 px-3 pt-2.5 pb-1.5">
@@ -112,26 +145,58 @@ export function ProfilView({
               Modul Saya
             </span>
           </div>
-          {visibleMenu.map((item) => (
-            <Link
-              key={item.label}
-              href={item.href}
-              className="flex items-center gap-3 px-3 py-3 rounded-2xl active:bg-surface-container-low active:scale-[0.99] transition-all"
-            >
-              <div className="w-10 h-10 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
-                <Icon name={item.icon} className="text-[20px]" />
+          
+          {/* Tab buttons */}
+          <div className="flex gap-1 overflow-x-auto pb-2 -mx-3 px-3" role="tablist">
+            {CATEGORY_ORDER.map((cat) => {
+              const items = menuByCategory[cat];
+              if (!items || items.length === 0) return null;
+              return (
+                <button
+                  key={cat}
+                  role="tab"
+                  aria-selected={openCategory === cat}
+                  onClick={() => setOpenCategory(openCategory === cat ? null : cat)}
+                  className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                    openCategory === cat
+                      ? "bg-primary text-white"
+                      : "bg-surface-container text-text-secondary hover:bg-surface-container-high"
+                  }`}
+                >
+                  <Icon name={CATEGORY_ICONS[cat]} className="text-[16px] mr-1" />
+                  {CATEGORY_LABELS[cat]}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Dropdown content */}
+          {openCategory && menuByCategory[openCategory] && (
+            <div className="mt-2 animate-in slide-in-from-top-2 duration-200">
+              <div className="bg-surface-container rounded-[16px] p-2 border border-border-subtle">
+                {menuByCategory[openCategory].map((item) => (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    className="flex items-center gap-3 px-3 py-3 rounded-xl active:bg-surface-container-low active:scale-[0.99] transition-all"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
+                      <Icon name={item.icon} className="text-[20px]" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <span className="font-body-bold text-body-bold text-text-primary block">
+                        {item.label}
+                      </span>
+                      <span className="font-caption text-caption text-text-muted block truncate">
+                        {item.caption}
+                      </span>
+                    </div>
+                    <Icon name="chevron_right" className="text-text-muted text-[20px] shrink-0" />
+                  </Link>
+                ))}
               </div>
-              <div className="flex-1 min-w-0">
-                <span className="font-body-bold text-body-bold text-text-primary block">
-                  {item.label}
-                </span>
-                <span className="font-caption text-caption text-text-muted block truncate">
-                  {item.caption}
-                </span>
-              </div>
-              <Icon name="chevron_right" className="text-text-muted text-[20px] shrink-0" />
-            </Link>
-          ))}
+            </div>
+          )}
         </div>
       </section>
 

@@ -335,27 +335,37 @@ export type ProfileMenuItem = {
   icon: string;
   href: string;
   permission: Permission | null;
+  category: "staf_cabang" | "keuangan" | "operasional" | "kehadiran" | "layanan_order";
 };
 
 export const PROFILE_MENU: readonly ProfileMenuItem[] = [
-  { label: "Absensi Biometrik", caption: "Scan Face ID & GPS kehadiran", icon: "how_to_reg", href: "/absensi", permission: "attendance.self" },
-  { label: "Izin, Cuti & Sakit", caption: "Ajukan dan pantau pengajuan", icon: "event_busy", href: "/izin", permission: "time_off.request" },
-  { label: "POS & Order", caption: "Buat order, bayar nanti, kerjakan", icon: "add_task", href: "/pos", permission: "pos.create" },
-  { label: "Antrean Order", caption: "Status pengerjaan dan inspeksi", icon: "assignment", href: "/pos/orders", permission: null },
-  { label: "Klaim Stok", caption: "Ajukan & pantau stok obat", icon: "inventory_2", href: "/stok", permission: "stock.claim" },
-  { label: "Kas Titipan Shift", caption: "Buka kas, rekap & tutup audit shift", icon: "payments", href: "/shift", permission: "cash.shift_manage" },
-  { label: "Kas Keluar", caption: "Petty cash operasional + foto nota", icon: "receipt_long", href: "/kas", permission: "cash.petty_manage" },
-  { label: "Riwayat Invoice", caption: "Cari & cetak ulang nota pelanggan", icon: "print", href: "/invoice", permission: "reports.branch" },
-  { label: "Klaim Garansi", caption: "Cek masa garansi & proses klaim", icon: "verified_user", href: "/garansi", permission: "warranty.manage" },
-  { label: "Rekap Kehadiran Staf", caption: "Kalender bulanan, rekap 3 bulan, ekspor Excel", icon: "groups", href: "/rekap", permission: "attendance.audit" },
-  { label: "Laporan Cabang", caption: "Finansial, omzet, komisi & stok", icon: "insights", href: "/laporan", permission: "reports.branch" },
-  { label: "Pengaturan Cabang", caption: "Alamat, titik GPS & jam operasional", icon: "tune", href: "/pengaturan/cabang", permission: "branch.manage" },
-  { label: "Kelola Staf", caption: "Foto, jabatan, jadwal, dan pindah cabang", icon: "schedule", href: "/pengaturan/karyawan", permission: "branch.manage" },
-  { label: "Kelola Jasa POS", caption: "Nama, harga per ukuran, dan status", icon: "edit_note", href: "/pengaturan/jasa", permission: "services.manage" },
-  { label: "Resep Bahan Jasa", caption: "Bahan gudang yang terpotong saat checkout", icon: "inventory_2", href: "/pengaturan/resep", permission: "services.manage" },
-  { label: "Verifikasi Wajah", caption: "Tinjau sampel wajah staf", icon: "face_retouching_natural", href: "/pengaturan/wajah", permission: "branch.manage" },
-  { label: "Opname Fisik Bulanan", caption: "Bandingkan stok gudang dengan sistem", icon: "fact_check", href: "/stok/opname", permission: "stock.approve" },
-  { label: "Pesanan WhatsApp", caption: "Siapkan pesan nota pelanggan", icon: "chat", href: "/whatsapp", permission: "whatsapp.draft" },
+  // Staf & Cabang
+  { label: "Pengaturan Cabang", caption: "Alamat, titik GPS & jam operasional", icon: "tune", href: "/pengaturan/cabang", permission: "branch.manage", category: "staf_cabang" },
+  { label: "Kelola Staf", caption: "Foto, jabatan, jadwal, dan pindah cabang", icon: "schedule", href: "/pengaturan/karyawan", permission: "branch.manage", category: "staf_cabang" },
+  { label: "Verifikasi Wajah", caption: "Tinjau sampel wajah staf", icon: "face_retouching_natural", href: "/pengaturan/wajah", permission: "branch.manage", category: "staf_cabang" },
+  { label: "Kelola Jasa POS", caption: "Nama, harga per ukuran, dan status", icon: "edit_note", href: "/pengaturan/jasa", permission: "services.manage", category: "staf_cabang" },
+  { label: "Resep Bahan Jasa", caption: "Bahan gudang yang terpotong saat checkout", icon: "inventory_2", href: "/pengaturan/resep", permission: "services.manage", category: "staf_cabang" },
+  // Keuangan
+  { label: "Kas Titipan Shift", caption: "Buka kas, rekap & tutup audit shift", icon: "payments", href: "/shift", permission: "cash.shift_manage", category: "keuangan" },
+  { label: "Kas Keluar", caption: "Petty cash operasional + foto nota", icon: "receipt_long", href: "/kas", permission: "cash.petty_manage", category: "keuangan" },
+  { label: "Riwayat Invoice", caption: "Cari & cetak ulang nota pelanggan", icon: "print", href: "/invoice", permission: "reports.branch", category: "keuangan" },
+  { label: "Laporan Cabang", caption: "Finansial, omzet, komisi & stok", icon: "insights", href: "/laporan", permission: "reports.branch", category: "keuangan" },
+  // Operasional
+  { label: "POS & Order", caption: "Buat order, bayar nanti, kerjakan", icon: "add_task", href: "/pos", permission: "pos.create", category: "operasional" },
+  { label: "Antrean Order", caption: "Status pengerjaan dan inspeksi", icon: "assignment", href: "/pos/orders", permission: null, category: "operasional" },
+  { label: "Klaim Stok", caption: "Ajukan & pantau stok obat", icon: "inventory_2", href: "/stok", permission: "stock.claim", category: "operasional" },
+  { label: "Klaim Garansi", caption: "Cek masa garansi & proses klaim", icon: "verified_user", href: "/garansi", permission: "warranty.manage", category: "operasional" },
+  { label: "Opname Fisik Bulanan", caption: "Bandingkan stok gudang dengan sistem", icon: "fact_check", href: "/stok/opname", permission: "stock.approve", category: "operasional" },
+  // Kehadiran
+  { label: "Absensi Biometrik", caption: "Scan Face ID & GPS kehadiran", icon: "how_to_reg", href: "/absensi", permission: "attendance.self", category: "kehadiran" },
+  { label: "Izin, Cuti & Sakit", caption: "Ajukan dan pantau pengajuan", icon: "event_busy", href: "/izin", permission: "time_off.request", category: "kehadiran" },
+  { label: "Rekap Kehadiran Staf", caption: "Kalender bulanan, rekap 3 bulan, ekspor Excel", icon: "groups", href: "/rekap", permission: "attendance.audit", category: "kehadiran" },
+  // Layanan & Order
+  { label: "POS & Order", caption: "Buat order, bayar nanti, kerjakan", icon: "add_task", href: "/pos", permission: "pos.create", category: "layanan_order" },
+  { label: "Antrean Order", caption: "Status pengerjaan dan inspeksi", icon: "assignment", href: "/pos/orders", permission: null, category: "layanan_order" },
+  { label: "Klaim Garansi", caption: "Cek masa garansi & proses klaim", icon: "verified_user", href: "/garansi", permission: "warranty.manage", category: "layanan_order" },
+  { label: "Pesanan WhatsApp", caption: "Siapkan pesan nota pelanggan", icon: "chat", href: "/whatsapp", permission: "whatsapp.draft", category: "layanan_order" },
+  { label: "Klaim Stok", caption: "Ajukan & pantau stok obat", icon: "inventory_2", href: "/stok", permission: "stock.claim", category: "layanan_order" },
 ];
 
 export function profileMenuFor(role: unknown): ProfileMenuItem[] {

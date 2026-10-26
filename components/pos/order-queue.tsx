@@ -259,11 +259,11 @@ const filtered = useMemo(
       openTeamModal(order);
       return;
     }
-    // Sudah ada tim: caller HARUS sudah menjadi anggota tim (lead atau member)
-    // Karyawan hanya bisa memulai order yang dia buat atau jadi anggota timnya
-    const callerIsInTeam = order.team.some((m) => m.user_id === (window as any).__CURRENT_USER_ID__);
-    if (!callerIsInTeam && !canManage) {
-      setError("Anda hanya bisa memulai order yang Anda buat atau menjadi anggota timnya.");
+    // Sudah ada tim: panggil RPC langsung (server handle join tim jika perlu)
+    // Validasi max team size di frontend untuk UX
+    const maxTeam = order.vehicle_size?.startsWith("Motor") ? 3 : 4;
+    if (order.team.length >= maxTeam) {
+      setError("Tim sudah penuh (maksimal " + maxTeam + " orang).");
       return;
     }
     setBusyId(order.id);

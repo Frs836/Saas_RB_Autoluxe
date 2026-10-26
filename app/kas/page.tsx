@@ -32,15 +32,14 @@ export default async function KasPage() {
     .order("created_at", { ascending: false })
     .limit(50);
 
-  // Fetch unpaid orders (Bayar Nanti) - orders with payment_state = 'unpaid' and cash_hold_amount > 0
+  // Fetch unpaid orders (Bayar Nanti) - orders with payment_state = 'unpaid'
   const { data: unpaidOrders } = await scopeBranchQuery(
     supabase
       .from("orders")
       .select(
         "id, order_number, license_plate, vehicle_model, customer_name, total_price, cash_hold_amount, cash_hold_payment_method, created_at",
       )
-      .eq("payment_state", "unpaid")
-      .gt("cash_hold_amount", 0),
+      .eq("payment_state", "unpaid"),
     branchId,
     "orders",
   )

@@ -159,10 +159,9 @@ export function ShiftConsole({
       const supabase = createClient();
       const { error: rpcErr } = await supabase.rpc("open_shift_handoff", {
         p_date: today,
-        p_shift_id: "",
         p_opening_cash: amount,
         p_notes: notes.trim() ? notes.trim() : "",
-      });
+      } as any);
       if (rpcErr) throw new Error(rpcErr.message);
       setInfo("Kas titipan pagi tercatat. Mulai audit shift.");
       window.location.reload();

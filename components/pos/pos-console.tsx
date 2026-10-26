@@ -121,10 +121,8 @@ export function PosConsole({
   const total = resolved.reduce((sum, line) => sum + line.price * line.qty, 0);
   const itemCount = resolved.reduce((sum, line) => sum + line.qty, 0);
 
-  // Hanya karyawan yang boleh menahan pembayaran; kasir wajib mencatat settled.
-  const effectivePaymentState: PaymentState = isEmployee
-    ? paymentState
-    : "paid";
+  // Karyawan & Admin Kasir boleh menahan pembayaran (Bayar Nanti)
+  const effectivePaymentState: PaymentState = paymentState;
 
   const availableServices = useMemo(
     () => services.filter((s) => isAvailableForSize(s, effSize)),

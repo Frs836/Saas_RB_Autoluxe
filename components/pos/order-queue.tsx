@@ -23,6 +23,7 @@ export type QueueOrder = {
   status: string;
   total_price: number | null;
   payment_method: string | null;
+  payment_state: string | null;
   created_at: string;
   completed_at: string | null;
   assigned_to: string | null;
@@ -125,6 +126,17 @@ const FILTERS = [
 /* Status pascapengerjaan yang dikumpulkan pada tab Selesai. */
 const STATUS_SELESAI = new Set(["completed", "menunggu_diambil", "diserahkan"]);
 
+/* Prioritas urutan status: Antrean → Dikerjakan → QC Review → Selesai */
+const STATUS_PRIORITY: Record<string, number> = {
+  queued: 1,
+  in_progress: 2,
+  qc_review: 3,
+  completed: 4,
+  menunggu_diambil: 5,
+  diserahkan: 6,
+  cancelled: 99,
+};
+
 function initials(name: string | null) {
   if (!name) return "RB";
   return name
@@ -207,7 +219,12 @@ const filtered = useMemo(
             (order.vehicle_model ?? "").toLowerCase().includes(query);
           return matchFilter && matchQuery;
         })
-        .sort((a, b) => (a.order_number ?? "").localeCompare(b.order_number ?? "")),
+        .sort((a, b) => {
+          const pa = STATUS_PRIORITY[a.status] ?? 99;
+          const pb = STATUS_PRIORITY[b.status] ?? 99;
+          if (pa !== pb) return pa - pb;
+          return (a.order_number ?? "").localeCompare(b.order_number ?? "");
+        }),
     [orders, filter, query, isStaff],
   );
 
@@ -240,6 +257,13 @@ const filtered = useMemo(
     // Jika belum ada tim, buka modal pilih tim
     if (order.team.length === 0) {
       openTeamModal(order);
+      return;
+    }
+    // Sudah ada tim: caller HARUS sudah menjadi anggota tim (lead atau member)
+    // Karyawan hanya bisa memulai order yang dia buat atau jadi anggota timnya
+    const callerIsInTeam = order.team.some((m) => m.user_id === (window as any).__CURRENT_USER_ID__);
+    if (!callerIsInTeam && !canManage) {
+      setError("Anda hanya bisa memulai order yang Anda buat atau menjadi anggota timnya.");
       return;
     }
     setBusyId(order.id);
@@ -547,6 +571,11 @@ const filtered = useMemo(
                         order.payment_method}
                     </span>
                   ) : null}
+                  {order.payment_state === "unpaid" && (
+                    <span className="px-2 py-0.5 rounded-full bg-warning-surface text-warning-text font-micro-badge text-micro-badge">
+                      Bayar Nanti
+                    </span>
+                  )}
                 </div>
 
                 {order.status === "cancelled" && order.cancellation_reason ? (

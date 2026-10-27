@@ -7,7 +7,6 @@ import { StaffCreateForm } from "@/components/branch/staff-create-form";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { BottomNav } from "@/components/dashboard/bottom-nav";
 import { getSessionProfile } from "@/lib/rbac-guard";
-import { can } from "@/lib/rbac";
 
 export type ManagedStaff = {
   id: string;
@@ -36,8 +35,8 @@ export function StaffManagementPage({ session, branches, branchId }: Props) {
 
   const branchOptions = branches.map((b) => ({ id: b.id, name: b.name }));
 
-  // Cek apakah user punya izin staff.manage
-  const bisaKelolaStaf = session ? can(session.role, "staff.manage") : false;
+  // Hanya owner dan maintainer yang boleh kelola staf
+  const bisaKelolaStaf = session ? ["owner", "maintainer"].includes(session.role) : false;
 
   const handleTabChange = (value: string) => {
     if (value === "kelola" || value === "tambah") {

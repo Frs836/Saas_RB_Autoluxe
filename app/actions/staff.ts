@@ -23,6 +23,8 @@ export type CreateStaffResult =
  * Membuat profil staf baru dengan hashing password di sisi Node.js (bcryptjs).
  * Menggantikan RPC create_staff_profile yang menggunakan crypt() di PostgreSQL
  * yang memerlukan ekstensi pgcrypto.
+ * 
+ * Hanya owner dan maintainer yang boleh menambah staf.
  */
 export async function createStaffProfile(data: CreateStaffData): Promise<CreateStaffResult> {
   const supabase = await createClient();
@@ -62,35 +64,26 @@ export async function createStaffProfile(data: CreateStaffData): Promise<CreateS
     return { ok: false, message: "Profil pelaku tidak ditemukan." };
   }
 
-  // Cek izin staff.manage melalui RBAC
-  const { can: canManage } = await import("@/lib/rbac");
-  if (!canManage(actorProfile.role, "staff.manage")) {
+  // Hanya owner dan maintainer yang boleh menambah staf
+  if (!["owner", "maintainer"].includes(actorProfile.role)) {
     console.warn("[createStaffProfile] Access denied for role:", actorProfile.role);
-    return { ok: false, message: "Anda tidak memiliki izin untuk menambah staf." };
+    return { ok: false, message: "Hanya owner dan maintainer yang boleh menambah staf." };
   }
 
-  // 3. Branch access check - admin_kasir hanya bisa di cabang sendiri
+  // 3. Branch access check
   const targetBranchId = data.branchId || actorProfile.branch_id;
   if (!targetBranchId) {
     console.error("[createStaffProfile] No target branch ID");
     return { ok: false, message: "Cabang tujuan tidak ditentukan." };
   }
 
-  // admin_kasir hanya bisa akses cabang sendiri
-  if (actorProfile.role === "admin_kasir" && targetBranchId !== actorProfile.branch_id) {
-    console.warn("[createStaffProfile] admin_kasir trying to access other branch:", targetBranchId);
-    return { ok: false, message: "Admin kasir hanya bisa menambah staf di cabang sendiri." };
-  }
-
   // Validasi akses cabang untuk owner/maintainer
-  if (["owner", "maintainer"].includes(actorProfile.role)) {
-    const { data: canAccess } = await supabase.rpc("can_access_branch", {
-      p_branch_id: targetBranchId,
-    });
-    if (!canAccess) {
-      console.warn("[createStaffProfile] Branch access denied for:", targetBranchId);
-      return { ok: false, message: "Cabang tujuan tidak dapat diakses." };
-    }
+  const { data: canAccess } = await supabase.rpc("can_access_branch", {
+    p_branch_id: targetBranchId,
+  });
+  if (!canAccess) {
+    console.warn("[createStaffProfile] Branch access denied for:", targetBranchId, "actor:", actorProfile.role);
+    return { ok: false, message: "Cabang tujuan tidak dapat diakses." };
   }
 
   // 4. Hash password menggunakan bcryptjs (Node.js) - tidak butuh pgcrypto di DB
@@ -99,7 +92,7 @@ export async function createStaffProfile(data: CreateStaffData): Promise<CreateS
   // 5. Buat auth user via Supabase Admin API
   const { data: authData, error: authError } = await supabase.auth.admin.createUser({
     email: data.email.toLowerCase().trim(),
-    password: data.password, // Supabase akan hash ulang ini
+    password: data.password,
     email_confirm: true,
     user_metadata: { full_name: data.fullName.trim() },
   });

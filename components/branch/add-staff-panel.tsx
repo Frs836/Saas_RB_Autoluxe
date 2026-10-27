@@ -32,11 +32,12 @@ export function AddStaffPanel({
   const [buka, setBuka] = useState(false);
   const [sibuk, setSibuk] = useState(false);
   const [galat, setGalat] = useState<string | null>(null);
+  const [sandiTerlihat, setSandiTerlihat] = useState(false);
 
   const [nama, setNama] = useState("");
   const [email, setEmail] = useState("");
   const [sandi, setSandi] = useState("");
-  const [peran, setPeran] = useState<"karyawan" | "admin_kasir" | "maintainer">(
+  const [peran, setPeran] = useState<"karyawan" | "admin_kasir" | "maintainer" | "owner">(
     "karyawan",
   );
   const [jadwal, setJadwal] = useState<"field" | "office">("field");
@@ -147,14 +148,24 @@ export function AddStaffPanel({
 
       <label className="flex flex-col gap-1">
         <span className="font-caption text-caption text-text-muted">Kata sandi sementara</span>
-        <input
-          type="text"
-          value={sandi}
-          onChange={(e) => setSandi(e.target.value)}
-          autoComplete="off"
-          placeholder="Minimal 8 karakter"
-          className={kelas}
-        />
+        <div className="relative">
+          <input
+            type={sandiTerlihat ? "text" : "password"}
+            value={sandi}
+            onChange={(e) => setSandi(e.target.value)}
+            autoComplete="off"
+            placeholder="Minimal 8 karakter"
+            className={`${kelas} pr-12`}
+          />
+          <button
+            type="button"
+            onClick={() => setSandiTerlihat(!sandiTerlihat)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"
+            aria-label={sandiTerlihat ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
+          >
+            <Icon name={sandiTerlihat ? "visibility_off" : "visibility"} className="text-[20px]" />
+          </button>
+        </div>
       </label>
 
       <div className="grid grid-cols-2 gap-3">
@@ -163,7 +174,7 @@ export function AddStaffPanel({
           <select
             value={peran}
             onChange={(e) =>
-              setPeran(e.target.value as "karyawan" | "admin_kasir" | "maintainer")
+              setPeran(e.target.value as "karyawan" | "admin_kasir" | "maintainer" | "owner")
             }
             className={kelas}
           >
@@ -171,6 +182,9 @@ export function AddStaffPanel({
             <option value="admin_kasir">Admin Kasir</option>
             {bisaBuatMaintainer ? (
               <option value="maintainer">Maintainer</option>
+            ) : null}
+            {bisaBuatMaintainer ? (
+              <option value="owner">Owner</option>
             ) : null}
           </select>
         </label>

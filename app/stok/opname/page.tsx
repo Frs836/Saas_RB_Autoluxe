@@ -120,7 +120,7 @@ export default async function StockOpnamePage() {
   });
 
   return (
-    <div className="flex flex-col w-full min-h-screen">
+    <div className="flex flex-col w-full min-h-screen pb-nav">
       <SubPageHeader
         title="Opname Fisik Bulanan"
         branchName={

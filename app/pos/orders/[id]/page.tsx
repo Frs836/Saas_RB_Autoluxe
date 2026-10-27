@@ -169,7 +169,7 @@ export default async function OrderDetailPage({ params }: { params: Params }) {
   const origin = host ? `${protocol}://${host}` : "";
 
   return (
-    <>
+    <div className="flex flex-col w-full min-h-screen pb-nav">
       <OrderDetailView
         order={{
           id: order.id as string,
@@ -225,6 +225,6 @@ export default async function OrderDetailPage({ params }: { params: Params }) {
         branchName={branchRes.data?.branch_name ?? "Cabang Utama"}
       />
       <BottomNav role={session.role} />
-    </>
+      </div>
   );
 }

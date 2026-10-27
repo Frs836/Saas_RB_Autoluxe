@@ -50,7 +50,7 @@ export default async function BranchSettingsPage() {
   }));
 
   return (
-    <div className="flex flex-col w-full min-h-screen">
+    <div className="flex flex-col w-full min-h-screen pb-nav">
       <SubPageHeader
         title="Pengaturan Cabang"
         branchName={

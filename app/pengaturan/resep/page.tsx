@@ -88,7 +88,7 @@ export default async function ServiceRecipePage({
     branches.find((branch) => branch.id === branchId)?.name ?? "Cabang";
 
   return (
-    <div className="flex min-h-screen w-full flex-col">
+    <div className="flex min-h-screen w-full flex-col pb-nav-plain">
       <SubPageHeader title="Resep Bahan Jasa" backHref="/dashboard" />
 
       {session.branchScope === "all" && branches.length > 1 ? (

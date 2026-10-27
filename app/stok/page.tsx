@@ -101,7 +101,7 @@ export default async function StockPage() {
   }));
 
   return (
-    <div className="flex flex-col w-full min-h-screen">
+    <div className="flex flex-col w-full min-h-screen pb-nav-plain">
       <SubPageHeader
         title="Stok & Inventaris"
         branchName={branchRes.data?.branch_name ?? "Cabang Utama"}

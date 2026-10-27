@@ -59,7 +59,7 @@ export default async function KasPage() {
     : { data: null };
 
   return (
-    <>
+    <div className="flex flex-col w-full min-h-screen pb-nav">
       <SubPageHeader
         title="Arus Kas & Petty Cash"
         subtitle={
@@ -106,6 +106,6 @@ export default async function KasPage() {
         />
       </main>
       <BottomNav role={session.role} />
-    </>
+      </div>
   );
 }

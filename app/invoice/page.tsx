@@ -101,7 +101,7 @@ export default async function InvoicePage() {
   }));
 
   return (
-    <div className="flex flex-col w-full min-h-screen">
+    <div className="flex flex-col w-full min-h-screen pb-nav-plain">
       <SubPageHeader
         title="Riwayat Invoice"
         branchName={branchName}

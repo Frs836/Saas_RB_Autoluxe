@@ -28,7 +28,7 @@ export default async function NotificationPage() {
     .limit(60);
 
   return (
-    <div className="flex flex-col w-full min-h-screen">
+    <div className="flex flex-col w-full min-h-screen pb-nav-plain">
       {/* Tanpa header ini halaman notifikasi tidak punya jalan kembali, karena
           lonceng hanya ada di dashboard. */}
       <SubPageHeader

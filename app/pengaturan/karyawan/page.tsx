@@ -35,7 +35,7 @@ export default async function StaffSchedulePage() {
   const branchOptions = (branchOptionsRes.data ?? []).map((b) => ({ id: b.id, name: b.branch_name }));
 
   return (
-    <div className="flex flex-col w-full min-h-screen">
+    <div className="flex flex-col w-full min-h-screen pb-nav-plain">
       <SubPageHeader
         title="Manajemen Staf"
         branchName={branch?.branch_name ?? "Cabang Utama"}

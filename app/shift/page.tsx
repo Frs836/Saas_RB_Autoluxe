@@ -39,7 +39,7 @@ export default async function ShiftPage() {
   if (!branchId) {
     const viewingAll = session.branchScope === "all";
     return (
-      <div className="flex flex-col w-full min-h-screen">
+      <div className="flex flex-col w-full min-h-screen pb-nav">
         <SubPageHeader
           title="Audit Shift & Kas"
           branchName={viewingAll ? "Seluruh Cabang" : "Cabang Utama"}
@@ -118,7 +118,7 @@ export default async function ShiftPage() {
   }
 
   return (
-    <div className="flex flex-col w-full min-h-screen">
+    <div className="flex flex-col w-full min-h-screen pb-nav">
       <SubPageHeader
         title="Audit Shift & Kas"
         branchName={(branch?.branch_name as string) ?? "Cabang Utama"}

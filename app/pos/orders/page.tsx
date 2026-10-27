@@ -49,7 +49,7 @@ export default async function OrderQueuePage() {
   const canManage = can(session.role, "order.manage_status");
 
   return (
-    <div className="flex flex-col w-full min-h-screen">
+    <div className="flex flex-col w-full min-h-screen pb-nav-plain">
       <SubPageHeader
         title="Antrean Order"
         branchName={

@@ -68,7 +68,7 @@ export default async function IzinPage() {
   }));
 
   return (
-    <div className="flex flex-col w-full min-h-screen">
+    <div className="flex flex-col w-full min-h-screen pb-nav-plain">
       <SubPageHeader
         title="Izin, Cuti & Sakit"
         branchName={canDecide ? "Semua pengajuan cabang" : "Pengajuan pribadi"}

@@ -44,7 +44,7 @@ export default async function FaceVerificationPage() {
       }));
 
   return (
-    <div className="flex flex-col w-full min-h-screen">
+    <div className="flex flex-col w-full min-h-screen pb-nav-plain">
       <SubPageHeader
         title="Verifikasi Wajah"
         branchName="Seluruh Cabang"

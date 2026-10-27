@@ -35,7 +35,7 @@ export default async function ProfilPage() {
   const role = session.role;
 
   return (
-    <div className="flex flex-col w-full min-h-screen">
+    <div className="flex flex-col w-full min-h-screen pb-nav">
       <SubPageHeader
         title="Profil Saya"
         branchName={(branch?.branch_name as string) ?? "Cabang Utama"}

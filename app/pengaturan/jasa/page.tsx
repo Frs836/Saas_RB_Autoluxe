@@ -44,7 +44,7 @@ export default async function ServiceSettingsPage() {
 
   if (services.length === 0) {
     return (
-      <div className="flex flex-col w-full min-h-screen">
+      <div className="flex flex-col w-full min-h-screen pb-nav-plain">
         <SubPageHeader title="Kelola Jasa POS" backHref="/dashboard" />
         <main className="flex-1 px-gutter py-4">
           <p className="font-body text-body text-text-secondary">
@@ -57,7 +57,7 @@ export default async function ServiceSettingsPage() {
   }
 
   return (
-    <div className="flex flex-col w-full min-h-screen">
+    <div className="flex flex-col w-full min-h-screen pb-nav-plain">
       <SubPageHeader title="Kelola Jasa POS" backHref="/dashboard" />
       <ServiceManager initialServices={services} />
       <BottomNav role={session.role} />

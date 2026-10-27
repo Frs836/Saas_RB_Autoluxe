@@ -101,7 +101,7 @@ export default async function AbsensiPage() {
   const history = [...todayHistory, ...historyRows.filter((r) => r.date !== today)].slice(0, 6);
 
   return (
-    <div className="flex flex-col w-full min-h-screen">
+    <div className="flex flex-col w-full min-h-screen pb-nav-plain">
       <SubPageHeader
         title="Absensi Biometrik"
         branchName={branch?.branch_name ?? "Cabang Utama"}

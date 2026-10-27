@@ -21,7 +21,7 @@ export default async function RekapPage() {
 
   if (!branchId && session.branchScope !== "all") {
     return (
-      <div className="flex flex-col w-full min-h-screen">
+      <div className="flex flex-col w-full min-h-screen pb-nav-plain">
         <SubPageHeader
           title="Rekap Kehadiran Staf"
           branchName="Cabang Utama"
@@ -176,7 +176,7 @@ export default async function RekapPage() {
   }));
 
   return (
-    <div className="flex flex-col w-full min-h-screen">
+    <div className="flex flex-col w-full min-h-screen pb-nav-plain">
       <SubPageHeader
         title="Rekap Kehadiran Staf"
         branchName={

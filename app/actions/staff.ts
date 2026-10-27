@@ -40,28 +40,57 @@ export async function createStaffProfile(data: CreateStaffData): Promise<CreateS
     return { ok: false, message: "Tanggal lahir tidak boleh di masa depan." };
   }
 
-  // 2. Authorization: hanya maintainer/owner
+  // 2. Authorization: cek sesi dan profil pelaku
   const { data: { user: authUser } } = await supabase.auth.getUser();
-  if (!authUser) return { ok: false, message: "Sesi tidak valid." };
+  if (!authUser) {
+    console.error("[createStaffProfile] Auth user not found");
+    return { ok: false, message: "Sesi tidak valid." };
+  }
 
-  const { data: actorProfile } = await supabase
+  const { data: actorProfile, error: actorError } = await supabase
     .from("profiles")
     .select("role, branch_id")
     .eq("auth_id", authUser.id)
     .maybeSingle();
 
-  if (!actorProfile) return { ok: false, message: "Profil pelaku tidak ditemukan." };
-  if (!["owner", "maintainer"].includes(actorProfile.role)) {
-    return { ok: false, message: "Hanya maintainer/owner yang bisa menambah staf." };
+  if (actorError) {
+    console.error("[createStaffProfile] Failed to fetch actor profile:", actorError);
+    return { ok: false, message: "Gagal memverifikasi profil pelaku." };
+  }
+  if (!actorProfile) {
+    console.error("[createStaffProfile] Actor profile not found for user:", authUser.id);
+    return { ok: false, message: "Profil pelaku tidak ditemukan." };
   }
 
-  // 3. Branch access check
+  // Cek izin staff.manage melalui RBAC
+  const { can: canManage } = await import("@/lib/rbac");
+  if (!canManage(actorProfile.role, "staff.manage")) {
+    console.warn("[createStaffProfile] Access denied for role:", actorProfile.role);
+    return { ok: false, message: "Anda tidak memiliki izin untuk menambah staf." };
+  }
+
+  // 3. Branch access check - admin_kasir hanya bisa di cabang sendiri
   const targetBranchId = data.branchId || actorProfile.branch_id;
-  if (targetBranchId) {
+  if (!targetBranchId) {
+    console.error("[createStaffProfile] No target branch ID");
+    return { ok: false, message: "Cabang tujuan tidak ditentukan." };
+  }
+
+  // admin_kasir hanya bisa akses cabang sendiri
+  if (actorProfile.role === "admin_kasir" && targetBranchId !== actorProfile.branch_id) {
+    console.warn("[createStaffProfile] admin_kasir trying to access other branch:", targetBranchId);
+    return { ok: false, message: "Admin kasir hanya bisa menambah staf di cabang sendiri." };
+  }
+
+  // Validasi akses cabang untuk owner/maintainer
+  if (["owner", "maintainer"].includes(actorProfile.role)) {
     const { data: canAccess } = await supabase.rpc("can_access_branch", {
       p_branch_id: targetBranchId,
     });
-    if (!canAccess) return { ok: false, message: "Cabang tujuan tidak dapat diakses." };
+    if (!canAccess) {
+      console.warn("[createStaffProfile] Branch access denied for:", targetBranchId);
+      return { ok: false, message: "Cabang tujuan tidak dapat diakses." };
+    }
   }
 
   // 4. Hash password menggunakan bcryptjs (Node.js) - tidak butuh pgcrypto di DB

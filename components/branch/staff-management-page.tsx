@@ -7,6 +7,7 @@ import { StaffCreateForm } from "@/components/branch/staff-create-form";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { BottomNav } from "@/components/dashboard/bottom-nav";
 import { getSessionProfile } from "@/lib/rbac-guard";
+import { can } from "@/lib/rbac";
 
 export type ManagedStaff = {
   id: string;
@@ -35,20 +36,32 @@ export function StaffManagementPage({ session, branches, branchId }: Props) {
 
   const branchOptions = branches.map((b) => ({ id: b.id, name: b.name }));
 
+  // Cek apakah user punya izin staff.manage
+  const bisaKelolaStaf = session ? can(session.role, "staff.manage") : false;
+
   const handleTabChange = (value: string) => {
     if (value === "kelola" || value === "tambah") {
       setActiveTab(value as "kelola" | "tambah");
     }
   };
 
+  // Reset ke tab "kelola" kalau user tidak punya izin "tambah"
+  useEffect(() => {
+    if (!bisaKelolaStaf && activeTab === "tambah") {
+      setActiveTab("kelola");
+    }
+  }, [bisaKelolaStaf, activeTab]);
+
   // Fetch staff data on mount
   useEffect(() => {
     async function fetchStaff() {
       if (!session || !branchId) {
+        console.log("[StaffManagementPage] Missing session or branchId, skipping fetch");
         setStaff([]);
         setLoading(false);
         return;
       }
+      console.log("[StaffManagementPage] Fetching staff for branch:", branchId);
       const supabase = createClient();
       const { data, error } = await supabase
         .from("profiles")
@@ -58,9 +71,10 @@ export function StaffManagementPage({ session, branches, branchId }: Props) {
         .order("full_name");
 
       if (error) {
-        console.error("Failed to fetch staff:", error);
+        console.error("[StaffManagementPage] Failed to fetch staff:", error);
         setStaff([]);
       } else {
+        console.log("[StaffManagementPage] Staff fetched:", data?.length ?? 0, "records");
         const mapped = (data ?? []).map((p) => ({
           id: p.id,
           fullName: p.full_name ?? "Staf",
@@ -102,7 +116,7 @@ export function StaffManagementPage({ session, branches, branchId }: Props) {
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="kelola">Kelola Staf</TabsTrigger>
-            <TabsTrigger value="tambah">Tambah Staf</TabsTrigger>
+            {bisaKelolaStaf && <TabsTrigger value="tambah">Tambah Staf</TabsTrigger>}
           </TabsList>
 
           <TabsContent value="kelola">
@@ -113,9 +127,11 @@ export function StaffManagementPage({ session, branches, branchId }: Props) {
             />
           </TabsContent>
 
-          <TabsContent value="tambah">
-            <StaffCreateForm branches={branchOptions} />
-          </TabsContent>
+          {bisaKelolaStaf && (
+            <TabsContent value="tambah">
+              <StaffCreateForm branches={branchOptions} />
+            </TabsContent>
+          )}
         </Tabs>
       </main>
       <BottomNav role={session.role} />

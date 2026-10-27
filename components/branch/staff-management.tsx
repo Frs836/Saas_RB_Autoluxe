@@ -85,6 +85,7 @@ export function StaffManagement({
     setSibuk(profileId);
     setError(null);
     setSukses(null);
+    console.log("[StaffManagement] Saving changes:", { profileId, perubahan, keterangan });
     const supabase = createClient();
     const { error: rpcError } = await supabase.rpc("update_staff_profile", {
       p_profile_id: profileId,
@@ -92,9 +93,16 @@ export function StaffManagement({
     });
     setSibuk(null);
     if (rpcError) {
-      setError(`${keterangan} gagal: ${rpcError.message}`);
+      console.error("[StaffManagement] RPC error:", rpcError);
+      // Tangani error khusus "User not allowed" / hak akses
+      if (rpcError.message.includes("tidak bisa") || rpcError.message.includes("hanya bisa") || rpcError.message.includes("User not allowed") || rpcError.message.includes("hanya owner")) {
+        setError(`${keterangan} gagal: Anda tidak memiliki hak akses untuk melakukan perubahan ini.`);
+      } else {
+        setError(`${keterangan} gagal: ${rpcError.message}`);
+      }
       return;
     }
+    console.log("[StaffManagement] Save successful:", keterangan);
     setSukses(`${keterangan} tersimpan.`);
     router.refresh();
   }

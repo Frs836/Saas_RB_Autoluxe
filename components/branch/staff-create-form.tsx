@@ -4,14 +4,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { createStaffProfile } from "@/app/actions/staff";
-import { useToast } from "@/components/ui/toast";
+import { useToast } from "@/components/toast";
 import { Icon } from "@/components/ui/icon";
 
 type Branch = { id: string; name: string };
 
 export function StaffCreateForm({ branches }: { branches: { id: string; name: string }[] }) {
   const router = useRouter();
-  const { toast } = useToast();
+  const { sukses, gagal } = useToast();
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -69,7 +69,7 @@ export function StaffCreateForm({ branches }: { branches: { id: string; name: st
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      toast({ variant: "destructive", title: "Error", description: "Periksa kembali isian yang ditandai" });
+      gagal("Error", "Periksa kembali isian yang ditandai");
       return;
     }
 
@@ -78,7 +78,7 @@ export function StaffCreateForm({ branches }: { branches: { id: string; name: st
       const result = await createStaffProfile(formData);
       if (!result.ok) throw new Error(result.message);
 
-      toast({ variant: "success", title: "Sukses", description: "Staf berhasil ditambahkan" });
+      sukses("Sukses", "Staf berhasil ditambahkan");
       router.refresh();
       // Reset form
       setFormData({
@@ -93,7 +93,7 @@ export function StaffCreateForm({ branches }: { branches: { id: string; name: st
         isActive: true,
       });
     } catch (err) {
-      toast({ variant: "destructive", title: "Error", description: err instanceof Error ? err.message : "Gagal menambah staf" });
+      gagal("Error", err instanceof Error ? err.message : "Gagal menambah staf");
     } finally {
       setLoading(false);
     }

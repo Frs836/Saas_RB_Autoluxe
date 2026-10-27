@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createStaffProfile } from "@/app/actions/staff";
-import { useToast } from "@/components/ui/toast";
+import { useToast } from "@/components/toast";
 import { Icon } from "@/components/ui/icon";
 
 /**
@@ -27,7 +27,7 @@ export function AddStaffPanel({
   bisaBuatMaintainer: boolean;
 }) {
   const router = useRouter();
-  const { toast } = useToast();
+  const { sukses, gagal } = useToast();
 
   const [buka, setBuka] = useState(false);
   const [sibuk, setSibuk] = useState(false);
@@ -68,10 +68,10 @@ export function AddStaffPanel({
       });
       if (!hasil.ok) {
         setGalat(hasil.message);
-        toast({ variant: "destructive", title: "Error", description: hasil.message });
+        gagal("Error", hasil.message);
         return;
       }
-      toast({ variant: "success", title: "Sukses", description: "Staf berhasil ditambahkan" });
+      sukses("Sukses", "Staf berhasil ditambahkan");
       setNama("");
       setEmail("");
       setSandi("");
@@ -80,7 +80,7 @@ export function AddStaffPanel({
     } catch (e) {
       const pesan = e instanceof Error ? e.message : "Gagal membuat akun.";
       setGalat(pesan);
-      toast({ variant: "destructive", title: "Error", description: "Akun staf gagal dibuat. " + pesan });
+      gagal("Error", "Akun staf gagal dibuat. " + pesan);
     } finally {
       setSibuk(false);
     }

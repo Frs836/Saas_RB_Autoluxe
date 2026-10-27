@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createStaffAccount } from "@/app/actions/staff";
-import { useToast } from "@/components/toast";
+import { createStaffProfile } from "@/app/actions/staff";
+import { useToast } from "@/components/ui/toast";
 import { Icon } from "@/components/ui/icon";
 
 /**
@@ -27,7 +27,7 @@ export function AddStaffPanel({
   bisaBuatMaintainer: boolean;
 }) {
   const router = useRouter();
-  const toast = useToast();
+  const { toast } = useToast();
 
   const [buka, setBuka] = useState(false);
   const [sibuk, setSibuk] = useState(false);
@@ -58,20 +58,20 @@ export function AddStaffPanel({
     setGalat(null);
     setSibuk(true);
     try {
-      const hasil = await createStaffAccount({
+      const hasil = await createStaffProfile({
+        fullName: nama.trim(),
         email: email.trim(),
         password: sandi,
-        fullName: nama.trim(),
         role: peran,
         branchId: branchId as string,
         workSchedule: jadwal,
       });
       if (!hasil.ok) {
         setGalat(hasil.message);
-        toast.gagal("Akun staf gagal dibuat.", hasil.message);
+        toast({ variant: "destructive", title: "Error", description: hasil.message });
         return;
       }
-      toast.sukses(hasil.message);
+      toast({ variant: "success", title: "Sukses", description: "Staf berhasil ditambahkan" });
       setNama("");
       setEmail("");
       setSandi("");
@@ -80,7 +80,7 @@ export function AddStaffPanel({
     } catch (e) {
       const pesan = e instanceof Error ? e.message : "Gagal membuat akun.";
       setGalat(pesan);
-      toast.gagal("Akun staf gagal dibuat.", pesan);
+      toast({ variant: "destructive", title: "Error", description: "Akun staf gagal dibuat. " + pesan });
     } finally {
       setSibuk(false);
     }

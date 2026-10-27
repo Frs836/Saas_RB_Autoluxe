@@ -129,6 +129,7 @@ export function StaffCreateForm({ branches }: { branches: { id: string; name: st
           value={formData.email}
           onChange={e => setFormData({ ...formData, email: e.target.value })}
           required={true}
+          autoComplete="email"
           className={`w-full px-3 py-2 rounded-xl border ${errors.email ? "border-danger" : "border-border-subtle"} bg-surface text-text-primary focus:ring-2 focus:ring-brand-400`}
           placeholder="staf@rbautoluxe.com"
         />
@@ -148,6 +149,7 @@ export function StaffCreateForm({ branches }: { branches: { id: string; name: st
             onChange={e => setFormData({ ...formData, password: e.target.value })}
             minLength={8}
             required={true}
+            autoComplete="new-password"
             className={`w-full px-3 py-2 rounded-xl border ${errors.password ? "border-danger" : "border-border-subtle"} bg-surface text-text-primary focus:ring-2 focus:ring-brand-400 pr-12`}
             placeholder="Minimal 8 karakter"
           />
@@ -173,6 +175,7 @@ export function StaffCreateForm({ branches }: { branches: { id: string; name: st
           value={formData.phoneNumber}
           onChange={e => setFormData({ ...formData, phoneNumber: e.target.value })}
           placeholder="0812 3456 7890"
+          autoComplete="tel"
           className="w-full px-3 py-2 rounded-xl border border-border-subtle bg-surface text-text-primary focus:ring-2 focus:ring-brand-400"
         />
       </div>
@@ -187,6 +190,7 @@ export function StaffCreateForm({ branches }: { branches: { id: string; name: st
           onChange={e => setFormData({ ...formData, dateOfBirth: e.target.value })}
           max={new Date().toISOString().split("T")[0]}
           required={true}
+          autoComplete="bday"
           className={`w-full px-3 py-2 rounded-xl border ${errors.dateOfBirth ? "border-danger" : "border-border-subtle"} bg-surface text-text-primary focus:ring-2 focus:ring-brand-400`}
         />
         {errors.dateOfBirth && <p className="text-sm text-danger mt-1">{errors.dateOfBirth}</p>}

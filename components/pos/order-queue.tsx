@@ -310,6 +310,8 @@ const filtered = useMemo(
 
   // Buka modal pilih tim untuk claim order
   async function openTeamModal(order: QueueOrder) {
+    console.log("[openTeamModal] Called for order:", order.id);
+    setError("DEBUG: openTeamModal called for " + order.order_number);
     setClaimOrder(order);
     setSelectedStaff([]);
     setTeamModalLoading(true);

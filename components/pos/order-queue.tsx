@@ -311,6 +311,13 @@ const filtered = useMemo(
 // Buka modal pilih tim untuk claim order
   async function openTeamModal(order: QueueOrder) {
     console.log("[openTeamModal] Called for order:", order.id);
+    
+    // Guard: prevent double invocation
+    if (showTeamModal || teamModalLoading) {
+      console.log("[openTeamModal] Already open/loading, ignoring duplicate call");
+      return;
+    }
+    
     setError("DEBUG: openTeamModal called for " + order.order_number);
     setClaimOrder(order);
     setSelectedStaff([]);
@@ -360,8 +367,11 @@ const filtered = useMemo(
     } finally {
       console.log("[openTeamModal] finally block - calling setShowTeamModal(true)");
       setTeamModalLoading(false);
-      setShowTeamModal(true);
-}
+      // Use setTimeout to ensure state update is processed
+      setTimeout(() => {
+        setShowTeamModal(true);
+      }, 0);
+    }
   }
 
   function toggleStaff(id: string) {

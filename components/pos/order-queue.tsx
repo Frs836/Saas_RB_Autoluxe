@@ -340,9 +340,11 @@ const filtered = useMemo(
         busy: busyIds.has(s.id),
       }));
       setAvailableStaff(staff);
-    } catch {
+    } catch (err) {
+      console.error("[openTeamModal] Error:", err);
       setAvailableStaff([]);
     } finally {
+      console.log("[openTeamModal] finally block - calling setShowTeamModal(true)");
       setTeamModalLoading(false);
       setShowTeamModal(true);
     }

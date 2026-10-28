@@ -8,6 +8,7 @@ import { formatRupiah, formatTimeWib, formatDateWib } from "@/lib/format";
 import { PAYMENT_LABELS, whatsappLink } from "@/lib/pos";
 import { Icon } from "@/components/ui/icon";
 import { useSingleFlight } from "@/lib/use-single-flight";
+import { useToast } from "@/components/toast";
 
 export type TeamMember = { id: string; user_id: string; full_name: string; is_lead: boolean };
 
@@ -165,6 +166,8 @@ export function OrderQueue({
   const [search, setSearch] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const { sukses, gagal } = useToast();
 
   // Modal pilih tim untuk claim order
   const [showTeamModal, setShowTeamModal] = useState(false);
@@ -355,6 +358,11 @@ const filtered = useMemo(
     if (!claimOrder) return;
     if (!kirimSekali.mulai()) return;
 
+    if (selectedStaff.length === 0) {
+      setError("Pilih minimal satu rekan kerja sebelum memulai.");
+      return;
+    }
+
     setTeamModalLoading(true);
     setError(null);
     try {
@@ -365,11 +373,14 @@ const filtered = useMemo(
       });
       if (rpcError) throw new Error(rpcError.message);
 
+      sukses("Berhasil", "Order berhasil diklaim dan pengerjaan dimulai.");
       setShowTeamModal(false);
       setClaimOrder(null);
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal claim order, coba lagi.");
+      const msg = err instanceof Error ? err.message : "Gagal claim order, coba lagi.";
+      gagal("Gagal", msg);
+      setError(msg);
     } finally {
       kirimSekali.selesai();
       setTeamModalLoading(false);

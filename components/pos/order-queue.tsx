@@ -308,7 +308,7 @@ const filtered = useMemo(
     router.refresh();
   }
 
-  // Buka modal pilih tim untuk claim order
+// Buka modal pilih tim untuk claim order
   async function openTeamModal(order: QueueOrder) {
     console.log("[openTeamModal] Called for order:", order.id);
     setError("DEBUG: openTeamModal called for " + order.order_number);
@@ -316,21 +316,34 @@ const filtered = useMemo(
     setSelectedStaff([]);
     setTeamModalLoading(true);
     try {
+      console.log("[openTeamModal] Fetching staff data...");
       const supabase = createClient();
       // Ambil karyawan aktif cabang yang sama, exclude yang busy
-      const { data: staffData } = await supabase
+      const { data: staffData, error: staffError } = await supabase
         .from("profiles")
         .select("id, full_name")
         .eq("role", "karyawan")
         .eq("is_active", true)
         .eq("branch_id", order.branch_id ?? "");
 
+      if (staffError) {
+        console.error("[openTeamModal] Staff fetch error:", staffError);
+        throw staffError;
+      }
+
+      console.log("[openTeamModal] Staff data:", staffData);
+
       // Ambil yang busy di order lain in_progress/qc_review
-      const { data: busyData } = await supabase
+      const { data: busyData, error: busyError } = await supabase
         .from("order_team_members")
         .select("profile_id, orders!inner(status, branch_id)")
         .in("orders.status", ["in_progress", "qc_review"])
         .eq("orders.branch_id", order.branch_id ?? "");
+
+      if (busyError) {
+        console.error("[openTeamModal] Busy fetch error:", busyError);
+        throw busyError;
+      }
 
       const busyIds = new Set((busyData ?? []).map((r) => r.profile_id as string));
 
@@ -339,6 +352,7 @@ const filtered = useMemo(
         full_name: s.full_name,
         busy: busyIds.has(s.id),
       }));
+      console.log("[openTeamModal] Staff processed:", staff);
       setAvailableStaff(staff);
     } catch (err) {
       console.error("[openTeamModal] Error:", err);
@@ -347,7 +361,7 @@ const filtered = useMemo(
       console.log("[openTeamModal] finally block - calling setShowTeamModal(true)");
       setTeamModalLoading(false);
       setShowTeamModal(true);
-    }
+}
   }
 
   function toggleStaff(id: string) {

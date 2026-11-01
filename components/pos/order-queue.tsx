@@ -369,6 +369,7 @@ const filtered = useMemo(
       setTeamModalLoading(false);
       // Use setTimeout to ensure state update is processed
       setTimeout(() => {
+        console.log("[openTeamModal] setTimeout callback - calling setShowTeamModal(true)");
         setShowTeamModal(true);
       }, 0);
     }

@@ -721,13 +721,13 @@ export function PosConsole({
               })}
             </div>
 
-            {/* Bayar Nanti tersedia untuk semua role */}
+            {/* Status Pembayaran — tersedia untuk semua role (karyawan, admin_kasir, maintainer, owner) */}
             <>
               <div className="h-px bg-outline-variant" />
               <p className="font-caption text-caption text-text-muted">
                 {isEmployee
                   ? <>Uang pelanggan yang Anda terima dicatat sebagai{" "}<b className="text-text-primary">kas titipan</b> atas nama Anda dan hanya divalidasi oleh Admin Kasir saat shift dibuka.</>
-                  : <>Pilih status pembayaran. Order <b className="text-text-primary">Bayar Nanti</b> tetap tercatat dan bisa diselesaikan via menu Kas.</>
+                  : <>Pilih status pembayaran. Order <b className="text-text-primary">Bayar Nanti</b> tetap tercatat dan bisa diselesaikan via menu <b>Kas</b>.</>
                 }
               </p>
               <div className="grid grid-cols-2 gap-2">

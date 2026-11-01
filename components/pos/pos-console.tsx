@@ -440,6 +440,14 @@ export function PosConsole({
                   atas nama Anda. Serahkan ke Admin Kasir saat shift dibuka.
                 </span>
               </div>
+            ) : result.paymentState === "unpaid" ? (
+              <div className="mt-3 p-3 rounded-xl bg-warning-surface text-warning-text font-caption text-caption flex items-start gap-2">
+                <Icon name="hourglass_empty" className="text-[18px] shrink-0" />
+                <span>
+                  Tagihan belum lunas. Selesaikan pembayaran via menu{" "}
+                  <b>Kas &rsaquo; Bayar Nanti</b>.
+                </span>
+              </div>
             ) : null}
             {result.startedImmediately ? (
               <div className="mt-2 p-3 rounded-xl bg-success-surface text-success-text font-caption text-caption flex items-start gap-2">
@@ -713,68 +721,80 @@ export function PosConsole({
               })}
             </div>
 
-            {isEmployee ? (
-              <>
-                <div className="h-px bg-outline-variant" />
-                <p className="font-caption text-caption text-text-muted">
-                  Uang pelanggan yang Anda terima dicatat sebagai{" "}
-                  <b className="text-text-primary">kas titipan</b> atas nama
-                  Anda dan hanya divalidasi oleh Admin Kasir saat shift dibuka.
+            {/* Bayar Nanti tersedia untuk semua role */}
+            <>
+              <div className="h-px bg-outline-variant" />
+              <p className="font-caption text-caption text-text-muted">
+                {isEmployee
+                  ? <>Uang pelanggan yang Anda terima dicatat sebagai{" "}<b className="text-text-primary">kas titipan</b> atas nama Anda dan hanya divalidasi oleh Admin Kasir saat shift dibuka.</>
+                  : <>Pilih status pembayaran. Order <b className="text-text-primary">Bayar Nanti</b> tetap tercatat dan bisa diselesaikan via menu Kas.</>
+                }
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPaymentState("unpaid")}
+                  aria-pressed={paymentState === "unpaid"}
+                  className={`px-3 py-3 rounded-xl flex flex-col items-center gap-1 active:scale-95 transition-transform ${
+                    paymentState === "unpaid"
+                      ? "bg-warning-surface text-warning-text"
+                      : "bg-surface-container-low text-text-secondary"
+                  }`}
+                >
+                  <Icon name="schedule" className="text-[20px]" />
+                  <span className="font-caption text-caption">Bayar Nanti</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPaymentState("paid")}
+                  aria-pressed={paymentState === "paid"}
+                  className={`px-3 py-3 rounded-xl flex flex-col items-center gap-1 active:scale-95 transition-transform ${
+                    paymentState === "paid"
+                      ? "bg-primary text-white"
+                      : "bg-surface-container-low text-text-secondary"
+                  }`}
+                >
+                  <Icon name="paid" className="text-[20px]" />
+                  <span className="font-caption text-caption">
+                    Bayar Sekarang
+                  </span>
+                </button>
+              </div>
+              <div className="flex items-start gap-2 p-3 rounded-xl bg-surface-container-low">
+                <Icon name={effectivePaymentState === "paid"
+                    ? "savings"
+                    : "hourglass_empty"} className="text-[18px] text-brand-600 mt-0.5" />
+                <p className="font-caption text-caption text-text-secondary">
+                  {effectivePaymentState === "paid" ? (
+                    <>
+                      {isEmployee ? (
+                        <>
+                          Anda memegang{" "}
+                          <b className="text-text-primary">
+                            {formatRupiah(total)} {PAYMENT_LABELS[paymentMethod]}
+                          </b>{" "}
+                          milik pelanggan.
+                        </>
+                      ) : (
+                        <>
+                          Pembayaran{" "}
+                          <b className="text-text-primary">
+                            {formatRupiah(total)} {PAYMENT_LABELS[paymentMethod]}
+                          </b>{" "}
+                          langsung masuk kas cabang.
+                        </>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      Belum ada uang masuk. Tagihan Rp
+                      {formatRupiah(total)} tetap tercatat dan menjadi
+                      tanggung jawab kasir saat serah terima shift.
+                    </>
+                  )}
                 </p>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setPaymentState("unpaid")}
-                    aria-pressed={paymentState === "unpaid"}
-                    className={`px-3 py-3 rounded-xl flex flex-col items-center gap-1 active:scale-95 transition-transform ${
-                      paymentState === "unpaid"
-                        ? "bg-warning-surface text-warning-text"
-                        : "bg-surface-container-low text-text-secondary"
-                    }`}
-                  >
-                    <Icon name="schedule" className="text-[20px]" />
-                    <span className="font-caption text-caption">Bayar Nanti</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPaymentState("paid")}
-                    aria-pressed={paymentState === "paid"}
-                    className={`px-3 py-3 rounded-xl flex flex-col items-center gap-1 active:scale-95 transition-transform ${
-                      paymentState === "paid"
-                        ? "bg-primary text-white"
-                        : "bg-surface-container-low text-text-secondary"
-                    }`}
-                  >
-                    <Icon name="paid" className="text-[20px]" />
-                    <span className="font-caption text-caption">
-                      Bayar Sekarang
-                    </span>
-                  </button>
-                </div>
-                <div className="flex items-start gap-2 p-3 rounded-xl bg-surface-container-low">
-                  <Icon name={effectivePaymentState === "paid"
-                      ? "savings"
-                      : "hourglass_empty"} className="text-[18px] text-brand-600 mt-0.5" />
-                  <p className="font-caption text-caption text-text-secondary">
-                    {effectivePaymentState === "paid" ? (
-                      <>
-                        Anda memegang{" "}
-                        <b className="text-text-primary">
-                          {formatRupiah(total)} {PAYMENT_LABELS[paymentMethod]}
-                        </b>{" "}
-                        milik pelanggan.
-                      </>
-                    ) : (
-                      <>
-                        Belum ada uang masuk. Tagihan Rp
-                        {formatRupiah(total)} tetap tercatat dan menjadi
-                        tanggung jawab kasir saat serah terima shift.
-                      </>
-                    )}
-                  </p>
-                </div>
-              </>
-            ) : null}
+              </div>
+            </>
 
             <div className="h-px bg-outline-variant" />
             <button

@@ -266,3 +266,77 @@ export function buildThermalReceipt(receipt: ThermalReceipt): string {
 
   return out.join(`${String.fromCharCode(LF)}`);
 }
+
+// ---------------------------------------------------------------------------
+// Struk pembayaran order
+// ---------------------------------------------------------------------------
+
+export type PaymentReceiptData = {
+  workshopName: string;
+  orderNumber: string;
+  customerName: string;
+  licensePlate: string;
+  vehicleModel: string | null;
+  servicePackage: string | null;
+  totalPrice: number;
+  paidAmount: number; // cumulative amount paid so far after this payment
+  paymentAmount: number; // amount paid in this transaction
+  paymentMethod: string;
+  paymentType: 'dp' | 'pelunasan' | 'full';
+  sisaPembayaran: number; // totalPrice - paidAmount
+  recordedAt: string; // ISO timestamp
+  note: string | null;
+  cashierName: string | null;
+};
+
+export function buildPaymentReceiptText(data: PaymentReceiptData): string {
+  const COL = PAPER_COLUMNS;
+  function line(text: string) { return text.substring(0, COL).padEnd(COL) + '\n'; }
+  function divider() { return '-'.repeat(COL) + '\n'; }
+  function center(text: string) {
+    const pad = Math.max(0, Math.floor((COL - text.length) / 2));
+    return ' '.repeat(pad) + text.substring(0, COL) + '\n';
+  }
+  function row(label: string, value: string) {
+    const maxLabel = COL - value.length - 1;
+    return label.substring(0, maxLabel).padEnd(maxLabel) + ' ' + value + '\n';
+  }
+  function fRp(amount: number) {
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
+  }
+  function fDate(iso: string) {
+    return new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Jakarta' }).format(new Date(iso));
+  }
+  const payTypeLabel = data.paymentType === 'dp' ? 'DP / Uang Muka' : data.paymentType === 'pelunasan' ? 'Pelunasan' : 'Lunas';
+  const methodLabel = data.paymentMethod === 'cash' ? 'Tunai' : data.paymentMethod === 'qris' ? 'QRIS' : 'Transfer Bank';
+
+  let out = '';
+  out += center(data.workshopName);
+  out += center('NOTA PEMBAYARAN');
+  out += divider();
+  out += row('No. Order', data.orderNumber);
+  out += row('Pelanggan', data.customerName.substring(0, 16));
+  out += row('Kendaraan', data.licensePlate);
+  if (data.vehicleModel) out += row('Model', data.vehicleModel.substring(0, 16));
+  if (data.servicePackage) out += row('Paket', data.servicePackage.substring(0, 16));
+  out += divider();
+  out += row('Tipe Bayar', payTypeLabel);
+  out += row('Metode', methodLabel);
+  out += row('Dibayarkan', fRp(data.paymentAmount));
+  out += row('Total Tagihan', fRp(data.totalPrice));
+  out += row('Total Dibayar', fRp(data.paidAmount));
+  if (data.sisaPembayaran > 0) {
+    out += row('Sisa Tagihan', fRp(data.sisaPembayaran));
+  } else {
+    out += row('Status', 'LUNAS');
+  }
+  out += divider();
+  out += row('Waktu', fDate(data.recordedAt));
+  if (data.cashierName) out += row('Kasir', data.cashierName.substring(0, 16));
+  if (data.note) out += line('Ket: ' + data.note.substring(0, COL - 5));
+  out += divider();
+  out += center('Terima kasih');
+  out += center('atas kepercayaan Anda');
+  out += '\n\n\n';
+  return out;
+}

@@ -33,9 +33,20 @@ type UnpaidOrder = {
   vehicleModel: string;
   customerName: string;
   totalPrice: number;
+  paidAmount: number;
   cashHoldAmount: number;
   cashHoldPaymentMethod: string;
   createdAt: string;
+};
+
+type OrderPayment = {
+  id: string;
+  orderId: string;
+  amount: number;
+  paymentMethod: string;
+  paymentType: string;
+  createdAt: string;
+  note: string | null;
 };
 
 type FormState = {
@@ -68,12 +79,14 @@ export function KasConsole({
   canManage,
   branchName,
   unpaidOrders,
+  orderPayments = [],
 }: {
   pettyCash: PettyCashRow[];
   handoff: Handoff | null;
   canManage: boolean;
   branchName: string;
   unpaidOrders?: UnpaidOrder[];
+  orderPayments?: OrderPayment[];
 }) {
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -94,6 +107,14 @@ export function KasConsole({
   const [cameraOpen, setCameraOpen] = useState(false);
   const [proofPath, setProofPath] = useState<string | null>(null);
 
+  // Payment modal state
+  const [paymentModal, setPaymentModal] = useState<UnpaidOrder | null>(null);
+  const [payAmount, setPayAmount] = useState('');
+  const [payMethod, setPayMethod] = useState<'cash' | 'qris' | 'bank_transfer'>('cash');
+  const [payType, setPayType] = useState<'dp' | 'pelunasan' | 'full'>('full');
+  const [payLoading, setPayLoading] = useState(false);
+  const [payError, setPayError] = useState<string | null>(null);
+
   const totalOut = useMemo(
     () => pettyCash.reduce((sum, row) => sum + Number(row.amount || 0), 0),
     [pettyCash],
@@ -102,6 +123,20 @@ export function KasConsole({
   const needsProof = form.type === "out";
   const disabled = !canManage || loading;
   const handoffId = handoff?.id ?? null;
+
+  // Auto-suggest payType when payAmount changes
+  useEffect(() => {
+    if (!paymentModal) return;
+    const amount = parseFloat(payAmount.replace(/[^0-9.]/g, ''));
+    if (!amount || amount <= 0) return;
+    if (amount >= paymentModal.totalPrice) {
+      setPayType('full');
+    } else if (paymentModal.paidAmount > 0) {
+      setPayType('pelunasan');
+    } else {
+      setPayType('dp');
+    }
+  }, [payAmount, paymentModal]);
 
   useEffect(() => {
     return () => {
@@ -225,6 +260,29 @@ export function KasConsole({
     [form, handoffId, needsProof, proofPath, kirimSekali, router],
   );
 
+  async function handleRecordPayment() {
+    if (!paymentModal) return;
+    const amount = parseFloat(payAmount.replace(/[^0-9.]/g, ''));
+    if (!amount || amount <= 0) { setPayError('Jumlah tidak valid'); return; }
+    setPayLoading(true);
+    setPayError(null);
+    const supabase = createClient();
+    const { error } = await supabase.rpc('record_order_payment', {
+      p_order_id: paymentModal.id,
+      p_amount: amount,
+      p_payment_method: payMethod,
+      p_payment_type: payType,
+      p_note: null,
+    });
+    setPayLoading(false);
+    if (error) { setPayError(error.message); return; }
+    setPaymentModal(null);
+    setPayAmount('');
+    router.refresh();
+  }
+
+  const unpaidCount = unpaidOrders?.length ?? 0;
+
   return (
     <div className="min-h-screen bg-canvas">
       <div className="pb-nav px-gutter pt-4 space-y-space-lg">
@@ -252,10 +310,10 @@ export function KasConsole({
             }`}
           >
             <Icon name="schedule" className="text-[16px] mx-auto" />
-            Bayar Nanti
-            {unpaidOrders && unpaidOrders.length > 0 && (
+            Bayar Nanti ({unpaidCount})
+            {unpaidCount > 0 && (
               <span className="ml-1.5 px-1.5 py-0.5 text-[10px] rounded-full bg-brand-500 text-white">
-                {unpaidOrders.length}
+                {unpaidCount}
               </span>
             )}
           </button>
@@ -475,8 +533,16 @@ export function KasConsole({
         {activeTab === "bayar_nanti" && (
           <BayarNantiTab
             unpaidOrders={unpaidOrders ?? []}
+            orderPayments={orderPayments}
             canManage={canManage}
             branchName={branchName}
+            onOpenPaymentModal={(order) => {
+              setPaymentModal(order);
+              setPayAmount('');
+              setPayMethod('cash');
+              setPayType('full');
+              setPayError(null);
+            }}
           />
         )}
       </div>
@@ -509,69 +575,202 @@ export function KasConsole({
           </div>
         </div>
       ) : null}
+
+      {/* Payment Modal */}
+      {paymentModal ? (
+        <>
+          <div
+            className="fixed inset-0 z-[60] bg-black/50"
+            onClick={() => setPaymentModal(null)}
+          />
+          <div
+            className="fixed inset-x-0 bottom-0 z-[61] max-h-[92dvh] bg-surface rounded-t-2xl flex flex-col shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 pt-5 pb-3">
+              <h3 className="font-headline-2 text-headline-2 text-text-primary">Catat Pembayaran</h3>
+              <button
+                type="button"
+                onClick={() => setPaymentModal(null)}
+                className="w-10 h-10 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary active:scale-95"
+                aria-label="Tutup"
+              >
+                <Icon name="close" className="text-[22px]" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-5 pb-6 flex flex-col gap-4">
+              {/* Order summary */}
+              <div className="rounded-2xl bg-surface-container/60 p-4 flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-caption text-caption text-text-muted">No. Order</span>
+                  <span className="font-body-bold text-body-bold text-text-primary">{paymentModal.orderNumber}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-caption text-caption text-text-muted">Kendaraan</span>
+                  <span className="font-body-bold text-body-bold text-text-primary">
+                    {paymentModal.licensePlate} {paymentModal.vehicleModel}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-caption text-caption text-text-muted">Total</span>
+                  <span className="font-body-bold text-body-bold text-text-primary">{formatRupiah(paymentModal.totalPrice)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-caption text-caption text-text-muted">Sudah Dibayar</span>
+                  <span className="font-body-bold text-body-bold text-success-text">{formatRupiah(paymentModal.paidAmount)}</span>
+                </div>
+                <div className="flex items-center justify-between border-t border-border-subtle pt-2">
+                  <span className="font-caption text-caption text-warning-text">Sisa Pembayaran</span>
+                  <span className="font-body-bold text-body-bold text-warning-text">
+                    {formatRupiah(paymentModal.totalPrice - paymentModal.paidAmount)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Payment history for this order */}
+              {orderPayments.filter((p) => p.orderId === paymentModal.id).length > 0 ? (
+                <div className="flex flex-col gap-2">
+                  <p className="font-body-bold text-body-bold text-text-secondary">Riwayat Pembayaran</p>
+                  {orderPayments
+                    .filter((p) => p.orderId === paymentModal.id)
+                    .map((p) => (
+                      <div key={p.id} className="flex items-center justify-between rounded-xl bg-surface-container/60 px-3 py-2.5">
+                        <div>
+                          <p className="font-caption text-caption text-text-primary">
+                            {p.paymentType === 'dp' ? 'DP' : p.paymentType === 'pelunasan' ? 'Pelunasan' : 'Lunas'} &bull; {
+                              p.paymentMethod === 'cash' ? 'Tunai' : p.paymentMethod === 'qris' ? 'QRIS' : 'Transfer'
+                            }
+                          </p>
+                          <p className="font-caption text-caption text-text-muted">{formatTimeWib(p.createdAt)} WIB</p>
+                        </div>
+                        <span className="font-body-bold text-body-bold text-success-text">{formatRupiah(p.amount)}</span>
+                      </div>
+                    ))}
+                </div>
+              ) : null}
+
+              {/* Input fields */}
+              <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="font-caption text-caption text-text-secondary">Jumlah Bayar</label>
+                  <div className="relative flex items-center h-12 rounded-xl bg-surface shadow-[inset_0px_2px_4px_rgba(15,23,42,0.06)] px-3">
+                    <span className="font-body-bold text-headline-2 text-primary-container pr-2">Rp</span>
+                    <input
+                      value={payAmount}
+                      onChange={(e) => setPayAmount(e.target.value.replace(/[^0-9]/g, ''))}
+                      placeholder="0"
+                      inputMode="numeric"
+                      className="w-full h-full bg-transparent font-headline-2 text-headline-2 font-semibold text-text-primary focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="font-caption text-caption text-text-secondary">Metode Pembayaran</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {PAYMENT_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setPayMethod(opt.value as 'cash' | 'qris' | 'bank_transfer')}
+                        className={`h-11 rounded-xl font-caption text-caption transition-colors ${
+                          payMethod === opt.value
+                            ? "bg-primary text-white shadow-[0px_8px_16px_rgba(37,99,235,0.25)]"
+                            : "bg-surface-container-low text-text-secondary"
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="font-caption text-caption text-text-secondary">Tipe Pembayaran</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {([
+                      { value: 'dp', label: 'DP' },
+                      { value: 'pelunasan', label: 'Pelunasan' },
+                      { value: 'full', label: 'Lunas' },
+                    ] as const).map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setPayType(opt.value)}
+                        className={`h-11 rounded-xl font-caption text-caption transition-colors ${
+                          payType === opt.value
+                            ? "bg-primary text-white shadow-[0px_8px_16px_rgba(37,99,235,0.25)]"
+                            : "bg-surface-container-low text-text-secondary"
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {payError && (
+                <p className="font-caption text-caption text-danger-text">{payError}</p>
+              )}
+
+              <div className="flex gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setPaymentModal(null)}
+                  className="flex-1 py-3 rounded-xl bg-surface-container-low text-text-secondary font-body-bold text-body-bold active:scale-95"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  disabled={payLoading}
+                  onClick={handleRecordPayment}
+                  className="flex-1 py-3 rounded-xl primary-gradient text-white font-body-bold text-body-bold active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2"
+                >
+                  {payLoading ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Menyimpan...
+                    </>
+                  ) : (
+                    <>
+                      <Icon name="payments" className="text-[20px]" />
+                      Catat Pembayaran
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      ) : null}
     </div>
   );
 }
 
 function BayarNantiTab({
   unpaidOrders,
+  orderPayments,
   canManage,
   branchName,
+  onOpenPaymentModal,
 }: {
   unpaidOrders: UnpaidOrder[];
+  orderPayments: OrderPayment[];
   canManage: boolean;
   branchName: string;
+  onOpenPaymentModal: (order: UnpaidOrder) => void;
 }) {
-  const router = useRouter();
-  const [loading, setLoading] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-  const kirimSekali = useSingleFlight();
-
-  const onSettle = useCallback(
-    async (order: UnpaidOrder) => {
-      setError(null);
-      setSuccess(null);
-      setLoading(order.id);
-
-      if (!kirimSekali.mulai()) return;
-
-      try {
-        const supabase = createClient();
-        const { error: rpcError } = await supabase.rpc("settle_order_payment", {
-          p_order_id: order.id,
-          p_paid_amount: order.cashHoldAmount,
-          p_payment_method: order.cashHoldPaymentMethod as "cash" | "qris" | "bank_transfer",
-        });
-
-        if (rpcError) {
-          setError(rpcError.message);
-          return;
-        }
-
-        setSuccess(
-          `Order ${order.orderNumber} (${order.licensePlate}) lunas. Uang titipan ${formatRupiah(
-            order.cashHoldAmount
-          )} tercatat ke kas.`
-        );
-        router.refresh();
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Gagal menyelesaikan pembayaran.");
-      } finally {
-        kirimSekali.selesai();
-        setLoading(null);
-      }
-    },
-    [kirimSekali, router]
-  );
-
   if (unpaidOrders.length === 0) {
     return (
       <div className="py-12 text-center">
         <Icon name="check_circle" className="text-[48px] text-success-text mx-auto mb-3" />
         <p className="font-body-bold text-body-bold text-text-primary">Semua Order Lunas</p>
         <p className="font-caption text-caption text-text-secondary mt-1">
-          Tidak ada order "Bayar Nanti" yang perlu diselesaikan.
+          Tidak ada order &quot;Bayar Nanti&quot; yang perlu diselesaikan.
         </p>
       </div>
     );
@@ -583,56 +782,69 @@ function BayarNantiTab({
         <div className="flex items-center justify-between">
           <h2 className="font-headline-2 text-headline-2 text-text-primary">Order Bayar Nanti</h2>
           <span className="font-caption text-caption text-text-muted">
-            {unpaidOrders.length} order menunggu settlement
+            {unpaidOrders.length} order menunggu pembayaran
           </span>
         </div>
         <div className="flex flex-col gap-space-sm">
-          {unpaidOrders.map((order) => (
-            <div
-              key={order.id}
-              className="flex items-center justify-between gap-space-md p-4 bg-surface rounded-xl border border-border-subtle"
-            >
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-body-bold text-body-bold text-text-primary truncate">
-                    {order.orderNumber}
-                  </span>
-                  <span className="px-2 py-0.5 rounded-full bg-warning-surface text-warning-text font-micro-badge text-micro-badge">
-                    Bayar Nanti
-                  </span>
+          {unpaidOrders.map((order) => {
+            const isPartial = order.paidAmount > 0;
+            const sisa = order.totalPrice - order.paidAmount;
+            return (
+              <div
+                key={order.id}
+                className="flex flex-col gap-3 p-4 bg-surface rounded-xl border border-border-subtle"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-body-bold text-body-bold text-text-primary">
+                        {order.orderNumber}
+                      </span>
+                      {isPartial ? (
+                        <span className="px-2 py-0.5 rounded-full bg-warning-surface text-warning-text font-micro-badge text-micro-badge">
+                          Partial
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-full bg-danger-surface text-danger-text font-micro-badge text-micro-badge">
+                          Belum Bayar
+                        </span>
+                      )}
+                    </div>
+                    <p className="font-caption text-caption text-text-muted mt-1">
+                      {order.customerName} &bull; {order.licensePlate} &bull; {order.vehicleModel}
+                    </p>
+                  </div>
                 </div>
-                <p className="font-caption text-caption text-text-muted mt-1">
-                  {order.licensePlate} &bull; {order.vehicleModel} &bull; {order.customerName}
-                </p>
-                <p className="font-caption text-caption text-text-muted">
-                  Dibuat: {formatTimeWib(order.createdAt)} WIB
-                </p>
-              </div>
-              <div className="flex items-center gap-3 shrink-0">
-                <div className="text-right">
-                  <p className="font-body-bold text-body-bold text-text-primary">
-                    {formatRupiah(order.totalPrice)}
-                  </p>
-                  <p className="font-caption text-caption text-brand-600">
-                    Uang titipan: {formatRupiah(order.cashHoldAmount)}
-                  </p>
+
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="rounded-xl bg-surface-container/60 p-2.5">
+                    <p className="font-caption text-caption text-text-muted">Total</p>
+                    <p className="font-body-bold text-body-bold text-text-primary mt-0.5 text-sm">{formatRupiah(order.totalPrice)}</p>
+                  </div>
+                  <div className="rounded-xl bg-surface-container/60 p-2.5">
+                    <p className="font-caption text-caption text-text-muted">Dibayar</p>
+                    <p className="font-body-bold text-body-bold text-success-text mt-0.5 text-sm">{formatRupiah(order.paidAmount)}</p>
+                  </div>
+                  <div className="rounded-xl bg-warning-surface p-2.5">
+                    <p className="font-caption text-caption text-warning-text">Sisa</p>
+                    <p className="font-body-bold text-body-bold text-warning-text mt-0.5 text-sm">{formatRupiah(sisa)}</p>
+                  </div>
                 </div>
+
                 {canManage && (
                   <button
                     type="button"
-                    onClick={() => onSettle(order)}
-                    disabled={loading === order.id}
-                    className="h-10 px-4 rounded-lg primary-gradient text-white font-body-bold text-body-bold shadow-[0px_8px_16px_rgba(37,99,235,0.25)] disabled:opacity-60 active:scale-[0.98] transition-transform"
+                    onClick={() => onOpenPaymentModal(order)}
+                    className="w-full h-11 rounded-xl primary-gradient text-white font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
                   >
-                    {loading === order.id ? "Memproses..." : "Selesaikan Bayar"}
+                    <Icon name="payments" className="text-[18px]" />
+                    Catat Pembayaran
                   </button>
                 )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
-        {error && <p className="font-caption text-caption text-danger-text">{error}</p>}
-        {success && <p className="font-caption text-caption text-success-text">{success}</p>}
       </section>
     </div>
   );

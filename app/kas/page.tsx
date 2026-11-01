@@ -32,18 +32,28 @@ export default async function KasPage() {
     .order("created_at", { ascending: false })
     .limit(50);
 
-  // Fetch unpaid orders (Bayar Nanti) - orders with payment_state = 'unpaid'
+  // Fetch unpaid and partial orders (Bayar Nanti) - orders with payment_state = 'unpaid' or 'partial'
   const { data: unpaidOrders } = await scopeBranchQuery(
     supabase
       .from("orders")
       .select(
-        "id, order_number, license_plate, vehicle_model, customer_name, total_price, cash_hold_amount, cash_hold_payment_method, created_at",
+        "id, order_number, license_plate, vehicle_model, customer_name, total_price, paid_amount, cash_hold_amount, cash_hold_payment_method, created_at",
       )
-      .eq("payment_state", "unpaid"),
+      .in("payment_state", ["unpaid", "partial"]),
     branchId,
     "orders",
   )
     .order("created_at", { ascending: false });
+
+  // Fetch payment history for unpaid/partial orders
+  const orderIds = (unpaidOrders ?? []).map((r) => r.id);
+  const { data: orderPayments } = orderIds.length > 0
+    ? await supabase
+        .from("order_payments")
+        .select("id, order_id, amount, payment_method, payment_type, created_at, note")
+        .in("order_id", orderIds)
+        .order("created_at", { ascending: false })
+    : { data: [] };
 
   // Handoff adalah satu catatan aktif per cabang, jadi tidak ada makna saat
   // manajer sedang melihat seluruh cabang sekaligus.
@@ -88,9 +98,19 @@ export default async function KasPage() {
             vehicleModel: row.vehicle_model,
             customerName: row.customer_name ?? "",
             totalPrice: Number(row.total_price),
+            paidAmount: Number(row.paid_amount ?? 0),
             cashHoldAmount: Number(row.cash_hold_amount),
             cashHoldPaymentMethod: row.cash_hold_payment_method ?? "",
             createdAt: row.created_at,
+          }))}
+          orderPayments={(orderPayments ?? []).map((row) => ({
+            id: row.id,
+            orderId: row.order_id,
+            amount: Number(row.amount),
+            paymentMethod: row.payment_method,
+            paymentType: row.payment_type,
+            createdAt: row.created_at,
+            note: row.note ?? null,
           }))}
           handoff={
             handoff

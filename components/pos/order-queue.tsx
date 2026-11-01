@@ -39,13 +39,14 @@ export type QueueOrder = {
 };
 
 const STATUS_META: Record<string, { label: string; cls: string; icon: string }> = {
-  queued:          { label: "Antrean",          cls: "bg-warning-surface text-warning-text",              icon: "hourglass_top"  },
-  in_progress:     { label: "Dikerjakan",        cls: "bg-brand-50 text-brand-700",                        icon: "build"          },
-  qc_review:       { label: "QC Review",         cls: "bg-surface-container-high text-text-secondary",     icon: "fact_check"     },
-  completed:       { label: "Selesai",           cls: "bg-success-surface text-success-text",              icon: "task_alt"       },
-  menunggu_diambil:{ label: "Siap Diambil",      cls: "bg-success-surface text-success-text",              icon: "local_shipping" },
-  diserahkan:      { label: "Sudah Diserahkan",  cls: "bg-success-surface text-success-text",              icon: "verified"       },
-  cancelled:       { label: "Dibatalkan",        cls: "bg-danger-surface text-danger-text",                icon: "cancel"         },
+  queued:               { label: "Antrean",            cls: "bg-warning-surface text-warning-text",              icon: "hourglass_top"  },
+  in_progress:          { label: "Dikerjakan",          cls: "bg-brand-50 text-brand-700",                        icon: "build"          },
+  qc_review:            { label: "QC Review",           cls: "bg-surface-container-high text-text-secondary",     icon: "fact_check"     },
+  completed:            { label: "Selesai",             cls: "bg-success-surface text-success-text",              icon: "task_alt"       },
+  menunggu_pembayaran:  { label: "Menunggu Pembayaran", cls: "bg-warning-surface text-warning-text",              icon: "payments"       },
+  menunggu_diambil:     { label: "Siap Diambil",        cls: "bg-success-surface text-success-text",              icon: "local_shipping" },
+  diserahkan:           { label: "Sudah Diserahkan",    cls: "bg-success-surface text-success-text",              icon: "verified"       },
+  cancelled:            { label: "Dibatalkan",          cls: "bg-danger-surface text-danger-text",                icon: "cancel"         },
 };
 
 const TRANSITIONS: Record<string, { status: string; label: string; icon: string }[]> = {
@@ -73,7 +74,7 @@ const STATUS_SELESAI = new Set(["completed", "menunggu_diambil", "diserahkan"]);
 
 const STATUS_PRIORITY: Record<string, number> = {
   queued: 1, in_progress: 2, qc_review: 3,
-  completed: 4, menunggu_diambil: 5, diserahkan: 6, cancelled: 99,
+  completed: 4, menunggu_pembayaran: 5, menunggu_diambil: 6, diserahkan: 7, cancelled: 99,
 };
 
 function initials(name: string | null) {
@@ -161,11 +162,11 @@ export function OrderQueue({
     const { error: rpcErr } = STATUS_SERAH_TERIMA.has(status)
       ? await supabase.rpc("advance_handover", {
           p_order_id: order.id,
-          p_next: status as "queued" | "in_progress" | "qc_review" | "completed" | "cancelled" | "menunggu_diambil" | "diserahkan",
+          p_next: status as "queued" | "in_progress" | "qc_review" | "completed" | "cancelled" | "menunggu_pembayaran" | "menunggu_diambil" | "diserahkan",
         })
       : await supabase.rpc("apply_order_status", {
           p_order_id: order.id,
-          p_status: status as "queued" | "in_progress" | "qc_review" | "completed" | "cancelled" | "menunggu_diambil" | "diserahkan",
+          p_status: status as "queued" | "in_progress" | "qc_review" | "completed" | "cancelled" | "menunggu_pembayaran" | "menunggu_diambil" | "diserahkan",
         });
     setBusyId(null);
     if (rpcErr) { setError(rpcErr.message); return; }

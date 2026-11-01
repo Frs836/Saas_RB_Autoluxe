@@ -12,6 +12,8 @@ type TrackingOrder = {
   vehicle_model: string | null;
   service_package: string | null;
   total_price: number | string | null;
+  paid_amount: number | string | null;
+  payment_state: string | null;
   created_at: string | null;
   updated_at: string | null;
   completed_at: string | null;
@@ -90,6 +92,12 @@ const STEPS: { key: string; label: string; icon: string; note?: string }[] = [
     label: "Pengerjaan Selesai",
     icon: "task_alt",
     note: "Pekerjaan utama selesai dan sudah lolos pemeriksaan",
+  },
+  {
+    key: "menunggu_pembayaran",
+    label: "Menunggu Pembayaran",
+    icon: "payments",
+    note: "Harap selesaikan pembayaran untuk melanjutkan proses serah terima",
   },
   {
     key: "menunggu_diambil",
@@ -187,6 +195,11 @@ export default async function TrackPage({
       : STATUS_UNKNOWN;
 
   const siapDiambil = order.status === "menunggu_diambil";
+  const menungguPembayaran = order.status === "menunggu_pembayaran";
+  const showPaymentInfo = order.payment_state === "unpaid" || order.payment_state === "partial";
+  const sisaPembayaran = order.total_price && order.paid_amount
+    ? Number(order.total_price) - Number(order.paid_amount)
+    : order.total_price ? Number(order.total_price) : null;
 
   return (
     <div className="min-h-screen bg-surface pb-16">
@@ -227,7 +240,9 @@ export default async function TrackPage({
                     ? "bg-success-surface text-success-text"
                     : siapDiambil
                       ? "bg-success-surface text-success-text"
-                      : "bg-brand-50 text-brand-600"
+                      : menungguPembayaran
+                        ? "bg-warning-surface text-warning-text"
+                        : "bg-brand-50 text-brand-600"
               }`}
             >
               <Icon
@@ -238,7 +253,9 @@ export default async function TrackPage({
                       ? "verified"
                       : siapDiambil
                         ? "local_shipping"
-                        : "pending"
+                        : menungguPembayaran
+                          ? "payments"
+                          : "pending"
                 }
                 className="text-[16px]"
               />
@@ -316,6 +333,18 @@ export default async function TrackPage({
             </div>
           ) : null}
 
+          {menungguPembayaran ? (
+            <div className="mt-4 flex items-start gap-2.5 p-3.5 rounded-xl bg-warning-surface text-warning-text">
+              <Icon name="payments" className="text-[20px] shrink-0 mt-0.5" />
+              <div>
+                <p className="font-body-bold text-body-bold">Menunggu Pembayaran</p>
+                <p className="font-caption text-caption leading-relaxed mt-0.5">
+                  Harap selesaikan pembayaran untuk melanjutkan proses serah terima.
+                </p>
+              </div>
+            </div>
+          ) : null}
+
           {selesaiDiserahkan ? (
             <div className="mt-4 flex items-start gap-2.5 p-3.5 rounded-xl bg-success-surface text-success-text">
               <Icon name="verified" className="text-[20px] shrink-0 mt-0.5" />
@@ -333,6 +362,34 @@ export default async function TrackPage({
             </div>
           ) : null}
         </section>
+
+        {showPaymentInfo ? (
+          <section className="bg-surface rounded-[20px] p-5 clay-card border border-white/80">
+            <div className="flex items-center gap-2 mb-4">
+              <Icon name="payments" className="text-brand-600 text-[20px]" />
+              <span className="font-headline-2 text-headline-2 text-text-primary">Informasi Pembayaran</span>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-2xl bg-surface-container/60 p-3">
+                <p className="font-caption text-caption text-text-muted">Total Biaya</p>
+                <p className="font-body-bold text-body-bold text-text-primary mt-0.5">{formatRupiah(order.total_price)}</p>
+              </div>
+              <div className="rounded-2xl bg-surface-container/60 p-3">
+                <p className="font-caption text-caption text-text-muted">Sudah Dibayar</p>
+                <p className="font-body-bold text-body-bold text-success-text mt-0.5">{formatRupiah(order.paid_amount ?? 0)}</p>
+              </div>
+              {sisaPembayaran !== null ? (
+                <div className="col-span-2 rounded-2xl bg-warning-surface p-3">
+                  <p className="font-caption text-caption text-warning-text">Sisa Pembayaran</p>
+                  <p className="font-body-bold text-body-bold text-warning-text mt-0.5">{formatRupiah(sisaPembayaran)}</p>
+                </div>
+              ) : null}
+            </div>
+            <p className="font-caption text-caption text-text-muted mt-3 leading-relaxed">
+              Silakan datang ke workshop atau hubungi kami untuk menyelesaikan pembayaran.
+            </p>
+          </section>
+        ) : null}
 
         <section className="bg-surface rounded-[20px] p-5 clay-card border border-white/80">
           <div className="flex items-center gap-2 mb-4">

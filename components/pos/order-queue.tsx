@@ -723,7 +723,7 @@ const filtered = useMemo(
   );
 
   // Modal Pilih Tim untuk Claim Order
-  if (showTeamModal) {
+  if (showTeamModal && claimOrder) {
     const order = claimOrder as any;
     const maxTeam = order.vehicle_size?.startsWith("Motor") ? 3 : 4;
     const canSelectMore = selectedStaff.length < maxTeam - 1; // -1 karena caller otomatis jadi lead

@@ -76,9 +76,7 @@ export function StaffCreateForm({ branches }: { branches: { id: string; name: st
 
     setLoading(true);
     try {
-      console.log("[StaffCreateForm] Submitting form:", { ...formData, password: "***" });
       const result = await createStaffProfile(formData);
-      console.log("[StaffCreateForm] Result:", result);
       if (!result.ok) throw new Error(result.message);
 
       sukses("Sukses", "Staf berhasil ditambahkan");
@@ -96,7 +94,6 @@ export function StaffCreateForm({ branches }: { branches: { id: string; name: st
         isActive: true,
       });
     } catch (err) {
-      console.error("[StaffCreateForm] Error:", err);
       const message = err instanceof Error ? err.message : "Gagal menambah staf";
       // Tangani error hak akses khusus
       if (message.includes("hak akses") || message.includes("hanya bisa") || message.includes("User not allowed") || message.includes("tidak memiliki izin")) {

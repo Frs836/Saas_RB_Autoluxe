@@ -55,12 +55,10 @@ export function StaffManagementPage({ session, branches, branchId }: Props) {
   useEffect(() => {
     async function fetchStaff() {
       if (!session || !branchId) {
-        console.log("[StaffManagementPage] Missing session or branchId, skipping fetch");
         setStaff([]);
         setLoading(false);
         return;
       }
-      console.log("[StaffManagementPage] Fetching staff for branch:", branchId);
       const supabase = createClient();
       const { data, error } = await supabase
         .from("profiles")
@@ -70,10 +68,8 @@ export function StaffManagementPage({ session, branches, branchId }: Props) {
         .order("full_name");
 
       if (error) {
-        console.error("[StaffManagementPage] Failed to fetch staff:", error);
         setStaff([]);
       } else {
-        console.log("[StaffManagementPage] Staff fetched:", data?.length ?? 0, "records");
         const mapped = (data ?? []).map((p) => ({
           id: p.id,
           fullName: p.full_name ?? "Staf",

@@ -19,7 +19,9 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
   },
   icons: {
-    icon: "/rb-logo-new.png",
+    icon: [
+      { url: "/rb-logo-new.png", type: "image/png" },
+    ],
     apple: "/rb-logo-new.png",
   },
 };

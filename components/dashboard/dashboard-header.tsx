@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { initials } from "@/lib/format";
 import { NotificationBell } from "@/components/dashboard/notification-bell";
 import { BranchSwitcher } from "@/components/branch/branch-switcher";
@@ -28,14 +29,14 @@ export function DashboardHeader({
     <header className="sticky top-0 z-40 bg-surface/90 backdrop-blur-md shadow-[0_2px_4px_rgba(15,23,42,0.03)] px-gutter py-3">
       <div className="flex items-center justify-between gap-space-sm">
         <div className="flex items-center gap-space-sm min-w-0">
-          <div className="w-8 h-8 rounded-lg bg-surface-container-low flex items-center justify-center shrink-0 p-1 shadow-[inset_0px_2px_4px_rgba(255,255,255,0.95)]">
-            <svg className="w-full h-full text-brand-600" fill="none" viewBox="0 0 40 40">
-              <path
-                d="M6 28L14 12H26L21 21H31L19 32L21 25H11L6 28Z"
-                fill="currentColor"
-              />
-            </svg>
-          </div>
+          <Image
+            src="/rb-logo-new.png"
+            alt="RB AUTOLUXE"
+            width={32}
+            height={32}
+            className="w-8 h-8 rounded-lg object-contain shrink-0"
+            priority
+          />
           <div className="flex flex-col min-w-0">
             <span className="font-headline-2 text-headline-2 text-text-primary tracking-tight truncate leading-tight">
               RB AUTOLUXE

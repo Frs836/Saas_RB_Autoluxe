@@ -24,16 +24,14 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
         </div>
 
         <div className="flex flex-col items-center text-center">
-          <div className="relative flex items-center justify-center p-3 mb-3 bg-surface rounded-2xl shadow-sm">
-            <Image
-              src="/rb-logo-new.png"
-              alt="RB AUTOLUXE Logo"
-              width={44}
-              height={44}
-              className="h-11 w-11 object-contain"
-              priority
-            />
-          </div>
+          <Image
+            src="/rb-logo-new.png"
+            alt="RB AUTOLUXE"
+            width={96}
+            height={96}
+            className="w-24 h-24 object-contain mb-3"
+            priority
+          />
           <h1 className="font-headline-1 text-headline-1 text-text-primary tracking-tight">
             RB AUTOLUXE
           </h1>

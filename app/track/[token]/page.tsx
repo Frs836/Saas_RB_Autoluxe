@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
+import Image from "next/image";
 import { InspectionPhoto } from "@/components/track/inspection-photo";
 import { PublicWarrantyClaim } from "@/components/track/public-warranty-claim";
 import { Icon } from "@/components/ui/icon";
@@ -206,9 +207,13 @@ export default async function TrackPage({
       <header className="sticky top-0 z-20 bg-surface/95 backdrop-blur border-b border-white/70">
         <div className="px-gutter pt-safe">
           <div className="h-14 flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-2xl primary-gradient clay-glow flex items-center justify-center">
-              <Icon name="local_car_wash" className="text-on-primary text-[20px]" />
-            </div>
+            <Image
+              src="/rb-logo-new.png"
+              alt="RB AUTOLUXE"
+              width={36}
+              height={36}
+              className="w-9 h-9 rounded-2xl object-contain"
+            />
             <div className="flex flex-col leading-tight">
               <span className="font-headline-2 text-headline-2 text-text-primary">
                 RB Autoluxe

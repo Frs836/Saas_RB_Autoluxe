@@ -74,6 +74,7 @@ export const PERMISSIONS = [
   "reports.branch",
   "reports.executive",
   "reports.omset",
+  "reports.komisi",
 
   /* Garansi & komunikasi */
   "warranty.manage",
@@ -148,6 +149,7 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "reports.branch",
     "reports.executive",
     "reports.omset",
+    "reports.komisi",
     "warranty.manage",
     "whatsapp.draft",
     "staff.manage",
@@ -176,6 +178,7 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "reports.branch",
     "reports.executive",
     "reports.omset",
+    "reports.komisi",
     "warranty.manage",
     "whatsapp.draft",
     "staff.manage",
@@ -326,9 +329,10 @@ export type QuickAction = {
 // Urutan menentukan: quickActionsFor mengambil 4 izin pertama yang cocok, jadi
 // pintasan manajerial diletakkan lebih dulu.
 const QUICK_ACTIONS: readonly QuickAction[] = [
-  { icon: "payments", label: "Shift Kas", href: "/shift", permission: "cash.shift_manage" },
-  { icon: "insights", label: "Laporan", href: "/laporan", permission: "reports.branch" },
-  { icon: "groups", label: "Rekap Staf", href: "/rekap", permission: "attendance.audit" },
+  { icon: "payments", label: "Shift Kas",  href: "/shift",   permission: "cash.shift_manage"  },
+  { icon: "insights", label: "Laporan",   href: "/laporan", permission: "reports.branch"     },
+  { icon: "badge",    label: "Komisi",    href: "/komisi",  permission: "reports.komisi"     },
+  { icon: "groups",   label: "Rekap Staf",href: "/rekap",   permission: "attendance.audit"   },
   { icon: "add_task", label: "Order Baru", href: "/pos", permission: "pos.create", primary: true },
   { icon: "assignment", label: "Antrean", href: "/pos/orders", permission: "pos.create" },
   { icon: "inventory_2", label: "Stok Obat", href: "/stok", permission: "stock.claim" },
@@ -369,6 +373,8 @@ export const PROFILE_MENU: readonly ProfileMenuItem[] = [
   { label: "Kas Keluar", caption: "Petty cash operasional + foto nota", icon: "receipt_long", href: "/kas", permission: "cash.petty_manage", category: "keuangan" },
   { label: "Riwayat Invoice", caption: "Cari & cetak ulang nota pelanggan", icon: "print", href: "/invoice", permission: "reports.branch", category: "keuangan" },
   { label: "Laporan Cabang", caption: "Finansial, omzet, komisi & stok", icon: "insights", href: "/laporan", permission: "reports.branch", category: "keuangan" },
+  { label: "Laporan Komisi", caption: "Unit dikerjakan & revenue per karyawan", icon: "badge", href: "/komisi", permission: "reports.komisi", category: "keuangan" },
+  { label: "Omset", caption: "Ringkasan omset harian, mingguan, bulanan", icon: "trending_up", href: "/omset", permission: "reports.omset", category: "keuangan" },
   // Operasional
   { label: "POS & Order", caption: "Buat order, bayar nanti, kerjakan", icon: "add_task", href: "/pos", permission: "pos.create", category: "operasional" },
   { label: "Antrean Order", caption: "Status pengerjaan dan inspeksi", icon: "assignment", href: "/pos/orders", permission: null, category: "operasional" },

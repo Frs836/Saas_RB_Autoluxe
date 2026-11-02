@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, type ChangeEvent } from "react";
 import { createPosOrder } from "@/app/actions/pos";
+import { createClient } from "@/lib/supabase/client";
 import { formatRupiah } from "@/lib/format";
 import { ThermalPrintButton } from "@/components/pos/thermal-print-button";
 import type { ThermalReceipt } from "@/lib/thermal";
@@ -39,7 +40,7 @@ type TeamOption = { id: string; full_name: string; busy?: boolean };
  */
 type FieldProblem = { field: string; message: string };
 
-type PaymentState = "paid" | "unpaid";
+type PaymentState = "paid" | "unpaid" | "dp";
 
 type Props = {
   services: PosService[];
@@ -87,6 +88,7 @@ export function PosConsole({
   const [customerPhone, setCustomerPhone] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [paymentState, setPaymentState] = useState<PaymentState>("paid");
+  const [dpAmount, setDpAmount] = useState("");  // nominal DP jika paymentState = "dp"
   const [startWork, setStartWork] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState<string[]>([]);
 
@@ -121,8 +123,10 @@ export function PosConsole({
   const total = resolved.reduce((sum, line) => sum + line.price * line.qty, 0);
   const itemCount = resolved.reduce((sum, line) => sum + line.qty, 0);
 
-  // Karyawan & Admin Kasir boleh menahan pembayaran (Bayar Nanti)
-  const effectivePaymentState: PaymentState = paymentState;
+  // paymentState bisa: "paid" | "unpaid" | "dp"
+  // Untuk DP, order dibuat sebagai unpaid lalu langsung catat DP payment
+  const effectivePaymentState: PaymentState = paymentState === "dp" ? "unpaid" : paymentState;
+  const dpAmountNum = paymentState === "dp" ? Number(dpAmount.replace(/\D/g, "")) : 0;
 
   const availableServices = useMemo(
     () => services.filter((s) => isAvailableForSize(s, effSize)),
@@ -187,6 +191,7 @@ export function PosConsole({
     setCustomerPhone("");
     setPaymentMethod("cash");
     setPaymentState("paid");
+    setDpAmount("");
     setStartWork(false);
     setSelectedTeam([]);
     setResult(null);
@@ -234,6 +239,17 @@ export function PosConsole({
     }
     setFieldError(null);
     setError(null);
+    // Validasi DP: jumlah DP wajib diisi dan < total
+    if (paymentState === "dp") {
+      if (dpAmountNum <= 0) {
+        setError("Masukkan jumlah DP yang valid.");
+        return;
+      }
+      if (dpAmountNum >= total) {
+        setError("Jumlah DP tidak boleh melebihi atau sama dengan total. Gunakan 'Bayar Sekarang' jika sudah lunas.");
+        return;
+      }
+    }
     // Pengerjaan wajib punya orang yang mengerjakan. Server juga menolaknya,
     // tetapi pesan di sini muncul sebelum order dibuat sehingga kasir tidak
     // perlu menebak kenapa penyimpanan gagal.
@@ -303,8 +319,22 @@ export function PosConsole({
         throw new Error("Order tidak dapat dibuat.");
       }
 
+      // Jika mode DP, langsung catat DP payment setelah order terbuat
+      if (paymentState === "dp" && dpAmountNum > 0) {
+        const supabase = createClient();
+        const { error: dpErr } = await supabase.rpc("record_order_payment", {
+          p_order_id: order.id as string,
+          p_amount: dpAmountNum,
+          p_payment_method: paymentMethod as "cash" | "qris" | "bank_transfer",
+          p_payment_type: "dp",
+          p_note: `DP saat checkout`,
+        });
+        if (dpErr) throw new Error(`Order dibuat, tapi DP gagal dicatat: ${dpErr.message}`);
+      }
+
       const recordedState: PaymentState =
-        (order.payment_state as PaymentState | null) ?? effectivePaymentState;
+        paymentState === "dp" ? "unpaid"
+        : (order.payment_state as PaymentState | null) ?? effectivePaymentState;
 
       const receipt = buildReceiptText({
         orderNumber: order.order_number as string,
@@ -726,71 +756,93 @@ export function PosConsole({
               <div className="h-px bg-outline-variant" />
               <p className="font-caption text-caption text-text-muted">
                 {isEmployee
-                  ? <>Uang pelanggan yang Anda terima dicatat sebagai{" "}<b className="text-text-primary">kas titipan</b> atas nama Anda dan hanya divalidasi oleh Admin Kasir saat shift dibuka.</>
-                  : <>Pilih status pembayaran. Order <b className="text-text-primary">Bayar Nanti</b> tetap tercatat dan bisa diselesaikan via menu <b>Kas</b>.</>
+                  ? <>Uang yang diterima dicatat sebagai <b className="text-text-primary">kas titipan</b> atas nama Anda.</>
+                  : <>Pilih status pembayaran untuk order ini.</>
                 }
               </p>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setPaymentState("unpaid")}
-                  aria-pressed={paymentState === "unpaid"}
-                  className={`px-3 py-3 rounded-xl flex flex-col items-center gap-1 active:scale-95 transition-transform ${
-                    paymentState === "unpaid"
-                      ? "bg-warning-surface text-warning-text"
-                      : "bg-surface-container-low text-text-secondary"
-                  }`}
-                >
-                  <Icon name="schedule" className="text-[20px]" />
-                  <span className="font-caption text-caption">Bayar Nanti</span>
-                </button>
+              <div className="grid grid-cols-3 gap-2">
                 <button
                   type="button"
                   onClick={() => setPaymentState("paid")}
                   aria-pressed={paymentState === "paid"}
-                  className={`px-3 py-3 rounded-xl flex flex-col items-center gap-1 active:scale-95 transition-transform ${
+                  className={`px-2 py-3 rounded-xl flex flex-col items-center gap-1 active:scale-95 transition-transform ${
                     paymentState === "paid"
                       ? "bg-primary text-white"
                       : "bg-surface-container-low text-text-secondary"
                   }`}
                 >
                   <Icon name="paid" className="text-[20px]" />
-                  <span className="font-caption text-caption">
-                    Bayar Sekarang
-                  </span>
+                  <span className="font-caption text-caption text-center leading-tight">Lunas</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPaymentState("dp")}
+                  aria-pressed={paymentState === "dp"}
+                  className={`px-2 py-3 rounded-xl flex flex-col items-center gap-1 active:scale-95 transition-transform ${
+                    paymentState === "dp"
+                      ? "bg-brand-100 text-brand-700 ring-2 ring-brand-400"
+                      : "bg-surface-container-low text-text-secondary"
+                  }`}
+                >
+                  <Icon name="account_balance_wallet" className="text-[20px]" />
+                  <span className="font-caption text-caption text-center leading-tight">DP Dulu</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPaymentState("unpaid")}
+                  aria-pressed={paymentState === "unpaid"}
+                  className={`px-2 py-3 rounded-xl flex flex-col items-center gap-1 active:scale-95 transition-transform ${
+                    paymentState === "unpaid"
+                      ? "bg-warning-surface text-warning-text"
+                      : "bg-surface-container-low text-text-secondary"
+                  }`}
+                >
+                  <Icon name="schedule" className="text-[20px]" />
+                  <span className="font-caption text-caption text-center leading-tight">Bayar Nanti</span>
                 </button>
               </div>
+
+              {/* Input nominal DP */}
+              {paymentState === "dp" && (
+                <div className="flex flex-col gap-1">
+                  <label className="font-caption text-caption text-text-secondary">
+                    Nominal DP <span className="text-danger-text">*</span>
+                  </label>
+                  <div className="relative flex items-center h-12 rounded-xl bg-surface shadow-[inset_0px_2px_4px_rgba(15,23,42,0.06)] px-3">
+                    <span className="font-body-bold text-brand-600 pr-2">Rp</span>
+                    <input
+                      value={dpAmount}
+                      onChange={(e) => setDpAmount(e.target.value.replace(/\D/g, ""))}
+                      placeholder="0"
+                      inputMode="numeric"
+                      className="w-full h-full bg-transparent font-headline-2 text-headline-2 font-semibold text-text-primary focus:outline-none"
+                    />
+                  </div>
+                  {dpAmountNum > 0 && (
+                    <p className="font-caption text-caption text-text-muted">
+                      Sisa tagihan: <b className="text-warning-text">{formatRupiah(total - dpAmountNum)}</b>
+                    </p>
+                  )}
+                </div>
+              )}
+
               <div className="flex items-start gap-2 p-3 rounded-xl bg-surface-container-low">
-                <Icon name={effectivePaymentState === "paid"
-                    ? "savings"
-                    : "hourglass_empty"} className="text-[18px] text-brand-600 mt-0.5" />
+                <Icon name={
+                  paymentState === "paid" ? "check_circle"
+                  : paymentState === "dp" ? "account_balance_wallet"
+                  : "hourglass_empty"
+                } className="text-[18px] text-brand-600 mt-0.5" />
                 <p className="font-caption text-caption text-text-secondary">
-                  {effectivePaymentState === "paid" ? (
-                    <>
-                      {isEmployee ? (
-                        <>
-                          Anda memegang{" "}
-                          <b className="text-text-primary">
-                            {formatRupiah(total)} {PAYMENT_LABELS[paymentMethod]}
-                          </b>{" "}
-                          milik pelanggan.
-                        </>
-                      ) : (
-                        <>
-                          Pembayaran{" "}
-                          <b className="text-text-primary">
-                            {formatRupiah(total)} {PAYMENT_LABELS[paymentMethod]}
-                          </b>{" "}
-                          langsung masuk kas cabang.
-                        </>
-                      )}
-                    </>
+                  {paymentState === "paid" ? (
+                    isEmployee
+                      ? <>Kas titipan <b className="text-text-primary">{formatRupiah(total)}</b> atas nama Anda.</>
+                      : <>Pembayaran <b className="text-text-primary">{formatRupiah(total)}</b> masuk kas cabang.</>
+                  ) : paymentState === "dp" ? (
+                    dpAmountNum > 0
+                      ? <>DP <b className="text-text-primary">{formatRupiah(dpAmountNum)}</b> dicatat. Sisa <b className="text-warning-text">{formatRupiah(total - dpAmountNum)}</b> diselesaikan via Kas.</>
+                      : <>Masukkan jumlah DP di atas.</>
                   ) : (
-                    <>
-                      Belum ada uang masuk. Tagihan Rp
-                      {formatRupiah(total)} tetap tercatat dan menjadi
-                      tanggung jawab kasir saat serah terima shift.
-                    </>
+                    <>Tagihan <b>{formatRupiah(total)}</b> tercatat. Pelunasan via menu <b>Kas › Bayar Nanti</b>.</>
                   )}
                 </p>
               </div>

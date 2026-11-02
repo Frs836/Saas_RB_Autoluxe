@@ -68,10 +68,12 @@ export const PERMISSIONS = [
   "cash.view_branch",
   "cash.shift_manage",
   "cash.petty_manage",
+  "cash.record_payment",
 
   /* Laporan */
   "reports.branch",
   "reports.executive",
+  "reports.omset",
 
   /* Garansi & komunikasi */
   "warranty.manage",
@@ -116,15 +118,14 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "order.cancel",
     "inspection.upload",
     "qc.review",
-    "stock.claim",
-    "stock.approve",
     "cash.view_branch",
     "cash.shift_manage",
     "cash.petty_manage",
+    "cash.record_payment",
     "reports.branch",
+    "reports.omset",
     "warranty.manage",
     "whatsapp.draft",
-    "services.manage",
   ],
   maintainer: [
     "attendance.self",
@@ -143,8 +144,10 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "cash.view_branch",
     "cash.shift_manage",
     "cash.petty_manage",
+    "cash.record_payment",
     "reports.branch",
     "reports.executive",
+    "reports.omset",
     "warranty.manage",
     "whatsapp.draft",
     "staff.manage",
@@ -169,8 +172,10 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "cash.view_branch",
     "cash.shift_manage",
     "cash.petty_manage",
+    "cash.record_payment",
     "reports.branch",
     "reports.executive",
+    "reports.omset",
     "warranty.manage",
     "whatsapp.draft",
     "staff.manage",
@@ -241,6 +246,20 @@ const NAV_SHIFT: NavItem = {
   permission: "cash.shift_manage",
 };
 
+const NAV_KAS: NavItem = {
+  label: "Kas",
+  icon: "account_balance_wallet",
+  href: "/kas",
+  permission: "cash.petty_manage",
+};
+
+const NAV_OMSET: NavItem = {
+  label: "Omset",
+  icon: "insights",
+  href: "/omset",
+  permission: "reports.omset",
+};
+
 const NAV_LAPORAN: NavItem = {
   label: "Laporan",
   icon: "insights",
@@ -274,10 +293,10 @@ const NAV_PROFIL: NavItem = {
  * Tiga role pertama di kiri, item keempat di kanan.
  */
 export const BOTTOM_NAV_BY_ROLE: Record<Role, readonly NavItem[]> = {
-  karyawan: [NAV_BERANDA, NAV_ABSENSI, NAV_ANTREAN, NAV_IZIN],
-  admin_kasir: [NAV_BERANDA, NAV_ANTREAN, NAV_STOK, NAV_SHIFT],
-  maintainer: [NAV_BERANDA, NAV_ANTREAN, NAV_STOK, NAV_REKAP],
-  owner: [NAV_BERANDA, NAV_ANTREAN, NAV_LAPORAN, NAV_PROFIL],
+  karyawan:    [NAV_BERANDA, NAV_ABSENSI,  NAV_ANTREAN, NAV_IZIN  ],
+  admin_kasir: [NAV_BERANDA, NAV_ANTREAN,  NAV_KAS,     NAV_OMSET ],
+  maintainer:  [NAV_BERANDA, NAV_ANTREAN,  NAV_STOK,    NAV_REKAP ],
+  owner:       [NAV_BERANDA, NAV_ANTREAN,  NAV_LAPORAN, NAV_PROFIL],
 };
 
 export function bottomNavFor(role: unknown): NavItem[] {

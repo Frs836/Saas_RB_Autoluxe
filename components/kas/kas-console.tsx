@@ -111,7 +111,7 @@ export function KasConsole({
   const [paymentModal, setPaymentModal] = useState<UnpaidOrder | null>(null);
   const [payAmount, setPayAmount] = useState('');
   const [payMethod, setPayMethod] = useState<'cash' | 'qris' | 'bank_transfer'>('cash');
-  const [payType, setPayType] = useState<'dp' | 'pelunasan' | 'full'>('full');
+  const [payType, setPayType] = useState<'pelunasan' | 'full'>('full');
   const [payLoading, setPayLoading] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
 
@@ -124,17 +124,15 @@ export function KasConsole({
   const disabled = !canManage || loading;
   const handoffId = handoff?.id ?? null;
 
-  // Auto-suggest payType when payAmount changes
+  // Auto-suggest payType berdasarkan jumlah
   useEffect(() => {
     if (!paymentModal) return;
     const amount = parseFloat(payAmount.replace(/[^0-9.]/g, ''));
     if (!amount || amount <= 0) return;
-    if (amount >= paymentModal.totalPrice) {
+    if (amount >= paymentModal.totalPrice - paymentModal.paidAmount) {
       setPayType('full');
-    } else if (paymentModal.paidAmount > 0) {
-      setPayType('pelunasan');
     } else {
-      setPayType('dp');
+      setPayType('pelunasan');
     }
   }, [payAmount, paymentModal]);
 
@@ -271,7 +269,7 @@ export function KasConsole({
       p_order_id: paymentModal.id,
       p_amount: amount,
       p_payment_method: payMethod,
-      p_payment_type: payType,
+      p_payment_type: payType as 'dp' | 'pelunasan' | 'full',
       p_note: null,
     });
     setPayLoading(false);
@@ -689,10 +687,9 @@ export function KasConsole({
 
                 <div className="flex flex-col gap-1">
                   <label className="font-caption text-caption text-text-secondary">Tipe Pembayaran</label>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 gap-2">
                     {([
-                      { value: 'dp', label: 'DP' },
-                      { value: 'pelunasan', label: 'Pelunasan' },
+                      { value: 'pelunasan', label: 'Pelunasan Sebagian' },
                       { value: 'full', label: 'Lunas' },
                     ] as const).map((opt) => (
                       <button

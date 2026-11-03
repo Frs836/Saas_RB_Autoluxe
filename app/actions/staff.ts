@@ -59,20 +59,48 @@ export async function createStaffProfile(data: CreateStaffData): Promise<CreateS
   const targetBranchId = data.branchId || actorProfile.branch_id;
   if (!targetBranchId) return { ok: false, message: "Cabang tujuan tidak ditentukan." };
 
-  // 4. Buat auth user via ADMIN CLIENT (service role) — tidak butuh pgcrypto, tidak rate-limit email
-  const { data: authData, error: authError } = await admin.auth.admin.createUser({
-    email:          data.email.toLowerCase().trim(),
-    password:       data.password,
-    email_confirm:  true,
-    user_metadata:  { full_name: data.fullName.trim() },
-  });
+  // 4. Cek email sudah ada — pakai listUsers dengan filter email
+  // getUserByEmail tidak ada di API, gunakan listUsers dengan filter
+  const { data: listData } = await admin.auth.admin.listUsers({ perPage: 1000 });
+  const existingAuth = listData?.users?.find(
+    (u) => u.email?.toLowerCase() === data.email.toLowerCase().trim()
+  ) ?? null;
 
-  if (authError) return { ok: false, message: authError.message };
-  if (!authData.user) return { ok: false, message: "Gagal membuat user auth." };
+  let authUserId: string;
 
-  const authUserId = authData.user.id;
+  if (existingAuth) {
+    // Auth user sudah ada — cek apakah profil juga sudah ada
+    const { data: existingProfile } = await admin
+      .from("profiles")
+      .select("id")
+      .eq("auth_id", existingAuth.id)
+      .maybeSingle();
 
-  // 5. Insert profil via ADMIN CLIENT (bypass RLS agar tidak terblok policy INSERT)
+    if (existingProfile) {
+      return { ok: false, message: "Email sudah terdaftar. Gunakan email yang berbeda." };
+    }
+    // Auth ada tapi profil belum (orphaned) — lanjutkan dengan auth_id yang sudah ada
+    authUserId = existingAuth.id;
+    // Update password & metadata
+    await admin.auth.admin.updateUserById(authUserId, {
+      password:      data.password,
+      email_confirm: true,
+      user_metadata: { full_name: data.fullName.trim() },
+    });
+  } else {
+    // Buat auth user baru via ADMIN CLIENT
+    const { data: authData, error: authError } = await admin.auth.admin.createUser({
+      email:         data.email.toLowerCase().trim(),
+      password:      data.password,
+      email_confirm: true,
+      user_metadata: { full_name: data.fullName.trim() },
+    });
+    if (authError) return { ok: false, message: authError.message };
+    if (!authData.user) return { ok: false, message: "Gagal membuat user auth." };
+    authUserId = authData.user.id;
+  }
+
+  // 5. Insert profil via ADMIN CLIENT (bypass RLS)
   const { data: profile, error: profileError } = await admin
     .from("profiles")
     .insert({
@@ -89,8 +117,10 @@ export async function createStaffProfile(data: CreateStaffData): Promise<CreateS
     .single();
 
   if (profileError) {
-    // Rollback auth user jika profil gagal
-    await admin.auth.admin.deleteUser(authUserId);
+    // Hanya hapus auth user jika kita yang baru buat (bukan user lama yang orphaned)
+    if (!existingAuth) {
+      await admin.auth.admin.deleteUser(authUserId);
+    }
     return { ok: false, message: profileError.message };
   }
 

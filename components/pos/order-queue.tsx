@@ -63,11 +63,12 @@ const TRANSITIONS: Record<string, { status: string; label: string; icon: string 
 const STATUS_SERAH_TERIMA = new Set(["menunggu_diambil", "diserahkan"]);
 
 const FILTERS = [
-  { key: "all",         label: "Semua"      },
-  { key: "queued",      label: "Antrean"    },
-  { key: "in_progress", label: "Dikerjakan" },
-  { key: "qc_review",   label: "QC Review"  },
-  { key: "selesai",     label: "Selesai"    },
+  { key: "all",                 label: "Semua"       },
+  { key: "queued",              label: "Antrean"     },
+  { key: "in_progress",         label: "Dikerjakan"  },
+  { key: "qc_review",           label: "QC Review"   },
+  { key: "menunggu_pembayaran", label: "Bayar"        },
+  { key: "selesai",             label: "Selesai"     },
 ];
 
 const STATUS_SELESAI = new Set(["completed", "menunggu_diambil", "diserahkan"]);
@@ -128,8 +129,8 @@ export function OrderQueue({
       initialOrders
         .filter((order) => {
           const matchFilter =
-            filter === "all"       ? order.status !== "cancelled"
-            : filter === "selesai" ? STATUS_SELESAI.has(order.status)
+            filter === "all"                  ? order.status !== "cancelled"
+            : filter === "selesai"            ? STATUS_SELESAI.has(order.status)
             : order.status === filter;
           const matchQuery =
             query === "" ||
@@ -149,10 +150,11 @@ export function OrderQueue({
   );
 
   const counts = useMemo(() => ({
-    queued:      initialOrders.filter((o) => o.status === "queued").length,
-    in_progress: initialOrders.filter((o) => o.status === "in_progress").length,
-    qc_review:   initialOrders.filter((o) => o.status === "qc_review").length,
-    selesai:     initialOrders.filter((o) => STATUS_SELESAI.has(o.status)).length,
+    queued:               initialOrders.filter((o) => o.status === "queued").length,
+    in_progress:          initialOrders.filter((o) => o.status === "in_progress").length,
+    qc_review:            initialOrders.filter((o) => o.status === "qc_review").length,
+    menunggu_pembayaran:  initialOrders.filter((o) => o.status === "menunggu_pembayaran").length,
+    selesai:              initialOrders.filter((o) => STATUS_SELESAI.has(o.status)).length,
   }), [initialOrders]);
 
   async function transition(order: QueueOrder, status: string) {
@@ -380,15 +382,26 @@ export function OrderQueue({
         {/* stat cards */}
         <div className="grid grid-cols-4 gap-2">
           {[
-            { key: "queued",      label: "Antrean", value: counts.queued      },
-            { key: "in_progress", label: "Kerja",   value: counts.in_progress },
-            { key: "qc_review",   label: "QC",      value: counts.qc_review   },
-            { key: "selesai",     label: "Selesai", value: counts.selesai     },
+            { key: "queued",              label: "Antrean", value: counts.queued,              warn: false },
+            { key: "in_progress",         label: "Kerja",   value: counts.in_progress,          warn: false },
+            { key: "qc_review",           label: "QC",      value: counts.qc_review,            warn: false },
+            { key: "menunggu_pembayaran",  label: "Bayar",   value: counts.menunggu_pembayaran,  warn: counts.menunggu_pembayaran > 0 },
           ].map((stat) => (
-            <div key={stat.key} className="clay-card p-3 flex flex-col items-center gap-0.5">
-              <span className="font-headline-2 text-headline-2 text-text-primary">{stat.value}</span>
-              <span className="font-caption text-caption text-text-muted">{stat.label}</span>
-            </div>
+            <button
+              key={stat.key}
+              type="button"
+              onClick={() => setFilter(stat.key)}
+              className={`clay-card p-3 flex flex-col items-center gap-0.5 active:scale-95 transition-transform ${
+                filter === stat.key ? "ring-2 ring-brand-400" : ""
+              }`}
+            >
+              <span className={`font-headline-2 text-headline-2 ${stat.warn ? "text-warning-text" : "text-text-primary"}`}>
+                {stat.value}
+              </span>
+              <span className={`font-caption text-caption ${stat.warn ? "text-warning-text" : "text-text-muted"}`}>
+                {stat.label}
+              </span>
+            </button>
           ))}
         </div>
 

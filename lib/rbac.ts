@@ -75,6 +75,7 @@ export const PERMISSIONS = [
   "reports.executive",
   "reports.omset",
   "reports.komisi",
+  "reports.self",    // karyawan: lihat statistik diri sendiri
 
   /* Garansi & komunikasi */
   "warranty.manage",
@@ -109,6 +110,7 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "inspection.upload",
     "stock.claim",
     "cash.view_own_hold",
+    "reports.self",
   ],
   admin_kasir: [
     "attendance.self",
@@ -125,6 +127,7 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "cash.record_payment",
     "reports.branch",
     "reports.omset",
+    "reports.self",
     "warranty.manage",
     "whatsapp.draft",
   ],
@@ -150,6 +153,7 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "reports.executive",
     "reports.omset",
     "reports.komisi",
+    "reports.self",
     "warranty.manage",
     "whatsapp.draft",
     "staff.manage",
@@ -179,6 +183,7 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "reports.executive",
     "reports.omset",
     "reports.komisi",
+    "reports.self",
     "warranty.manage",
     "whatsapp.draft",
     "staff.manage",
@@ -375,6 +380,7 @@ export const PROFILE_MENU: readonly ProfileMenuItem[] = [
   { label: "Laporan Cabang", caption: "Finansial, omzet, komisi & stok", icon: "insights", href: "/laporan", permission: "reports.branch", category: "keuangan" },
   { label: "Laporan Komisi", caption: "Unit dikerjakan & revenue per karyawan", icon: "badge", href: "/komisi", permission: "reports.komisi", category: "keuangan" },
   { label: "Omset", caption: "Ringkasan omset harian, mingguan, bulanan", icon: "trending_up", href: "/omset", permission: "reports.omset", category: "keuangan" },
+  { label: "Statistik Saya", caption: "Unit yang saya kerjakan bulan ini", icon: "bar_chart", href: "/komisi/saya", permission: "reports.self", category: "keuangan" },
   // Operasional
   { label: "POS & Order", caption: "Buat order, bayar nanti, kerjakan", icon: "add_task", href: "/pos", permission: "pos.create", category: "operasional" },
   { label: "Antrean Order", caption: "Status pengerjaan dan inspeksi", icon: "assignment", href: "/pos/orders", permission: null, category: "operasional" },

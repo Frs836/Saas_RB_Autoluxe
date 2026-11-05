@@ -70,49 +70,96 @@ function storageObjectUrl(path: string | null): string | null {
 }
 
 /*
- * Tahap yang dilalui pelanggan, berurutan dari order dibuat sampai unit
- * diambil pulang.
- *
- * Daftar ini sebelumnya hanya memuat queued sampai completed. Padahal
- * migrasi 0030 menambah dua tahap lagi ke enum order_status, yaitu
- * menunggu_diambil dan diserahkan. Karena keduanya tidak ada di daftar,
- * findIndex mengembalikan -1, semua tahap jatuh ke "Menunggu", dan
- * lencana status jatuh ke teks cadangan "Diproses". Pelanggan yang
- * Eug belum mengambil kendaraannya tetap membaca "Diproses".
- *
- * Urutan di enum: queued, in_progress, qc_review, completed,
- * menunggu_diambil, diserahkan. Jangan diubah seenaknya, karena apply_order_status
- * dan advance_handover memvalidasi transisinya.
+ * Deteksi kategori layanan dari nama paket.
+ * Tidak perlu kolom baru di DB — cukup keyword matching di service_package.
  */
-const STEPS: { key: string; label: string; icon: string; note?: string }[] = [
-  { key: "queued", label: "Antre", icon: "schedule" },
-  { key: "in_progress", label: "Pengerjaan", icon: "build" },
-  { key: "qc_review", label: "Quality Control", icon: "fact_check" },
-  {
-    key: "completed",
-    label: "Pengerjaan Selesai",
-    icon: "task_alt",
-    note: "Pekerjaan utama selesai dan sudah lolos pemeriksaan",
-  },
-  {
-    key: "menunggu_pembayaran",
-    label: "Menunggu Pembayaran",
-    icon: "payments",
-    note: "Harap selesaikan pembayaran untuk melanjutkan proses serah terima",
-  },
-  {
-    key: "menunggu_diambil",
-    label: "Siap Diambil",
-    icon: "local_shipping",
-    note: "Kendaraan sudah selesai dan siap diambil pelanggan",
-  },
-  {
-    key: "diserahkan",
-    label: "Telah Diambil",
-    icon: "verified",
-    note: "Kendaraan sudah diserahkan ke pelanggan",
-  },
+function detectCategory(servicePackage: string | null): "wash" | "poles" | "coating" {
+  const pkg = (servicePackage ?? "").toLowerCase();
+  if (
+    pkg.includes("coating") ||
+    pkg.includes("ceramic") ||
+    pkg.includes("nano") ||
+    pkg.includes("graphene") ||
+    pkg.includes("liquid glass") ||
+    pkg.includes("package") ||
+    pkg.includes("premium") ||
+    pkg.includes("express coat")
+  ) return "coating";
+  if (
+    pkg.includes("poles") ||
+    pkg.includes("polish") ||
+    pkg.includes("detailing") ||
+    pkg.includes("kompound") ||
+    pkg.includes("compound")
+  ) return "poles";
+  return "wash";
+}
+
+/*
+ * Step tracker per kategori layanan.
+ *
+ * Wash   : Antre → Pengerjaan → Siap Diambil (tidak ada QC)
+ * Poles  : Antre → Pengerjaan → QC → Siap Diambil
+ * Coating: Antre → Checking → Wash → Poles → Coating → QC → Finishing → Siap Diambil
+ *
+ * Semua berakhir di menunggu_pembayaran (jika belum lunas) atau menunggu_diambil → diserahkan.
+ * Status database tetap sama (queued/in_progress/qc_review/completed/dll).
+ * Perbedaan hanya pada label dan jumlah step yang ditampilkan.
+ */
+type Step = { key: string; label: string; icon: string; note?: string };
+
+const STEPS_WASH: Step[] = [
+  { key: "queued",               label: "Antre",              icon: "schedule"       },
+  { key: "in_progress",          label: "Pencucian",          icon: "water_drop"     },
+  { key: "completed",            label: "Selesai Dicuci",     icon: "task_alt",
+    note: "Unit selesai dicuci dan siap diserahkan" },
+  { key: "menunggu_pembayaran",  label: "Menunggu Pembayaran",icon: "payments",
+    note: "Harap selesaikan pembayaran" },
+  { key: "menunggu_diambil",     label: "Siap Diambil",       icon: "local_shipping",
+    note: "Kendaraan sudah bersih dan siap diambil" },
+  { key: "diserahkan",           label: "Telah Diambil",      icon: "verified"       },
 ];
+
+const STEPS_POLES: Step[] = [
+  { key: "queued",               label: "Antre",              icon: "schedule"       },
+  { key: "in_progress",          label: "Poles & Detailing",  icon: "healing"        },
+  { key: "qc_review",            label: "Quality Control",    icon: "fact_check"     },
+  { key: "completed",            label: "QC Selesai",         icon: "task_alt",
+    note: "Unit lolos QC dan siap diserahkan" },
+  { key: "menunggu_pembayaran",  label: "Menunggu Pembayaran",icon: "payments"       },
+  { key: "menunggu_diambil",     label: "Siap Diambil",       icon: "local_shipping" },
+  { key: "diserahkan",           label: "Telah Diambil",      icon: "verified"       },
+];
+
+const STEPS_COATING: Step[] = [
+  { key: "queued",               label: "Antre & Checking",   icon: "schedule",
+    note: "Pemeriksaan kondisi awal kendaraan" },
+  { key: "in_progress",         label: "Proses Coating",      icon: "auto_awesome",
+    note: "Wash → Poles → Aplikasi Coating" },
+  { key: "qc_review",            label: "Quality Control",    icon: "fact_check",
+    note: "Pengecekan hasil coating & ketebalan lapisan" },
+  { key: "completed",            label: "Finishing",          icon: "task_alt",
+    note: "Detail finishing dan pengeringan akhir" },
+  { key: "menunggu_pembayaran",  label: "Menunggu Pembayaran",icon: "payments"       },
+  { key: "menunggu_diambil",     label: "Siap Diambil",       icon: "local_shipping",
+    note: "Coating sudah curing, unit siap diambil" },
+  { key: "diserahkan",           label: "Diserahkan + Garansi",icon: "verified",
+    note: "Kendaraan diserahkan beserta sertifikat garansi" },
+];
+
+function getSteps(servicePackage: string | null): Step[] {
+  const cat = detectCategory(servicePackage);
+  if (cat === "coating") return STEPS_COATING;
+  if (cat === "poles")   return STEPS_POLES;
+  return STEPS_WASH;
+}
+
+// Label badge kategori untuk ditampilkan di halaman
+const CATEGORY_INFO: Record<"wash"|"poles"|"coating", { label: string; icon: string; color: string }> = {
+  wash:    { label: "Cuci Kendaraan",     icon: "water_drop",   color: "bg-brand-50 text-brand-700"       },
+  poles:   { label: "Poles & Detailing",  icon: "healing",      color: "bg-orange-50 text-orange-700"     },
+  coating: { label: "Coating & Garansi",  icon: "auto_awesome", color: "bg-purple-50 text-purple-700"     },
+};
 
 /* Cadangan kalau status tidak dikenal. Tidak boleh berbunyi "Diproses". */
 const STATUS_UNKNOWN = "Status tidak tersedia";
@@ -179,6 +226,9 @@ export default async function TrackPage({
   }));
 
   const isCancelled = order.status === "cancelled";
+  const STEPS = getSteps(order.service_package);
+  const category = detectCategory(order.service_package);
+  const catInfo = CATEGORY_INFO[category];
   const currentIndex = STEPS.findIndex((step) => step.key === order.status);
 
   /*
@@ -297,6 +347,15 @@ export default async function TrackPage({
               <p className="font-body-bold text-body-bold text-text-primary mt-0.5">
                 {order.service_package ?? "-"}
               </p>
+            </div>
+            <div className="rounded-2xl bg-surface-container/60 p-3">
+              <p className="font-caption text-caption text-text-muted">
+                Kategori
+              </p>
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-micro-badge text-micro-badge mt-0.5 ${catInfo.color}`}>
+                <Icon name={catInfo.icon} className="text-[13px]" />
+                {catInfo.label}
+              </span>
             </div>
             <div className="rounded-2xl bg-surface-container/60 p-3">
               <p className="font-caption text-caption text-text-muted">

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { formatDateWib, formatRupiah, formatTimeWib } from "@/lib/format";
 import { canvasToWebp, captureSquareCanvas, fileToSquareWebp } from "@/lib/attendance";
 import { createClient } from "@/lib/supabase/client";
-import { PAYMENT_LABELS } from "@/lib/pos";
+import { PAYMENT_LABELS, whatsappLink } from "@/lib/pos";
 import { Icon } from "@/components/ui/icon";
 
 export type InspectionPhoto = {
@@ -156,6 +156,10 @@ export function OrderDetailView({
   const [teamDraft, setTeamDraft] = useState<string[]>([]);
   const [teamBusy, setTeamBusy] = useState(false);
   const [teamError, setTeamError] = useState<string | null>(null);
+
+  // Modal kirim nota WhatsApp
+  const [waModalOpen, setWaModalOpen] = useState(false);
+  const [waPhone, setWaPhone] = useState(order.customerPhone ?? "");
 
   const meta = STATUS_META[order.status] ?? STATUS_META.queued;
   const trackUrl = `${origin.replace(/\/$/, "")}/track/${order.trackingToken}`;
@@ -572,15 +576,86 @@ export function OrderDetailView({
             </span>
           </div>
 
-          <a
-            href={trackUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="self-start px-3 py-2 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center gap-1"
-          >
-            <Icon name="link" className="text-[16px]" />
-            Buka halaman lacak pelanggan
-          </a>
+          <div className="flex gap-2 flex-wrap">
+            <a
+              href={trackUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-3 py-2 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center gap-1"
+            >
+              <Icon name="link" className="text-[16px]" />
+              Lacak Pelanggan
+            </a>
+            <button
+              type="button"
+              onClick={() => {
+                setWaPhone(order.customerPhone ?? "");
+                setWaModalOpen(true);
+              }}
+              className="px-3 py-2 rounded-xl bg-whatsapp/10 text-whatsapp font-caption text-caption flex items-center gap-1 active:scale-95 transition-transform"
+            >
+              <Icon name="chat" className="text-[16px]" />
+              Kirim Nota WA
+            </button>
+          </div>
+
+          {/* Modal Kirim Nota WA */}
+          {waModalOpen && (
+            <>
+              <div className="fixed inset-0 z-[60] bg-black/50" onClick={() => setWaModalOpen(false)} />
+              <div className="fixed inset-x-4 bottom-4 z-[61] bg-surface rounded-2xl p-5 shadow-xl max-w-md mx-auto flex flex-col gap-4" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center justify-between">
+                  <h3 className="font-headline-2 text-headline-2 text-text-primary">Kirim Nota ke WhatsApp</h3>
+                  <button type="button" onClick={() => setWaModalOpen(false)} className="w-9 h-9 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary active:scale-95">
+                    <Icon name="close" className="text-[20px]" />
+                  </button>
+                </div>
+                <label className="flex flex-col gap-1">
+                  <span className="font-caption text-caption text-text-secondary">Nomor WhatsApp Pelanggan</span>
+                  <input
+                    type="tel"
+                    inputMode="tel"
+                    value={waPhone}
+                    onChange={(e) => setWaPhone(e.target.value)}
+                    placeholder="08123456789"
+                    className="h-12 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+                  />
+                  <span className="font-micro-badge text-micro-badge text-text-muted">Format: 08xxxxxxxxxx</span>
+                </label>
+                <div className="p-3 rounded-xl bg-surface-container-low">
+                  <p className="font-caption text-caption text-text-muted">Isi nota yang akan dikirim:</p>
+                  <p className="font-body text-body text-text-primary mt-1 text-sm">
+                    {`✅ ${order.orderNumber} - ${order.vehicleModel} (${order.licensePlate})\n` +
+                     `📋 ${order.servicePackage}\n` +
+                     `💰 ${formatRupiah(order.totalPrice)}\n` +
+                     `🔗 Lacak: ${trackUrl}`}
+                  </p>
+                </div>
+                <a
+                  href={waPhone.trim() ? whatsappLink(
+                    waPhone.trim(),
+                    `Halo, ini nota pengerjaan kendaraan Anda di RB AUTOLUXE:\n\n` +
+                    `✅ No. Order: ${order.orderNumber}\n` +
+                    `🚗 Kendaraan: ${order.vehicleModel} (${order.licensePlate})\n` +
+                    `📋 Layanan: ${order.servicePackage}\n` +
+                    `💰 Total: ${formatRupiah(order.totalPrice)}\n` +
+                    `📊 Status: ${meta.label}\n\n` +
+                    `🔗 Lacak pengerjaan: ${trackUrl}\n\n` +
+                    `Terima kasih telah mempercayakan kendaraan Anda kepada kami! 🙏`
+                  ) : "#"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => { if (!waPhone.trim()) { e.preventDefault(); return; } setWaModalOpen(false); }}
+                  className={`w-full py-3 rounded-xl font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform ${
+                    waPhone.trim() ? "bg-whatsapp text-white shadow-[0_8px_20px_-6px_rgba(37,211,102,0.6)]" : "bg-surface-container text-text-muted opacity-60"
+                  }`}
+                >
+                  <Icon name="chat" className="text-[20px]" />
+                  Buka WhatsApp
+                </a>
+              </div>
+            </>
+          )}
 
           {order.cancellationReason ? (
             <p className="font-caption text-caption text-danger-text">

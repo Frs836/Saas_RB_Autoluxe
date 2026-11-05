@@ -127,7 +127,6 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "cash.record_payment",
     "reports.branch",
     "reports.omset",
-    "reports.self",
     "warranty.manage",
     "whatsapp.draft",
   ],
@@ -378,9 +377,10 @@ export const PROFILE_MENU: readonly ProfileMenuItem[] = [
   { label: "Kas Keluar", caption: "Petty cash operasional + foto nota", icon: "receipt_long", href: "/kas", permission: "cash.petty_manage", category: "keuangan" },
   { label: "Riwayat Invoice", caption: "Cari & cetak ulang nota pelanggan", icon: "print", href: "/invoice", permission: "reports.branch", category: "keuangan" },
   { label: "Laporan Cabang", caption: "Finansial, omzet, komisi & stok", icon: "insights", href: "/laporan", permission: "reports.branch", category: "keuangan" },
-  { label: "Laporan Komisi", caption: "Unit dikerjakan & revenue per karyawan", icon: "badge", href: "/komisi", permission: "reports.komisi", category: "keuangan" },
+  { label: "Laporan Komisi Staf", caption: "Data unit & revenue semua karyawan", icon: "badge", href: "/komisi", permission: "reports.komisi", category: "keuangan" },
   { label: "Omset", caption: "Ringkasan omset harian, mingguan, bulanan", icon: "trending_up", href: "/omset", permission: "reports.omset", category: "keuangan" },
-  { label: "Statistik Saya", caption: "Unit yang saya kerjakan bulan ini", icon: "bar_chart", href: "/komisi/saya", permission: "reports.self", category: "keuangan" },
+  // Statistik Saya: HANYA untuk karyawan yang kerja di lapangan
+  { label: "Statistik Saya", caption: "Unit yang saya kerjakan & data komisi saya", icon: "bar_chart", href: "/komisi/saya", permission: "reports.self", category: "kehadiran" },
   // Operasional
   { label: "POS & Order", caption: "Buat order, bayar nanti, kerjakan", icon: "add_task", href: "/pos", permission: "pos.create", category: "operasional" },
   { label: "Antrean Order", caption: "Status pengerjaan dan inspeksi", icon: "assignment", href: "/pos/orders", permission: null, category: "operasional" },

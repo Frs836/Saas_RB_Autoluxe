@@ -21,9 +21,12 @@ export type ManagedStaff = {
 };
 
 const JABATAN: { value: string; label: string }[] = [
-  { value: "karyawan", label: "Karyawan" },
-  { value: "admin_kasir", label: "Admin Kasir" },
-  { value: "maintainer", label: "Maintainer" },
+  { value: "karyawan",        label: "Karyawan"         },
+  { value: "kepala_karyawan", label: "Kepala Karyawan"  },
+  { value: "admin_kasir",     label: "Admin Kasir"      },
+  { value: "finance",         label: "Finance"          },
+  { value: "manager",         label: "Manager Cabang"   },
+  { value: "maintainer",      label: "Maintainer"       },
 ];
 
 const HARI: { value: number; label: string }[] = [
@@ -57,10 +60,12 @@ export function StaffManagement({
   staff,
   branches,
   bisaUbahJabatan,
+  bisaHapus = false,
 }: {
   staff: ManagedStaff[];
   branches: { id: string; name: string }[];
   bisaUbahJabatan: boolean;
+  bisaHapus?: boolean;
 }) {
   const router = useRouter();
   const [terbuka, setTerbuka] = useState<string | null>(null);
@@ -101,6 +106,33 @@ export function StaffManagement({
       return;
     }
     setSukses(`${keterangan} tersimpan.`);
+    router.refresh();
+  }
+
+  async function hapus(profileId: string, namaStaf: string) {
+    const konfirmasi = typeof window !== "undefined"
+      ? window.confirm(
+          `Hapus permanen akun "${namaStaf}"?\n\n` +
+          `Tindakan ini TIDAK BISA dibatalkan.\n` +
+          `Semua data absensi, order, dan tim yang terkait akan terputus dari akun ini.\n\n` +
+          `Ketik OK untuk lanjutkan.`
+        )
+      : false;
+    if (!konfirmasi) return;
+
+    setSibuk(profileId);
+    setError(null);
+    setSukses(null);
+    const supabase = createClient();
+    const { error: rpcError } = await supabase.rpc("delete_staff_profile" as any, {
+      p_profile_id: profileId,
+    });
+    setSibuk(null);
+    if (rpcError) {
+      setError(`Gagal menghapus: ${rpcError.message}`);
+      return;
+    }
+    setSukses(`Akun "${namaStaf}" berhasil dihapus.`);
     router.refresh();
   }
 
@@ -199,7 +231,7 @@ export function StaffManagement({
                 }
                 className={`flex-1 min-h-11 rounded-xl font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform disabled:opacity-60 ${
                   s.isActive
-                    ? "bg-danger-surface text-danger-text"
+                    ? "bg-warning-surface text-warning-text"
                     : "bg-success-surface text-success-text"
                 }`}
               >
@@ -209,6 +241,18 @@ export function StaffManagement({
                 />
                 {s.isActive ? "Nonaktifkan" : "Aktifkan"}
               </button>
+              {bisaHapus && (
+                <button
+                  type="button"
+                  disabled={sibukBaris}
+                  onClick={() => hapus(s.id, s.fullName)}
+                  title="Hapus permanen akun staf ini"
+                  className="w-11 min-h-11 rounded-xl bg-danger-surface text-danger-text flex items-center justify-center shrink-0 active:scale-95 transition-transform disabled:opacity-60"
+                  aria-label="Hapus akun staf"
+                >
+                  <Icon name="delete" className="text-[18px]" />
+                </button>
+              )}
             </div>
 
             {buka ? (

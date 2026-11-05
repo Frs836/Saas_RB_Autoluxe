@@ -10,15 +10,18 @@
  * app/profil/page.tsx, dan app/laporan/page.tsx.
  */
 
-export const ROLES = ["owner", "admin_kasir", "maintainer", "karyawan"] as const;
+export const ROLES = ["owner", "admin_kasir", "maintainer", "karyawan", "manager", "finance", "kepala_karyawan"] as const;
 
 export type Role = (typeof ROLES)[number];
 
 export const ROLE_LABELS: Record<Role, string> = {
-  owner: "Pemilik / Owner",
-  admin_kasir: "Admin Kasir",
-  maintainer: "Maintainer",
-  karyawan: "Karyawan",
+  owner:           "Pemilik / Owner",
+  admin_kasir:     "Admin Kasir",
+  maintainer:      "Maintainer",
+  karyawan:        "Karyawan",
+  manager:         "Manager Cabang",
+  finance:         "Finance",
+  kepala_karyawan: "Kepala Karyawan",
 };
 
 export function isRole(value: unknown): value is Role {
@@ -112,6 +115,22 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "cash.view_own_hold",
     "reports.self",
   ],
+  kepala_karyawan: [
+    "attendance.self",
+    "attendance.audit",
+    "time_off.request",
+    "time_off.decide",
+    "pos.create",
+    "order.manage_status",
+    "order.start_work",
+    "inspection.upload",
+    "qc.review",
+    "stock.claim",
+    "stock.approve",
+    "cash.view_own_hold",
+    "warranty.manage",
+    "reports.self",
+  ],
   admin_kasir: [
     "attendance.self",
     "attendance.audit",
@@ -129,6 +148,43 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "reports.omset",
     "warranty.manage",
     "whatsapp.draft",
+  ],
+  finance: [
+    "attendance.self",
+    "attendance.audit",
+    "time_off.request",
+    "cash.view_branch",
+    "reports.branch",
+    "reports.executive",
+    "reports.omset",
+    "reports.komisi",
+    "branch.switch",
+  ],
+  manager: [
+    "attendance.self",
+    "attendance.audit",
+    "attendance.manage_location",
+    "time_off.request",
+    "time_off.decide",
+    "pos.create",
+    "order.manage_status",
+    "order.cancel",
+    "inspection.upload",
+    "inspection.delete_any",
+    "qc.review",
+    "stock.claim",
+    "stock.approve",
+    "cash.view_branch",
+    "cash.shift_manage",
+    "cash.petty_manage",
+    "cash.record_payment",
+    "reports.branch",
+    "reports.omset",
+    "reports.komisi",
+    "warranty.manage",
+    "whatsapp.draft",
+    "staff.manage",
+    "branch.manage",
   ],
   maintainer: [
     "attendance.self",
@@ -152,7 +208,6 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "reports.executive",
     "reports.omset",
     "reports.komisi",
-    "reports.self",
     "warranty.manage",
     "whatsapp.draft",
     "staff.manage",
@@ -182,7 +237,6 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "reports.executive",
     "reports.omset",
     "reports.komisi",
-    "reports.self",
     "warranty.manage",
     "whatsapp.draft",
     "staff.manage",
@@ -300,10 +354,13 @@ const NAV_PROFIL: NavItem = {
  * Tiga role pertama di kiri, item keempat di kanan.
  */
 export const BOTTOM_NAV_BY_ROLE: Record<Role, readonly NavItem[]> = {
-  karyawan:    [NAV_BERANDA, NAV_ABSENSI,  NAV_ANTREAN, NAV_IZIN  ],
-  admin_kasir: [NAV_BERANDA, NAV_ANTREAN,  NAV_KAS,     NAV_OMSET ],
-  maintainer:  [NAV_BERANDA, NAV_ANTREAN,  NAV_STOK,    NAV_REKAP ],
-  owner:       [NAV_BERANDA, NAV_ANTREAN,  NAV_LAPORAN, NAV_PROFIL],
+  karyawan:        [NAV_BERANDA, NAV_ABSENSI,  NAV_ANTREAN, NAV_IZIN   ],
+  kepala_karyawan: [NAV_BERANDA, NAV_ANTREAN,  NAV_STOK,    NAV_ABSENSI],
+  admin_kasir:     [NAV_BERANDA, NAV_ANTREAN,  NAV_KAS,     NAV_OMSET  ],
+  finance:         [NAV_BERANDA, NAV_LAPORAN,  NAV_REKAP,   NAV_PROFIL ],
+  manager:         [NAV_BERANDA, NAV_ANTREAN,  NAV_STOK,    NAV_REKAP  ],
+  maintainer:      [NAV_BERANDA, NAV_ANTREAN,  NAV_STOK,    NAV_REKAP  ],
+  owner:           [NAV_BERANDA, NAV_ANTREAN,  NAV_LAPORAN, NAV_PROFIL ],
 };
 
 export function bottomNavFor(role: unknown): NavItem[] {

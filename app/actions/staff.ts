@@ -10,7 +10,7 @@ export type CreateStaffData = {
   dateOfBirth?: string;
   password: string;
   branchId?: string;
-  role: "karyawan" | "admin_kasir" | "maintainer" | "owner";
+  role: "karyawan" | "admin_kasir" | "maintainer" | "owner" | "manager" | "finance" | "kepala_karyawan";
   workSchedule?: "field" | "office";
   isActive?: boolean;
 };

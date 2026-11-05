@@ -200,7 +200,8 @@ export function StaffManagementPage({ session, branches, branchId }: Props) {
               <StaffManagement
                 staff={filtered}
                 branches={branches}
-                bisaUbahJabatan={session.role === "owner"}
+                bisaUbahJabatan={session.role === "owner" || session.role === "maintainer"}
+                bisaHapus={session.role === "owner" || session.role === "maintainer"}
               />
             )}
           </TabsContent>

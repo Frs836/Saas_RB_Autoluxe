@@ -19,7 +19,7 @@ export function StaffCreateForm({ branches }: { branches: { id: string; name: st
     dateOfBirth: "",
     password: "",
     branchId: "",
-    role: "karyawan" as "karyawan" | "admin_kasir" | "maintainer" | "owner",
+    role: "karyawan" as "karyawan" | "admin_kasir" | "maintainer" | "owner" | "manager" | "finance" | "kepala_karyawan",
     workSchedule: "field" as "field" | "office",
     isActive: true,
   });
@@ -229,7 +229,10 @@ export function StaffCreateForm({ branches }: { branches: { id: string; name: st
           className="w-full px-3 py-2 rounded-xl border border-border-subtle bg-surface text-text-primary focus:ring-2 focus:ring-brand-400"
         >
           <option value="karyawan">Karyawan</option>
+          <option value="kepala_karyawan">Kepala Karyawan</option>
           <option value="admin_kasir">Admin Kasir</option>
+          <option value="finance">Finance</option>
+          <option value="manager">Manager Cabang</option>
           <option value="maintainer">Maintainer</option>
           <option value="owner">Owner</option>
         </select>

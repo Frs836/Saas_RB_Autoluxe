@@ -161,6 +161,9 @@ const CATEGORY_INFO: Record<"wash"|"poles"|"coating", { label: string; icon: str
   coating: { label: "Coating & Garansi",  icon: "auto_awesome", color: "bg-purple-50 text-purple-700"     },
 };
 
+/* Cadangan kalau status tidak dikenal */
+const STATUS_UNKNOWN = "Sedang Diproses";
+
 /* Cadangan kalau status tidak dikenal. Tidak boleh berbunyi "Diproses". */
 const STATUS_UNKNOWN = "Status tidak tersedia";
 

@@ -59,8 +59,7 @@ export async function createStaffProfile(data: CreateStaffData): Promise<CreateS
   const targetBranchId = data.branchId || actorProfile.branch_id;
   if (!targetBranchId) return { ok: false, message: "Cabang tujuan tidak ditentukan." };
 
-  // 4. Cek email sudah ada — pakai listUsers dengan filter email
-  // getUserByEmail tidak ada di API, gunakan listUsers dengan filter
+  // 4. Cek email sudah ada di auth
   const { data: listData } = await admin.auth.admin.listUsers({ perPage: 1000 });
   const existingAuth = listData?.users?.find(
     (u) => u.email?.toLowerCase() === data.email.toLowerCase().trim()
@@ -79,32 +78,35 @@ export async function createStaffProfile(data: CreateStaffData): Promise<CreateS
     if (existingProfile) {
       return { ok: false, message: "Email sudah terdaftar. Gunakan email yang berbeda." };
     }
-    // Auth ada tapi profil belum (orphaned) — lanjutkan dengan auth_id yang sudah ada
     authUserId = existingAuth.id;
-    // Update password & metadata
     await admin.auth.admin.updateUserById(authUserId, {
       password:      data.password,
       email_confirm: true,
       user_metadata: { full_name: data.fullName.trim() },
     });
   } else {
-    // Buat auth user baru via ADMIN CLIENT
+    // Buat auth user baru — trigger on_auth_user_created akan otomatis INSERT profil
+    // dengan role karyawan dan branch pertama. Kita UPDATE setelah itu.
     const { data: authData, error: authError } = await admin.auth.admin.createUser({
       email:         data.email.toLowerCase().trim(),
       password:      data.password,
       email_confirm: true,
-      user_metadata: { full_name: data.fullName.trim() },
+      user_metadata: {
+        full_name:     data.fullName.trim(),
+        phone_number:  data.phoneNumber?.trim() || null,
+        date_of_birth: data.dateOfBirth || null,
+      },
     });
     if (authError) return { ok: false, message: authError.message };
     if (!authData.user) return { ok: false, message: "Gagal membuat user auth." };
     authUserId = authData.user.id;
   }
 
-  // 5. Insert profil via ADMIN CLIENT (bypass RLS)
+  // 5. UPDATE profil yang sudah dibuat trigger (atau orphaned) dengan data yang benar
+  // Trigger sudah INSERT dengan role='karyawan', kita UPDATE dengan data aktual.
   const { data: profile, error: profileError } = await admin
     .from("profiles")
-    .insert({
-      auth_id:       authUserId,
+    .update({
       full_name:     data.fullName.trim(),
       phone_number:  data.phoneNumber?.trim() || null,
       date_of_birth: data.dateOfBirth || null,
@@ -112,16 +114,34 @@ export async function createStaffProfile(data: CreateStaffData): Promise<CreateS
       branch_id:     targetBranchId,
       work_schedule: (data.workSchedule || "field") as any,
       is_active:     data.isActive ?? true,
+      updated_at:    new Date().toISOString(),
     } as any)
+    .eq("auth_id", authUserId)
     .select()
     .single();
 
   if (profileError) {
-    // Hanya hapus auth user jika kita yang baru buat (bukan user lama yang orphaned)
-    if (!existingAuth) {
-      await admin.auth.admin.deleteUser(authUserId);
+    // Kalau UPDATE gagal (profil belum ada karena trigger delayed), coba INSERT
+    const { data: insertedProfile, error: insertError } = await admin
+      .from("profiles")
+      .insert({
+        auth_id:       authUserId,
+        full_name:     data.fullName.trim(),
+        phone_number:  data.phoneNumber?.trim() || null,
+        date_of_birth: data.dateOfBirth || null,
+        role:          data.role as any,
+        branch_id:     targetBranchId,
+        work_schedule: (data.workSchedule || "field") as any,
+        is_active:     data.isActive ?? true,
+      } as any)
+      .select()
+      .single();
+
+    if (insertError) {
+      if (!existingAuth) await admin.auth.admin.deleteUser(authUserId);
+      return { ok: false, message: insertError.message };
     }
-    return { ok: false, message: profileError.message };
+    return { ok: true, data: { profile: insertedProfile, authUserId } };
   }
 
   // 6. Activity log — actor_id pakai profiles.id bukan auth.uid()

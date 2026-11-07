@@ -410,6 +410,54 @@ export function OrderDetailView({
   // Pengerjaan wajib punya teknisi. Tombol Mulai Pengerjaan dimatikan dan
   // alasannya ditulis, karena server juga akan menolak permintaannya.
   const butuhTeknisi = order.status === "queued" && order.team.length === 0;
+
+  // Deteksi kategori layanan
+  const pkg = (order.servicePackage ?? "").toLowerCase();
+  const serviceCategory: "wash" | "poles" | "coating" =
+    pkg.includes("coating") || pkg.includes("ceramic") || pkg.includes("nano") ||
+    pkg.includes("graphene") || pkg.includes("package") || pkg.includes("premium")
+      ? "coating"
+    : pkg.includes("poles") || pkg.includes("polish") || pkg.includes("detailing") ||
+      pkg.includes("kompound") || pkg.includes("compound")
+      ? "poles"
+    : "wash";
+
+  const categoryLabel = serviceCategory === "coating" ? "Coating" : serviceCategory === "poles" ? "Poles" : "Wash";
+
+  // Progress steps berdasarkan kategori
+  type ProgressStep = { key: string; label: string; icon: string };
+  const progressSteps: ProgressStep[] =
+    serviceCategory === "wash"
+      ? [
+          { key: "queued",               label: "Antre",         icon: "schedule"       },
+          { key: "in_progress",          label: "Pencucian",     icon: "water_drop"     },
+          { key: "completed",            label: "Selesai",       icon: "task_alt"       },
+          { key: "menunggu_pembayaran",  label: "Bayar",         icon: "payments"       },
+          { key: "menunggu_diambil",     label: "Siap Diambil",  icon: "local_shipping" },
+          { key: "diserahkan",           label: "Diserahkan",    icon: "verified"       },
+        ]
+      : serviceCategory === "poles"
+      ? [
+          { key: "queued",               label: "Antre",         icon: "schedule"       },
+          { key: "in_progress",          label: "Poles",         icon: "healing"        },
+          { key: "qc_review",            label: "QC",            icon: "fact_check"     },
+          { key: "completed",            label: "Selesai",       icon: "task_alt"       },
+          { key: "menunggu_pembayaran",  label: "Bayar",         icon: "payments"       },
+          { key: "menunggu_diambil",     label: "Siap Diambil",  icon: "local_shipping" },
+          { key: "diserahkan",           label: "Diserahkan",    icon: "verified"       },
+        ]
+      : [
+          { key: "queued",               label: "Checking",      icon: "schedule"       },
+          { key: "in_progress",          label: "Coating",       icon: "auto_awesome"   },
+          { key: "qc_review",            label: "QC",            icon: "fact_check"     },
+          { key: "completed",            label: "Finishing",     icon: "task_alt"       },
+          { key: "menunggu_pembayaran",  label: "Bayar",         icon: "payments"       },
+          { key: "menunggu_diambil",     label: "Siap Diambil",  icon: "local_shipping" },
+          { key: "diserahkan",           label: "Diserahkan + Garansi", icon: "verified" },
+        ];
+
+  const currentStepIdx = progressSteps.findIndex((s) => s.key === order.status);
+
   if (order.status === "queued" && canUpload) {
     primaryActions.push({
       label: "Mulai Pengerjaan",
@@ -419,16 +467,25 @@ export function OrderDetailView({
     });
   }
   if (order.status === "in_progress" && canUpload) {
-    primaryActions.push({
-      label: "Ajukan QC",
-      icon: "fact_check",
-      status: "qc_review",
-      cls: "bg-primary text-white",
-    });
+    if (serviceCategory === "wash") {
+      // Wash: selesaikan langsung tanpa QC
+      primaryActions.push({
+        label: "Selesaikan (Cuci Selesai)",
+        icon: "task_alt",
+        status: "completed",
+        cls: "bg-success-base text-white",
+      });
+    } else {
+      // Poles/Coating: ajukan QC
+      primaryActions.push({
+        label: `Ajukan QC ${categoryLabel}`,
+        icon: "fact_check",
+        status: "qc_review",
+        cls: "bg-primary text-white",
+      });
+    }
   }
   if (order.status === "completed") {
-    // Setelah QC selesai, mobil belum otomatis dianggap selesai. Pelanggan
-    // biasanya belum datang, jadi ada tahap menunggu diambil dulu.
     primaryActions.push({
       label: "Tandai Menunggu Diambil",
       icon: "hourglass_top",
@@ -446,14 +503,14 @@ export function OrderDetailView({
   }
   if (order.status === "qc_review" && canDecideQc) {
     primaryActions.push({
-      label: "Setujui QC",
+      label: "QC Lulus ✓",
       icon: "verified",
       status: "completed",
       cls: "bg-success-base text-white",
     });
     primaryActions.push({
-      label: "Kembalikan",
-      icon: "replay",
+      label: "Gagal QC — Revisi",
+      icon: "undo",
       status: "in_progress",
       cls: "bg-warning-surface text-warning-text",
     });
@@ -663,6 +720,55 @@ export function OrderDetailView({
             </p>
           ) : null}
         </section>
+
+        {/* Progress bar adaptif per jenis layanan */}
+        {order.status !== "cancelled" && (
+          <section className="clay-card p-4 flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <h2 className="font-headline-2 text-headline-2 text-text-primary">Progres Pengerjaan</h2>
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-micro-badge text-micro-badge ${
+                serviceCategory === "coating" ? "bg-purple-50 text-purple-700"
+                : serviceCategory === "poles" ? "bg-orange-50 text-orange-700"
+                : "bg-brand-50 text-brand-700"
+              }`}>
+                <Icon name={serviceCategory === "coating" ? "auto_awesome" : serviceCategory === "poles" ? "healing" : "water_drop"} className="text-[12px]" />
+                {categoryLabel}
+              </span>
+            </div>
+            <ol className="flex flex-col">
+              {progressSteps.map((step, idx) => {
+                const done   = currentStepIdx >= 0 && idx < currentStepIdx;
+                const active = idx === currentStepIdx;
+                const reached = done || active;
+                const isLast = idx === progressSteps.length - 1;
+                return (
+                  <li key={step.key} className="flex gap-3">
+                    <div className="flex flex-col items-center">
+                      <span className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 font-micro-badge text-micro-badge ${
+                        active  ? "primary-gradient text-on-primary"
+                        : done  ? "bg-success-surface text-success-text"
+                        : "bg-surface-container text-text-muted"
+                      }`}>
+                        <Icon name={done ? "check" : step.icon} className="text-[16px]" />
+                      </span>
+                      {!isLast && (
+                        <span className={`w-0.5 flex-1 min-h-[20px] ${done ? "bg-success-base" : "bg-surface-container"}`} />
+                      )}
+                    </div>
+                    <div className="pb-4">
+                      <p className={`font-caption text-caption ${reached ? "text-text-primary font-semibold" : "text-text-muted"}`}>
+                        {step.label}
+                      </p>
+                      {active && (
+                        <span className="font-micro-badge text-micro-badge text-brand-600">● Sedang berlangsung</span>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+          </section>
+        )}
 
         <section className="clay-card p-4 flex flex-col gap-3">
           <div className="flex items-center justify-between">

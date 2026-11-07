@@ -49,18 +49,46 @@ const STATUS_META: Record<string, { label: string; cls: string; icon: string }> 
   cancelled:            { label: "Dibatalkan",          cls: "bg-danger-surface text-danger-text",                icon: "cancel"         },
 };
 
-const TRANSITIONS: Record<string, { status: string; label: string; icon: string }[]> = {
+const TRANSITIONS: Record<string, { status: string; label: string; icon: string; cls?: string }[]> = {
   queued:           [{ status: "in_progress",     label: "Mulai Pengerjaan",       icon: "play_arrow"    }],
-  in_progress:      [{ status: "qc_review",       label: "Ajukan QC",              icon: "fact_check"    }],
+  in_progress:      [
+    { status: "qc_review",   label: "Ajukan QC",    icon: "fact_check"  },
+    { status: "completed",   label: "Selesaikan",   icon: "task_alt"    },
+  ],
   qc_review:        [
-    { status: "completed",   label: "Selesaikan",  icon: "task_alt" },
-    { status: "in_progress", label: "Kembalikan",  icon: "undo"     },
+    { status: "completed",   label: "QC Lulus ✓",   icon: "task_alt",   cls: "bg-success-surface text-success-text" },
+    { status: "in_progress", label: "Gagal QC / Revisi", icon: "undo",  cls: "bg-warning-surface text-warning-text" },
   ],
   completed:        [{ status: "menunggu_diambil", label: "Siapkan untuk Diambil",  icon: "local_shipping"}],
   menunggu_diambil: [{ status: "diserahkan",       label: "Serahkan ke Pelanggan",  icon: "verified"      }],
 };
 
 const STATUS_SERAH_TERIMA = new Set(["menunggu_diambil", "diserahkan"]);
+
+// Deteksi kategori layanan — sama dengan logic di tracking page dan database
+function detectCat(servicePackage: string | null): "wash" | "poles" | "coating" {
+  const pkg = (servicePackage ?? "").toLowerCase();
+  if (pkg.includes("coating") || pkg.includes("ceramic") || pkg.includes("nano") ||
+      pkg.includes("graphene") || pkg.includes("liquid glass") || pkg.includes("package") ||
+      pkg.includes("premium")) return "coating";
+  if (pkg.includes("poles") || pkg.includes("polish") || pkg.includes("detailing") ||
+      pkg.includes("kompound") || pkg.includes("compound")) return "poles";
+  return "wash";
+}
+
+// Filter tombol aksi berdasarkan kategori layanan
+function actionsFor(status: string, servicePackage: string | null) {
+  const allActions = TRANSITIONS[status] ?? [];
+  const cat = detectCat(servicePackage);
+  if (status === "in_progress") {
+    // Wash: hanya tombol "Selesaikan" (skip QC)
+    // Poles/Coating: hanya tombol "Ajukan QC" (wajib QC)
+    return cat === "wash"
+      ? allActions.filter((a) => a.status === "completed")
+      : allActions.filter((a) => a.status === "qc_review");
+  }
+  return allActions;
+}
 
 const FILTERS = [
   { key: "all",                 label: "Semua"       },
@@ -454,7 +482,7 @@ export function OrderQueue({
           <div className="flex flex-col gap-3">
             {filtered.map((order) => {
               const meta     = STATUS_META[order.status] ?? STATUS_META.queued;
-              const actions  = TRANSITIONS[order.status] ?? [];
+              const actions  = actionsFor(order.status, order.service_package);
               const busy     = busyId === order.id;
               const canCancel = canManage && (order.status === "queued" || order.status === "in_progress");
               const perluTeknisi = order.status === "queued" && order.team.length === 0;
@@ -609,9 +637,9 @@ export function OrderQueue({
                             }
                             onClick={() => transition(order, action.status)}
                             className={`flex-1 py-2.5 rounded-xl font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform disabled:opacity-60 ${
-                              action.status === "completed"
+                              action.cls ?? (action.status === "completed"
                                 ? "bg-success-surface text-success-text"
-                                : "bg-primary text-white"
+                                : "bg-primary text-white")
                             }`}
                           >
                             <Icon name={action.icon} className="text-[18px]" />

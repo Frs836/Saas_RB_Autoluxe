@@ -164,9 +164,6 @@ const CATEGORY_INFO: Record<"wash"|"poles"|"coating", { label: string; icon: str
 /* Cadangan kalau status tidak dikenal */
 const STATUS_UNKNOWN = "Sedang Diproses";
 
-/* Cadangan kalau status tidak dikenal. Tidak boleh berbunyi "Diproses". */
-const STATUS_UNKNOWN = "Status tidak tersedia";
-
 const PHASE_LABEL: Record<string, string> = {
   before: "Kondisi Sebelum",
   process: "Proses Pengerjaan",

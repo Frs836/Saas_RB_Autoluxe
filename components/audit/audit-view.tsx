@@ -62,6 +62,25 @@ const ROLE_LABELS: Record<string, string> = {
   karyawan:        "Karyawan",
 };
 
+// Normalize a raw DB row (snake_case json) to AuditRow
+function normalizeRow(r: any): AuditRow {
+  return {
+    id:           r.id           ?? "",
+    created_at:   r.created_at   ?? "",
+    action:       r.action       ?? "",
+    category:     r.category     ?? "system",
+    actor_id:     r.actor_id     ?? null,
+    actor_name:   r.actor_name   ?? "Sistem",
+    actor_role:   r.actor_role   ?? "-",
+    entity:       r.entity       ?? "",
+    entity_id:    r.entity_id    ?? null,
+    metadata:     r.metadata     ?? null,
+    label:        r.label        ?? r.action ?? "",
+    order_number: r.order_number ?? null,
+    target_name:  r.target_name  ?? null,
+  };
+}
+
 function formatDateTime(iso: string) {
   return new Intl.DateTimeFormat("id-ID", {
     dateStyle: "medium",
@@ -85,7 +104,7 @@ export function AuditView({
   defaultTo: string;
   error: string | null;
 }) {
-  const [rows,     setRows]     = useState<AuditRow[]>(initialRows);
+  const [rows,     setRows]     = useState<AuditRow[]>(initialRows.map(normalizeRow));
   const [category, setCategory] = useState("all");
   const [from,     setFrom]     = useState(defaultFrom);
   const [to,       setTo]       = useState(defaultTo);
@@ -119,7 +138,8 @@ export function AuditView({
         p_offset: 0,
       });
       if (rpcErr) { setError(rpcErr.message); return; }
-      setRows((data ?? []) as AuditRow[]);
+      // RPC returns SETOF json — each row is a plain JSON object
+      setRows(((data ?? []) as any[]).map(normalizeRow));
     });
   }
 

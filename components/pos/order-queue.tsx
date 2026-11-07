@@ -66,13 +66,17 @@ const TRANSITIONS: Record<string, { status: string; label: string; icon: string;
 const STATUS_SERAH_TERIMA = new Set(["menunggu_diambil", "diserahkan"]);
 
 // Deteksi kategori layanan — sama dengan logic di tracking page dan database
-function detectCat(servicePackage: string | null): "wash" | "poles" | "coating" {
-  const pkg = (servicePackage ?? "").toLowerCase();
-  if (pkg.includes("coating") || pkg.includes("ceramic") || pkg.includes("nano") ||
-      pkg.includes("graphene") || pkg.includes("liquid glass") || pkg.includes("package") ||
-      pkg.includes("premium")) return "coating";
-  if (pkg.includes("poles") || pkg.includes("polish") || pkg.includes("detailing") ||
-      pkg.includes("kompound") || pkg.includes("compound")) return "poles";
+function detectCat(servicePackage: string | null): "wash" | "detailing" | "coating" {
+  const pkg = (servicePackage ?? "").toLowerCase().trim();
+  // Coating — exact names first
+  if (pkg === "graphene package" || pkg.includes("graphene")) return "coating";
+  if (pkg === "premium package"  || pkg === "light package")   return "coating";
+  if (pkg.includes("coating") || pkg.includes("ceramic") || pkg.includes("nano") || pkg.includes("layer")) return "coating";
+  // Detailing
+  if (pkg === "full package" || pkg.includes("full package")) return "detailing";
+  if (pkg === "interior" || pkg === "polish")                  return "detailing";
+  if (pkg.includes("detailing") || pkg.includes("interior"))   return "detailing";
+  if (pkg.includes("polish") || pkg.includes("poles") || pkg.includes("compound")) return "detailing";
   return "wash";
 }
 

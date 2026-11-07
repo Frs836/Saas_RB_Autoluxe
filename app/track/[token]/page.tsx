@@ -70,95 +70,131 @@ function storageObjectUrl(path: string | null): string | null {
 }
 
 /*
- * Deteksi kategori layanan dari nama paket.
- * Tidak perlu kolom baru di DB — cukup keyword matching di service_package.
+ * Deteksi kategori layanan berdasarkan nama paket yang tepat.
+ * Urutan pengecekan: coating packages dulu (termasuk "package" suffix),
+ * lalu detailing, lalu wash variants, lalu fallback wash_basic.
  */
-function detectCategory(servicePackage: string | null): "wash" | "poles" | "coating" {
-  const pkg = (servicePackage ?? "").toLowerCase();
-  if (
-    pkg.includes("coating") ||
-    pkg.includes("ceramic") ||
-    pkg.includes("nano") ||
-    pkg.includes("graphene") ||
-    pkg.includes("liquid glass") ||
-    pkg.includes("package") ||
-    pkg.includes("premium") ||
-    pkg.includes("express coat")
-  ) return "coating";
-  if (
-    pkg.includes("poles") ||
-    pkg.includes("polish") ||
-    pkg.includes("detailing") ||
-    pkg.includes("kompound") ||
-    pkg.includes("compound")
-  ) return "poles";
+type ServiceCategory =
+  | "coating_graphene" | "coating_premium" | "coating_light"
+  | "detailing_full"   | "detailing_polish" | "detailing_interior"
+  | "wash_premium"     | "wash_super"       | "wash_jamur" | "wash_basic";
+
+function detectCategory(servicePackage: string | null): ServiceCategory {
+  const pkg = (servicePackage ?? "").toLowerCase().trim();
+  // Coating — exact package names
+  if (pkg === "graphene package" || pkg.includes("graphene"))        return "coating_graphene";
+  if (pkg === "premium package"  || pkg.includes("5 layer"))         return "coating_graphene";
+  if (pkg === "light package"    || pkg.includes("2 layer") || pkg.includes("light package")) return "coating_light";
+  if (pkg.includes("3 layer") || pkg.includes("nano ceramic"))       return "coating_premium";
+  if (pkg.includes("coating") || pkg.includes("ceramic") || pkg.includes("nano")) return "coating_light";
+  // Detailing
+  if (pkg === "full package" || pkg.includes("full package") || pkg.includes("detailing full")) return "detailing_full";
+  if (pkg === "interior"     || pkg.includes("interior detailing"))  return "detailing_interior";
+  if (pkg === "polish"       || pkg.includes("polish detailing"))    return "detailing_polish";
+  if (pkg.includes("detailing") || pkg.includes("interior"))         return "detailing_full";
+  if (pkg.includes("polish") || pkg.includes("poles") || pkg.includes("compound")) return "detailing_polish";
+  // Wash variants — check BEFORE generic wash
+  if (pkg.includes("premium wash"))  return "wash_premium";
+  if (pkg.includes("super wash"))    return "wash_super";
+  if (pkg.includes("jamur kaca") || pkg.includes("jamur")) return "wash_jamur";
+  if (pkg.includes("basic wash") || pkg.includes("wash")) return "wash_basic";
+  return "wash_basic";
+}
+
+type Step = { key: string; label: string; icon: string; note?: string };
+
+// ── Step definitions per kategori ──────────────────────────────────────────
+const TAIL: Step[] = [
+  { key: "menunggu_pembayaran", label: "Menunggu Pembayaran", icon: "payments",       note: "Selesaikan pembayaran untuk melanjutkan" },
+  { key: "menunggu_diambil",    label: "Siap Diambil",        icon: "local_shipping", note: "Kendaraan siap diambil" },
+  { key: "diserahkan",          label: "Telah Diambil",       icon: "verified"        },
+];
+
+const STEP_MAP: Record<ServiceCategory, Step[]> = {
+  wash_basic: [
+    { key: "queued",      label: "Antre",        icon: "schedule"   },
+    { key: "in_progress", label: "Pencucian",     icon: "water_drop" },
+    { key: "completed",   label: "Pengeringan",   icon: "task_alt",  note: "Unit selesai dicuci & dikeringkan" },
+    ...TAIL,
+  ],
+  wash_super: [
+    { key: "queued",      label: "Antre",         icon: "schedule"   },
+    { key: "in_progress", label: "Pencucian",      icon: "water_drop" },
+    { key: "completed",   label: "Waxing & Pengeringan", icon: "task_alt", note: "Selesai cuci + wax" },
+    ...TAIL,
+  ],
+  wash_premium: [
+    { key: "queued",      label: "Antre",          icon: "schedule"   },
+    { key: "in_progress", label: "Pencucian",       icon: "water_drop" },
+    { key: "completed",   label: "Waxing → Quick Polish → Pengeringan", icon: "task_alt", note: "Premium wash selesai" },
+    ...TAIL,
+  ],
+  wash_jamur: [
+    { key: "queued",      label: "Antre",              icon: "schedule"   },
+    { key: "in_progress", label: "Pencucian",           icon: "water_drop" },
+    { key: "completed",   label: "Treatment Jamur Kaca", icon: "task_alt", note: "Selesai treatment & pengeringan" },
+    ...TAIL,
+  ],
+  detailing_polish: [
+    { key: "queued",      label: "Antre",                    icon: "schedule"  },
+    { key: "in_progress", label: "Paint Correction / Poles", icon: "healing"   },
+    { key: "qc_review",   label: "Quality Control",          icon: "fact_check" },
+    { key: "completed",   label: "QC Lulus",                 icon: "task_alt"  },
+    ...TAIL,
+  ],
+  detailing_interior: [
+    { key: "queued",      label: "Antre",                    icon: "schedule"  },
+    { key: "in_progress", label: "Interior Deep Clean",      icon: "healing"   },
+    { key: "qc_review",   label: "Quality Control",          icon: "fact_check" },
+    { key: "completed",   label: "QC Lulus",                 icon: "task_alt"  },
+    ...TAIL,
+  ],
+  detailing_full: [
+    { key: "queued",      label: "Antre",                    icon: "schedule"  },
+    { key: "in_progress", label: "Interior + Poles + Detail", icon: "healing"  },
+    { key: "qc_review",   label: "Quality Control",          icon: "fact_check" },
+    { key: "completed",   label: "QC Lulus",                 icon: "task_alt"  },
+    ...TAIL,
+  ],
+  coating_light: [
+    { key: "queued",      label: "Antre & Unit Checking",              icon: "schedule",    note: "Pemeriksaan kondisi awal" },
+    { key: "in_progress", label: "Poles → Coating → Glass Treatment",  icon: "auto_awesome", note: "2 Layer Nano Ceramic" },
+    { key: "qc_review",   label: "Quality Control",                    icon: "fact_check"  },
+    { key: "completed",   label: "Finishing",                          icon: "task_alt",    note: "Detail akhir & pengeringan" },
+    ...TAIL.map((s, i) => i === TAIL.length - 1 ? { ...s, label: "Diserahkan + Garansi", note: "Sertifikat garansi terbit" } : s),
+  ],
+  coating_premium: [
+    { key: "queued",      label: "Antre & Unit Checking",              icon: "schedule",    note: "Pemeriksaan kondisi awal" },
+    { key: "in_progress", label: "Engine Bay → Interior → Poles → Coating → Glass", icon: "auto_awesome", note: "3 Layer Nano Ceramic" },
+    { key: "qc_review",   label: "Quality Control",                    icon: "fact_check"  },
+    { key: "completed",   label: "Finishing",                          icon: "task_alt"    },
+    ...TAIL.map((s, i) => i === TAIL.length - 1 ? { ...s, label: "Diserahkan + Garansi" } : s),
+  ],
+  coating_graphene: [
+    { key: "queued",      label: "Antre & Unit Checking",              icon: "schedule",    note: "Pemeriksaan kondisi awal" },
+    { key: "in_progress", label: "Engine Bay → Interior → Wheel/Rim → Poles → Coating → Glass", icon: "auto_awesome", note: "5 Layer Graphene Coating" },
+    { key: "qc_review",   label: "Quality Control",                    icon: "fact_check"  },
+    { key: "completed",   label: "Finishing",                          icon: "task_alt"    },
+    ...TAIL.map((s, i) => i === TAIL.length - 1 ? { ...s, label: "Diserahkan + Garansi" } : s),
+  ],
+};
+
+function getSteps(servicePackage: string | null): Step[] {
+  return STEP_MAP[detectCategory(servicePackage)];
+}
+
+// Badge info per top-level category
+type TopCat = "wash" | "detailing" | "coating";
+function topCategory(cat: ServiceCategory): TopCat {
+  if (cat.startsWith("coating")) return "coating";
+  if (cat.startsWith("detailing")) return "detailing";
   return "wash";
 }
 
-/*
- * Step tracker per kategori layanan.
- *
- * Wash   : Antre → Pengerjaan → Siap Diambil (tidak ada QC)
- * Poles  : Antre → Pengerjaan → QC → Siap Diambil
- * Coating: Antre → Checking → Wash → Poles → Coating → QC → Finishing → Siap Diambil
- *
- * Semua berakhir di menunggu_pembayaran (jika belum lunas) atau menunggu_diambil → diserahkan.
- * Status database tetap sama (queued/in_progress/qc_review/completed/dll).
- * Perbedaan hanya pada label dan jumlah step yang ditampilkan.
- */
-type Step = { key: string; label: string; icon: string; note?: string };
-
-const STEPS_WASH: Step[] = [
-  { key: "queued",               label: "Antre",              icon: "schedule"       },
-  { key: "in_progress",          label: "Pencucian",          icon: "water_drop"     },
-  { key: "completed",            label: "Selesai Dicuci",     icon: "task_alt",
-    note: "Unit selesai dicuci dan siap diserahkan" },
-  { key: "menunggu_pembayaran",  label: "Menunggu Pembayaran",icon: "payments",
-    note: "Harap selesaikan pembayaran" },
-  { key: "menunggu_diambil",     label: "Siap Diambil",       icon: "local_shipping",
-    note: "Kendaraan sudah bersih dan siap diambil" },
-  { key: "diserahkan",           label: "Telah Diambil",      icon: "verified"       },
-];
-
-const STEPS_POLES: Step[] = [
-  { key: "queued",               label: "Antre",              icon: "schedule"       },
-  { key: "in_progress",          label: "Poles & Detailing",  icon: "healing"        },
-  { key: "qc_review",            label: "Quality Control",    icon: "fact_check"     },
-  { key: "completed",            label: "QC Selesai",         icon: "task_alt",
-    note: "Unit lolos QC dan siap diserahkan" },
-  { key: "menunggu_pembayaran",  label: "Menunggu Pembayaran",icon: "payments"       },
-  { key: "menunggu_diambil",     label: "Siap Diambil",       icon: "local_shipping" },
-  { key: "diserahkan",           label: "Telah Diambil",      icon: "verified"       },
-];
-
-const STEPS_COATING: Step[] = [
-  { key: "queued",               label: "Antre & Checking",   icon: "schedule",
-    note: "Pemeriksaan kondisi awal kendaraan" },
-  { key: "in_progress",         label: "Proses Coating",      icon: "auto_awesome",
-    note: "Wash → Poles → Aplikasi Coating" },
-  { key: "qc_review",            label: "Quality Control",    icon: "fact_check",
-    note: "Pengecekan hasil coating & ketebalan lapisan" },
-  { key: "completed",            label: "Finishing",          icon: "task_alt",
-    note: "Detail finishing dan pengeringan akhir" },
-  { key: "menunggu_pembayaran",  label: "Menunggu Pembayaran",icon: "payments"       },
-  { key: "menunggu_diambil",     label: "Siap Diambil",       icon: "local_shipping",
-    note: "Coating sudah curing, unit siap diambil" },
-  { key: "diserahkan",           label: "Diserahkan + Garansi",icon: "verified",
-    note: "Kendaraan diserahkan beserta sertifikat garansi" },
-];
-
-function getSteps(servicePackage: string | null): Step[] {
-  const cat = detectCategory(servicePackage);
-  if (cat === "coating") return STEPS_COATING;
-  if (cat === "poles")   return STEPS_POLES;
-  return STEPS_WASH;
-}
-
-// Label badge kategori untuk ditampilkan di halaman
-const CATEGORY_INFO: Record<"wash"|"poles"|"coating", { label: string; icon: string; color: string }> = {
-  wash:    { label: "Cuci Kendaraan",     icon: "water_drop",   color: "bg-brand-50 text-brand-700"       },
-  poles:   { label: "Poles & Detailing",  icon: "healing",      color: "bg-orange-50 text-orange-700"     },
-  coating: { label: "Coating & Garansi",  icon: "auto_awesome", color: "bg-purple-50 text-purple-700"     },
+const CATEGORY_INFO: Record<TopCat, { label: string; icon: string; color: string }> = {
+  wash:      { label: "Cuci Kendaraan",     icon: "water_drop",   color: "bg-brand-50 text-brand-700"       },
+  detailing: { label: "Poles & Detailing",  icon: "healing",      color: "bg-orange-50 text-orange-700"     },
+  coating:   { label: "Coating & Garansi",  icon: "auto_awesome", color: "bg-purple-50 text-purple-700"     },
 };
 
 /* Cadangan kalau status tidak dikenal */
@@ -227,8 +263,8 @@ export default async function TrackPage({
 
   const isCancelled = order.status === "cancelled";
   const STEPS = getSteps(order.service_package);
-  const category = detectCategory(order.service_package);
-  const catInfo = CATEGORY_INFO[category];
+  const cat = detectCategory(order.service_package);
+  const catInfo = CATEGORY_INFO[topCategory(cat)];
   const currentIndex = STEPS.findIndex((step) => step.key === order.status);
 
   /*

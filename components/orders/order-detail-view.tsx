@@ -411,50 +411,111 @@ export function OrderDetailView({
   // alasannya ditulis, karena server juga akan menolak permintaannya.
   const butuhTeknisi = order.status === "queued" && order.team.length === 0;
 
-  // Deteksi kategori layanan
-  const pkg = (order.servicePackage ?? "").toLowerCase();
-  const serviceCategory: "wash" | "poles" | "coating" =
-    pkg.includes("coating") || pkg.includes("ceramic") || pkg.includes("nano") ||
-    pkg.includes("graphene") || pkg.includes("package") || pkg.includes("premium")
-      ? "coating"
-    : pkg.includes("poles") || pkg.includes("polish") || pkg.includes("detailing") ||
-      pkg.includes("kompound") || pkg.includes("compound")
-      ? "poles"
-    : "wash";
+  // Deteksi kategori layanan — mirror dari logic di tracking page dan database
+  const pkg = (order.servicePackage ?? "").toLowerCase().trim();
+  type ServiceCat = "coating_graphene"|"coating_premium"|"coating_light"|"detailing_full"|"detailing_polish"|"detailing_interior"|"wash_premium"|"wash_super"|"wash_jamur"|"wash_basic";
+  const serviceCategory: ServiceCat =
+    pkg === "graphene package" || pkg.includes("graphene") ? "coating_graphene"
+    : pkg === "premium package" || pkg.includes("5 layer") ? "coating_graphene"
+    : pkg === "light package" || pkg.includes("2 layer") ? "coating_light"
+    : pkg.includes("3 layer") || pkg.includes("nano ceramic") ? "coating_premium"
+    : pkg.includes("coating") || pkg.includes("ceramic") || pkg.includes("nano") ? "coating_light"
+    : pkg === "full package" || pkg.includes("full package") ? "detailing_full"
+    : pkg === "interior" || pkg.includes("interior detailing") ? "detailing_interior"
+    : pkg === "polish" || pkg.includes("polish detailing") ? "detailing_polish"
+    : pkg.includes("detailing") || pkg.includes("interior") ? "detailing_full"
+    : pkg.includes("polish") || pkg.includes("poles") || pkg.includes("compound") ? "detailing_polish"
+    : pkg.includes("premium wash") ? "wash_premium"
+    : pkg.includes("super wash") ? "wash_super"
+    : pkg.includes("jamur") ? "wash_jamur"
+    : "wash_basic";
 
-  const categoryLabel = serviceCategory === "coating" ? "Coating" : serviceCategory === "poles" ? "Poles" : "Wash";
+  const needsQc = ["coating_graphene","coating_premium","coating_light","detailing_full","detailing_polish","detailing_interior"].includes(serviceCategory);
+  const hasWarranty = ["coating_graphene","coating_premium","coating_light"].includes(serviceCategory);
 
-  // Progress steps berdasarkan kategori
+  const catLabel =
+    serviceCategory.startsWith("coating") ? "Coating" :
+    serviceCategory.startsWith("detailing") ? "Detailing" :
+    serviceCategory === "wash_premium" ? "Premium Wash" :
+    serviceCategory === "wash_super" ? "Super Wash" :
+    serviceCategory === "wash_jamur" ? "Jamur Kaca" : "Wash";
+
+  const catIcon =
+    serviceCategory.startsWith("coating") ? "auto_awesome" :
+    serviceCategory.startsWith("detailing") ? "healing" : "water_drop";
+
+  const catColor =
+    serviceCategory.startsWith("coating") ? "bg-purple-50 text-purple-700" :
+    serviceCategory.startsWith("detailing") ? "bg-orange-50 text-orange-700" :
+    "bg-brand-50 text-brand-700";
+
+  // Progress steps
   type ProgressStep = { key: string; label: string; icon: string };
+  const PTAIL: ProgressStep[] = [
+    { key: "menunggu_pembayaran", label: "Bayar", icon: "payments" },
+    { key: "menunggu_diambil",    label: "Siap Diambil", icon: "local_shipping" },
+    { key: "diserahkan",          label: hasWarranty ? "Diserahkan + Garansi" : "Diserahkan", icon: "verified" },
+  ];
+
   const progressSteps: ProgressStep[] =
-    serviceCategory === "wash"
-      ? [
-          { key: "queued",               label: "Antre",         icon: "schedule"       },
-          { key: "in_progress",          label: "Pencucian",     icon: "water_drop"     },
-          { key: "completed",            label: "Selesai",       icon: "task_alt"       },
-          { key: "menunggu_pembayaran",  label: "Bayar",         icon: "payments"       },
-          { key: "menunggu_diambil",     label: "Siap Diambil",  icon: "local_shipping" },
-          { key: "diserahkan",           label: "Diserahkan",    icon: "verified"       },
-        ]
-      : serviceCategory === "poles"
-      ? [
-          { key: "queued",               label: "Antre",         icon: "schedule"       },
-          { key: "in_progress",          label: "Poles",         icon: "healing"        },
-          { key: "qc_review",            label: "QC",            icon: "fact_check"     },
-          { key: "completed",            label: "Selesai",       icon: "task_alt"       },
-          { key: "menunggu_pembayaran",  label: "Bayar",         icon: "payments"       },
-          { key: "menunggu_diambil",     label: "Siap Diambil",  icon: "local_shipping" },
-          { key: "diserahkan",           label: "Diserahkan",    icon: "verified"       },
-        ]
-      : [
-          { key: "queued",               label: "Checking",      icon: "schedule"       },
-          { key: "in_progress",          label: "Coating",       icon: "auto_awesome"   },
-          { key: "qc_review",            label: "QC",            icon: "fact_check"     },
-          { key: "completed",            label: "Finishing",     icon: "task_alt"       },
-          { key: "menunggu_pembayaran",  label: "Bayar",         icon: "payments"       },
-          { key: "menunggu_diambil",     label: "Siap Diambil",  icon: "local_shipping" },
-          { key: "diserahkan",           label: "Diserahkan + Garansi", icon: "verified" },
-        ];
+    serviceCategory === "wash_basic" ? [
+      {key:"queued",label:"Antre",icon:"schedule"},
+      {key:"in_progress",label:"Pencucian",icon:"water_drop"},
+      {key:"completed",label:"Pengeringan",icon:"task_alt"},
+      ...PTAIL,
+    ] : serviceCategory === "wash_super" ? [
+      {key:"queued",label:"Antre",icon:"schedule"},
+      {key:"in_progress",label:"Pencucian",icon:"water_drop"},
+      {key:"completed",label:"Waxing & Pengeringan",icon:"task_alt"},
+      ...PTAIL,
+    ] : serviceCategory === "wash_premium" ? [
+      {key:"queued",label:"Antre",icon:"schedule"},
+      {key:"in_progress",label:"Pencucian",icon:"water_drop"},
+      {key:"completed",label:"Waxing → Quick Polish",icon:"task_alt"},
+      ...PTAIL,
+    ] : serviceCategory === "wash_jamur" ? [
+      {key:"queued",label:"Antre",icon:"schedule"},
+      {key:"in_progress",label:"Pencucian",icon:"water_drop"},
+      {key:"completed",label:"Treatment Jamur Kaca",icon:"task_alt"},
+      ...PTAIL,
+    ] : serviceCategory === "detailing_polish" ? [
+      {key:"queued",label:"Antre",icon:"schedule"},
+      {key:"in_progress",label:"Paint Correction / Poles",icon:"healing"},
+      {key:"qc_review",label:"QC",icon:"fact_check"},
+      {key:"completed",label:"QC Lulus",icon:"task_alt"},
+      ...PTAIL,
+    ] : serviceCategory === "detailing_interior" ? [
+      {key:"queued",label:"Antre",icon:"schedule"},
+      {key:"in_progress",label:"Interior Deep Clean",icon:"healing"},
+      {key:"qc_review",label:"QC",icon:"fact_check"},
+      {key:"completed",label:"QC Lulus",icon:"task_alt"},
+      ...PTAIL,
+    ] : serviceCategory === "detailing_full" ? [
+      {key:"queued",label:"Antre",icon:"schedule"},
+      {key:"in_progress",label:"Interior + Polish + Detail",icon:"healing"},
+      {key:"qc_review",label:"QC",icon:"fact_check"},
+      {key:"completed",label:"QC Lulus",icon:"task_alt"},
+      ...PTAIL,
+    ] : serviceCategory === "coating_light" ? [
+      {key:"queued",label:"Antre & Checking",icon:"schedule"},
+      {key:"in_progress",label:"Poles → Coating → Glass",icon:"auto_awesome"},
+      {key:"qc_review",label:"QC",icon:"fact_check"},
+      {key:"completed",label:"Finishing",icon:"task_alt"},
+      ...PTAIL,
+    ] : serviceCategory === "coating_premium" ? [
+      {key:"queued",label:"Antre & Checking",icon:"schedule"},
+      {key:"in_progress",label:"Engine Bay → Interior → Poles → Coating",icon:"auto_awesome"},
+      {key:"qc_review",label:"QC",icon:"fact_check"},
+      {key:"completed",label:"Finishing",icon:"task_alt"},
+      ...PTAIL,
+    ] : [
+      // coating_graphene
+      {key:"queued",label:"Antre & Checking",icon:"schedule"},
+      {key:"in_progress",label:"Engine Bay → Wheel/Rim → Poles → Coating → Glass",icon:"auto_awesome"},
+      {key:"qc_review",label:"QC",icon:"fact_check"},
+      {key:"completed",label:"Finishing",icon:"task_alt"},
+      ...PTAIL,
+    ];
 
   const currentStepIdx = progressSteps.findIndex((s) => s.key === order.status);
 
@@ -467,18 +528,18 @@ export function OrderDetailView({
     });
   }
   if (order.status === "in_progress" && canUpload) {
-    if (serviceCategory === "wash") {
+    if (!needsQc) {
       // Wash: selesaikan langsung tanpa QC
       primaryActions.push({
-        label: "Selesaikan (Cuci Selesai)",
+        label: `Selesaikan (${catLabel} Selesai)`,
         icon: "task_alt",
         status: "completed",
         cls: "bg-success-base text-white",
       });
     } else {
-      // Poles/Coating: ajukan QC
+      // Detailing/Coating: ajukan QC
       primaryActions.push({
-        label: `Ajukan QC ${categoryLabel}`,
+        label: `Ajukan QC ${catLabel}`,
         icon: "fact_check",
         status: "qc_review",
         cls: "bg-primary text-white",
@@ -726,13 +787,9 @@ export function OrderDetailView({
           <section className="clay-card p-4 flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <h2 className="font-headline-2 text-headline-2 text-text-primary">Progres Pengerjaan</h2>
-              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-micro-badge text-micro-badge ${
-                serviceCategory === "coating" ? "bg-purple-50 text-purple-700"
-                : serviceCategory === "poles" ? "bg-orange-50 text-orange-700"
-                : "bg-brand-50 text-brand-700"
-              }`}>
-                <Icon name={serviceCategory === "coating" ? "auto_awesome" : serviceCategory === "poles" ? "healing" : "water_drop"} className="text-[12px]" />
-                {categoryLabel}
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-micro-badge text-micro-badge ${catColor}`}>
+                <Icon name={catIcon} className="text-[12px]" />
+                {catLabel}
               </span>
             </div>
             <ol className="flex flex-col">

@@ -79,6 +79,7 @@ export const PERMISSIONS = [
   "reports.omset",
   "reports.komisi",
   "reports.self",    // karyawan: lihat statistik diri sendiri
+  "reports.audit",   // audit trail log aktivitas
 
   /* Garansi & komunikasi */
   "warranty.manage",
@@ -159,6 +160,7 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "reports.omset",
     "reports.komisi",
     "branch.switch",
+    "reports.audit",
   ],
   manager: [
     "attendance.self",
@@ -185,6 +187,7 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "whatsapp.draft",
     "staff.manage",
     "branch.manage",
+    "reports.audit",
   ],
   maintainer: [
     "attendance.self",
@@ -214,6 +217,7 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "services.manage",
     "branch.switch",
     "branch.manage",
+    "reports.audit",
   ],
   owner: [
     "attendance.self",
@@ -243,6 +247,7 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "services.manage",
     "branch.switch",
     "branch.manage",
+    "reports.audit",
   ],
 };
 
@@ -436,6 +441,7 @@ export const PROFILE_MENU: readonly ProfileMenuItem[] = [
   { label: "Laporan Cabang", caption: "Finansial, omzet, komisi & stok", icon: "insights", href: "/laporan", permission: "reports.branch", category: "keuangan" },
   { label: "Laporan Komisi Staf", caption: "Data unit & revenue semua karyawan", icon: "badge", href: "/komisi", permission: "reports.komisi", category: "keuangan" },
   { label: "Omset", caption: "Ringkasan omset harian, mingguan, bulanan", icon: "trending_up", href: "/omset", permission: "reports.omset", category: "keuangan" },
+  { label: "Log Aktivitas", caption: "Audit trail — siapa melakukan apa dan kapan", icon: "history", href: "/laporan/aktivitas", permission: "reports.audit", category: "keuangan" },
   // Statistik Saya: HANYA untuk karyawan yang kerja di lapangan
   { label: "Statistik Saya", caption: "Unit yang saya kerjakan & data komisi saya", icon: "bar_chart", href: "/komisi/saya", permission: "reports.self", category: "kehadiran" },
   // Operasional

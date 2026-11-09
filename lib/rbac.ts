@@ -80,6 +80,10 @@ export const PERMISSIONS = [
   "reports.komisi",
   "reports.self",    // karyawan: lihat statistik diri sendiri
   "reports.audit",   // audit trail log aktivitas
+  "reports.cashflow", // laporan arus kas
+
+  /* Import data */
+  "data.import",
 
   /* Garansi & komunikasi */
   "warranty.manage",
@@ -149,6 +153,7 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "reports.omset",
     "warranty.manage",
     "whatsapp.draft",
+    "reports.cashflow",
   ],
   finance: [
     "attendance.self",
@@ -161,6 +166,7 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "reports.komisi",
     "branch.switch",
     "reports.audit",
+    "reports.cashflow",
   ],
   manager: [
     "attendance.self",
@@ -188,6 +194,8 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "staff.manage",
     "branch.manage",
     "reports.audit",
+    "reports.cashflow",
+    "data.import",
   ],
   maintainer: [
     "attendance.self",
@@ -218,6 +226,8 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "branch.switch",
     "branch.manage",
     "reports.audit",
+    "reports.cashflow",
+    "data.import",
   ],
   owner: [
     "attendance.self",
@@ -248,6 +258,8 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "branch.switch",
     "branch.manage",
     "reports.audit",
+    "reports.cashflow",
+    "data.import",
   ],
 };
 
@@ -442,6 +454,8 @@ export const PROFILE_MENU: readonly ProfileMenuItem[] = [
   { label: "Laporan Komisi Staf", caption: "Data unit & revenue semua karyawan", icon: "badge", href: "/komisi", permission: "reports.komisi", category: "keuangan" },
   { label: "Omset", caption: "Ringkasan omset harian, mingguan, bulanan", icon: "trending_up", href: "/omset", permission: "reports.omset", category: "keuangan" },
   { label: "Log Aktivitas", caption: "Audit trail — siapa melakukan apa dan kapan", icon: "history", href: "/laporan/aktivitas", permission: "reports.audit", category: "keuangan" },
+  { label: "Laporan Arus Kas", caption: "Cash flow statement + export Excel", icon: "account_balance", href: "/laporan/cashflow", permission: "reports.cashflow", category: "keuangan" },
+  { label: "Import Data Excel", caption: "Bulk import stok, kas historis", icon: "upload", href: "/import", permission: "data.import", category: "staf_cabang" },
   // Statistik Saya: HANYA untuk karyawan yang kerja di lapangan
   { label: "Statistik Saya", caption: "Unit yang saya kerjakan & data komisi saya", icon: "bar_chart", href: "/komisi/saya", permission: "reports.self", category: "kehadiran" },
   // Operasional

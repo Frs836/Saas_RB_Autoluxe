@@ -77,6 +77,15 @@ const [tab, setTab] = useState<"items" | "claims">("items");
   const [inOpen, setInOpen] = useState(false);
   const [inItemId, setInItemId] = useState("");
   const [cariBarang, setCariBarang] = useState("");
+  // Modal tambah item baru
+  const [newItemOpen, setNewItemOpen] = useState(false);
+  const [newItemName, setNewItemName] = useState("");
+  const [newItemUnit, setNewItemUnit] = useState("pcs");
+  const [newItemStock, setNewItemStock] = useState("0");
+  const [newItemMin, setNewItemMin] = useState("0");
+  const [newItemCost, setNewItemCost] = useState("");
+  const [newItemLoading, setNewItemLoading] = useState(false);
+  const [newItemError, setNewItemError] = useState<string | null>(null);
   // Penahan sinkron untuk menahan double-klik. State submitting baru berlaku
   // setelah React selesai merender, jadi dua klik cepat bisa sama-sama lolos
   // sebelum tombol terlihat mati.
@@ -245,6 +254,31 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
     }
   }
 
+  async function submitNewItem() {
+    if (!newItemName.trim()) { setNewItemError("Nama item wajib diisi."); return; }
+    setNewItemLoading(true);
+    setNewItemError(null);
+    try {
+      const supabase = createClient();
+      const { error: rpcErr } = await (supabase as any).rpc("create_inventory_item", {
+        p_item_name:       newItemName.trim(),
+        p_unit:            newItemUnit.trim() || "pcs",
+        p_current_stock:   Number(newItemStock) || 0,
+        p_min_stock_alert: Number(newItemMin) || 0,
+        p_unit_cost:       newItemCost.trim() ? Number(newItemCost) : null,
+      });
+      if (rpcErr) { setNewItemError(rpcErr.message); return; }
+      toast.sukses("Item baru berhasil ditambahkan", `${newItemName.trim()} ditambahkan ke inventaris.`);
+      setNewItemOpen(false);
+      setNewItemName(""); setNewItemUnit("pcs"); setNewItemStock("0"); setNewItemMin("0"); setNewItemCost("");
+      router.refresh();
+    } catch(e) {
+      setNewItemError(e instanceof Error ? e.message : "Gagal menambahkan item.");
+    } finally {
+      setNewItemLoading(false);
+    }
+  }
+
   async function confirmClaim(claim: StockClaim) {
     setBusyId(claim.id);
     setError(null);
@@ -377,7 +411,7 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
                   dan filter huruf, karena keduanya dipakai setelah pengguna
                   decides barang yang dicari. */}
               {canManage ? (
-                <div className="flex gap-2 pt-1">
+                <div className="flex gap-2 pt-1 flex-wrap">
                   <button
                     type="button"
                     onClick={() => {
@@ -391,12 +425,20 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
                     <Icon name="move_to_inbox" className="text-[18px]" />
                     Tambah Stok Masuk
                   </button>
-                  <a
-                    href="/stok/opname"
+                  <button
+                    type="button"
+                    onClick={() => setNewItemOpen(true)}
                     className="flex-1 min-h-11 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
                   >
+                    <Icon name="add_circle" className="text-[18px]" />
+                    Item Baru
+                  </button>
+                  <a
+                    href="/stok/opname"
+                    className="flex-1 min-h-11 rounded-xl bg-surface-container text-text-secondary font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+                  >
                     <Icon name="fact_check" className="text-[18px]" />
-                    Opname Stok
+                    Opname
                   </a>
                 </div>
               ) : null}
@@ -751,6 +793,67 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
           ) : null}
         </section>
       ) : null}
+
+      {/* ─── Modal Tambah Item Stok Baru ─── */}
+      {newItemOpen && (
+        <>
+          <div className="fixed inset-0 z-[60] bg-black/50" onClick={() => setNewItemOpen(false)} />
+          <div className="fixed inset-x-4 bottom-4 z-[61] bg-surface rounded-2xl p-5 shadow-xl max-w-md mx-auto flex flex-col gap-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between">
+              <h3 className="font-headline-2 text-headline-2 text-text-primary">Tambah Item Stok Baru</h3>
+              <button type="button" onClick={() => setNewItemOpen(false)} className="w-9 h-9 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary active:scale-95">
+                <Icon name="close" className="text-[20px]" />
+              </button>
+            </div>
+            <div className="flex flex-col gap-3">
+              <label className="flex flex-col gap-1">
+                <span className="font-caption text-caption text-text-secondary">Nama Item <span className="text-danger-text">*</span></span>
+                <input value={newItemName} onChange={(e) => setNewItemName(e.target.value)}
+                  placeholder="contoh: Nano Ceramic 10H" autoFocus
+                  className="h-11 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400" />
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="flex flex-col gap-1">
+                  <span className="font-caption text-caption text-text-secondary">Satuan</span>
+                  <input value={newItemUnit} onChange={(e) => setNewItemUnit(e.target.value)}
+                    placeholder="pcs / botol / liter"
+                    className="h-11 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400" />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="font-caption text-caption text-text-secondary">Harga Beli</span>
+                  <input value={newItemCost} onChange={(e) => setNewItemCost(e.target.value.replace(/\D/g,""))}
+                    placeholder="opsional" inputMode="numeric"
+                    className="h-11 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400" />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="font-caption text-caption text-text-secondary">Stok Awal</span>
+                  <input value={newItemStock} onChange={(e) => setNewItemStock(e.target.value.replace(/\D/g,""))}
+                    inputMode="numeric"
+                    className="h-11 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400" />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="font-caption text-caption text-text-secondary">Min. Alert</span>
+                  <input value={newItemMin} onChange={(e) => setNewItemMin(e.target.value.replace(/\D/g,""))}
+                    inputMode="numeric"
+                    className="h-11 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400" />
+                </label>
+              </div>
+            </div>
+            {newItemError && <p className="font-caption text-caption text-danger-text">{newItemError}</p>}
+            <div className="flex gap-3">
+              <button type="button" onClick={() => setNewItemOpen(false)}
+                className="flex-1 py-3 rounded-xl bg-surface-container-low text-text-secondary font-body-bold text-body-bold active:scale-95">
+                Batal
+              </button>
+              <button type="button" onClick={submitNewItem} disabled={newItemLoading}
+                className="flex-1 py-3 rounded-xl bg-primary text-white font-body-bold text-body-bold active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2">
+                {newItemLoading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Icon name="add_circle" className="text-[20px]" />}
+                {newItemLoading ? "Menyimpan..." : "Tambah Item"}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

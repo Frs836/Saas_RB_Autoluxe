@@ -147,9 +147,29 @@ export async function gantiEmail(input: {
   if (!konteks) return { ok: false, message: "Sesi berakhir. Silakan masuk kembali." };
 
   const emailBaru = potong(input.emailBaru.toLowerCase(), 160);
+
+  // Validasi format dasar
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailBaru)) {
     return { ok: false, message: "Format email tidak valid.", field: "email" };
   }
+
+  // Whitelist domain email yang diizinkan
+  const DOMAIN_DIIZINKAN = [
+    "gmail.com", "yahoo.com", "yahoo.co.id",
+    "outlook.com", "hotmail.com", "live.com",
+    "icloud.com", "me.com", "mac.com",
+    "proton.me", "protonmail.com",
+    "zoho.com", "yandex.com",
+  ];
+  const domain = emailBaru.split("@")[1] ?? "";
+  if (!DOMAIN_DIIZINKAN.includes(domain)) {
+    return {
+      ok: false,
+      message: `Email hanya boleh menggunakan domain terpercaya seperti: ${DOMAIN_DIIZINKAN.slice(0, 5).join(", ")}, dll.`,
+      field: "email",
+    };
+  }
+
   if (emailBaru === (konteks.user.email ?? "").toLowerCase()) {
     return { ok: false, message: "Email baru sama dengan email sekarang.", field: "email" };
   }
@@ -157,21 +177,30 @@ export async function gantiEmail(input: {
   const cek = await verifikasiPasswordLama(konteks.user.email ?? "", input.passwordLama);
   if (!cek.ok) return { ok: false, message: cek.pesan, field: "email" };
 
-  // Email hidup di auth.users, bukan di profiles. Keunikan dijaga Supabase,
-  // jadi pelanggaran keunikan dari sini diterjemahkan menjadi kalimat yang
-  // bisa dibaca staf, bukan kode database.
-  const { error } = await konteks.supabase.auth.updateUser({ email: emailBaru });
-  if (error) {
-    if (/already been registered|already exists|duplicate/i.test(error.message)) {
+  // Update email langsung via admin client (service_role) — tidak butuh konfirmasi email
+  // karena kita tidak punya server email untuk verifikasi.
+  const { createClient: buatAdmin } = await import("@supabase/supabase-js");
+  const adminSupa = buatAdmin(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+
+  const { error: adminErr } = await adminSupa.auth.admin.updateUserById(
+    konteks.user.id,
+    { email: emailBaru },
+  );
+
+  if (adminErr) {
+    if (/already been registered|already exists|duplicate/i.test(adminErr.message)) {
       return { ok: false, message: "Email sudah dipakai akun lain.", field: "email" };
     }
-    return { ok: false, message: `Gagal mengganti email: ${error.message}`, field: "email" };
+    return { ok: false, message: `Gagal mengganti email: ${adminErr.message}`, field: "email" };
   }
 
   revalidatePath("/profil");
   return {
     ok: true,
-    message: `Tautan konfirmasi dikirim ke ${emailBaru}. Email aktif berubah setelah tautan itu dibuka.`,
+    message: `Email berhasil diganti ke ${emailBaru}.`,
   };
 }
 

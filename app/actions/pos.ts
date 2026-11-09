@@ -81,8 +81,8 @@ export async function createPosOrder(
         }
       }
     }
-  } catch {
-    // Push errors must not crash the action
+  } catch (err) {
+    console.error("[push] createPosOrder notification failed:", err);
   }
 
   return { ok: true, data: order as Record<string, unknown> };

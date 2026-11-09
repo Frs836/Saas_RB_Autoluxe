@@ -32,14 +32,16 @@ export default async function KasPage() {
     .order("created_at", { ascending: false })
     .limit(50);
 
-  // Fetch unpaid and partial orders (Bayar Nanti) - orders with payment_state = 'unpaid' or 'partial'
+  // Fetch unpaid and partial orders (Bayar Nanti)
+  // Filter: payment_state unpaid/partial DAN status order bukan cancelled
   const { data: unpaidOrders } = await scopeBranchQuery(
     supabase
       .from("orders")
       .select(
         "id, order_number, license_plate, vehicle_model, customer_name, total_price, paid_amount, cash_hold_amount, cash_hold_payment_method, created_at",
       )
-      .in("payment_state", ["unpaid", "partial"]),
+      .in("payment_state", ["unpaid", "partial"])
+      .neq("status", "cancelled"),
     branchId,
     "orders",
   )

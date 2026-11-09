@@ -374,20 +374,20 @@ export function AccountSettings({
         title="Ganti Email"
       >
         <p className="font-caption text-caption text-text-muted">
-          Email sekarang <span className="font-body-bold text-text-primary">{email}</span> dan dipakai untuk masuk.
+          Email sekarang: <span className="font-body-bold text-text-primary">{email}</span>
         </p>
         <input
           value={emailBaru}
           onChange={(e) => setEmailBaru(e.target.value)}
           type="email"
-          placeholder="Email baru"
+          placeholder="Email baru (@gmail.com, @yahoo.com, dll)"
           className="h-11 rounded-2xl bg-surface-container-low px-3.5 font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-500/40"
         />
         <input
           value={sandiLama}
           onChange={(e) => setSandiLama(e.target.value)}
           type="password"
-          placeholder="Password lama"
+          placeholder="Password lama untuk konfirmasi"
           autoComplete="current-password"
           className="h-11 rounded-2xl bg-surface-container-low px-3.5 font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-500/40"
         />
@@ -402,10 +402,10 @@ export function AccountSettings({
           ) : (
             <Icon name="mark_email_read" className="text-[18px]" />
           )}
-          Kirim Tautan Konfirmasi
+          Ganti Email
         </button>
         <span className="font-caption text-caption text-text-muted">
-          Email baru hanya aktif setelah tautan konfirmasi dibuka.
+          Email langsung aktif setelah disimpan. Domain yang diizinkan: Gmail, Yahoo, Outlook, iCloud, dan sejenisnya.
         </span>
       </Modal>
 

@@ -1,14 +1,15 @@
 /**
- * Internal API endpoint untuk mengirim push notification.
- * Dipanggil dari server actions setelah event penting.
- * Protected dengan SUPABASE_SERVICE_ROLE_KEY di header.
+ * Legacy internal endpoint — no longer called from lib/push.ts.
+ * Kept for backward compatibility. VAPID init inside handler only.
  */
 import { NextRequest, NextResponse } from "next/server";
 import * as webpush from "web-push";
 
 export async function POST(req: NextRequest) {
-  // Inisialisasi VAPID di dalam handler agar tidak crash saat build
-  const rawEmail = process.env.VAPID_EMAIL!;
+  const rawEmail = process.env.VAPID_EMAIL ?? "";
+  if (!rawEmail || !process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
+    return NextResponse.json({ error: "VAPID not configured" }, { status: 500 });
+  }
   const vapidSubject = rawEmail.startsWith("mailto:") ? rawEmail : `mailto:${rawEmail}`;
   webpush.setVapidDetails(
     vapidSubject,
@@ -16,7 +17,6 @@ export async function POST(req: NextRequest) {
     process.env.VAPID_PRIVATE_KEY!,
   );
 
-  // Validasi internal secret
   const auth = req.headers.get("x-internal-secret");
   if (auth !== process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -31,8 +31,7 @@ export async function POST(req: NextRequest) {
   };
 
   const payload = JSON.stringify({
-    title,
-    body,
+    title, body,
     url:  url  ?? "/dashboard",
     icon: icon ?? "/rb-logo-new.png",
     badge: "/rb-logo-new.png",
@@ -44,13 +43,12 @@ export async function POST(req: NextRequest) {
       webpush.sendNotification(
         { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
         payload,
-        { TTL: 86400 }, // 24 jam
+        { TTL: 86400 },
       )
     )
   );
 
   const failed  = results.filter((r) => r.status === "rejected");
   const success = results.filter((r) => r.status === "fulfilled");
-
   return NextResponse.json({ sent: success.length, failed: failed.length });
 }

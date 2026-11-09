@@ -1,17 +1,30 @@
 /**
  * Server-side helper untuk kirim push notification ke profil tertentu.
- * Dipakai dari server actions / RPCs setelah event penting.
+ * Direct webpush — no HTTP self-call.
  */
+import * as webpush from "web-push";
 import { adminClient } from "@/lib/supabase/admin";
 import type { Role } from "@/lib/rbac";
 
 type PushPayload = {
-  profileIds: string[];       // profil yang mau dapat notif
+  profileIds: string[];
   title: string;
   body: string;
   url?: string;
   icon?: string;
 };
+
+/** Inisialisasi VAPID hanya saat dipanggil (runtime, bukan build time). */
+function getWebpush() {
+  const email = process.env.VAPID_EMAIL!;
+  const subject = email.startsWith("mailto:") ? email : `mailto:${email}`;
+  webpush.setVapidDetails(
+    subject,
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
+    process.env.VAPID_PRIVATE_KEY!,
+  );
+  return webpush;
+}
 
 export async function sendPushToProfiles({
   profileIds,
@@ -22,53 +35,60 @@ export async function sendPushToProfiles({
 }: PushPayload): Promise<void> {
   if (!profileIds.length) return;
 
-  // Ambil semua subscriptions dari profile ids yang relevan
   const db = adminClient();
   const { data: subs } = await db
     .from("push_subscriptions")
-    .select("endpoint, p256dh, auth")
+    .select("id, endpoint, p256dh, auth")
     .in("profile_id", profileIds);
 
   if (!subs || subs.length === 0) return;
 
-  // VERCEL_PROJECT_PRODUCTION_URL = domain production stabil (tanpa https://)
-  // VERCEL_URL = deployment URL saat ini (bisa preview/production)
-  // Fallback ke NEXT_PUBLIC_APP_URL jika tidak di Vercel
-  const productionUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL; // auto by Vercel
-  const vercelUrl    = process.env.VERCEL_URL;                      // auto by Vercel
-  const appUrl = productionUrl
-    ? `https://${productionUrl}`
-    : vercelUrl
-    ? `https://${vercelUrl}`
-    : (process.env.NEXT_PUBLIC_APP_URL ?? "https://rb-autoluxe-git-main-frs836s-projects.vercel.app");
+  const wp = getWebpush();
+  const payload = JSON.stringify({
+    title,
+    body,
+    url:   url  ?? "/dashboard",
+    icon:  icon ?? "/rb-logo-new.png",
+    badge: "/rb-logo-new.png",
+    timestamp: Date.now(),
+  });
 
-  try {
-    await fetch(`${appUrl}/api/push/send`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-internal-secret": process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      },
-      body: JSON.stringify({
-        subscriptions: subs.map((s) => ({
-          endpoint: s.endpoint,
-          p256dh:   s.p256dh,
-          auth:     s.auth,
-        })),
-        title,
-        body,
-        url:  url  ?? "/dashboard",
-        icon: icon ?? "/rb-logo-new.png",
-      }),
-    });
-  } catch {
-    // Push failure tidak boleh crash flow utama
+  const expiredIds: string[] = [];
+
+  await Promise.allSettled(
+    subs.map(async (sub) => {
+      try {
+        await wp.sendNotification(
+          { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+          payload,
+          { TTL: 86400 },
+        );
+      } catch (err: unknown) {
+        const status = (err as { statusCode?: number }).statusCode;
+        if (status === 410) {
+          // Subscription expired — mark for cleanup
+          expiredIds.push(sub.id);
+        } else {
+          console.error("[push] sendNotification failed for", sub.endpoint, err);
+        }
+      }
+    })
+  );
+
+  // Auto-cleanup expired subscriptions
+  if (expiredIds.length > 0) {
+    const { error } = await db
+      .from("push_subscriptions")
+      .delete()
+      .in("id", expiredIds);
+    if (error) {
+      console.error("[push] Failed to delete expired subscriptions:", error);
+    }
   }
 }
 
 /**
  * Ambil profile_id semua staf yang perlu dapat notifikasi per cabang.
- * Filter berdasarkan role yang relevan.
  */
 export async function getNotifTargets(branchId: string, roles: Role[]): Promise<string[]> {
   const db = adminClient();

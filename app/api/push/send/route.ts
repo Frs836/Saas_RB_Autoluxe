@@ -6,13 +6,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as webpush from "web-push";
 
-webpush.setVapidDetails(
-  process.env.VAPID_EMAIL!,
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!,
-);
-
 export async function POST(req: NextRequest) {
+  // Inisialisasi VAPID di dalam handler agar tidak crash saat build
+  const rawEmail = process.env.VAPID_EMAIL!;
+  const vapidSubject = rawEmail.startsWith("mailto:") ? rawEmail : `mailto:${rawEmail}`;
+  webpush.setVapidDetails(
+    vapidSubject,
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
+    process.env.VAPID_PRIVATE_KEY!,
+  );
+
   // Validasi internal secret
   const auth = req.headers.get("x-internal-secret");
   if (auth !== process.env.SUPABASE_SERVICE_ROLE_KEY) {

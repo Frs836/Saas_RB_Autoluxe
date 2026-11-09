@@ -7,6 +7,10 @@ import { canvasToWebp, captureSquareCanvas, fileToSquareWebp } from "@/lib/atten
 import { createClient } from "@/lib/supabase/client";
 import { PAYMENT_LABELS, whatsappLink } from "@/lib/pos";
 import { Icon } from "@/components/ui/icon";
+import {
+  applyOrderStatusAction,
+  advanceHandoverAction,
+} from "@/app/actions/order-status";
 
 export type InspectionPhoto = {
   id: string;
@@ -330,27 +334,21 @@ export function OrderDetailView({
     setError(null);
     setSuccess(null);
     try {
-      const supabase = createClient();
       // Tahap serah terima punya jalurnya sendiri, karena transisinya bukan
       // keputusan QC melainkan catatan dari fisik kendaraan.
       const serahTerima = next === "menunggu_diambil" || next === "diserahkan";
-      const { data, error: rpcError } = serahTerima
-        ? await supabase.rpc("advance_handover", {
-            p_order_id: order.id,
-            p_next: next as "queued" | "in_progress" | "qc_review" | "completed" | "cancelled" | "menunggu_diambil" | "diserahkan",
-          })
-        : await supabase.rpc("apply_order_status", {
-            p_order_id: order.id,
-            p_status: next as "queued" | "in_progress" | "qc_review" | "completed" | "cancelled" | "menunggu_diambil" | "diserahkan",
-          });
-      if (rpcError) throw new Error(rpcError.message);
+      type OrderStatus = "queued" | "in_progress" | "qc_review" | "completed" | "cancelled" | "menunggu_diambil" | "diserahkan";
+      let result;
+      if (serahTerima) {
+        result = await advanceHandoverAction(order.id, next as "menunggu_diambil" | "diserahkan");
+      } else {
+        result = await applyOrderStatusAction(order.id, next as OrderStatus);
+      }
+      if (!result.ok) throw new Error(result.message);
 
-      const warrantyCode = typeof data === "string" ? data : null;
       setSuccess(
         next === "completed"
-          ? warrantyCode
-            ? `QC disetujui. Sertifikat garansi ${warrantyCode} terbit.`
-            : "QC disetujui. Layanan ini tidak mendukung garansi."
+          ? "QC disetujui."
           : next === "in_progress"
             ? "Order dikembalikan ke teknisi untuk dikerjakan ulang."
             : "Status order diperbarui.",

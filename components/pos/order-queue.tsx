@@ -9,6 +9,12 @@ import { PAYMENT_LABELS, whatsappLink } from "@/lib/pos";
 import { Icon } from "@/components/ui/icon";
 import { useSingleFlight } from "@/lib/use-single-flight";
 import { useToast } from "@/components/toast";
+import {
+  applyOrderStatusAction,
+  advanceHandoverAction,
+  startOrderWorkAction,
+  cancelOrderAction,
+} from "@/app/actions/order-status";
 
 export type TeamMember = {
   id: string;
@@ -192,18 +198,15 @@ export function OrderQueue({
   async function transition(order: QueueOrder, status: string) {
     setBusyId(order.id);
     setError(null);
-    const supabase = createClient();
-    const { error: rpcErr } = STATUS_SERAH_TERIMA.has(status)
-      ? await supabase.rpc("advance_handover", {
-          p_order_id: order.id,
-          p_next: status as "queued" | "in_progress" | "qc_review" | "completed" | "cancelled" | "menunggu_pembayaran" | "menunggu_diambil" | "diserahkan",
-        })
-      : await supabase.rpc("apply_order_status", {
-          p_order_id: order.id,
-          p_status: status as "queued" | "in_progress" | "qc_review" | "completed" | "cancelled" | "menunggu_pembayaran" | "menunggu_diambil" | "diserahkan",
-        });
+    type OrderStatus = "queued" | "in_progress" | "qc_review" | "completed" | "cancelled" | "menunggu_pembayaran" | "menunggu_diambil" | "diserahkan";
+    let result;
+    if (STATUS_SERAH_TERIMA.has(status)) {
+      result = await advanceHandoverAction(order.id, status as "menunggu_diambil" | "diserahkan");
+    } else {
+      result = await applyOrderStatusAction(order.id, status as OrderStatus);
+    }
     setBusyId(null);
-    if (rpcErr) { setError(rpcErr.message); return; }
+    if (!result.ok) { setError(result.message); return; }
     router.refresh();
   }
 
@@ -215,13 +218,9 @@ export function OrderQueue({
     if (reason === null) return;
     setBusyId(order.id);
     setError(null);
-    const supabase = createClient();
-    const { error: rpcError } = await supabase.rpc("cancel_order", {
-      p_order_id: order.id,
-      p_reason: reason.trim() || "Dibatalkan",
-    });
+    const result = await cancelOrderAction(order.id, reason.trim() || "Dibatalkan");
     setBusyId(null);
-    if (rpcError) { setError(rpcError.message); return; }
+    if (!result.ok) { setError(result.message); return; }
     router.refresh();
   }
 
@@ -280,12 +279,8 @@ export function OrderQueue({
     setTeamModalLoading(true);
     setError(null);
     try {
-      const supabase = createClient();
-      const { error: rpcError } = await supabase.rpc("start_order_work", {
-        p_order_id: claimOrder.id,
-        p_team_ids: selectedStaff,
-      });
-      if (rpcError) throw new Error(rpcError.message);
+      const result = await startOrderWorkAction(claimOrder.id, selectedStaff);
+      if (!result.ok) throw new Error(result.message);
       sukses("Berhasil", "Order berhasil diklaim dan pengerjaan dimulai.");
       setShowTeamModal(false);
       setClaimOrder(null);

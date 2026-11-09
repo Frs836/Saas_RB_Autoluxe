@@ -9,6 +9,12 @@ import { formatTimeWib, formatDateWib } from "@/lib/format";
 import { formatAngka } from "@/lib/pos";
 import { Icon } from "@/components/ui/icon";
 import { Modal } from "@/components/ui/modal";
+import {
+  confirmStockClaimAction,
+  rejectStockClaimAction,
+  recordStockInAction,
+  createStockClaimAction,
+} from "@/app/actions/stok";
 
 export type InventoryItem = {
   id: string;
@@ -160,15 +166,14 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
     setSubmitting(true);
     setError(null);
     try {
-      const supabase = createClient();
-      const { error: rpcError } = await supabase.rpc("create_stock_claim", {
+      const result = await createStockClaimAction({
         p_item_id: selected.id,
         p_quantity: quantity,
         p_note: note.trim() === "" ? undefined : note.trim(),
       });
       setSubmitting(false);
-      if (rpcError) {
-        setError(rpcError.message);
+      if (!result.ok) {
+        setError(result.message);
         return;
       }
       setSelected(null);
@@ -218,18 +223,17 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
     );
 
     try {
-      const supabase = createClient();
-      const { error: rpcError } = await supabase.rpc("record_stock_in", {
+      const result = await recordStockInAction({
         p_item_id: inItem.id,
         p_quantity: quantity,
         p_unit_cost: cost ?? undefined,
         p_note: inNote.trim() === "" ? undefined : inNote.trim(),
       });
 
-      if (rpcError) {
+      if (!result.ok) {
         toast.gagal(
           "Stok masuk gagal dicatat",
-          `Penyebab: ${rpcError.message}. Data tidak tersimpan, periksa jumlah, harga, dan hak akses Anda lalu coba lagi.`,
+          `Penyebab: ${result.message}. Data tidak tersimpan, periksa jumlah, harga, dan hak akses Anda lalu coba lagi.`,
         );
         return;
       }

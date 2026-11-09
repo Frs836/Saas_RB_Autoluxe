@@ -28,6 +28,10 @@ import {
   type WibNow,
 } from "@/lib/attendance";
 import { Icon } from "@/components/ui/icon";
+import {
+  attendanceCheckInAction,
+  attendanceCheckOutAction,
+} from "@/app/actions/attendance";
 
 type TodayRow = {
   clockIn: string | null;
@@ -513,7 +517,7 @@ export function AttendanceConsole({
       const scanWajah = capturedDescriptor;
 
       if (mode === "checkin") {
-        const { error: rpcErr } = await supabase.rpc("attendance_check_in", {
+        const result = await attendanceCheckInAction({
           p_latitude: gps.lat,
           p_longitude: gps.lng,
           p_accuracy_meters: gps.accuracy ?? undefined,
@@ -522,13 +526,11 @@ export function AttendanceConsole({
           p_liveness_trace: liveRef.current.jejak(),
           p_late_reason: isLate ? lateReason.trim() : undefined,
         });
-        if (rpcErr) throw new Error(rpcErr.message);
+        if (!result.ok) throw new Error(result.message);
         setInfo("Check-in berhasil dicatat.");
       } else {
-        const { error: rpcErr } = await supabase.rpc("attendance_check_out", {
-          p_notes: undefined,
-        });
-        if (rpcErr) throw new Error(rpcErr.message);
+        const result = await attendanceCheckOutAction();
+        if (!result.ok) throw new Error(result.message);
         setInfo("Check-out berhasil dicatat.");
       }
 

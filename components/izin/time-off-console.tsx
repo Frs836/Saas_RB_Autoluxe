@@ -6,6 +6,11 @@ import { formatDateWib } from "@/lib/format";
 import { canvasToWebp, captureSquareCanvas } from "@/lib/attendance";
 import { createClient } from "@/lib/supabase/client";
 import { Icon } from "@/components/ui/icon";
+import {
+  submitTimeOffAction,
+  decideTimeOffAction,
+  cancelTimeOffAction,
+} from "@/app/actions/izin";
 
 export type TimeOffRow = {
   id: string;
@@ -151,7 +156,7 @@ export function TimeOffConsole({ requests, canDecide, todayIso }: Props) {
         if (upErr) throw new Error(`Gagal mengunggah bukti: ${upErr.message}`);
       }
 
-      const { error: rpcError } = await supabase.rpc("submit_time_off_request", {
+      const result = await submitTimeOffAction({
         p_type: type,
         p_start_date: startDate,
         p_end_date: endDate,
@@ -159,9 +164,9 @@ export function TimeOffConsole({ requests, canDecide, todayIso }: Props) {
         p_proof_path: path ?? undefined,
       });
 
-      if (rpcError) {
+      if (!result.ok) {
         if (path) await supabase.storage.from("timeoff-proofs").remove([path]);
-        throw new Error(rpcError.message);
+        throw new Error(result.message);
       }
 
       setReason("");
@@ -181,12 +186,8 @@ export function TimeOffConsole({ requests, canDecide, todayIso }: Props) {
     setError(null);
     setSuccess(null);
     try {
-      const supabase = createClient();
-      const { error: rpcError } = await supabase.rpc("decide_time_off_request", {
-        p_id: id,
-        p_decision: decision,
-      });
-      if (rpcError) throw new Error(rpcError.message);
+      const result = await decideTimeOffAction(id, decision);
+      if (!result.ok) throw new Error(result.message);
 
       setSuccess(
         decision === "approved"
@@ -219,11 +220,8 @@ export function TimeOffConsole({ requests, canDecide, todayIso }: Props) {
     setError(null);
     setSuccess(null);
     try {
-      const supabase = createClient();
-      const { error: rpcError } = await supabase.rpc("cancel_time_off_request", {
-        p_id: id,
-      });
-      if (rpcError) throw new Error(rpcError.message);
+      const result = await cancelTimeOffAction(id);
+      if (!result.ok) throw new Error(result.message);
       setSuccess("Pengajuan ditarik.");
       router.refresh();
     } catch (err) {

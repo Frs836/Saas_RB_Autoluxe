@@ -73,7 +73,7 @@ export default async function StatistikSayaPage() {
   const topServices = Array.from(byService.entries()).sort((a,b) => b[1]-a[1]).slice(0,5);
 
   return (
-    <div className="flex flex-col w-full min-h-screen pb-nav-plain">
+    <div className="flex flex-col w-full min-h-screen pb-nav-plain lg:pb-8">
       <SubPageHeader title="Statistik Saya" branchName={session.fullName} backHref="/profil" />
 
       <div className="px-gutter py-4 flex flex-col gap-4">

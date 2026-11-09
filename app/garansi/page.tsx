@@ -116,7 +116,7 @@ export default async function GaransiPage({
     : { data: [] as { order_id: string; claim_date: string; status: string; problem_description: string }[] };
 
   return (
-    <div className="flex flex-col w-full min-h-screen pb-nav-plain">
+    <div className="flex flex-col w-full min-h-screen pb-nav-plain lg:pb-8">
       <SubPageHeader
         title="Klaim Garansi"
         subtitle={

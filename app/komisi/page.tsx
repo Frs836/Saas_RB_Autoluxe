@@ -44,7 +44,7 @@ export default async function KomisiPage() {
   }));
 
   return (
-    <div className="flex flex-col w-full min-h-screen pb-nav-plain">
+    <div className="flex flex-col w-full min-h-screen pb-nav-plain lg:pb-8">
       <SubPageHeader
         title="Laporan Komisi"
         branchName={

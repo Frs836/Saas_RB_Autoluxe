@@ -21,7 +21,7 @@ export default async function ImportPage() {
     : { data: null };
 
   return (
-    <div className="flex flex-col w-full min-h-screen pb-nav-plain">
+    <div className="flex flex-col w-full min-h-screen pb-nav-plain lg:pb-8">
       <SubPageHeader
         title="Import Data Excel"
         branchName={branchData?.branch_name ?? (session.branchScope === "all" ? "Seluruh Cabang" : "Cabang Utama")}

@@ -219,7 +219,7 @@ const jamSekarang = wibNow();
   // Padding bawah memperhitungkan bilah navigasi dan safe area iPhone,
   // supaya kartu terakhir tidak tertutup menu.
   return (
-      <div className="flex flex-col w-full pb-nav-plain min-h-screen">
+      <div className="flex flex-col w-full pb-nav-plain lg:pb-8 min-h-screen">
       <DashboardHeader
         branchName={branch?.branch_name ?? "Cabang Utama"}
         fullName={profile.fullName}

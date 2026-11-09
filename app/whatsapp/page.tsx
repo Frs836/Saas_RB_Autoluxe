@@ -132,7 +132,7 @@ export default async function WhatsappPage() {
   const origin = host ? `${protocol}://${host}` : "";
 
   return (
-    <div className="flex flex-col w-full min-h-screen pb-nav-plain">
+    <div className="flex flex-col w-full min-h-screen pb-nav-plain lg:pb-8">
       <SubPageHeader
         title="Integrasi WhatsApp"
         subtitle={branchName}

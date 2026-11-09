@@ -169,7 +169,7 @@ export default async function OrderDetailPage({ params }: { params: Params }) {
   const origin = host ? `${protocol}://${host}` : "";
 
   return (
-    <div className="flex flex-col w-full min-h-screen pb-nav">
+    <div className="flex flex-col w-full min-h-screen pb-nav lg:pb-8">
       <OrderDetailView
         order={{
           id: order.id as string,

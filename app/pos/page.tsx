@@ -69,7 +69,7 @@ export default async function PosPage() {
     (profile.branchScope === "all" ? "Seluruh Cabang" : "Cabang Utama");
 
   return (
-    <div className="flex flex-col w-full min-h-screen pb-nav">
+    <div className="flex flex-col w-full min-h-screen pb-nav lg:pb-8">
       <PosConsole
         services={services}
         teamOptions={teamOptions}

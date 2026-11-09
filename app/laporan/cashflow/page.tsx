@@ -27,7 +27,7 @@ export default async function CashFlowPage() {
   });
 
   return (
-    <div className="flex flex-col w-full min-h-screen pb-nav-plain">
+    <div className="flex flex-col w-full min-h-screen pb-nav-plain lg:pb-8">
       <SubPageHeader
         title="Laporan Arus Kas"
         branchName={branchData?.branch_name ?? (session.branchScope === "all" ? "Seluruh Cabang" : "Cabang Utama")}

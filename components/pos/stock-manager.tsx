@@ -86,6 +86,9 @@ const [tab, setTab] = useState<"items" | "claims">("items");
   const [newItemCost, setNewItemCost] = useState("");
   const [newItemLoading, setNewItemLoading] = useState(false);
   const [newItemError, setNewItemError] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<InventoryItem | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   // Penahan sinkron untuk menahan double-klik. State submitting baru berlaku
   // setelah React selesai merender, jadi dua klik cepat bisa sama-sama lolos
   // sebelum tombol terlihat mati.
@@ -276,6 +279,30 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
       setNewItemError(e instanceof Error ? e.message : "Gagal menambahkan item.");
     } finally {
       setNewItemLoading(false);
+    }
+  }
+
+  async function deleteItem() {
+    if (!deleteTarget) return;
+    setDeleteLoading(true);
+    setDeleteError(null);
+    try {
+      const supabase = createClient();
+      const { error: delErr } = await supabase
+        .from("inventory_items")
+        .delete()
+        .eq("id", deleteTarget.id);
+      if (delErr) {
+        setDeleteError(delErr.message);
+        return;
+      }
+      setDeleteTarget(null);
+      toast.sukses("Item dihapus", `${deleteTarget.item_name} berhasil dihapus dari inventaris.`);
+      router.refresh();
+    } catch (e) {
+      setDeleteError(e instanceof Error ? e.message : "Gagal menghapus item.");
+    } finally {
+      setDeleteLoading(false);
     }
   }
 
@@ -516,6 +543,16 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
                     <Icon name="shopping_cart_checkout" className="text-[16px]" />
                     Klaim
                   </button>
+                  {canManage ? (
+                    <button
+                      type="button"
+                      onClick={() => { setDeleteTarget(item); setDeleteError(null); }}
+                      className="w-full min-h-11 rounded-xl bg-danger-surface text-danger-text font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform mt-1"
+                    >
+                      <Icon name="delete" className="text-[16px]" />
+                      Hapus
+                    </button>
+                  ) : null}
                 </div>
               );
             })}
@@ -655,6 +692,47 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
               <Icon name={submitting ? "hourglass_top" : "send"} className="text-[22px]" />
               {submitting ? "Mengirim..." : "Ajukan Klaim"}
             </button>
+          </div>
+        </div>
+      ) : null}
+
+      {deleteTarget ? (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+          <div className="w-full max-w-sm bg-surface rounded-[28px] p-6 flex flex-col gap-4 shadow-[0_8px_40px_rgba(0,0,0,0.2)]">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-danger-surface flex items-center justify-center shrink-0">
+                <Icon name="delete_forever" className="text-[24px] text-danger-text" />
+              </div>
+              <div>
+                <h3 className="font-headline-2 text-headline-2 text-text-primary">Hapus Item</h3>
+                <p className="font-caption text-caption text-text-muted">Tindakan ini tidak bisa dibatalkan</p>
+              </div>
+            </div>
+            <p className="font-body text-body text-text-secondary">
+              Yakin ingin menghapus <span className="font-body-bold text-body-bold text-text-primary">{deleteTarget.item_name}</span>? Data tidak bisa dikembalikan.
+            </p>
+            {deleteError ? (
+              <p className="font-caption text-caption text-danger-text bg-danger-surface rounded-xl p-2.5">{deleteError}</p>
+            ) : null}
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setDeleteTarget(null)}
+                disabled={deleteLoading}
+                className="flex-1 py-3 rounded-2xl bg-surface-container text-text-secondary font-body-bold text-body-bold active:scale-95 transition-transform disabled:opacity-60"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={deleteItem}
+                disabled={deleteLoading}
+                className="flex-1 py-3 rounded-2xl bg-danger-base text-white font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-60"
+              >
+                {deleteLoading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Icon name="delete" className="text-[18px]" />}
+                {deleteLoading ? "Menghapus..." : "Hapus"}
+              </button>
+            </div>
           </div>
         </div>
       ) : null}

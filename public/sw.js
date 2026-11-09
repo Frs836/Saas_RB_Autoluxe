@@ -15,7 +15,7 @@
  * sudah berubah kepada pengguna.
  */
 
-const CACHE_NAME = "rba-shell-v2";  // bump versi agar browser paksa update SW
+const CACHE_NAME = "rba-shell-v3";  // bump → force SW update di semua device
 const SHELL_ASSETS = ["/offline", "/manifest.json", "/rb-logo-new.png"];
 
 /*
@@ -68,6 +68,11 @@ self.addEventListener("activate", (event) => {
    belakang saat halaman pertama memakainya, bukan saat service worker
    dipasang, supaya pemasangan tidak tertahan berkas besar. */
 self.addEventListener("message", (event) => {
+  // SW update: skip waiting agar versi baru langsung aktif
+  if (event.data?.type === "SKIP_WAITING") {
+    self.skipWaiting();
+    return;
+  }
   if (event.data?.type !== "precache-face-engine") return;
   event.waitUntil(
     caches.open(MESIN_WAJAH_CACHE).then((cache) =>
@@ -89,25 +94,32 @@ function isSupabase(url) {
 // ─── Push Notification Handlers ─────────────────────────────────────────────
 
 self.addEventListener("push", (event) => {
-  if (!event.data) return;
-
+  // Jangan skip — selalu tampilkan notif bahkan jika data kosong
   let data;
-  try { data = event.data.json(); }
-  catch { data = { title: "RB AUTOLUXE", body: event.data.text(), url: "/dashboard" }; }
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch {
+    data = { title: "RB AUTOLUXE", body: event.data ? event.data.text() : "Ada notifikasi baru", url: "/dashboard" };
+  }
 
   const title   = data.title ?? "RB AUTOLUXE";
   const options = {
-    body:    data.body    ?? "",
-    icon:    data.icon    ?? "/rb-logo-new.png",
-    badge:   data.badge   ?? "/rb-logo-new.png",
-    data:    { url: data.url ?? "/dashboard" },
-    vibrate: [200, 100, 200],
-    tag:     data.tag ?? "rba-notif",
-    renotify: true,
-    actions: data.url ? [{ action: "open", title: "Buka" }] : [],
+    body:             data.body    ?? "",
+    icon:             data.icon    ?? "/rb-logo-new.png",
+    badge:            data.badge   ?? "/rb-logo-new.png",
+    data:             { url: data.url ?? "/dashboard" },
+    vibrate:          [200, 100, 200, 100, 200],
+    tag:              data.tag ?? "rba-notif",
+    renotify:         true,
+    requireInteraction: false,   // false = notif bisa hilang sendiri di Android
+    silent:           false,     // pastikan ada suara/getar
+    actions:          [{ action: "open", title: "Buka Aplikasi" }],
   };
 
-  event.waitUntil(self.registration.showNotification(title, options));
+  event.waitUntil(
+    self.registration.showNotification(title, options)
+      .catch((err) => console.error("[SW] showNotification failed:", err))
+  );
 });
 
 self.addEventListener("notificationclick", (event) => {

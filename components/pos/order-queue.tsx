@@ -405,7 +405,7 @@ export function OrderQueue({
       )}
 
       {/* ── Main queue list ── */}
-      <div className="px-gutter py-4 pb-nav-plain flex flex-col gap-4">
+      <div className="px-gutter py-4 pb-nav-plain flex flex-col gap-4 lg:max-w-4xl lg:mx-auto lg:w-full">
         {/* stat cards */}
         <div className="grid grid-cols-4 gap-2">
           {[
@@ -494,7 +494,7 @@ export function OrderQueue({
                 : null;
 
               return (
-                <div key={order.id} className="clay-card p-4 flex flex-col gap-3">
+                <div key={order.id} className="clay-card p-4 lg:p-6 flex flex-col gap-3">
                   {/* header: order number + status badge */}
                   <div className="flex items-center justify-between gap-2">
                     <Link
@@ -519,7 +519,7 @@ export function OrderQueue({
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <h3 className="font-body-bold text-body-bold text-text-primary truncate">
+                        <h3 className="font-body-bold text-body-bold text-text-primary truncate lg:whitespace-normal">
                           {order.vehicle_model ?? "Kendaraan"}
                         </h3>
                         {order.license_plate && (
@@ -528,10 +528,10 @@ export function OrderQueue({
                           </span>
                         )}
                       </div>
-                      <p className="font-caption text-caption text-brand-600 mt-0.5 truncate">
+                      <p className="font-caption text-caption text-brand-600 mt-0.5 truncate lg:whitespace-normal">
                         {order.service_package ?? "Paket layanan"}
                       </p>
-                      <p className="font-caption text-caption text-text-muted mt-0.5 truncate">
+                      <p className="font-caption text-caption text-text-muted mt-0.5 truncate lg:whitespace-normal">
                         {!isStaff
                           ? order.customer_name
                             ? `${order.customer_name}${order.customer_phone ? ` • ${order.customer_phone}` : ""}`

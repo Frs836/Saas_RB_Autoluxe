@@ -4,6 +4,7 @@ import { BottomNav } from "@/components/dashboard/bottom-nav";
 import { SubPageHeader } from "@/components/pos/sub-page-header";
 import { ProfilView } from "@/components/profil/profil-view";
 import { AccountSettings } from "@/components/profil/account-settings";
+import { PushSubscribeButton } from "@/components/mobile/push-subscribe-button";
 import { urlAvatar } from "@/lib/avatar";
 import { can, profileMenuFor, roleLabel, toRole } from "@/lib/rbac";
 import { getSessionProfile } from "@/lib/rbac-guard";
@@ -78,6 +79,10 @@ export default async function ProfilPage() {
         email={session.email}
         avatarUrl={profile?.avatar_path ? urlAvatar(profile.avatar_path) : null}
       />
+      <div className="px-gutter pb-4">
+        <p className="font-caption text-caption text-text-muted mb-2">Notifikasi Perangkat</p>
+        <PushSubscribeButton />
+      </div>
       <BottomNav role={toRole(role)} />
     </div>
   );

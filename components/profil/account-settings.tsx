@@ -12,6 +12,7 @@ import {
   type AccountActionResult,
 } from "@/app/actions/account";
 import { Icon } from "@/components/ui/icon";
+import { Modal } from "@/components/ui/modal";
 import { AvatarCropper } from "@/components/profil/avatar-cropper";
 import { initials } from "@/lib/format";
 import { urlAvatar } from "@/lib/avatar";
@@ -22,14 +23,9 @@ const JENIS_FOTO = ["image/webp", "image/jpeg", "image/png"];
 /**
  * Pengaturan akun milik staf sendiri.
  *
- * Halaman Profil lama hanya menampilkan nilai, jadi nama, nomor telepon, dan
- * tanggal lahir yang diisi saat pendaftaran praktis terkunci selamanya. Bagian
- * ini membuat ketiganya bisa diubah sendiri, ditambah foto profil, email,
- * dan kata sandi.
- *
- * Email dan kata sandi selalu minta password lama lebih dulu. Tanpa itu,
- * siapa pun yang mendapat sesi terbuka di peramban orang lain, termasuk
- * dari perangkat bersama, bisa mengunci pemilik akun selamanya.
+ * Setiap tindakan (data diri, email, sandi, foto) membuka modal overlay,
+ * bukan memperluas section di bawah halaman. Ini membuat tampilan tetap
+ * ringkas dan tidak membingungkan pengguna.
  */
 export function AccountSettings({
   nama,
@@ -62,6 +58,11 @@ export function AccountSettings({
   const [sibuk, setSibuk] = useState<"data" | "email" | "sandi" | "foto" | null>(null);
   const [sandiLama, setSandiLama] = useState("");
 
+  // Modal state
+  const [modalDataDiri, setModalDataDiri] = useState(false);
+  const [modalEmail, setModalEmail] = useState(false);
+  const [modalSandi, setModalSandi] = useState(false);
+
   const jalankan = async (
     kunci: "data" | "email" | "sandi" | "foto",
     kerja: () => Promise<AccountActionResult>,
@@ -81,14 +82,16 @@ export function AccountSettings({
     }
   };
 
-  const kirimData = () =>
-    jalankan("data", () =>
+  const kirimData = async () => {
+    const hasil = await jalankan("data", () =>
       simpanDataDiri({
         nama: form.nama,
         telepon: form.telepon,
         tanggalLahir: form.tanggalLahir,
       }),
     );
+    if (hasil.ok) setModalDataDiri(false);
+  };
 
   const kirimEmail = async () => {
     const hasil = await jalankan("email", () =>
@@ -97,6 +100,7 @@ export function AccountSettings({
     if (hasil.ok) {
       setEmailBaru("");
       setSandiLama("");
+      setModalEmail(false);
     }
   };
 
@@ -111,6 +115,7 @@ export function AccountSettings({
     if (hasil.ok) {
       setSandi({ passwordLama: "", passwordBaru: "", ulangiSandi: "" });
       setSandiTerlihat(false);
+      setModalSandi(false);
     }
   };
 
@@ -123,7 +128,6 @@ export function AccountSettings({
       setPesan({ ok: false, message: "Ukuran foto maksimal 2 MB." });
       return;
     }
-    // Bingkai diatur pengguna sebelum berkas diunggah, bukan dipotong dari tengah.
     setBerkasCrop(berkas);
   };
 
@@ -171,12 +175,6 @@ export function AccountSettings({
   const tampilFoto = avatar ? urlAvatar(avatar) : null;
 
   return (
-    /*
-     * Ruang bawah memakai pb-nav, bukan pb-2. Bagian ini berada di luar
-     * wadah ProfilView yang sudah membawa pb-nav-plain-nya sendiri, jadi
-     * tanpa tambahan ruang di sini tombol terakhir tepat tertutup navigasi
-     * bawah dan tidak bisa diketuk.
-     */
     <div className="flex flex-col gap-2.5 px-gutter pt-2.5 pb-nav">
       {/* Pesan hasil aksi */}
       {pesan ? (
@@ -202,9 +200,6 @@ export function AccountSettings({
         <div className="flex items-center gap-4">
           <div className="relative w-20 h-20 shrink-0">
             {tampilFoto ? (
-              // Foto profil diambil dari bucket publik, jadi harus lewat
-              // next/image agar tidak dikenal mesin pencari sebagai aset
-              // aplikasi yang tidak relevan.
               <img
                 src={tampilFoto}
                 alt="Foto profil Anda"
@@ -259,170 +254,225 @@ export function AccountSettings({
         </div>
       </section>
 
-      {/* Data diri */}
+      {/* Data diri — tombol pembuka modal */}
       <section className="bg-surface rounded-[20px] p-4 clay-card border border-white/80">
-        <div className="flex items-center gap-2 mb-3">
-          <Icon name="badge" className="text-brand-600 text-[18px]" />
-          <span className="font-body-bold text-body-bold text-text-primary">Data Diri</span>
-        </div>
-        <div className="flex flex-col gap-2.5">
-          <label className="flex flex-col gap-1">
-            <span className="font-caption text-caption text-text-secondary">Nama Lengkap</span>
-            <input
-              value={form.nama}
-              onChange={(e) => setForm({ ...form, nama: e.target.value })}
-              maxLength={120}
-              className="h-11 rounded-2xl bg-surface-container-low px-3.5 font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-500/40"
-            />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="font-caption text-caption text-text-secondary">Nomor Telepon</span>
-            <input
-              value={form.telepon}
-              onChange={(e) => setForm({ ...form, telepon: e.target.value })}
-              inputMode="tel"
-              maxLength={25}
-              placeholder="08xxxxxxxxxx"
-              className="h-11 rounded-2xl bg-surface-container-low px-3.5 font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-500/40"
-            />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="font-caption text-caption text-text-secondary">Tanggal Lahir</span>
-            <input
-              type="date"
-              value={form.tanggalLahir}
-              onChange={(e) => setForm({ ...form, tanggalLahir: e.target.value })}
-              className="h-11 rounded-2xl bg-surface-container-low px-3.5 font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-500/40"
-            />
-          </label>
-          <button
-            type="button"
-            onClick={kirimData}
-            disabled={sibuk !== null}
-            className="mt-1 h-11 rounded-full bg-brand-600 text-white font-body-bold text-body-bold flex items-center justify-center gap-2 disabled:opacity-60"
-          >
-            {sibuk === "data" ? (
-              <Icon name="progress_activity" className="text-[18px] animate-spin" />
-            ) : (
-              <Icon name="save" className="text-[18px]" />
-            )}
-            Simpan Data Diri
-          </button>
-        </div>
-      </section>
-
-      {/* Email */}
-      <section className="bg-surface rounded-[20px] p-4 clay-card border border-white/80">
-        <div className="flex items-center gap-2 mb-1">
-          <Icon name="mail" className="text-brand-600 text-[18px]" />
-          <span className="font-body-bold text-body-bold text-text-primary">Email</span>
-        </div>
-        <p className="font-caption text-caption text-text-muted mb-3">
-          Email sekarang {email} dan dipakai untuk masuk.
-        </p>
-        <div className="flex flex-col gap-2.5">
-          <input
-            value={emailBaru}
-            onChange={(e) => setEmailBaru(e.target.value)}
-            type="email"
-            placeholder="email baru"
-            className="h-11 rounded-2xl bg-surface-container-low px-3.5 font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-500/40"
-          />
-          <input
-            value={sandiLama}
-            onChange={(e) => setSandiLama(e.target.value)}
-            type="password"
-            placeholder="Password lama"
-            autoComplete="current-password"
-            className="h-11 rounded-2xl bg-surface-container-low px-3.5 font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-500/40"
-          />
-          <button
-            type="button"
-            onClick={kirimEmail}
-            disabled={sibuk !== null || emailBaru.length === 0 || sandiLama.length === 0}
-            className="h-11 rounded-full bg-brand-600 text-white font-body-bold text-body-bold flex items-center justify-center gap-2 disabled:opacity-60"
-          >
-            {sibuk === "email" ? (
-              <Icon name="progress_activity" className="text-[18px] animate-spin" />
-            ) : (
-              <Icon name="mark_email_read" className="text-[18px]" />
-            )}
-            Kirim Tautan Konfirmasi
-          </button>
-          <span className="font-caption text-caption text-text-muted">
-            Email baru hanya aktif setelah tautan konfirmasi dibuka.
-          </span>
-        </div>
-      </section>
-
-      {/* Kata sandi */}
-      <section className="bg-surface rounded-[20px] p-4 clay-card border border-white/80">
-        <div className="flex items-center gap-2 mb-3">
-          <Icon name="lock" className="text-brand-600 text-[18px]" />
-          <span className="font-body-bold text-body-bold text-text-primary">
-            Kata Sandi
-          </span>
-        </div>
-        <div className="flex flex-col gap-2.5">
-          <input
-            value={sandi.passwordLama}
-            onChange={(e) => setSandi({ ...sandi, passwordLama: e.target.value })}
-            type="password"
-            placeholder="Password lama"
-            autoComplete="current-password"
-            className="h-11 rounded-2xl bg-surface-container-low px-3.5 font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-500/40"
-          />
-          <input
-            value={sandi.passwordBaru}
-            onChange={(e) => setSandi({ ...sandi, passwordBaru: e.target.value })}
-            type={sandiTerlihat ? "text" : "password"}
-            placeholder="Password baru, minimal 8 karakter"
-            autoComplete="new-password"
-            className="h-11 rounded-2xl bg-surface-container-low px-3.5 font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-500/40"
-          />
-          <input
-            value={sandi.ulangiSandi}
-            onChange={(e) => setSandi({ ...sandi, ulangiSandi: e.target.value })}
-            type={sandiTerlihat ? "text" : "password"}
-            placeholder="Ulangi password baru"
-            autoComplete="new-password"
-            className="h-11 rounded-2xl bg-surface-container-low px-3.5 font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-500/40"
-          />
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setSandiTerlihat(!sandiTerlihat)}
-              className="font-caption text-caption text-brand-700 flex items-center gap-1"
-            >
-              <Icon
-                name={sandiTerlihat ? "visibility_off" : "visibility"}
-                className="text-[16px]"
-              />
-              {sandiTerlihat ? "Sembunyikan" : "Tampilkan"}
-            </button>
-            <span className="font-caption text-caption text-text-muted">
-              Jangan pakai kata sandi yang dipakai di layanan lain.
-            </span>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Icon name="badge" className="text-brand-600 text-[18px]" />
+            <div>
+              <span className="font-body-bold text-body-bold text-text-primary">Data Diri</span>
+              <p className="font-caption text-caption text-text-muted">{form.nama}</p>
+            </div>
           </div>
           <button
             type="button"
-            onClick={kirimSandi}
-            disabled={
-              sibuk !== null ||
-              sandi.passwordLama.length === 0 ||
-              sandi.passwordBaru.length === 0
-            }
-            className="h-11 rounded-full bg-brand-600 text-white font-body-bold text-body-bold flex items-center justify-center gap-2 disabled:opacity-60"
+            onClick={() => setModalDataDiri(true)}
+            className="h-9 px-4 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center gap-1.5 active:scale-95 transition-transform"
           >
-            {sibuk === "sandi" ? (
-              <Icon name="progress_activity" className="text-[18px] animate-spin" />
-            ) : (
-              <Icon name="lock_reset" className="text-[18px]" />
-            )}
-            Ganti Kata Sandi
+            <Icon name="edit" className="text-[16px]" />
+            Ubah
           </button>
         </div>
       </section>
+
+      {/* Email — tombol pembuka modal */}
+      <section className="bg-surface rounded-[20px] p-4 clay-card border border-white/80">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Icon name="mail" className="text-brand-600 text-[18px]" />
+            <div>
+              <span className="font-body-bold text-body-bold text-text-primary">Email</span>
+              <p className="font-caption text-caption text-text-muted truncate max-w-[160px]">{email}</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setModalEmail(true)}
+            className="h-9 px-4 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center gap-1.5 active:scale-95 transition-transform shrink-0"
+          >
+            <Icon name="edit" className="text-[16px]" />
+            Ganti
+          </button>
+        </div>
+      </section>
+
+      {/* Kata sandi — tombol pembuka modal */}
+      <section className="bg-surface rounded-[20px] p-4 clay-card border border-white/80">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Icon name="lock" className="text-brand-600 text-[18px]" />
+            <div>
+              <span className="font-body-bold text-body-bold text-text-primary">Kata Sandi</span>
+              <p className="font-caption text-caption text-text-muted">••••••••</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setModalSandi(true)}
+            className="h-9 px-4 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center gap-1.5 active:scale-95 transition-transform shrink-0"
+          >
+            <Icon name="lock_reset" className="text-[16px]" />
+            Ganti
+          </button>
+        </div>
+      </section>
+
+      {/* ── Modal: Ubah Data Diri ── */}
+      <Modal
+        open={modalDataDiri}
+        onClose={() => setModalDataDiri(false)}
+        title="Ubah Data Diri"
+      >
+        <label className="flex flex-col gap-1">
+          <span className="font-caption text-caption text-text-secondary">Nama Lengkap</span>
+          <input
+            value={form.nama}
+            onChange={(e) => setForm({ ...form, nama: e.target.value })}
+            maxLength={120}
+            className="h-11 rounded-2xl bg-surface-container-low px-3.5 font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-500/40"
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="font-caption text-caption text-text-secondary">Nomor Telepon</span>
+          <input
+            value={form.telepon}
+            onChange={(e) => setForm({ ...form, telepon: e.target.value })}
+            inputMode="tel"
+            maxLength={25}
+            placeholder="08xxxxxxxxxx"
+            className="h-11 rounded-2xl bg-surface-container-low px-3.5 font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-500/40"
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="font-caption text-caption text-text-secondary">Tanggal Lahir</span>
+          <input
+            type="date"
+            value={form.tanggalLahir}
+            onChange={(e) => setForm({ ...form, tanggalLahir: e.target.value })}
+            className="h-11 rounded-2xl bg-surface-container-low px-3.5 font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-500/40"
+          />
+        </label>
+        <button
+          type="button"
+          onClick={kirimData}
+          disabled={sibuk !== null}
+          className="mt-1 h-11 rounded-full bg-brand-600 text-white font-body-bold text-body-bold flex items-center justify-center gap-2 disabled:opacity-60"
+        >
+          {sibuk === "data" ? (
+            <Icon name="progress_activity" className="text-[18px] animate-spin" />
+          ) : (
+            <Icon name="save" className="text-[18px]" />
+          )}
+          Simpan Data Diri
+        </button>
+      </Modal>
+
+      {/* ── Modal: Ganti Email ── */}
+      <Modal
+        open={modalEmail}
+        onClose={() => setModalEmail(false)}
+        title="Ganti Email"
+      >
+        <p className="font-caption text-caption text-text-muted">
+          Email sekarang <span className="font-body-bold text-text-primary">{email}</span> dan dipakai untuk masuk.
+        </p>
+        <input
+          value={emailBaru}
+          onChange={(e) => setEmailBaru(e.target.value)}
+          type="email"
+          placeholder="Email baru"
+          className="h-11 rounded-2xl bg-surface-container-low px-3.5 font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-500/40"
+        />
+        <input
+          value={sandiLama}
+          onChange={(e) => setSandiLama(e.target.value)}
+          type="password"
+          placeholder="Password lama"
+          autoComplete="current-password"
+          className="h-11 rounded-2xl bg-surface-container-low px-3.5 font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-500/40"
+        />
+        <button
+          type="button"
+          onClick={kirimEmail}
+          disabled={sibuk !== null || emailBaru.length === 0 || sandiLama.length === 0}
+          className="h-11 rounded-full bg-brand-600 text-white font-body-bold text-body-bold flex items-center justify-center gap-2 disabled:opacity-60"
+        >
+          {sibuk === "email" ? (
+            <Icon name="progress_activity" className="text-[18px] animate-spin" />
+          ) : (
+            <Icon name="mark_email_read" className="text-[18px]" />
+          )}
+          Kirim Tautan Konfirmasi
+        </button>
+        <span className="font-caption text-caption text-text-muted">
+          Email baru hanya aktif setelah tautan konfirmasi dibuka.
+        </span>
+      </Modal>
+
+      {/* ── Modal: Ganti Kata Sandi ── */}
+      <Modal
+        open={modalSandi}
+        onClose={() => setModalSandi(false)}
+        title="Ganti Kata Sandi"
+      >
+        <input
+          value={sandi.passwordLama}
+          onChange={(e) => setSandi({ ...sandi, passwordLama: e.target.value })}
+          type="password"
+          placeholder="Password lama"
+          autoComplete="current-password"
+          className="h-11 rounded-2xl bg-surface-container-low px-3.5 font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-500/40"
+        />
+        <input
+          value={sandi.passwordBaru}
+          onChange={(e) => setSandi({ ...sandi, passwordBaru: e.target.value })}
+          type={sandiTerlihat ? "text" : "password"}
+          placeholder="Password baru, minimal 8 karakter"
+          autoComplete="new-password"
+          className="h-11 rounded-2xl bg-surface-container-low px-3.5 font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-500/40"
+        />
+        <input
+          value={sandi.ulangiSandi}
+          onChange={(e) => setSandi({ ...sandi, ulangiSandi: e.target.value })}
+          type={sandiTerlihat ? "text" : "password"}
+          placeholder="Ulangi password baru"
+          autoComplete="new-password"
+          className="h-11 rounded-2xl bg-surface-container-low px-3.5 font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-500/40"
+        />
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setSandiTerlihat(!sandiTerlihat)}
+            className="font-caption text-caption text-brand-700 flex items-center gap-1"
+          >
+            <Icon
+              name={sandiTerlihat ? "visibility_off" : "visibility"}
+              className="text-[16px]"
+            />
+            {sandiTerlihat ? "Sembunyikan" : "Tampilkan"}
+          </button>
+          <span className="font-caption text-caption text-text-muted">
+            Jangan pakai kata sandi yang dipakai di layanan lain.
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={kirimSandi}
+          disabled={
+            sibuk !== null ||
+            sandi.passwordLama.length === 0 ||
+            sandi.passwordBaru.length === 0
+          }
+          className="h-11 rounded-full bg-brand-600 text-white font-body-bold text-body-bold flex items-center justify-center gap-2 disabled:opacity-60"
+        >
+          {sibuk === "sandi" ? (
+            <Icon name="progress_activity" className="text-[18px] animate-spin" />
+          ) : (
+            <Icon name="lock_reset" className="text-[18px]" />
+          )}
+          Ganti Kata Sandi
+        </button>
+      </Modal>
 
       {berkasCrop ? (
         <AvatarCropper
@@ -437,5 +487,3 @@ export function AccountSettings({
     </div>
   );
 }
-
-

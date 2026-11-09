@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { CATEGORY_ICONS, CATEGORY_LABELS } from "@/lib/pos";
 import { formatRupiah } from "@/lib/format";
 import { Icon } from "@/components/ui/icon";
+import { Modal } from "@/components/ui/modal";
 
 export type ServiceRow = {
   id: string;
@@ -511,141 +512,134 @@ export function ServiceManager({
 
       <div className="h-1" />
 
-      {/* Panel tambah dan ubah berbagi satu formulir supaya aturan validasi
-          hanya ada di satu tempat. */}
-      {!bukaPanel ? (
+      {/* Tombol tambah jasa baru selalu tampil di bawah daftar */}
+      <button
+        type="button"
+        onClick={bukaBaru}
+        className="w-full h-12 rounded-2xl primary-gradient text-white font-body-bold text-body-bold flex items-center justify-center gap-2 clay-glow active:scale-[0.98] transition-transform"
+      >
+        <Icon name="add" className="text-[20px]" />
+        Tambah Jasa Baru
+      </button>
+
+      {/* Modal tambah/ubah jasa — tidak lagi muncul di bawah halaman */}
+      <Modal
+        open={bukaPanel}
+        onClose={tutup}
+        title={sunting ? "Ubah Jasa" : "Jasa Baru"}
+      >
+        <label className="flex flex-col gap-1">
+          <span className="font-micro-badge text-micro-badge text-text-muted">
+            Nama Jasa
+          </span>
+          <input
+            value={draft.name}
+            onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+            placeholder="Contoh: Coating Paket C - 5 Layers"
+            className="h-12 px-3 rounded-xl bg-surface-container font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+          />
+        </label>
+
+        <label className="flex flex-col gap-1">
+          <span className="font-micro-badge text-micro-badge text-text-muted">
+            Kategori
+          </span>
+          <select
+            value={draft.category}
+            onChange={(e) => setDraft({ ...draft, category: e.target.value })}
+            className="h-12 px-3 rounded-xl bg-surface-container font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+          >
+            {Object.keys(CATEGORY_LABELS).map((key) => (
+              <option key={key} value={key}>
+                {CATEGORY_LABELS[key]}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        {/* Harga per ukuran. Nol berarti layanan tidak tersedia untuk
+            ukuran itu, jadi kosong lebih mudah daripada mengetik nol. */}
+        <div className="flex flex-col gap-2">
+          <p className="font-body-bold text-caption text-text-secondary">
+            Harga per Ukuran
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            {HARGA.map((h) => (
+              <label key={String(h.key)} className="flex flex-col gap-1">
+                <span className="font-micro-badge text-micro-badge text-text-muted">
+                  {h.label}
+                </span>
+                <input
+                  value={
+                    (draft[h.key] as number) === 0
+                      ? ""
+                      : String(draft[h.key])
+                  }
+                  onChange={(e) => {
+                    const v = e.target.value.replace(/\D/g, "");
+                    setDraft({
+                      ...draft,
+                      [h.key]: v === "" ? 0 : Math.min(Number(v), 100000000),
+                    });
+                  }}
+                  inputMode="numeric"
+                  placeholder="0"
+                  className="h-11 px-3 rounded-xl bg-surface-container font-body-mono text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+                />
+              </label>
+            ))}
+          </div>
+          <p className="font-micro-badge text-micro-badge text-text-muted">
+            Kosong berarti 0, layanan tidak dijual untuk ukuran tersebut.
+          </p>
+        </div>
+
+        <div className="flex gap-2">
+          <label className="flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-surface-container">
+            <input
+              type="checkbox"
+              checked={draft.isAddon}
+              onChange={(e) =>
+                setDraft({ ...draft, isAddon: e.target.checked })
+              }
+              className="w-5 h-5 accent-[#1D4ED8]"
+            />
+            <span className="font-caption text-caption text-text-secondary">
+              Layanan tambahan
+            </span>
+          </label>
+          <label className="flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-surface-container">
+            <input
+              type="checkbox"
+              checked={draft.isActive}
+              onChange={(e) =>
+                setDraft({ ...draft, isActive: e.target.checked })
+              }
+              className="w-5 h-5 accent-[#1D4ED8]"
+            />
+            <span className="font-caption text-caption text-text-secondary">
+              Aktif di POS
+            </span>
+          </label>
+        </div>
+
+        {error ? (
+          <div className="p-3 rounded-xl bg-danger-surface text-danger-text font-caption text-caption flex items-start gap-2">
+            <Icon name="error" className="text-[18px] shrink-0" />
+            <span className="flex-1">{error}</span>
+          </div>
+        ) : null}
+
         <button
           type="button"
-          onClick={bukaBaru}
-          className="w-full h-12 rounded-2xl primary-gradient text-white font-body-bold text-body-bold flex items-center justify-center gap-2 clay-glow active:scale-[0.98] transition-transform"
+          disabled={sibuk}
+          onClick={() => void simpan()}
+          className="w-full h-12 rounded-2xl primary-gradient text-white font-body-bold text-body-bold flex items-center justify-center gap-2 clay-glow active:scale-[0.98] transition-transform disabled:opacity-60"
         >
-          <Icon name="add" className="text-[20px]" />
-          Tambah Jasa Baru
+          <Icon name={sibuk ? "hourglass_top" : "task_alt"} className="text-[20px]" />
+          {sibuk ? "Menyimpan..." : sunting ? "Simpan Perubahan" : "Simpan Jasa"}
         </button>
-      ) : null}
-
-      {bukaPanel ? (
-        <section className="clay-card p-4 flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <h2 className="font-headline-3 text-headline-3 text-text-primary">
-              {sunting ? "Ubah Jasa" : "Jasa Baru"}
-            </h2>
-            <button
-              type="button"
-              onClick={tutup}
-              aria-label="Tutup"
-              className="w-9 h-9 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary active:scale-95"
-            >
-              <Icon name="close" className="text-[20px]" />
-            </button>
-          </div>
-
-          <label className="flex flex-col gap-1">
-            <span className="font-micro-badge text-micro-badge text-text-muted">
-              Nama Jasa
-            </span>
-            <input
-              value={draft.name}
-              onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-              placeholder="Contoh: Coating Paket C - 5 Layers"
-              className="h-12 px-3 rounded-xl bg-surface-container font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
-            />
-          </label>
-
-          <label className="flex flex-col gap-1">
-            <span className="font-micro-badge text-micro-badge text-text-muted">
-              Kategori
-            </span>
-            <select
-              value={draft.category}
-              onChange={(e) => setDraft({ ...draft, category: e.target.value })}
-              className="h-12 px-3 rounded-xl bg-surface-container font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
-            >
-              {Object.keys(CATEGORY_LABELS).map((key) => (
-                <option key={key} value={key}>
-                  {CATEGORY_LABELS[key]}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          {/* Harga per ukuran. Nol berarti layanan tidak tersedia untuk
-              ukuran itu, jadi kosong lebih mudah daripada mengetik nol. */}
-          <div className="flex flex-col gap-2">
-            <p className="font-body-bold text-caption text-text-secondary">
-              Harga per Ukuran
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              {HARGA.map((h) => (
-                <label key={String(h.key)} className="flex flex-col gap-1">
-                  <span className="font-micro-badge text-micro-badge text-text-muted">
-                    {h.label}
-                  </span>
-                  <input
-                    value={
-                      (draft[h.key] as number) === 0
-                        ? ""
-                        : String(draft[h.key])
-                    }
-                    onChange={(e) => {
-                      const v = e.target.value.replace(/\D/g, "");
-                      setDraft({
-                        ...draft,
-                        [h.key]: v === "" ? 0 : Math.min(Number(v), 100000000),
-                      });
-                    }}
-                    inputMode="numeric"
-                    placeholder="0"
-                    className="h-11 px-3 rounded-xl bg-surface-container font-body-mono text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
-                  />
-                </label>
-              ))}
-            </div>
-            <p className="font-micro-badge text-micro-badge text-text-muted">
-              Kosong berarti 0, layanan tidak dijual untuk ukuran tersebut.
-            </p>
-          </div>
-
-          <div className="flex gap-2">
-            <label className="flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-surface-container">
-              <input
-                type="checkbox"
-                checked={draft.isAddon}
-                onChange={(e) =>
-                  setDraft({ ...draft, isAddon: e.target.checked })
-                }
-                className="w-5 h-5 accent-[#1D4ED8]"
-              />
-              <span className="font-caption text-caption text-text-secondary">
-                Layanan tambahan
-              </span>
-            </label>
-            <label className="flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-surface-container">
-              <input
-                type="checkbox"
-                checked={draft.isActive}
-                onChange={(e) =>
-                  setDraft({ ...draft, isActive: e.target.checked })
-                }
-                className="w-5 h-5 accent-[#1D4ED8]"
-              />
-              <span className="font-caption text-caption text-text-secondary">
-                Aktif di POS
-              </span>
-            </label>
-          </div>
-
-          <button
-            type="button"
-            disabled={sibuk}
-            onClick={() => void simpan()}
-            className="w-full h-12 rounded-2xl primary-gradient text-white font-body-bold text-body-bold flex items-center justify-center gap-2 clay-glow active:scale-[0.98] transition-transform disabled:opacity-60"
-          >
-            <Icon name={sibuk ? "hourglass_top" : "task_alt"} className="text-[20px]" />
-            {sibuk ? "Menyimpan..." : sunting ? "Simpan Perubahan" : "Simpan Jasa"}
-          </button>
-        </section>
-      ) : null}
+      </Modal>
     </main>
   );
 }

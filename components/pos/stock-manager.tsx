@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import { formatTimeWib, formatDateWib } from "@/lib/format";
 import { formatAngka } from "@/lib/pos";
 import { Icon } from "@/components/ui/icon";
+import { Modal } from "@/components/ui/modal";
 
 export type InventoryItem = {
   id: string;
@@ -443,9 +444,6 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
                     type="button"
                     onClick={() => {
                       setInOpen(true);
-                      document
-                        .getElementById("formulir-stok-masuk")
-                        ?.scrollIntoView({ behavior: "smooth", block: "center" });
                     }}
                     className="flex-1 min-h-11 rounded-xl bg-success-surface text-success-text font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
                   >
@@ -737,139 +735,131 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
         </div>
       ) : null}
 
-      {/* Stok masuk dari supplier */}
+      {/* ─── Modal Stok Masuk ─── */}
       {canManage ? (
-        <section
-          id="formulir-stok-masuk"
-          className="px-gutter pt-4 scroll-mt-4"
+        <Modal
+          open={inOpen}
+          onClose={() => {
+            setInOpen(false);
+            setInItemId("");
+            setCariBarang("");
+            setInQty("1");
+            setInCost("");
+            setInNote("");
+          }}
+          title="Tambah Stok Masuk"
         >
-          {inOpen ? (
-            <button
-              type="button"
-              onClick={() => setInOpen(false)}
-              className="w-full h-11 rounded-2xl bg-surface-container text-text-secondary font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+          <label className="flex flex-col gap-1">
+            <span className="font-caption text-caption text-text-muted">
+              Cari barang
+            </span>
+            <input
+              value={cariBarang}
+              onChange={(e) => setCariBarang(e.target.value)}
+              type="search"
+              placeholder="Ketik nama obat atau bahan..."
+              className="h-11 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+            />
+          </label>
+
+          <label className="flex flex-col gap-1">
+            <span className="font-caption text-caption text-text-muted">
+              Barang
+            </span>
+            <select
+              value={inItemId}
+              onChange={(e) => setInItemId(e.target.value)}
+              size={barangTersaring.length > 6 ? 6 : undefined}
+              className="h-12 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
             >
-              <Icon name="close" className="text-[18px]" />
-              Tutup formulir stok masuk
-            </button>
-          ) : null}
+              <option value="">Pilih barang...</option>
+              {barangTersaring.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.item_name} (sisa {formatAngka(item.current_stock)} {item.unit})
+                </option>
+              ))}
+            </select>
+            {cariBarang.trim() !== "" && barangTersaring.length === 0 ? (
+              <p className="font-micro-badge text-micro-badge text-danger-text">
+                Tidak ada barang bernama {cariBarang.trim()}. Periksa ejaan atau hapus kata kunci.
+              </p>
+            ) : (
+              <p className="font-micro-badge text-micro-badge text-text-muted">
+                {barangTersaring.length} dari {items.length} barang ditampilkan
+              </p>
+            )}
+          </label>
 
-          {inOpen ? (
-            <div className="mt-2 rounded-2xl bg-surface-container-low p-3 flex flex-col gap-2">
-              <label className="flex flex-col gap-1">
-                <span className="font-caption text-caption text-text-muted">
-                  Cari barang
-                </span>
-                <input
-                  value={cariBarang}
-                  onChange={(e) => setCariBarang(e.target.value)}
-                  type="search"
-                  placeholder="Ketik nama obat atau bahan..."
-                  className="h-11 px-3 rounded-xl bg-surface font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
-                />
-              </label>
-
-              <label className="flex flex-col gap-1">
-                <span className="font-caption text-caption text-text-muted">
-                  Barang
-                </span>
-                <select
-                  value={inItemId}
-                  onChange={(e) => setInItemId(e.target.value)}
-                  size={barangTersaring.length > 6 ? 6 : undefined}
-                  className="h-12 px-3 rounded-xl bg-surface font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
-                >
-                  <option value="">Pilih barang...</option>
-                  {barangTersaring.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.item_name} (sisa {formatAngka(item.current_stock)} {item.unit})
-                    </option>
-                  ))}
-                </select>
-                {cariBarang.trim() !== "" && barangTersaring.length === 0 ? (
-                  <p className="font-micro-badge text-micro-badge text-danger-text">
-                    Tidak ada barang bernama {cariBarang.trim()}. Periksa ejaan atau
-                    hapus kata kunci.
-                  </p>
-                ) : (
-                  <p className="font-micro-badge text-micro-badge text-text-muted">
-                    {barangTersaring.length} dari {items.length} barang ditampilkan
-                  </p>
-                )}
-              </label>
-
-              {inItem ? (
-                <>
-                  <div className="grid grid-cols-2 gap-2">
-                    <label className="flex flex-col gap-1">
-                      <span className="font-micro-badge text-micro-badge text-text-muted">
-                        Jumlah ({inItem.unit})
-                      </span>
-                      <input
-                        value={inQty}
-                        onChange={(e) => setInQty(e.target.value)}
-                        inputMode="decimal"
-                        className="h-11 px-3 rounded-xl bg-surface font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
-                      />
-                    </label>
-                    <label className="flex flex-col gap-1">
-                      <span className="font-micro-badge text-micro-badge text-text-muted">
-                        Harga beli / {inItem.unit}
-                      </span>
-                      <input
-                        value={inCost}
-                        onChange={(e) => setInCost(e.target.value)}
-                        inputMode="numeric"
-                        placeholder="opsional"
-                        className="h-11 px-3 rounded-xl bg-surface font-body-mono text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
-                      />
-                    </label>
-                  </div>
+          {inItem ? (
+            <>
+              <div className="grid grid-cols-2 gap-2">
+                <label className="flex flex-col gap-1">
+                  <span className="font-micro-badge text-micro-badge text-text-muted">
+                    Jumlah ({inItem.unit})
+                  </span>
                   <input
-                    value={inNote}
-                    onChange={(e) => setInNote(e.target.value)}
-                    placeholder="Nama supplier / nomor nota"
-                    className="h-11 px-3 rounded-xl bg-surface font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+                    value={inQty}
+                    onChange={(e) => setInQty(e.target.value)}
+                    inputMode="decimal"
+                    className="h-11 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
                   />
-                  {success ? (
-                    <p className="font-caption text-caption text-success-text">
-                      {success}
-                    </p>
-                  ) : null}
-                  <SyaratBelumTerpenuhi
-                    syarat={[
-                      {
-                        terpenuhi: Boolean(inItem),
-                        label: "Pilih barang lebih dulu pada kolom Barang",
-                      },
-                      {
-                        terpenuhi: Number(inQty) > 0,
-                        label: "Isi jumlah lebih dari 0",
-                      },
-                      {
-                        terpenuhi:
-                          inCost.trim() === "" ||
-                          (Number.isFinite(Number(inCost)) && Number(inCost) >= 0),
-                        label: "Harga beli harus angka nol atau lebih, boleh dikosongkan",
-                      },
-                    ]}
-                    judul="Sisa langkah sebelum stok masuk bisa dicatat"
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="font-micro-badge text-micro-badge text-text-muted">
+                    Harga beli / {inItem.unit}
+                  </span>
+                  <input
+                    value={inCost}
+                    onChange={(e) => setInCost(e.target.value)}
+                    inputMode="numeric"
+                    placeholder="opsional"
+                    className="h-11 px-3 rounded-xl bg-surface-container-low font-body-mono text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
                   />
-
-                  <button
-                    type="button"
-                    disabled={submitting}
-                    onClick={submitStockIn}
-                    className="w-full py-3 rounded-xl bg-success-base text-white font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-60"
-                  >
-                    <Icon name={submitting ? "hourglass_top" : "inventory_2"} className="text-[20px]" />
-                    {submitting ? "Mencatat..." : "Catat Stok Masuk"}
-                  </button>
-                </>
+                </label>
+              </div>
+              <input
+                value={inNote}
+                onChange={(e) => setInNote(e.target.value)}
+                placeholder="Nama supplier / nomor nota"
+                className="h-11 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+              />
+              {success ? (
+                <p className="font-caption text-caption text-success-text">
+                  {success}
+                </p>
               ) : null}
-            </div>
+              <SyaratBelumTerpenuhi
+                syarat={[
+                  {
+                    terpenuhi: Boolean(inItem),
+                    label: "Pilih barang lebih dulu pada kolom Barang",
+                  },
+                  {
+                    terpenuhi: Number(inQty) > 0,
+                    label: "Isi jumlah lebih dari 0",
+                  },
+                  {
+                    terpenuhi:
+                      inCost.trim() === "" ||
+                      (Number.isFinite(Number(inCost)) && Number(inCost) >= 0),
+                    label: "Harga beli harus angka nol atau lebih, boleh dikosongkan",
+                  },
+                ]}
+                judul="Sisa langkah sebelum stok masuk bisa dicatat"
+              />
+
+              <button
+                type="button"
+                disabled={submitting}
+                onClick={submitStockIn}
+                className="w-full py-3 rounded-xl bg-success-base text-white font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-60"
+              >
+                <Icon name={submitting ? "hourglass_top" : "inventory_2"} className="text-[20px]" />
+                {submitting ? "Mencatat..." : "Catat Stok Masuk"}
+              </button>
+            </>
           ) : null}
-        </section>
+        </Modal>
       ) : null}
 
       {/* ─── Modal Tambah Item Stok Baru ─── */}

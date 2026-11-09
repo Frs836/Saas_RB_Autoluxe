@@ -31,7 +31,16 @@ export async function sendPushToProfiles({
 
   if (!subs || subs.length === 0) return;
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://rb-autoluxe.vercel.app";
+  // VERCEL_PROJECT_PRODUCTION_URL = domain production stabil (tanpa https://)
+  // VERCEL_URL = deployment URL saat ini (bisa preview/production)
+  // Fallback ke NEXT_PUBLIC_APP_URL jika tidak di Vercel
+  const productionUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL; // auto by Vercel
+  const vercelUrl    = process.env.VERCEL_URL;                      // auto by Vercel
+  const appUrl = productionUrl
+    ? `https://${productionUrl}`
+    : vercelUrl
+    ? `https://${vercelUrl}`
+    : (process.env.NEXT_PUBLIC_APP_URL ?? "https://rb-autoluxe-git-main-frs836s-projects.vercel.app");
 
   try {
     await fetch(`${appUrl}/api/push/send`, {

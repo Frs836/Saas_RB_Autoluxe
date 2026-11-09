@@ -21,6 +21,7 @@ create policy "service_role only"
   with check (true);
 
 -- Insert konfigurasi cron
+-- app_url: gunakan domain production Vercel yang stabil
 insert into public.app_config (key, value) values
   ('app_url',     'https://rb-autoluxe-git-main-frs836s-projects.vercel.app'),
   ('cron_secret', '93678cf1dd0b898151035ac15321d03e5de70f6a60c37667b2e51d86e79d1b8e')

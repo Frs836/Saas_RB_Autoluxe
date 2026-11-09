@@ -30,6 +30,7 @@ export function PushSubscribeButton() {
 
   async function checkSubscription() {
     try {
+      // Pastikan SW sudah terdaftar dan siap
       const reg  = await navigator.serviceWorker.ready;
       const sub  = await reg.pushManager.getSubscription();
       const perm = Notification.permission;
@@ -44,21 +45,52 @@ export function PushSubscribeButton() {
       const perm = await Notification.requestPermission();
       if (perm !== "granted") { setState("denied"); return; }
 
-      const reg = await navigator.serviceWorker.ready;
+      // Daftarkan SW jika belum (handle kasus SW belum aktif)
+      let reg = await navigator.serviceWorker.getRegistration("/sw.js");
+      if (!reg) {
+        reg = await navigator.serviceWorker.register("/sw.js");
+      }
+      // Tunggu SW aktif
+      await navigator.serviceWorker.ready;
+
+      if (!VAPID_PUBLIC_KEY) {
+        console.error("[Push] NEXT_PUBLIC_VAPID_PUBLIC_KEY tidak tersedia");
+        setState("unsubscribed");
+        return;
+      }
+
       const key = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: key.buffer as ArrayBuffer,
       });
 
+      const subJson = sub.toJSON();
+
       const res = await fetch("/api/push/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subscription: sub }),
+        body: JSON.stringify({
+          subscription: {
+            endpoint: subJson.endpoint,
+            keys: {
+              p256dh: subJson.keys?.p256dh ?? "",
+              auth:   subJson.keys?.auth   ?? "",
+            },
+          },
+        }),
       });
 
+      if (!res.ok) {
+        const err = await res.text();
+        console.error("[Push] Gagal simpan subscription:", err);
+      }
+
       setState(res.ok ? "subscribed" : "unsubscribed");
-    } catch { setState("unsubscribed"); }
+    } catch (e) {
+      console.error("[Push] subscribe error:", e);
+      setState("unsubscribed");
+    }
   }
 
   async function unsubscribe() {
@@ -81,10 +113,10 @@ export function PushSubscribeButton() {
   if (state === "unsupported") return null;
 
   const config = {
-    loading:      { label: "Memuat...",         icon: "hourglass_top", cls: "bg-surface-container-low text-text-secondary opacity-60", disabled: true  },
-    denied:       { label: "Notifikasi Diblok", icon: "notifications_off", cls: "bg-danger-surface text-danger-text", disabled: true  },
-    subscribed:   { label: "Notifikasi Aktif ✓", icon: "notifications_active", cls: "bg-success-surface text-success-text", disabled: false },
-    unsubscribed: { label: "Aktifkan Notifikasi", icon: "notifications", cls: "bg-brand-50 text-brand-700", disabled: false },
+    loading:      { label: "Memuat...",          icon: "hourglass_top",       cls: "bg-surface-container-low text-text-secondary opacity-60", disabled: true  },
+    denied:       { label: "Notifikasi Diblok",  icon: "notifications_off",   cls: "bg-danger-surface text-danger-text",                      disabled: true  },
+    subscribed:   { label: "Notifikasi Aktif ✓", icon: "notifications_active",cls: "bg-success-surface text-success-text",                    disabled: false },
+    unsubscribed: { label: "Aktifkan Notifikasi",icon: "notifications",        cls: "bg-brand-50 text-brand-700",                              disabled: false },
   }[state];
 
   return (

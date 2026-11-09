@@ -15,7 +15,7 @@
  * sudah berubah kepada pengguna.
  */
 
-const CACHE_NAME = "rba-shell-v1";
+const CACHE_NAME = "rba-shell-v2";  // bump versi agar browser paksa update SW
 const SHELL_ASSETS = ["/offline", "/manifest.json", "/rb-logo-new.png"];
 
 /*

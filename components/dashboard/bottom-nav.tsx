@@ -48,7 +48,7 @@ export function BottomNav({ role }: Props) {
   };
 
   return (
-    <nav className="fixed bottom-0 w-full z-nav pb-safe bg-surface rounded-t-[24px] clay-nav">
+    <nav className="lg:hidden fixed bottom-0 w-full z-nav pb-safe bg-surface rounded-t-[24px] clay-nav">
       <div className="relative flex items-center justify-around h-[var(--nav-h)] px-space-xs">
         {renderItem(items[0])}
         {renderItem(items[1])}

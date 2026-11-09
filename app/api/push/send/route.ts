@@ -4,7 +4,7 @@
  * Protected dengan SUPABASE_SERVICE_ROLE_KEY di header.
  */
 import { NextRequest, NextResponse } from "next/server";
-import webpush from "web-push";
+import * as webpush from "web-push";
 
 webpush.setVapidDetails(
   process.env.VAPID_EMAIL!,

@@ -3,6 +3,7 @@
  * Dipakai dari server actions / RPCs setelah event penting.
  */
 import { adminClient } from "@/lib/supabase/admin";
+import type { Role } from "@/lib/rbac";
 
 type PushPayload = {
   profileIds: string[];       // profil yang mau dapat notif
@@ -60,7 +61,7 @@ export async function sendPushToProfiles({
  * Ambil profile_id semua staf yang perlu dapat notifikasi per cabang.
  * Filter berdasarkan role yang relevan.
  */
-export async function getNotifTargets(branchId: string, roles: string[]): Promise<string[]> {
+export async function getNotifTargets(branchId: string, roles: Role[]): Promise<string[]> {
   const db = adminClient();
   const { data } = await db
     .from("profiles")

@@ -3,7 +3,6 @@
 import { useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Icon } from "@/components/ui/icon";
-import { formatRupiah } from "@/lib/format";
 import { useRouter } from "next/navigation";
 
 type ImportType = "inventory" | "cash_flow";
@@ -110,23 +109,69 @@ export function BulkImportConsole({
     setResult(null);
 
     const supabase = createClient();
-    try {
-      let res: { data: ImportResult | null; error: { message: string } | null };
+    let imported = 0;
+    let skipped = 0;
+    const errors: { item?: string; row?: unknown; error: string }[] = [];
 
+    try {
       if (activeType === "inventory") {
-        res = await (supabase as any).rpc("bulk_import_inventory", {
-          p_items: rows,
-          p_branch_id: selectedBranch,
-        });
+        for (const row of rows) {
+          const itemName = String(row["item_name"] ?? "").trim();
+          if (!itemName) { skipped++; continue; }
+          const unit = String(row["unit"] ?? "pcs").trim();
+          const currentStock = Number(row["current_stock"] ?? 0);
+          const minStockAlert = Number(row["min_stock_alert"] ?? 0);
+          const unitCost = row["unit_cost"] !== undefined && row["unit_cost"] !== "" ? Number(row["unit_cost"]) : null;
+
+          // Check if item exists
+          const { data: existing, error: selErr } = await supabase
+            .from("inventory_items")
+            .select("id")
+            .eq("item_name", itemName)
+            .eq("branch_id", selectedBranch)
+            .maybeSingle();
+
+          if (selErr) { errors.push({ item: itemName, error: selErr.message }); continue; }
+
+          if (existing) {
+            // UPDATE
+            const { error: updErr } = await supabase
+              .from("inventory_items")
+              .update({ current_stock: currentStock, min_stock_alert: minStockAlert, unit_cost: unitCost })
+              .eq("id", existing.id);
+            if (updErr) { errors.push({ item: itemName, error: updErr.message }); }
+            else { imported++; }
+          } else {
+            // INSERT
+            const { error: insErr } = await supabase
+              .from("inventory_items")
+              .insert({ item_name: itemName, unit, current_stock: currentStock, min_stock_alert: minStockAlert, unit_cost: unitCost, branch_id: selectedBranch });
+            if (insErr) { errors.push({ item: itemName, error: insErr.message }); }
+            else { imported++; }
+          }
+        }
       } else {
-        res = await (supabase as any).rpc("bulk_import_cash_flow", {
-          p_rows: rows,
-          p_branch_id: selectedBranch,
-        });
+        // cash_flow
+        for (const row of rows) {
+          const type = String(row["type"] ?? "").trim().toLowerCase();
+          if (type !== "in" && type !== "out") { errors.push({ item: String(row["description"] ?? "Baris"), error: `Tipe '${type}' tidak valid. Gunakan 'in' atau 'out'.` }); continue; }
+          const amount = Number(row["amount"] ?? 0);
+          if (!amount || amount <= 0) { errors.push({ item: String(row["description"] ?? "Baris"), error: "Jumlah harus lebih dari 0." }); continue; }
+          const category = String(row["category"] ?? "Lainnya").trim();
+          const description = String(row["description"] ?? "").trim();
+          const paymentMethod = String(row["payment_method"] ?? "cash").trim();
+          const createdAt = row["created_at"] ? new Date(String(row["created_at"])).toISOString() : new Date().toISOString();
+
+          const { error: insErr } = await supabase
+            .from("petty_cash")
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            .insert({ branch_id: selectedBranch, type, amount, category, description, payment_method: paymentMethod, created_at: createdAt } as any);
+          if (insErr) { errors.push({ item: description || "Baris", error: insErr.message }); }
+          else { imported++; }
+        }
       }
 
-      if (res.error) { setError(res.error.message); return; }
-      setResult(res.data!);
+      setResult({ imported, skipped: skipped + errors.length, errors });
       setRows([]);
       setFileName(null);
       if (fileRef.current) fileRef.current.value = "";

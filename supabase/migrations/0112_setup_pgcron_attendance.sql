@@ -18,15 +18,13 @@ declare
   app_url  text;
   secret   text;
 begin
-  -- Ambil konfigurasi dari app_settings (atau hardcode URL produksi)
-  app_url := coalesce(
-    current_setting('app.app_url', true),
-    'https://rb-autoluxe.vercel.app'
-  );
-  secret := coalesce(
-    current_setting('app.cron_secret', true),
-    ''
-  );
+  -- Ambil konfigurasi dari tabel app_config (di-seed oleh migration 0113)
+  select value into app_url  from public.app_config where key = 'app_url';
+  select value into secret   from public.app_config where key = 'cron_secret';
+
+  -- Fallback jika tabel belum ada nilainya
+  app_url := coalesce(app_url, 'https://rb-autoluxe-git-main-frs836s-projects.vercel.app');
+  secret  := coalesce(secret, '');
 
   perform net.http_post(
     url     := app_url || '/api/cron/attendance-check',

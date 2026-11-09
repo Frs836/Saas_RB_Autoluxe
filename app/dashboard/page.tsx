@@ -231,7 +231,7 @@ const jamSekarang = wibNow();
         branchScope={profile.branchScope}
       />
 
-      <div className="px-gutter pt-space-md grid grid-cols-2 gap-space-md">
+      <div className="px-gutter pt-space-md grid grid-cols-2 lg:grid-cols-4 gap-space-md">
         <section className="col-span-2 relative overflow-hidden rounded-[20px] p-5 primary-gradient text-on-primary clay-glow">
           <div className="absolute -right-6 -bottom-6 opacity-10 pointer-events-none text-white">
             <Icon name="directions_car" className="text-[130px]" />
@@ -377,7 +377,7 @@ const jamSekarang = wibNow();
         {!canSeeBranchCash && unpaidCount > 0 ? (
           <Link
             href="/pos/orders"
-            className="col-span-2 rounded-[16px] p-3.5 bg-warning-surface flex items-center gap-3 active:scale-[0.98] transition-transform"
+            className="col-span-2 lg:col-span-4 rounded-[16px] p-3.5 bg-warning-surface flex items-center gap-3 active:scale-[0.98] transition-transform"
           >
             <Icon name="hourglass_top" className="text-[22px] text-warning-text shrink-0" />
             <div className="min-w-0">

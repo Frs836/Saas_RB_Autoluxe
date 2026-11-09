@@ -35,7 +35,10 @@
 }
 
 .pt-safe {
-  padding-top: env(safe-area-inset-top, 0px);
+  /* Minimum 8px agar header tidak nempel ke ujung layar di browser/PWA
+     yang belum support safe-area-inset-top (Android Chrome lama, dll).
+     Di device dengan notch/dynamic island, nilai env() otomatis lebih besar. */
+  padding-top: max(env(safe-area-inset-top, 0px), 8px);
 }
 
 /*

@@ -57,7 +57,7 @@ export async function createPosOrder(
   // Invalidasi cache halaman antrian hanya setelah order berhasil disimpan.
   revalidatePath("/pos/orders");
 
-  // Kirim push notification ke owner/admin/manager setelah order berhasil dibuat.
+  // Kirim push notification ke semua staff aktif setelah order berhasil dibuat.
   // Kegagalan push tidak boleh membatalkan response sukses ke client.
   try {
     const { data: { user } } = await supabase.auth.getUser();
@@ -70,12 +70,16 @@ export async function createPosOrder(
 
       const branchId = (actorProfile?.branch_id as string | null) ?? null;
       if (branchId) {
-        const adminIds = await getNotifTargets(branchId, ["owner", "admin_kasir", "manager"]);
-        if (adminIds.length > 0) {
+        // Notif ke manager/owner/kasir (info order baru)
+        const adminIds = await getNotifTargets(branchId, ["owner", "admin_kasir", "manager", "finance"]);
+        // Notif ke karyawan/teknisi (ada antrian baru perlu dikerjakan)
+        const staffIds = await getNotifTargets(branchId, ["karyawan", "kepala_karyawan"]);
+        const allTargets = Array.from(new Set([...adminIds, ...staffIds]));
+        if (allTargets.length > 0) {
           await sendPushToProfiles({
-            profileIds: adminIds,
-            title: "Order Baru Masuk",
-            body: `Order ${order.order_number} - ${params.p_license_plate} (${params.p_service_package}) telah dibuat.`,
+            profileIds: allTargets,
+            title: "🚗 Order Baru Masuk",
+            body: `Order ${order.order_number} - ${params.p_license_plate} (${params.p_service_package}) menunggu pengerjaan.`,
             url: "/pos/orders",
           });
         }

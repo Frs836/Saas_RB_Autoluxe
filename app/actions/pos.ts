@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/database.types";
+import { sendPushToProfiles, getNotifTargets } from "@/lib/push";
 
 type VehicleSize = Database["public"]["Enums"]["vehicle_size"];
 type PaymentMethod = Database["public"]["Enums"]["payment_method"];
@@ -55,6 +56,34 @@ export async function createPosOrder(
 
   // Invalidasi cache halaman antrian hanya setelah order berhasil disimpan.
   revalidatePath("/pos/orders");
+
+  // Kirim push notification ke owner/admin/manager setelah order berhasil dibuat.
+  // Kegagalan push tidak boleh membatalkan response sukses ke client.
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: actorProfile } = await supabase
+        .from("profiles")
+        .select("branch_id")
+        .eq("auth_id", user.id)
+        .maybeSingle();
+
+      const branchId = (actorProfile?.branch_id as string | null) ?? null;
+      if (branchId) {
+        const adminIds = await getNotifTargets(branchId, ["owner", "admin_kasir", "manager"]);
+        if (adminIds.length > 0) {
+          await sendPushToProfiles({
+            profileIds: adminIds,
+            title: "Order Baru Masuk",
+            body: `Order ${order.order_number} - ${params.p_license_plate} (${params.p_service_package}) telah dibuat.`,
+            url: "/pos/orders",
+          });
+        }
+      }
+    }
+  } catch {
+    // Push errors must not crash the action
+  }
 
   return { ok: true, data: order as Record<string, unknown> };
 }

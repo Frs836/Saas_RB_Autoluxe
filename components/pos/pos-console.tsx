@@ -532,686 +532,699 @@ export function PosConsole({
     );
   }
 
-  if (step === "checkout") {
-    return (
-      /*
-       * Ruang bawah dihitung dari navigasi (88px termasuk ruang tombol
-       * tambah) ditambah bilah melayang yang lebih tinggi karena memuat
-       * jumlah layanan dan total, lalu diberi ruang bernapas supaya tidak
-       * ada yang menempel di baliknya.
-       */
-      <div className="pb-[calc(15rem+env(safe-area-inset-bottom))]">
-        <div className="sticky top-0 z-40 bg-surface/90 backdrop-blur-md pt-safe shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
-          <div className="h-16 px-gutter flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => {
-                setError(null);
-                setStep("catalog");
-              }}
-              aria-label="Kembali ke katalog"
-              className="w-11 h-11 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary active:scale-95 transition-transform"
-            >
-              <Icon name="arrow_back" className="text-[22px]" />
-            </button>
-            <h1 className="font-headline-2 text-headline-2 text-text-primary">
-              Checkout Order
-            </h1>
-          </div>
-        </div>
-
-        <div className="px-gutter py-4 flex flex-col gap-4">
-          <section className="clay-card p-4 flex flex-col gap-3">
-            <h2 className="font-body-bold text-body-bold text-text-primary flex items-center gap-2">
-              <Icon name="directions_car" className="text-[20px] text-brand-600" />
-              Data Kendaraan
-            </h2>
-            <div className="grid grid-cols-2 gap-3">
-              <label className="flex flex-col gap-1">
-                <span className="font-caption text-caption text-text-muted">
-                  Nomor Plat
-                </span>
-                <input
-                  value={licensePlate}
-                  onChange={ubahTeks("licensePlate", setLicensePlate)}
-                  placeholder="B 1234 XYZ"
-                  className={`h-12 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary uppercase outline-none focus:ring-2 focus:ring-brand-400 ${
-                    fieldError?.field === "licensePlate" ? "ring-2 ring-danger-base" : ""
-                  }`}
-                />
-                {fieldError?.field === "licensePlate" ? (
-                  <span className="font-caption text-caption text-danger-text">
-                    {fieldError.message}
+  /* ── Shared split-panel layout: catalog (left) + checkout (right) ──
+   *
+   * Di mobile: hanya section yang sesuai `step` yang terlihat (block/hidden).
+   * Di desktop (lg:): keduanya tampil bersamaan dalam grid 5-kolom — katalog
+   * mengambil 3 kolom, checkout 2 kolom. Step "done" masih dikembalikan lebih
+   * awal di atas, jadi tidak masuk ke sini.
+   */
+  return (
+    <div className="lg:grid lg:grid-cols-5 lg:min-h-screen lg:gap-0">
+      {/* ── Catalog section (kiri di desktop) ── */}
+      <div
+        className={`${step === "catalog" ? "block" : "hidden"} lg:block lg:col-span-3 lg:overflow-y-auto lg:max-h-screen`}
+      >
+        <div className="pb-[calc(14rem+env(safe-area-inset-bottom))] lg:pb-6">
+          <div className="sticky top-0 z-40 bg-surface/90 backdrop-blur-md pt-safe shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+            <div className="h-16 px-gutter flex items-center justify-between gap-space-sm">
+              <div className="flex items-center gap-space-sm min-w-0">
+                <div className="w-8 h-8 rounded-lg bg-surface-container-low flex items-center justify-center shrink-0 p-1">
+                  <svg
+                    className="w-full h-full text-brand-600"
+                    fill="none"
+                    viewBox="0 0 40 40"
+                  >
+                    <path
+                      d="M6 28L14 12H26L21 21H31L19 32L21 25H11L6 28Z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="font-headline-2 text-headline-2 text-text-primary leading-tight">
+                    Katalog Layanan
                   </span>
-                ) : null}
-              </label>
-              <label className="flex flex-col gap-1">
-                <span className="font-caption text-caption text-text-muted">
-                  Model
-                </span>
-                <input
-                  value={vehicleModel}
-                  onChange={ubahTeks("vehicleModel", setVehicleModel)}
-                  placeholder="Avanza"
-                  className={`h-12 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400 ${
-                    fieldError?.field === "vehicleModel" ? "ring-2 ring-danger-base" : ""
-                  }`}
-                />
-                {fieldError?.field === "vehicleModel" ? (
-                  <span className="font-caption text-caption text-danger-text">
-                    {fieldError.message}
+                  <span className="font-caption text-caption text-text-muted truncate">
+                    {branchName}
                   </span>
-                ) : null}
-              </label>
-            </div>
-            <div className="flex items-center gap-2 text-text-secondary font-caption text-caption">
-              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-brand-50 text-brand-700">
-                <Icon name={vehicleType === "motor" ? "two_wheeler" : "directions_car"} className="text-[14px]" />
-                {vehicleType === "motor" ? "Motor" : "Mobil"}
-              </span>
-              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-surface-container-high">
-                {sizeLabel(effSize)}
-              </span>
-            </div>
-          </section>
-
-          {role !== "karyawan" && (
-            <section className="clay-card p-4 flex flex-col gap-3">
-              <h2 className="font-body-bold text-body-bold text-text-primary flex items-center gap-2">
-                <Icon name="person" className="text-[20px] text-brand-600" />
-                Data Pelanggan
-              </h2>
-              <label className="flex flex-col gap-1">
-                <span className="font-caption text-caption text-text-muted flex items-center gap-1">
-                  Nama Pelanggan
-                  <span className="text-text-muted/50 text-[11px]">(opsional)</span>
-                </span>
-                <input
-                  value={customerName}
-                  onChange={ubahTeks("customerName", setCustomerName)}
-                  placeholder="Nama pelanggan (opsional)"
-                  className={`h-12 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400 ${
-                    fieldError?.field === "customerName" ? "ring-2 ring-danger-base" : ""
-                  }`}
-                />
-                {fieldError?.field === "customerName" ? (
-                  <span className="font-caption text-caption text-danger-text">
-                    {fieldError.message}
-                  </span>
-                ) : null}
-              </label>
-              <label className="flex flex-col gap-1">
-                <span className="font-caption text-caption text-text-muted flex items-center gap-1">
-                  Nomor WhatsApp
-                  <span className="text-text-muted/50 text-[11px]">(opsional)</span>
-                </span>
-                <input
-                  value={customerPhone}
-                  onChange={ubahTeks("customerPhone", setCustomerPhone)}
-                  inputMode="tel"
-                  placeholder="08123456789 (opsional)"
-                  className={`h-12 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400 ${
-                    fieldError?.field === "customerPhone" ? "ring-2 ring-danger-base" : ""
-                  }`}
-                />
-                {fieldError?.field === "customerPhone" ? (
-                  <span className="font-caption text-caption text-danger-text">
-                    {fieldError.message}
-                  </span>
-                ) : null}
-              </label>
-            </section>
-          )}
-
-          <section className="clay-card p-4 flex flex-col gap-3">
-            <h2 className="font-body-bold text-body-bold text-text-primary flex items-center gap-2">
-              <Icon name="groups" className="text-[20px] text-brand-600" />
-              Tim Teknisi
-              <span className="font-caption text-caption text-text-muted ml-auto">
-                maks 5
-              </span>
-            </h2>
-            {teamOptions.length === 0 ? (
-              <p className="font-body text-body text-text-secondary">
-                Belum ada teknisi aktif di cabang ini.
-              </p>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {teamOptions.map((member) => {
-                  const index = selectedTeam.indexOf(member.id);
-                  const selected = index >= 0;
-                  const locked = Boolean(member.busy) && !selected;
-                  return (
-                    <button
-                      key={member.id}
-                      type="button"
-                      onClick={() => toggleMember(member.id)}
-                      disabled={locked}
-                      title={
-                        locked
-                          ? "Sedang mengerjakan unit lain. Selesaikan unit itu dulu."
-                          : undefined
-                      }
-                      className={`px-3 min-h-11 rounded-full font-caption text-caption flex items-center gap-1 active:scale-95 transition-transform ${
-                        selected
-                          ? "bg-primary text-white"
-                          : locked
-                            ? "bg-surface-container-low text-text-muted opacity-60"
-                            : "bg-surface-container-low text-text-secondary"
-                      }`}
-                    >
-                      {selected && index === 0 ? (
-                        <Icon name="star" className="text-[14px]" />
-                      ) : null}
-                      {member.full_name}
-                      {locked ? " (sibuk)" : ""}
-                    </button>
-                  );
-                })}
+                </div>
               </div>
-            )}
-            {teamOptions.some((m) => m.busy) ? (
-              <p className="font-caption text-caption text-text-muted">
-                Teknisi bertanda sibuk sedang mengerjakan unit lain dan baru bisa dipilih
-                setelah unit itu selesai.
-              </p>
-            ) : null}
-            {selectedTeam.length > 0 ? (
-              <p className="font-caption text-caption text-text-muted">
-                Lead: {teamOptions.find((m) => m.id === selectedTeam[0])?.full_name}
-              </p>
-            ) : null}
-          </section>
+              <Link
+                href="/pos/orders"
+                aria-label="Antrean order"
+                className="w-11 h-11 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary active:scale-95 transition-transform"
+              >
+                <Icon name="list_alt" className="text-[22px]" />
+              </Link>
+            </div>
+          </div>
 
-          <section className="clay-card p-4 flex flex-col gap-3">
-            <h2 className="font-body-bold text-body-bold text-text-primary flex items-center gap-2">
-              <Icon name="payments" className="text-[20px] text-brand-600" />
-              Metode Pembayaran
-            </h2>
-            <div className="grid grid-cols-3 gap-2">
-              {Object.keys(PAYMENT_LABELS).map((method) => {
-                const active = paymentMethod === method;
+          <div className="px-gutter py-4 flex flex-col gap-4">
+            <div className="flex gap-2">
+              {VEHICLE_TYPES.map((type) => {
+                const active = vehicleType === type.value;
                 return (
                   <button
-                    key={method}
+                    key={type.value}
                     type="button"
-                    onClick={() => setPaymentMethod(method)}
-                    className={`py-3 rounded-xl flex flex-col items-center gap-1 active:scale-95 transition-transform ${
+                    onClick={() => setVehicleType(type.value)}
+                    className={`flex-1 py-3 rounded-2xl flex items-center justify-center gap-2 font-body-bold text-body-bold active:scale-95 transition-transform ${
                       active
                         ? "bg-primary text-white"
                         : "bg-surface-container-low text-text-secondary"
                     }`}
                   >
-                    <Icon name={PAYMENT_ICONS[method]} className="text-[20px]" />
-                    <span className="font-caption text-caption">
-                      {PAYMENT_LABELS[method]}
-                    </span>
+                    <Icon name={type.icon} className="text-[20px]" />
+                    {type.label}
                   </button>
                 );
               })}
             </div>
 
-            {/* Status Pembayaran — tersedia untuk semua role (karyawan, admin_kasir, maintainer, owner) */}
-            <>
-              <div className="h-px bg-outline-variant" />
-              <p className="font-caption text-caption text-text-muted">
-                {isEmployee
-                  ? <>Uang yang diterima dicatat sebagai <b className="text-text-primary">kas titipan</b> atas nama Anda.</>
-                  : <>Pilih status pembayaran untuk order ini.</>
-                }
-              </p>
-              <div className="grid grid-cols-3 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setPaymentState("paid")}
-                  aria-pressed={paymentState === "paid"}
-                  className={`px-2 py-3 rounded-xl flex flex-col items-center gap-1 active:scale-95 transition-transform ${
-                    paymentState === "paid"
-                      ? "bg-primary text-white"
-                      : "bg-surface-container-low text-text-secondary"
-                  }`}
-                >
-                  <Icon name="paid" className="text-[20px]" />
-                  <span className="font-caption text-caption text-center leading-tight">Lunas</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPaymentState("dp")}
-                  aria-pressed={paymentState === "dp"}
-                  className={`px-2 py-3 rounded-xl flex flex-col items-center gap-1 active:scale-95 transition-transform ${
-                    paymentState === "dp"
-                      ? "bg-brand-100 text-brand-700 ring-2 ring-brand-400"
-                      : "bg-surface-container-low text-text-secondary"
-                  }`}
-                >
-                  <Icon name="account_balance_wallet" className="text-[20px]" />
-                  <span className="font-caption text-caption text-center leading-tight">DP Dulu</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPaymentState("unpaid")}
-                  aria-pressed={paymentState === "unpaid"}
-                  className={`px-2 py-3 rounded-xl flex flex-col items-center gap-1 active:scale-95 transition-transform ${
-                    paymentState === "unpaid"
-                      ? "bg-warning-surface text-warning-text"
-                      : "bg-surface-container-low text-text-secondary"
-                  }`}
-                >
-                  <Icon name="schedule" className="text-[20px]" />
-                  <span className="font-caption text-caption text-center leading-tight">Bayar Nanti</span>
-                </button>
-              </div>
-
-              {/* Input nominal DP */}
-              {paymentState === "dp" && (
-                <div className="flex flex-col gap-1">
-                  <label className="font-caption text-caption text-text-secondary">
-                    Nominal DP <span className="text-danger-text">*</span>
-                  </label>
-                  <div className="relative flex items-center h-12 rounded-xl bg-surface shadow-[inset_0px_2px_4px_rgba(15,23,42,0.06)] px-3">
-                    <span className="font-body-bold text-brand-600 pr-2">Rp</span>
-                    <input
-                      value={dpAmount}
-                      onChange={(e) => setDpAmount(e.target.value.replace(/\D/g, ""))}
-                      placeholder="0"
-                      inputMode="numeric"
-                      className="w-full h-full bg-transparent font-headline-2 text-headline-2 font-semibold text-text-primary focus:outline-none"
-                    />
-                  </div>
-                  {dpAmountNum > 0 && (
-                    <p className="font-caption text-caption text-text-muted">
-                      Sisa tagihan: <b className="text-warning-text">{formatRupiah(total - dpAmountNum)}</b>
-                    </p>
-                  )}
-                </div>
-              )}
-
-              <div className="flex items-start gap-2 p-3 rounded-xl bg-surface-container-low">
-                <Icon name={
-                  paymentState === "paid" ? "check_circle"
-                  : paymentState === "dp" ? "account_balance_wallet"
-                  : "hourglass_empty"
-                } className="text-[18px] text-brand-600 mt-0.5" />
-                <p className="font-caption text-caption text-text-secondary">
-                  {paymentState === "paid" ? (
-                    isEmployee
-                      ? <>Kas titipan <b className="text-text-primary">{formatRupiah(total)}</b> atas nama Anda.</>
-                      : <>Pembayaran <b className="text-text-primary">{formatRupiah(total)}</b> masuk kas cabang.</>
-                  ) : paymentState === "dp" ? (
-                    dpAmountNum > 0
-                      ? <>DP <b className="text-text-primary">{formatRupiah(dpAmountNum)}</b> dicatat. Sisa <b className="text-warning-text">{formatRupiah(total - dpAmountNum)}</b> diselesaikan via Kas.</>
-                      : <>Masukkan jumlah DP di atas.</>
-                  ) : (
-                    <>Tagihan <b>{formatRupiah(total)}</b> tercatat. Pelunasan via menu <b>Kas › Bayar Nanti</b>.</>
-                  )}
-                </p>
-              </div>
-            </>
-
-            <div className="h-px bg-outline-variant" />
-            <button
-              type="button"
-              onClick={() => setStartWork((prev) => !prev)}
-              disabled={selectedTeam.length === 0}
-              aria-pressed={startWork}
-              className={`px-3 py-3 rounded-xl flex items-center gap-3 active:scale-95 transition-transform disabled:opacity-50 ${
-                startWork
-                  ? "bg-success-surface text-success-text"
-                  : "bg-surface-container-low text-text-secondary"
-              }`}
-            >
-              <Icon name={startWork ? "check_box" : "check_box_outline_blank"} className="text-[20px]" />
-              <span className="flex flex-col items-start">
-                <span className="font-caption text-caption">
-                  Kerjakan Sekarang
-                </span>
-                <span className="font-micro-badge text-micro-badge opacity-80">
-                  {selectedTeam.length === 0
-                    ? "Pilih teknisi dulu"
-                    : "Langsung berstatus “Sedang Dikerjakan”"}
-                </span>
-              </span>
-            </button>
-          </section>
-
-          <section className="clay-card p-4 flex flex-col gap-2">
-            <h2 className="font-body-bold text-body-bold text-text-primary">
-              Rincian Pesanan
-            </h2>
-            {resolved.map((line) => (
-              <div
-                key={line.serviceId}
-                className="flex items-center justify-between font-body text-body"
-              >
-                <span className="text-text-secondary">
-                  {line.qty}x {line.service.name}
-                </span>
-                <span className="text-text-primary font-body-bold">
-                  {formatRupiah(line.price * line.qty)}
-                </span>
-              </div>
-            ))}
-            <div className="h-px bg-outline-variant my-1" />
-            <div className="flex items-center justify-between">
-              <span className="font-body-bold text-body-bold text-text-primary">
-                Total
-              </span>
-              <span className="font-headline-2 text-headline-2 text-primary">
-                {formatRupiah(total)}
-              </span>
+            {/*
+              Ukuran ditampilkan untuk mobil maupun motor. Motor memakai huruf
+              ukuran yang sama (S/M/L/XL) tetapi disimpan sebagai label "Motor S"
+              sampai "Motor XL" supaya tiap ukuran punya tarif sendiri.
+            */}
+            <div className="flex gap-2">
+              {MOBIL_SIZES.map((option) => {
+                const active = size === option;
+                return (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => setSize(option)}
+                    // min-h-11 karena py-2.5 hanya menghasilkan 40px. Tombol ukuran kendaraan
+                    // ditekan di awal transaksi, sering dengan satu tangan sambil
+                    // memegang kunci unit.
+                    className={`flex-1 min-h-11 rounded-xl font-body-bold text-body-bold flex items-center justify-center active:scale-95 transition-transform ${
+                      active
+                        ? "bg-brand-600 text-white"
+                        : "bg-surface-container-low text-text-secondary"
+                    }`}
+                  >
+                    {vehicleType === "motor" ? `Motor ${option}` : option}
+                  </button>
+                );
+              })}
             </div>
-          </section>
 
-          {error ? (
-            <div className="p-3 rounded-xl bg-danger-surface text-danger-text font-body text-body flex items-center gap-2">
-              <Icon name="error" className="text-[20px]" />
-              {error}
+            <div className="relative">
+              <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[20px]" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Cari layanan..."
+                className="w-full h-12 pl-10 pr-3 rounded-2xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+              />
             </div>
-          ) : null}
-        </div>
 
-        {/*
-         * Tombol melayang, terpisah dari navigasi bawah.
-         *
-         * Sebelumnya bilahnya menempel tepat di tepi navigasi dengan latar
-         * yang sama, sehingga keduanya terbaca sebagai satu blok besar dan
-         * rincian di bawahnya tertutup. Sekarang bentuknya pil dengan
-         * bayangan sendiri, jaraknya diberikan oleh token --nav-h-fab. Tinggi
-         * navigasi sendiri 68px, jadi jaraknya selalu terlihat.
-         */}
-        <div className="fixed bottom-nav-offset left-0 right-0 z-action-bar px-gutter">
-          <button
-            type="button"
-            disabled={submitting}
-            onClick={submitOrder}
-            className="w-full py-4 rounded-full primary-gradient text-white font-body-bold text-body-bold flex items-center justify-center gap-2 clay-fab active:scale-95 transition-transform disabled:opacity-60"
-          >
-            <Icon name={submitting ? "hourglass_top" : "check_circle"} className="text-[22px]" />
-            {submitting
-              ? "Memproses..."
-              : `${startWork ? "Simpan & Kerjakan" : "Buat Order"} - ${formatRupiah(total)}`}
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-      <div className="pb-[calc(14rem+env(safe-area-inset-bottom))]">
-      <div className="sticky top-0 z-40 bg-surface/90 backdrop-blur-md pt-safe shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
-        <div className="h-16 px-gutter flex items-center justify-between gap-space-sm">
-          <div className="flex items-center gap-space-sm min-w-0">
-            <div className="w-8 h-8 rounded-lg bg-surface-container-low flex items-center justify-center shrink-0 p-1">
-              <svg
-                className="w-full h-full text-brand-600"
-                fill="none"
-                viewBox="0 0 40 40"
-              >
-                <path
-                  d="M6 28L14 12H26L21 21H31L19 32L21 25H11L6 28Z"
-                  fill="currentColor"
-                />
-              </svg>
-            </div>
-            <div className="flex flex-col min-w-0">
-              <span className="font-headline-2 text-headline-2 text-text-primary leading-tight">
-                Katalog Layanan
-              </span>
-              <span className="font-caption text-caption text-text-muted truncate">
-                {branchName}
-              </span>
-            </div>
-          </div>
-          <Link
-            href="/pos/orders"
-            aria-label="Antrean order"
-            className="w-11 h-11 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary active:scale-95 transition-transform"
-          >
-            <Icon name="list_alt" className="text-[22px]" />
-          </Link>
-        </div>
-      </div>
-
-      <div className="px-gutter py-4 flex flex-col gap-4">
-        <div className="flex gap-2">
-          {VEHICLE_TYPES.map((type) => {
-            const active = vehicleType === type.value;
-            return (
+            <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-gutter px-gutter">
               <button
-                key={type.value}
                 type="button"
-                onClick={() => setVehicleType(type.value)}
-                className={`flex-1 py-3 rounded-2xl flex items-center justify-center gap-2 font-body-bold text-body-bold active:scale-95 transition-transform ${
-                  active
+                onClick={() => setActiveCategory("all")}
+                className={`shrink-0 px-4 min-h-11 rounded-full font-caption text-caption flex items-center active:scale-95 transition-transform ${
+                  activeCategory === "all"
                     ? "bg-primary text-white"
                     : "bg-surface-container-low text-text-secondary"
                 }`}
               >
-                <Icon name={type.icon} className="text-[20px]" />
-                {type.label}
+                Semua
               </button>
-            );
-          })}
-        </div>
+              {categories.map((category) => (
+                <button
+                  key={category}
+                  type="button"
+                  onClick={() => setActiveCategory(category)}
+                  className={`shrink-0 px-4 min-h-11 rounded-full font-caption text-caption flex items-center active:scale-95 transition-transform ${
+                    activeCategory === category
+                      ? "bg-primary text-white"
+                      : "bg-surface-container-low text-text-secondary"
+                  }`}
+                >
+                  {CATEGORY_LABELS[category] ?? category}
+                </button>
+              ))}
+            </div>
 
-        {/*
-          Ukuran ditampilkan untuk mobil maupun motor. Motor memakai huruf
-          ukuran yang sama (S/M/L/XL) tetapi disimpan sebagai label "Motor S"
-          sampai "Motor XL" supaya tiap ukuran punya tarif sendiri.
-        */}
-        <div className="flex gap-2">
-          {MOBIL_SIZES.map((option) => {
-            const active = size === option;
-            return (
+            <section className="flex flex-col gap-3">
+              <h2 className="font-body-bold text-body-bold text-text-primary">
+                Paket Utama
+              </h2>
+              {filteredMain.length === 0 ? (
+                <p className="font-body text-body text-text-secondary py-4 text-center">
+                  Tidak ada layanan yang cocok.
+                </p>
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
+                  {filteredMain.map((service) => {
+                    const qty = qtyInCart(service.id);
+                    return (
+                      <div key={service.id} className="clay-card p-3 flex flex-col gap-2">
+                        <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center">
+                          <Icon name={CATEGORY_ICONS[service.category] ?? "build"} className="text-brand-600 text-[22px]" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-body-bold text-body-bold text-text-primary leading-tight line-clamp-2">
+                            {service.name}
+                          </span>
+                          <span className="font-caption text-caption text-text-muted">
+                            {CATEGORY_LABELS[service.category] ?? service.category}
+                          </span>
+                        </div>
+                        <span className="font-body-bold text-body-bold text-primary">
+                          {formatRupiah(priceForSize(service, effSize))}
+                        </span>
+                        {qty > 0 ? (
+                          <div className="flex items-center justify-between bg-surface-container-low rounded-xl p-1">
+                            <button
+                              type="button"
+                              onClick={() => changeQty(service.id, -1)}
+                              className="w-11 h-11 rounded-lg bg-surface flex items-center justify-center active:scale-95"
+                            >
+                              <Icon name="remove" className="text-[18px] text-text-secondary" />
+                            </button>
+                            <span className="font-body-bold text-body-bold text-text-primary">
+                              {qty}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => changeQty(service.id, 1)}
+                              className="w-11 h-11 rounded-lg bg-primary text-white flex items-center justify-center active:scale-95"
+                            >
+                              <Icon name="add" className="text-[18px]" />
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => addToCart(service.id)}
+                            className="min-h-11 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform"
+                          >
+                            <Icon name="add" className="text-[16px]" />
+                            Tambah
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
+
+            {filteredAddon.length > 0 ? (
+              <section className="flex flex-col gap-3">
+                <h2 className="font-body-bold text-body-bold text-text-primary">
+                  Layanan Tambahan
+                </h2>
+                <div className="flex flex-col gap-2">
+                  {filteredAddon.map((service) => {
+                    const qty = qtyInCart(service.id);
+                    return (
+                      <div
+                        key={service.id}
+                        className="clay-card p-3 flex items-center gap-3"
+                      >
+                        <div className="w-10 h-10 rounded-xl bg-surface-container-low flex items-center justify-center shrink-0">
+                          <Icon name="add_circle" className="text-brand-600 text-[22px]" />
+                        </div>
+                        <div className="flex flex-col min-w-0 flex-1">
+                          <span className="font-body-bold text-body-bold text-text-primary truncate">
+                            {service.name}
+                          </span>
+                          <span className="font-body-bold text-body-bold text-primary">
+                            {formatRupiah(priceForSize(service, effSize))}
+                          </span>
+                        </div>
+                        {qty > 0 ? (
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => changeQty(service.id, -1)}
+                              className="w-11 h-11 rounded-lg bg-surface-container-low flex items-center justify-center active:scale-95"
+                            >
+                              <Icon name="remove" className="text-[18px] text-text-secondary" />
+                            </button>
+                            <span className="font-body-bold text-body-bold text-text-primary w-5 text-center">
+                              {qty}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => changeQty(service.id, 1)}
+                              className="w-11 h-11 rounded-lg bg-primary text-white flex items-center justify-center active:scale-95"
+                            >
+                              <Icon name="add" className="text-[18px]" />
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => addToCart(service.id)}
+                            aria-label={`Tambah ${service.name}`}
+                            className="w-11 h-11 rounded-xl bg-brand-50 text-brand-700 flex items-center justify-center active:scale-95 transition-transform"
+                          >
+                            <Icon name="add" className="text-[20px]" />
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            ) : null}
+          </div>
+
+          {itemCount > 0 ? (
+            <div className="fixed bottom-nav-offset left-0 right-0 z-action-bar px-gutter lg:sticky lg:bottom-0 lg:left-auto lg:right-auto">
+              <div className="bg-surface rounded-[24px] clay-fab px-4 py-3 border border-outline-variant">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-caption text-caption text-text-secondary">
+                    {itemCount} layanan dipilih
+                  </span>
+                  <span className="font-headline-2 text-headline-2 text-primary">
+                    {formatRupiah(total)}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setError(null);
+                    setStep("checkout");
+                  }}
+                  className="w-full py-4 rounded-full primary-gradient text-white font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform"
+                >
+                  Lanjut ke Checkout
+                  <Icon name="arrow_forward" className="text-[22px]" />
+                </button>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      </div>
+
+      {/* ── Checkout section (kanan di desktop) ── */}
+      <div
+        className={`${step === "checkout" ? "block" : "hidden"} lg:block lg:col-span-2 lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto lg:border-l lg:border-slate-200 lg:bg-white lg:shadow-[-4px_0_12px_rgba(0,0,0,0.04)]`}
+      >
+        <div className="pb-[calc(15rem+env(safe-area-inset-bottom))] lg:pb-6">
+          {/*
+           * Header checkout: tombol kembali hanya tampil di mobile karena di
+           * desktop katalog dan checkout terlihat bersamaan.
+           */}
+          <div className="sticky top-0 z-40 bg-surface/90 backdrop-blur-md pt-safe shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+            <div className="h-16 px-gutter flex items-center gap-3">
               <button
-                key={option}
                 type="button"
-                onClick={() => setSize(option)}
-                // min-h-11 karena py-2.5 hanya menghasilkan 40px. Tombol ukuran kendaraan
-                // ditekan di awal transaksi, sering dengan satu tangan sambil
-                // memegang kunci unit.
-                className={`flex-1 min-h-11 rounded-xl font-body-bold text-body-bold flex items-center justify-center active:scale-95 transition-transform ${
-                  active
-                    ? "bg-brand-600 text-white"
+                onClick={() => {
+                  setError(null);
+                  setStep("catalog");
+                }}
+                aria-label="Kembali ke katalog"
+                className="w-11 h-11 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary active:scale-95 transition-transform lg:hidden"
+              >
+                <Icon name="arrow_back" className="text-[22px]" />
+              </button>
+              <h1 className="font-headline-2 text-headline-2 text-text-primary">
+                Checkout Order
+              </h1>
+            </div>
+          </div>
+
+          <div className="px-gutter py-4 flex flex-col gap-4">
+            <section className="clay-card p-4 flex flex-col gap-3">
+              <h2 className="font-body-bold text-body-bold text-text-primary flex items-center gap-2">
+                <Icon name="directions_car" className="text-[20px] text-brand-600" />
+                Data Kendaraan
+              </h2>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="flex flex-col gap-1">
+                  <span className="font-caption text-caption text-text-muted">
+                    Nomor Plat
+                  </span>
+                  <input
+                    value={licensePlate}
+                    onChange={ubahTeks("licensePlate", setLicensePlate)}
+                    placeholder="B 1234 XYZ"
+                    className={`h-12 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary uppercase outline-none focus:ring-2 focus:ring-brand-400 ${
+                      fieldError?.field === "licensePlate" ? "ring-2 ring-danger-base" : ""
+                    }`}
+                  />
+                  {fieldError?.field === "licensePlate" ? (
+                    <span className="font-caption text-caption text-danger-text">
+                      {fieldError.message}
+                    </span>
+                  ) : null}
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="font-caption text-caption text-text-muted">
+                    Model
+                  </span>
+                  <input
+                    value={vehicleModel}
+                    onChange={ubahTeks("vehicleModel", setVehicleModel)}
+                    placeholder="Avanza"
+                    className={`h-12 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400 ${
+                      fieldError?.field === "vehicleModel" ? "ring-2 ring-danger-base" : ""
+                    }`}
+                  />
+                  {fieldError?.field === "vehicleModel" ? (
+                    <span className="font-caption text-caption text-danger-text">
+                      {fieldError.message}
+                    </span>
+                  ) : null}
+                </label>
+              </div>
+              <div className="flex items-center gap-2 text-text-secondary font-caption text-caption">
+                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-brand-50 text-brand-700">
+                  <Icon name={vehicleType === "motor" ? "two_wheeler" : "directions_car"} className="text-[14px]" />
+                  {vehicleType === "motor" ? "Motor" : "Mobil"}
+                </span>
+                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-surface-container-high">
+                  {sizeLabel(effSize)}
+                </span>
+              </div>
+            </section>
+
+            {role !== "karyawan" && (
+              <section className="clay-card p-4 flex flex-col gap-3">
+                <h2 className="font-body-bold text-body-bold text-text-primary flex items-center gap-2">
+                  <Icon name="person" className="text-[20px] text-brand-600" />
+                  Data Pelanggan
+                </h2>
+                <label className="flex flex-col gap-1">
+                  <span className="font-caption text-caption text-text-muted flex items-center gap-1">
+                    Nama Pelanggan
+                    <span className="text-text-muted/50 text-[11px]">(opsional)</span>
+                  </span>
+                  <input
+                    value={customerName}
+                    onChange={ubahTeks("customerName", setCustomerName)}
+                    placeholder="Nama pelanggan (opsional)"
+                    className={`h-12 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400 ${
+                      fieldError?.field === "customerName" ? "ring-2 ring-danger-base" : ""
+                    }`}
+                  />
+                  {fieldError?.field === "customerName" ? (
+                    <span className="font-caption text-caption text-danger-text">
+                      {fieldError.message}
+                    </span>
+                  ) : null}
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="font-caption text-caption text-text-muted flex items-center gap-1">
+                    Nomor WhatsApp
+                    <span className="text-text-muted/50 text-[11px]">(opsional)</span>
+                  </span>
+                  <input
+                    value={customerPhone}
+                    onChange={ubahTeks("customerPhone", setCustomerPhone)}
+                    inputMode="tel"
+                    placeholder="08123456789 (opsional)"
+                    className={`h-12 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400 ${
+                      fieldError?.field === "customerPhone" ? "ring-2 ring-danger-base" : ""
+                    }`}
+                  />
+                  {fieldError?.field === "customerPhone" ? (
+                    <span className="font-caption text-caption text-danger-text">
+                      {fieldError.message}
+                    </span>
+                  ) : null}
+                </label>
+              </section>
+            )}
+
+            <section className="clay-card p-4 flex flex-col gap-3">
+              <h2 className="font-body-bold text-body-bold text-text-primary flex items-center gap-2">
+                <Icon name="groups" className="text-[20px] text-brand-600" />
+                Tim Teknisi
+                <span className="font-caption text-caption text-text-muted ml-auto">
+                  maks 5
+                </span>
+              </h2>
+              {teamOptions.length === 0 ? (
+                <p className="font-body text-body text-text-secondary">
+                  Belum ada teknisi aktif di cabang ini.
+                </p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {teamOptions.map((member) => {
+                    const index = selectedTeam.indexOf(member.id);
+                    const selected = index >= 0;
+                    const locked = Boolean(member.busy) && !selected;
+                    return (
+                      <button
+                        key={member.id}
+                        type="button"
+                        onClick={() => toggleMember(member.id)}
+                        disabled={locked}
+                        title={
+                          locked
+                            ? "Sedang mengerjakan unit lain. Selesaikan unit itu dulu."
+                            : undefined
+                        }
+                        className={`px-3 min-h-11 rounded-full font-caption text-caption flex items-center gap-1 active:scale-95 transition-transform ${
+                          selected
+                            ? "bg-primary text-white"
+                            : locked
+                              ? "bg-surface-container-low text-text-muted opacity-60"
+                              : "bg-surface-container-low text-text-secondary"
+                        }`}
+                      >
+                        {selected && index === 0 ? (
+                          <Icon name="star" className="text-[14px]" />
+                        ) : null}
+                        {member.full_name}
+                        {locked ? " (sibuk)" : ""}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              {teamOptions.some((m) => m.busy) ? (
+                <p className="font-caption text-caption text-text-muted">
+                  Teknisi bertanda sibuk sedang mengerjakan unit lain dan baru bisa dipilih
+                  setelah unit itu selesai.
+                </p>
+              ) : null}
+              {selectedTeam.length > 0 ? (
+                <p className="font-caption text-caption text-text-muted">
+                  Lead: {teamOptions.find((m) => m.id === selectedTeam[0])?.full_name}
+                </p>
+              ) : null}
+            </section>
+
+            <section className="clay-card p-4 flex flex-col gap-3">
+              <h2 className="font-body-bold text-body-bold text-text-primary flex items-center gap-2">
+                <Icon name="payments" className="text-[20px] text-brand-600" />
+                Metode Pembayaran
+              </h2>
+              <div className="grid grid-cols-3 gap-2">
+                {Object.keys(PAYMENT_LABELS).map((method) => {
+                  const active = paymentMethod === method;
+                  return (
+                    <button
+                      key={method}
+                      type="button"
+                      onClick={() => setPaymentMethod(method)}
+                      className={`py-3 rounded-xl flex flex-col items-center gap-1 active:scale-95 transition-transform ${
+                        active
+                          ? "bg-primary text-white"
+                          : "bg-surface-container-low text-text-secondary"
+                      }`}
+                    >
+                      <Icon name={PAYMENT_ICONS[method]} className="text-[20px]" />
+                      <span className="font-caption text-caption">
+                        {PAYMENT_LABELS[method]}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Status Pembayaran — tersedia untuk semua role (karyawan, admin_kasir, maintainer, owner) */}
+              <>
+                <div className="h-px bg-outline-variant" />
+                <p className="font-caption text-caption text-text-muted">
+                  {isEmployee
+                    ? <>Uang yang diterima dicatat sebagai <b className="text-text-primary">kas titipan</b> atas nama Anda.</>
+                    : <>Pilih status pembayaran untuk order ini.</>
+                  }
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentState("paid")}
+                    aria-pressed={paymentState === "paid"}
+                    className={`px-2 py-3 rounded-xl flex flex-col items-center gap-1 active:scale-95 transition-transform ${
+                      paymentState === "paid"
+                        ? "bg-primary text-white"
+                        : "bg-surface-container-low text-text-secondary"
+                    }`}
+                  >
+                    <Icon name="paid" className="text-[20px]" />
+                    <span className="font-caption text-caption text-center leading-tight">Lunas</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentState("dp")}
+                    aria-pressed={paymentState === "dp"}
+                    className={`px-2 py-3 rounded-xl flex flex-col items-center gap-1 active:scale-95 transition-transform ${
+                      paymentState === "dp"
+                        ? "bg-brand-100 text-brand-700 ring-2 ring-brand-400"
+                        : "bg-surface-container-low text-text-secondary"
+                    }`}
+                  >
+                    <Icon name="account_balance_wallet" className="text-[20px]" />
+                    <span className="font-caption text-caption text-center leading-tight">DP Dulu</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentState("unpaid")}
+                    aria-pressed={paymentState === "unpaid"}
+                    className={`px-2 py-3 rounded-xl flex flex-col items-center gap-1 active:scale-95 transition-transform ${
+                      paymentState === "unpaid"
+                        ? "bg-warning-surface text-warning-text"
+                        : "bg-surface-container-low text-text-secondary"
+                    }`}
+                  >
+                    <Icon name="schedule" className="text-[20px]" />
+                    <span className="font-caption text-caption text-center leading-tight">Bayar Nanti</span>
+                  </button>
+                </div>
+
+                {/* Input nominal DP */}
+                {paymentState === "dp" && (
+                  <div className="flex flex-col gap-1">
+                    <label className="font-caption text-caption text-text-secondary">
+                      Nominal DP <span className="text-danger-text">*</span>
+                    </label>
+                    <div className="relative flex items-center h-12 rounded-xl bg-surface shadow-[inset_0px_2px_4px_rgba(15,23,42,0.06)] px-3">
+                      <span className="font-body-bold text-brand-600 pr-2">Rp</span>
+                      <input
+                        value={dpAmount}
+                        onChange={(e) => setDpAmount(e.target.value.replace(/\D/g, ""))}
+                        placeholder="0"
+                        inputMode="numeric"
+                        className="w-full h-full bg-transparent font-headline-2 text-headline-2 font-semibold text-text-primary focus:outline-none"
+                      />
+                    </div>
+                    {dpAmountNum > 0 && (
+                      <p className="font-caption text-caption text-text-muted">
+                        Sisa tagihan: <b className="text-warning-text">{formatRupiah(total - dpAmountNum)}</b>
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex items-start gap-2 p-3 rounded-xl bg-surface-container-low">
+                  <Icon name={
+                    paymentState === "paid" ? "check_circle"
+                    : paymentState === "dp" ? "account_balance_wallet"
+                    : "hourglass_empty"
+                  } className="text-[18px] text-brand-600 mt-0.5" />
+                  <p className="font-caption text-caption text-text-secondary">
+                    {paymentState === "paid" ? (
+                      isEmployee
+                        ? <>Kas titipan <b className="text-text-primary">{formatRupiah(total)}</b> atas nama Anda.</>
+                        : <>Pembayaran <b className="text-text-primary">{formatRupiah(total)}</b> masuk kas cabang.</>
+                    ) : paymentState === "dp" ? (
+                      dpAmountNum > 0
+                        ? <>DP <b className="text-text-primary">{formatRupiah(dpAmountNum)}</b> dicatat. Sisa <b className="text-warning-text">{formatRupiah(total - dpAmountNum)}</b> diselesaikan via Kas.</>
+                        : <>Masukkan jumlah DP di atas.</>
+                    ) : (
+                      <>Tagihan <b>{formatRupiah(total)}</b> tercatat. Pelunasan via menu <b>Kas › Bayar Nanti</b>.</>
+                    )}
+                  </p>
+                </div>
+              </>
+
+              <div className="h-px bg-outline-variant" />
+              <button
+                type="button"
+                onClick={() => setStartWork((prev) => !prev)}
+                disabled={selectedTeam.length === 0}
+                aria-pressed={startWork}
+                className={`px-3 py-3 rounded-xl flex items-center gap-3 active:scale-95 transition-transform disabled:opacity-50 ${
+                  startWork
+                    ? "bg-success-surface text-success-text"
                     : "bg-surface-container-low text-text-secondary"
                 }`}
               >
-                {vehicleType === "motor" ? `Motor ${option}` : option}
+                <Icon name={startWork ? "check_box" : "check_box_outline_blank"} className="text-[20px]" />
+                <span className="flex flex-col items-start">
+                  <span className="font-caption text-caption">
+                    Kerjakan Sekarang
+                  </span>
+                  <span className="font-micro-badge text-micro-badge opacity-80">
+                    {selectedTeam.length === 0
+                      ? "Pilih teknisi dulu"
+                      : "Langsung berstatus \u201cSedang Dikerjakan\u201d"}
+                  </span>
+                </span>
               </button>
-            );
-          })}
-        </div>
+            </section>
 
-        <div className="relative">
-          <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[20px]" />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Cari layanan..."
-            className="w-full h-12 pl-10 pr-3 rounded-2xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
-          />
-        </div>
+            <section className="clay-card p-4 flex flex-col gap-2">
+              <h2 className="font-body-bold text-body-bold text-text-primary">
+                Rincian Pesanan
+              </h2>
+              {resolved.map((line) => (
+                <div
+                  key={line.serviceId}
+                  className="flex items-center justify-between font-body text-body"
+                >
+                  <span className="text-text-secondary">
+                    {line.qty}x {line.service.name}
+                  </span>
+                  <span className="text-text-primary font-body-bold">
+                    {formatRupiah(line.price * line.qty)}
+                  </span>
+                </div>
+              ))}
+              <div className="h-px bg-outline-variant my-1" />
+              <div className="flex items-center justify-between">
+                <span className="font-body-bold text-body-bold text-text-primary">
+                  Total
+                </span>
+                <span className="font-headline-2 text-headline-2 text-primary">
+                  {formatRupiah(total)}
+                </span>
+              </div>
+            </section>
 
-        <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-gutter px-gutter">
-          <button
-            type="button"
-            onClick={() => setActiveCategory("all")}
-            className={`shrink-0 px-4 min-h-11 rounded-full font-caption text-caption flex items-center active:scale-95 transition-transform ${
-              activeCategory === "all"
-                ? "bg-primary text-white"
-                : "bg-surface-container-low text-text-secondary"
-            }`}
-          >
-            Semua
-          </button>
-          {categories.map((category) => (
-            <button
-              key={category}
-              type="button"
-              onClick={() => setActiveCategory(category)}
-              className={`shrink-0 px-4 min-h-11 rounded-full font-caption text-caption flex items-center active:scale-95 transition-transform ${
-                activeCategory === category
-                  ? "bg-primary text-white"
-                  : "bg-surface-container-low text-text-secondary"
-              }`}
-            >
-              {CATEGORY_LABELS[category] ?? category}
-            </button>
-          ))}
-        </div>
+            {error ? (
+              <div className="p-3 rounded-xl bg-danger-surface text-danger-text font-body text-body flex items-center gap-2">
+                <Icon name="error" className="text-[20px]" />
+                {error}
+              </div>
+            ) : null}
+          </div>
 
-        <section className="flex flex-col gap-3">
-          <h2 className="font-body-bold text-body-bold text-text-primary">
-            Paket Utama
-          </h2>
-          {filteredMain.length === 0 ? (
-            <p className="font-body text-body text-text-secondary py-4 text-center">
-              Tidak ada layanan yang cocok.
-            </p>
-          ) : (
-            <div className="grid grid-cols-2 gap-3">
-              {filteredMain.map((service) => {
-                const qty = qtyInCart(service.id);
-                return (
-                  <div key={service.id} className="clay-card p-3 flex flex-col gap-2">
-                    <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center">
-                      <Icon name={CATEGORY_ICONS[service.category] ?? "build"} className="text-brand-600 text-[22px]" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="font-body-bold text-body-bold text-text-primary leading-tight line-clamp-2">
-                        {service.name}
-                      </span>
-                      <span className="font-caption text-caption text-text-muted">
-                        {CATEGORY_LABELS[service.category] ?? service.category}
-                      </span>
-                    </div>
-                    <span className="font-body-bold text-body-bold text-primary">
-                      {formatRupiah(priceForSize(service, effSize))}
-                    </span>
-                    {qty > 0 ? (
-                      <div className="flex items-center justify-between bg-surface-container-low rounded-xl p-1">
-                        <button
-                          type="button"
-                          onClick={() => changeQty(service.id, -1)}
-                          className="w-11 h-11 rounded-lg bg-surface flex items-center justify-center active:scale-95"
-                        >
-                          <Icon name="remove" className="text-[18px] text-text-secondary" />
-                        </button>
-                        <span className="font-body-bold text-body-bold text-text-primary">
-                          {qty}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => changeQty(service.id, 1)}
-                          className="w-11 h-11 rounded-lg bg-primary text-white flex items-center justify-center active:scale-95"
-                        >
-                          <Icon name="add" className="text-[18px]" />
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => addToCart(service.id)}
-                        className="min-h-11 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform"
-                      >
-                        <Icon name="add" className="text-[16px]" />
-                        Tambah
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </section>
-
-        {filteredAddon.length > 0 ? (
-          <section className="flex flex-col gap-3">
-            <h2 className="font-body-bold text-body-bold text-text-primary">
-              Layanan Tambahan
-            </h2>
-            <div className="flex flex-col gap-2">
-              {filteredAddon.map((service) => {
-                const qty = qtyInCart(service.id);
-                return (
-                  <div
-                    key={service.id}
-                    className="clay-card p-3 flex items-center gap-3"
-                  >
-                    <div className="w-10 h-10 rounded-xl bg-surface-container-low flex items-center justify-center shrink-0">
-                      <Icon name="add_circle" className="text-brand-600 text-[22px]" />
-                    </div>
-                    <div className="flex flex-col min-w-0 flex-1">
-                      <span className="font-body-bold text-body-bold text-text-primary truncate">
-                        {service.name}
-                      </span>
-                      <span className="font-body-bold text-body-bold text-primary">
-                        {formatRupiah(priceForSize(service, effSize))}
-                      </span>
-                    </div>
-                    {qty > 0 ? (
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => changeQty(service.id, -1)}
-                          className="w-11 h-11 rounded-lg bg-surface-container-low flex items-center justify-center active:scale-95"
-                        >
-                          <Icon name="remove" className="text-[18px] text-text-secondary" />
-                        </button>
-                        <span className="font-body-bold text-body-bold text-text-primary w-5 text-center">
-                          {qty}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => changeQty(service.id, 1)}
-                          className="w-11 h-11 rounded-lg bg-primary text-white flex items-center justify-center active:scale-95"
-                        >
-                          <Icon name="add" className="text-[18px]" />
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => addToCart(service.id)}
-                        aria-label={`Tambah ${service.name}`}
-                        className="w-11 h-11 rounded-xl bg-brand-50 text-brand-700 flex items-center justify-center active:scale-95 transition-transform"
-                      >
-                        <Icon name="add" className="text-[20px]" />
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-        ) : null}
-      </div>
-
-      {itemCount > 0 ? (
-        <div className="fixed bottom-nav-offset left-0 right-0 z-action-bar px-gutter">
-          <div className="bg-surface rounded-[24px] clay-fab px-4 py-3 border border-outline-variant">
-            <div className="flex items-center justify-between mb-2">
-              <span className="font-caption text-caption text-text-secondary">
-                {itemCount} layanan dipilih
-              </span>
-              <span className="font-headline-2 text-headline-2 text-primary">
-                {formatRupiah(total)}
-              </span>
-            </div>
+          {/*
+           * Tombol melayang, terpisah dari navigasi bawah.
+           *
+           * Sebelumnya bilahnya menempel tepat di tepi navigasi dengan latar
+           * yang sama, sehingga keduanya terbaca sebagai satu blok besar dan
+           * rincian di bawahnya tertutup. Sekarang bentuknya pil dengan
+           * bayangan sendiri, jaraknya diberikan oleh token --nav-h-fab. Tinggi
+           * navigasi sendiri 68px, jadi jaraknya selalu terlihat.
+           */}
+          <div className="fixed bottom-nav-offset left-0 right-0 z-action-bar px-gutter lg:sticky lg:bottom-0 lg:left-auto lg:right-auto">
             <button
               type="button"
-              onClick={() => {
-                setError(null);
-                setStep("checkout");
-              }}
-              className="w-full py-4 rounded-full primary-gradient text-white font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform"
+              disabled={submitting}
+              onClick={submitOrder}
+              className="w-full py-4 rounded-full primary-gradient text-white font-body-bold text-body-bold flex items-center justify-center gap-2 clay-fab active:scale-95 transition-transform disabled:opacity-60"
             >
-              Lanjut ke Checkout
-              <Icon name="arrow_forward" className="text-[22px]" />
+              <Icon name={submitting ? "hourglass_top" : "check_circle"} className="text-[22px]" />
+              {submitting
+                ? "Memproses..."
+                : `${startWork ? "Simpan & Kerjakan" : "Buat Order"} - ${formatRupiah(total)}`}
             </button>
           </div>
         </div>
-      ) : null}
+      </div>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { BottomNav } from "@/components/dashboard/bottom-nav";
 import { SubPageHeader } from "@/components/pos/sub-page-header";
@@ -7,6 +8,7 @@ import {
   type InventoryItem,
   type StockClaim,
 } from "@/components/pos/stock-manager";
+import { Icon } from "@/components/ui/icon";
 import { can } from "@/lib/rbac";
 import { getSessionProfile, scopedBranchId } from "@/lib/rbac-guard";
 import { scopeBranchQuery } from "@/lib/branch";
@@ -111,6 +113,23 @@ export default async function StockPage() {
         branches={can(session.role, "branch.switch") ? branchOptions : []}
         activeBranchId={branchId}
       />
+      {canManage ? (
+        <div className="px-4 pt-4">
+          <Link
+            href="/stok/opname"
+            className="flex items-center gap-3 bg-surface rounded-[16px] p-3.5 clay-card border border-white/80 active:scale-[0.99] transition-transform"
+          >
+            <div className="w-9 h-9 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
+              <Icon name="inventory" className="text-[18px]" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <span className="font-body-bold text-body-bold text-text-primary block">Stok Opname</span>
+              <span className="font-caption text-caption text-text-muted block">Lakukan rekonsiliasi stok bulanan</span>
+            </div>
+            <Icon name="chevron_right" className="text-text-muted text-[20px] shrink-0" />
+          </Link>
+        </div>
+      ) : null}
       <StockManager
         items={items as InventoryItem[]}
         claims={claims}

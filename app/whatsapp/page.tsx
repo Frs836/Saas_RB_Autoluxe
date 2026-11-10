@@ -136,7 +136,7 @@ export default async function WhatsappPage() {
       <SubPageHeader
         title="Integrasi WhatsApp"
         subtitle={branchName}
-        backHref="/dashboard"
+        backHref="/profil"
       />
       <main className="flex-1">
         <WhatsappConsole

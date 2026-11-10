@@ -105,7 +105,7 @@ export default async function InvoicePage() {
       <SubPageHeader
         title="Riwayat Invoice"
         branchName={branchName}
-        backHref="/dashboard"
+        backHref="/profil"
       />
       <InvoiceHistory invoices={invoices} />
       <BottomNav role={session.role} />

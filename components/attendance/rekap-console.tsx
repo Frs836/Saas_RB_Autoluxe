@@ -644,7 +644,7 @@ export function RekapConsole({
   ];
 
   return (
-    <div className="flex flex-col w-full pb-nav-plain">
+    <div className="flex flex-col w-full pb-nav-plain lg:pb-8">
       {/* Desktop 2-column grid: filter sidebar kiri, konten utama kanan */}
       <div className="lg:grid lg:grid-cols-4 lg:gap-6 lg:items-start lg:px-gutter lg:pt-4">
 

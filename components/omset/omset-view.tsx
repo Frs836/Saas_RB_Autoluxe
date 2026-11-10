@@ -125,7 +125,7 @@ export function OmsetView({
   ];
 
   return (
-    <div className="px-gutter py-4 flex flex-col gap-4 pb-nav-plain">
+    <div className="px-gutter py-4 flex flex-col gap-4 pb-nav-plain lg:pb-8">
       {/* Filter tabs */}
       <div className="flex gap-2 overflow-x-auto no-scrollbar">
         {FILTERS.map((f) => (

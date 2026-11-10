@@ -272,7 +272,7 @@ export function RecipeManager({
   };
 
   return (
-    <main className="flex-1 px-gutter pt-4 pb-nav-plain flex flex-col gap-3">
+    <main className="flex-1 px-gutter pt-4 pb-nav-plain lg:pb-8 flex flex-col gap-3">
       {error ? (
         <p className="clay-card p-3 font-body text-body text-danger-text">{error}</p>
       ) : null}

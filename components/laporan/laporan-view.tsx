@@ -170,7 +170,7 @@ export function LaporanView({ data }: { data: LaporanData }) {
   }
 
   return (
-    <div className="flex-1 px-gutter pt-4 pb-nav-plain flex flex-col gap-4">
+    <div className="flex-1 px-gutter pt-4 pb-nav-plain lg:pb-8 flex flex-col gap-4">
       {/* Row 1 desktop: chart (col-span-2) + tagihan (col-span-1) */}
       <div className="lg:grid lg:grid-cols-3 lg:gap-4 flex flex-col gap-4">
       <section className="bg-surface rounded-[20px] p-4 clay-card border border-white/80 lg:col-span-2">

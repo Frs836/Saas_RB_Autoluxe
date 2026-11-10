@@ -110,7 +110,7 @@ export function StaffScheduleView({
   }, [branchId, jamKantor, router, toast]);
 
   return (
-    <div className="px-gutter py-4 flex flex-col gap-4 pb-nav-plain">
+    <div className="px-gutter py-4 flex flex-col gap-4 pb-nav-plain lg:pb-8">
       {/* Dua pasang jam yang menjadi acuan penilaian keterlambatan */}
       <section className="bg-surface rounded-[20px] clay-card p-4">
         <h2 className="font-headline-3 text-headline-3 text-text-primary">

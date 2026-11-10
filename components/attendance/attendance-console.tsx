@@ -716,7 +716,7 @@ export function AttendanceConsole({
   })();
 
   return (
-    <div className="flex flex-col w-full pb-nav-plain">
+    <div className="flex flex-col w-full pb-nav-plain lg:pb-8">
       {/* Ringkasan shift hari ini (owner / admin_kasir / maintainer) */}
       {canAudit ? (
         <section className="px-gutter pt-4">

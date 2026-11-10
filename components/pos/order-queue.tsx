@@ -405,7 +405,7 @@ export function OrderQueue({
       )}
 
       {/* ── Main queue list ── */}
-      <div className="px-gutter py-4 pb-nav-plain flex flex-col gap-4 lg:max-w-4xl lg:mx-auto lg:w-full">
+      <div className="px-gutter py-4 pb-nav-plain lg:pb-8 flex flex-col gap-4 lg:max-w-4xl lg:mx-auto lg:w-full">
         {/* stat cards */}
         <div className="grid grid-cols-4 lg:grid-cols-5 gap-2">
           {[

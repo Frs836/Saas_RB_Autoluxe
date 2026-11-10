@@ -71,7 +71,7 @@ export function ProfilView({
   const [openCategory, setOpenCategory] = useState<string | null>(null);
 
   return (
-    <div className="flex flex-col w-full pb-nav-plain">
+    <div className="flex flex-col w-full pb-nav-plain lg:pb-8">
       {/* Desktop 2-column grid wrapper */}
       <div className="lg:grid lg:grid-cols-3 lg:gap-6 lg:items-start lg:px-gutter lg:pt-6">
 

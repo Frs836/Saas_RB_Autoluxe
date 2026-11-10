@@ -348,7 +348,7 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
   }
 
   return (
-<div className="px-gutter py-4 pb-nav-plain flex flex-col gap-4">
+<div className="px-gutter py-4 pb-nav-plain lg:pb-8 flex flex-col gap-4">
       <div className="grid grid-cols-3 gap-2">
         <div className="clay-card p-3 flex flex-col items-center gap-0.5">
           <span className="font-headline-2 text-headline-2 text-text-primary">

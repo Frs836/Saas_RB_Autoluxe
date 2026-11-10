@@ -95,7 +95,7 @@ export function InvoiceHistory({ invoices }: { invoices: InvoiceRow[] }) {
 
   if (invoices.length === 0) {
     return (
-      <main className="flex-1 px-gutter pt-4 pb-nav-plain">
+      <main className="flex-1 px-gutter pt-4 pb-nav-plain lg:pb-8">
         <div className="clay-card p-8 flex flex-col items-center text-center gap-2">
           <Icon name="receipt_long" className="text-[40px] text-text-muted" />
           <p className="font-body text-body text-text-secondary">
@@ -107,7 +107,7 @@ export function InvoiceHistory({ invoices }: { invoices: InvoiceRow[] }) {
   }
 
   return (
-    <main className="flex-1 px-gutter pt-4 pb-nav-plain flex flex-col gap-3">
+    <main className="flex-1 px-gutter pt-4 pb-nav-plain lg:pb-8 flex flex-col gap-3">
       <div className="grid grid-cols-3 gap-2">
         <div className="clay-card p-3 flex flex-col items-center gap-0.5">
           <span className="font-headline-2 text-headline-2 text-text-primary">

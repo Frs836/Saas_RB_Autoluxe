@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { initials } from "@/lib/format";
@@ -72,6 +72,11 @@ export function StaffManagement({
   const [sibuk, setSibuk] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sukses, setSukses] = useState<string | null>(null);
+  // Track IDs whose photo failed to load so we fall back to initials
+  const [photoError, setPhotoError] = useState<Set<string>>(new Set());
+  const handlePhotoError = useCallback((id: string) => {
+    setPhotoError((prev) => new Set(prev).add(id));
+  }, []);
 
   /**
    * Menyimpan perubahan staf.
@@ -137,16 +142,7 @@ export function StaffManagement({
   }
 
   return (
-    <section className="px-gutter pt-4 flex flex-col gap-2">
-      <div className="flex items-center justify-between">
-        <h2 className="font-headline-3 text-headline-3 text-text-primary">
-          Kelola Staf
-        </h2>
-        <span className="font-caption text-caption text-text-muted">
-          {staff.filter((s) => s.isActive).length} aktif
-        </span>
-      </div>
-
+    <section className="flex flex-col gap-2">
       {error ? (
         <div className="p-3 rounded-xl bg-danger-surface text-danger-text font-caption text-caption flex items-center gap-2">
           <Icon name="error" className="text-[18px] shrink-0" />
@@ -167,22 +163,24 @@ export function StaffManagement({
         return (
           <article key={s.id} className="clay-card p-4 flex flex-col gap-2">
             <div className="flex items-start gap-3">
-              {s.facePhotoUrl ? (
+              {s.facePhotoUrl && !photoError.has(s.id) ? (
                 <img
                   src={s.facePhotoUrl}
                   alt={s.fullName}
-                  className="w-12 h-12 rounded-xl object-cover shrink-0"
+                  loading="lazy"
+                  onError={() => handlePhotoError(s.id)}
+                  className="w-12 h-12 lg:w-20 lg:h-20 rounded-xl object-cover shrink-0"
                 />
               ) : (
-                <span className="w-12 h-12 rounded-xl bg-brand-50 text-brand-700 font-headline-2 text-headline-2 flex items-center justify-center shrink-0">
+                <span className="w-12 h-12 lg:w-20 lg:h-20 rounded-xl bg-brand-50 text-brand-700 font-headline-2 text-headline-2 flex items-center justify-center shrink-0 select-none">
                   {initials(s.fullName)}
                 </span>
               )}
               <div className="min-w-0 flex-1">
-                <p className="font-body-bold text-body-bold text-text-primary truncate">
+                <p className="font-body-bold text-body-bold lg:font-headline-3 lg:text-headline-3 text-text-primary truncate">
                   {s.fullName}
                 </p>
-                <p className="font-caption text-caption text-text-muted truncate">
+                <p className="font-caption text-caption lg:font-body lg:text-body text-text-muted truncate">
                   {s.roleLabel} · {s.branchName}
                 </p>
                 <div className="flex flex-wrap gap-1.5 mt-1">

@@ -407,7 +407,7 @@ export function OrderQueue({
       {/* ── Main queue list ── */}
       <div className="px-gutter py-4 pb-nav-plain flex flex-col gap-4 lg:max-w-4xl lg:mx-auto lg:w-full">
         {/* stat cards */}
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-4 lg:grid-cols-5 gap-2">
           {[
             { key: "queued",              label: "Antrean", value: counts.queued,              warn: false },
             { key: "in_progress",         label: "Kerja",   value: counts.in_progress,          warn: false },
@@ -430,6 +430,21 @@ export function OrderQueue({
               </span>
             </button>
           ))}
+          {/* 5th stat card — desktop only */}
+          <button
+            type="button"
+            onClick={() => setFilter("selesai")}
+            className={`hidden lg:flex clay-card p-3 flex-col items-center gap-0.5 active:scale-95 transition-transform ${
+              filter === "selesai" ? "ring-2 ring-brand-400" : ""
+            }`}
+          >
+            <span className="font-headline-2 text-headline-2 text-text-primary">
+              {counts.selesai}
+            </span>
+            <span className="font-caption text-caption text-text-muted">
+              Selesai
+            </span>
+          </button>
         </div>
 
         {/* search */}
@@ -478,7 +493,7 @@ export function OrderQueue({
             </p>
           </div>
         ) : (
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3 lg:gap-4">
             {filtered.map((order) => {
               const meta     = STATUS_META[order.status] ?? STATUS_META.queued;
               const actions  = actionsFor(order.status, order.service_package);
@@ -538,6 +553,12 @@ export function OrderQueue({
                             : "Data pelanggan belum diisi"
                           : "Data pelanggan disembunyikan"}
                       </p>
+                      {/* Desktop: always show customer name regardless of role */}
+                      {isStaff && (
+                        <p className="hidden lg:block font-caption text-caption text-text-muted mt-0.5">
+                          {order.customer_name ?? "—"}
+                        </p>
+                      )}
                     </div>
                   </div>
 

@@ -283,7 +283,13 @@ export function KasConsole({
 
   return (
     <div className="min-h-screen bg-canvas">
-      <div className="pb-nav px-gutter pt-4 space-y-space-lg">
+      <div className="pb-nav px-gutter pt-4 space-y-space-lg lg:space-y-0">
+        {/* Desktop 2-panel layout wrapper */}
+        <div className="lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start">
+
+        {/* Left panel: tab nav + list content */}
+        <div className="lg:col-span-1 space-y-space-lg">
+
         {/* Tab Navigation */}
         <div className="flex gap-2 bg-surface rounded-xl p-1 clay-card border border-white/80">
           <button
@@ -343,8 +349,9 @@ export function KasConsole({
           )}
         </section>
 
+        {/* Form on mobile (inside left panel flow) — hidden on desktop since right panel has it */}
         {canManage && (
-          <section className="clay-card flex flex-col gap-space-md p-space-lg">
+          <section className="clay-card flex flex-col gap-space-md p-space-lg lg:hidden">
             <div className="flex items-center justify-between">
               <h2 className="font-headline-2 text-headline-2 text-text-primary">Catat Transaksi Kas</h2>
               <span className="px-2 py-0.5 rounded-full bg-brand-50 text-brand-600 font-micro-badge text-micro-badge">Petty Cash</span>
@@ -543,7 +550,168 @@ export function KasConsole({
             }}
           />
         )}
-      </div>
+
+        </div>{/* end left panel */}
+
+        {/* Right panel: form (desktop only) */}
+        {activeTab === "kas" && canManage && (
+          <div className="hidden lg:block lg:col-span-1 lg:sticky lg:top-20">
+            <section className="clay-card flex flex-col gap-space-md p-space-lg">
+              <div className="flex items-center justify-between">
+                <h2 className="font-headline-2 text-headline-2 text-text-primary">Catat Transaksi Kas</h2>
+                <span className="px-2 py-0.5 rounded-full bg-brand-50 text-brand-600 font-micro-badge text-micro-badge">Petty Cash</span>
+              </div>
+              <form onSubmit={onSubmit} className="flex flex-col gap-space-md">
+                <div className="flex flex-col gap-space-xs">
+                  <label className="font-caption text-caption text-text-secondary">Jenis</label>
+                  <div className="grid grid-cols-2 gap-space-xs">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setForm((f) => ({ ...f, type: "out", category: "Perlengkapan Wash" }));
+                        setProofPath(null);
+                      }}
+                      className={`h-11 rounded-xl font-body-bold text-body-bold transition-colors ${
+                        form.type === "out"
+                          ? "bg-brand-500 text-on-primary shadow-[0px_8px_16px_rgba(37,99,235,0.25)]"
+                          : "bg-surface-container-low text-text-secondary shadow-[inset_0px_2px_4px_rgba(255,255,255,0.95)]"
+                      }`}
+                    >
+                      Pengeluaran
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setForm((f) => ({ ...f, type: "in", category: "Lainnya" }));
+                        setProofPath(null);
+                      }}
+                      className={`h-11 rounded-xl font-body-bold text-body-bold transition-colors ${
+                        form.type === "in"
+                          ? "bg-success-base text-white shadow-[0px_8px_16px_rgba(16,185,129,0.25)]"
+                          : "bg-surface-container-low text-text-secondary shadow-[inset_0px_2px_4px_rgba(255,255,255,0.95)]"
+                      }`}
+                    >
+                      Pemasukan
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-space-xs">
+                  <label className="font-caption text-caption text-text-secondary">Kategori</label>
+                  <select
+                    value={form.category}
+                    onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+                    className="h-12 rounded-xl bg-surface px-3 font-body-regular text-body-regular text-text-primary shadow-[inset_0px_2px_4px_rgba(15,23,42,0.06)]"
+                  >
+                    {CATEGORIES_OUT.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex flex-col gap-space-xs">
+                  <label className="font-caption text-caption text-text-secondary">
+                    Metode Pembayaran
+                  </label>
+                  <div className="grid grid-cols-3 gap-space-xs">
+                    {PAYMENT_OPTIONS.map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() =>
+                          setForm((f) => ({ ...f, paymentMethod: option.value }))
+                        }
+                        className={`h-11 rounded-xl font-caption text-caption transition-colors ${
+                          form.paymentMethod === option.value
+                            ? "bg-primary text-white shadow-[0px_8px_16px_rgba(37,99,235,0.25)]"
+                            : "bg-surface-container-low text-text-secondary shadow-[inset_0px_2px_4px_rgba(255,255,255,0.95)]"
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-space-xs">
+                  <label className="font-caption text-caption text-text-secondary">Nominal</label>
+                  <div className="relative flex items-center h-12 rounded-xl bg-surface shadow-[inset_0px_2px_4px_rgba(15,23,42,0.06)] px-3">
+                    <span className="font-body-bold text-headline-2 text-primary-container pr-2">Rp</span>
+                    <input
+                      value={form.amount}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, amount: e.target.value.replace(/\D/g, "") }))
+                      }
+                      placeholder="120000"
+                      inputMode="numeric"
+                      className="w-full h-full bg-transparent font-headline-2 text-headline-2 font-semibold text-text-primary focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-space-xs">
+                  <label className="font-caption text-caption text-text-secondary">Keterangan</label>
+                  <input
+                    value={form.description}
+                    onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                    placeholder="Keterangan transaksi"
+                    className="h-12 rounded-xl bg-surface px-3 font-body-regular text-body-regular text-text-primary shadow-[inset_0px_2px_4px_rgba(15,23,42,0.06)]"
+                  />
+                </div>
+
+                {needsProof ? (
+                  <div className="flex flex-col gap-space-xs">
+                    <label className="font-caption text-caption text-text-secondary">
+                      Bukti Nota (wajib)
+                    </label>
+                    {proofPath ? (
+                      <div className="flex items-center justify-between gap-2 rounded-xl bg-success-surface text-success-text px-3 py-2.5">
+                        <span className="flex items-center gap-2 font-caption text-caption">
+                          <Icon name="check_circle" className="text-[18px]" />
+                          Foto nota terlampir
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setProofPath(null)}
+                          className="font-micro-badge text-micro-badge font-semibold uppercase"
+                        >
+                          Ganti
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={openCamera}
+                        className="h-12 rounded-xl bg-surface-container-low text-text-secondary font-caption text-caption flex items-center justify-center gap-2 shadow-[inset_0px_2px_4px_rgba(255,255,255,0.95)]"
+                      >
+                        <Icon name="photo_camera" className="text-[18px]" />
+                        Ambil foto nota
+                      </button>
+                    )}
+                  </div>
+                ) : null}
+
+                {error && <p className="font-caption text-caption text-danger-text">{error}</p>}
+                {success && (
+                  <p className="font-caption text-caption text-success-text">{success}</p>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={disabled}
+                  className="h-[50px] rounded-full primary-gradient text-on-primary font-body-bold text-body-bold shadow-[0px_10px_22px_rgba(37,99,235,0.24)] disabled:opacity-60"
+                >
+                  {loading ? "Menyimpan..." : "Simpan Transaksi"}
+                </button>
+              </form>
+            </section>
+          </div>
+        )}
+
+        </div>{/* end 2-panel grid */}
+      </div>{/* end pb-nav */}
 
       {cameraOpen ? (
         <div className="fixed inset-0 z-[60] bg-black/80 flex flex-col items-center justify-center gap-4 p-gutter">

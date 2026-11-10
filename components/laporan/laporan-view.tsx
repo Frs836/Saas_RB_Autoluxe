@@ -171,7 +171,9 @@ export function LaporanView({ data }: { data: LaporanData }) {
 
   return (
     <div className="flex-1 px-gutter pt-4 pb-nav-plain flex flex-col gap-4">
-      <section className="bg-surface rounded-[20px] p-4 clay-card border border-white/80">
+      {/* Row 1 desktop: chart (col-span-2) + tagihan (col-span-1) */}
+      <div className="lg:grid lg:grid-cols-3 lg:gap-4 flex flex-col gap-4">
+      <section className="bg-surface rounded-[20px] p-4 clay-card border border-white/80 lg:col-span-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Icon name="account_balance_wallet" className="text-brand-600 text-[20px]" />
@@ -190,7 +192,7 @@ export function LaporanView({ data }: { data: LaporanData }) {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 gap-2.5 mt-3">
+        <div className="grid grid-cols-1 gap-2.5 mt-3 lg:grid-cols-3 lg:gap-4">
           <div className="rounded-2xl bg-success-surface p-3 flex items-center justify-between">
             <span className="font-caption text-caption text-success-text">
               Total Pemasukan
@@ -254,6 +256,26 @@ export function LaporanView({ data }: { data: LaporanData }) {
         </div>
       </section>
 
+      <section className="bg-surface rounded-[20px] p-4 clay-card border border-white/80 lg:col-span-1">
+        <div className="flex items-center gap-2 mb-3">
+          <Icon name="receipt_long" className="text-brand-600 text-[20px]" />
+          <span className="font-headline-2 text-headline-2 text-text-primary">
+            Tagihan Belum Lunas
+          </span>
+        </div>
+        <div className="rounded-2xl bg-warning-surface p-3 flex items-center justify-between">
+          <span className="font-caption text-caption text-warning-text">
+            {data.receivables.count} order belum lunas
+          </span>
+          <span className="font-body-bold text-body-bold text-warning-text">
+            {rupiah(data.receivables.total)}
+          </span>
+        </div>
+      </section>
+      </div>{/* end chart+tagihan row */}
+
+      {/* Row 2 desktop: omzet cabang + rincian keuangan + unit terjual */}
+      <div className="lg:grid lg:grid-cols-3 lg:gap-4 flex flex-col gap-4">
       <section className="bg-surface rounded-[20px] p-4 clay-card border border-white/80">
         <div className="flex items-center gap-2 mb-3">
           <Icon name="storefront" className="text-brand-600 text-[20px]" />
@@ -292,6 +314,7 @@ export function LaporanView({ data }: { data: LaporanData }) {
         </div>
       </section>
 
+      {/* Rincian Keuangan */}
       <section className="bg-surface rounded-[20px] p-4 clay-card border border-white/80">
         <div className="flex items-center gap-2 mb-3">
           <Icon name="payments" className="text-brand-600 text-[20px]" />
@@ -331,6 +354,7 @@ export function LaporanView({ data }: { data: LaporanData }) {
         )}
       </section>
 
+      {/* Unit Terjual */}
       <section className="bg-surface rounded-[20px] p-4 clay-card border border-white/80">
         <div className="flex items-center gap-2 mb-3">
           <Icon name="inventory_2" className="text-brand-600 text-[20px]" />
@@ -374,24 +398,9 @@ export function LaporanView({ data }: { data: LaporanData }) {
           </div>
         )}
       </section>
+      </div>{/* end omzet+rincian+units row */}
 
-      <section className="bg-surface rounded-[20px] p-4 clay-card border border-white/80">
-        <div className="flex items-center gap-2 mb-3">
-          <Icon name="receipt_long" className="text-brand-600 text-[20px]" />
-          <span className="font-headline-2 text-headline-2 text-text-primary">
-            Tagihan Belum Lunas
-          </span>
-        </div>
-        <div className="rounded-2xl bg-warning-surface p-3 flex items-center justify-between">
-          <span className="font-caption text-caption text-warning-text">
-            {data.receivables.count} order belum lunas
-          </span>
-          <span className="font-body-bold text-body-bold text-warning-text">
-            {rupiah(data.receivables.total)}
-          </span>
-        </div>
-      </section>
-
+      {/* Row 3 desktop: stok (full width on mobile, centered on desktop) */}
       <section className="bg-surface rounded-[20px] p-4 clay-card border border-white/80">
         <div className="flex items-center gap-2 mb-3">
           <Icon name="inventory_2" className="text-brand-600 text-[20px]" />

@@ -22,30 +22,26 @@ export function AppShellClient({
   profileId,
   children,
 }: AppShellClientProps) {
-  // Start with collapsed (72px) to match sidebar default; sync after mount
-  const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  // collapsed = true → sidebar 72px, false → 240px
+  const [collapsed, setCollapsed] = useState(true);
 
   useEffect(() => {
+    // Sync initial state dari localStorage
     const stored = localStorage.getItem(STORAGE_KEY);
-    // stored === "true" means collapsed, so expanded === stored !== "true"
-    if (stored !== null) {
-      setSidebarExpanded(stored !== "true");
-    } else {
-      setSidebarExpanded(false); // default: collapsed
-    }
+    if (stored !== null) setCollapsed(stored === "true");
 
+    // Listen untuk toggle dari DesktopSidebar
     function handleToggle(e: Event) {
-      const custom = e as CustomEvent<{ collapsed: boolean }>;
-      setSidebarExpanded(!custom.detail.collapsed);
+      const detail = (e as CustomEvent<{ collapsed: boolean }>).detail;
+      setCollapsed(detail.collapsed);
     }
-
     window.addEventListener("rba-sidebar-toggle", handleToggle);
     return () => window.removeEventListener("rba-sidebar-toggle", handleToggle);
   }, []);
 
   return (
     <>
-      {/* Sidebar — desktop only */}
+      {/* Sidebar — hanya muncul di lg ke atas */}
       <div className="hidden lg:block">
         <DesktopSidebar
           role={role}
@@ -56,18 +52,10 @@ export function AppShellClient({
         />
       </div>
 
-      {/* Main content — offset by sidebar width on desktop */}
-      <div
-        className="lg:transition-all lg:duration-300"
-        style={{
-          marginLeft:
-            typeof window !== "undefined" && window.innerWidth >= 1024
-              ? sidebarExpanded
-                ? "240px"
-                : "72px"
-              : undefined,
-        }}
-      >
+      {/* Main content — geser ke kanan sesuai lebar sidebar */}
+      <div className={`w-full transition-all duration-300 ${
+        collapsed ? "lg:pl-[72px]" : "lg:pl-[240px]"
+      }`}>
         {children}
       </div>
     </>

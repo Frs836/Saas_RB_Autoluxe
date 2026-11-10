@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { isValidLatitude, isValidLongitude, parseCoordinateInput } from "@/lib/branch";
 import { useToast } from "@/components/toast";
 import { Icon } from "@/components/ui/icon";
+import { Modal } from "@/components/ui/modal";
 
 /**
  * Formulir pembuatan cabang.
@@ -109,160 +110,148 @@ export function CreateBranchPanel() {
   const kelas = "w-full h-12 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400";
 
   return (
-    <div className="clay-card bg-surface p-4 flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <h3 className="font-headline-3 text-headline-3 text-text-primary">
-          Cabang Baru
-        </h3>
+    <Modal open={buka} onClose={() => setBuka(false)} title="Cabang Baru">
+      <div className="flex flex-col gap-3">
+        <label className="flex flex-col gap-1">
+          <span className="font-caption text-caption text-text-muted">Nama cabang</span>
+          <input
+            value={nama}
+            onChange={(e) => setNama(e.target.value)}
+            placeholder="Cabang Cikarang"
+            className={kelas}
+          />
+        </label>
+
+        <label className="flex flex-col gap-1">
+          <span className="font-caption text-caption text-text-muted">Alamat</span>
+          <input
+            value={alamat}
+            onChange={(e) => setAlamat(e.target.value)}
+            placeholder="Jalan Cikarang 12"
+            className={kelas}
+          />
+        </label>
+
         <button
           type="button"
-          onClick={() => setBuka(false)}
-          aria-label="Batal membuat cabang"
-          className="w-11 h-11 rounded-xl bg-danger-surface flex items-center justify-center text-white active:scale-95 transition-transform"
-        >
-          <Icon name="close" className="text-[20px]" />
-        </button>
-      </div>
-
-      <label className="flex flex-col gap-1">
-        <span className="font-caption text-caption text-text-muted">Nama cabang</span>
-        <input
-          value={nama}
-          onChange={(e) => setNama(e.target.value)}
-          placeholder="Cabang Cikarang"
-          className={kelas}
-        />
-      </label>
-
-      <label className="flex flex-col gap-1">
-        <span className="font-caption text-caption text-text-muted">Alamat</span>
-        <input
-          value={alamat}
-          onChange={(e) => setAlamat(e.target.value)}
-          placeholder="Jalan Cikarang 12"
-          className={kelas}
-        />
-      </label>
-
-      <button
-        type="button"
-        role="switch"
-        aria-checked={pakaiTitik}
-        onClick={() => setPakaiTitik((v) => !v)}
-        className={`h-12 px-3 rounded-xl flex items-center justify-between gap-3 ${
-          pakaiTitik
-            ? "bg-success-surface text-success-text"
-            : "primary-gradient text-white"
-        }`}
-      >
-        <span className="flex items-center gap-2 font-body text-body">
-          <Icon name="gps_fixed" className="text-[18px]" />
-          Pakai geofence
-        </span>
-        <span
-          className={`w-10 h-6 rounded-full relative transition-colors ${
-            pakaiTitik ? "bg-success-base" : "bg-outline-variant"
+          role="switch"
+          aria-checked={pakaiTitik}
+          onClick={() => setPakaiTitik((v) => !v)}
+          className={`h-12 px-3 rounded-xl flex items-center justify-between gap-3 ${
+            pakaiTitik
+              ? "bg-success-surface text-success-text"
+              : "primary-gradient text-white"
           }`}
         >
+          <span className="flex items-center gap-2 font-body text-body">
+            <Icon name="gps_fixed" className="text-[18px]" />
+            Pakai geofence
+          </span>
           <span
-            className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-transform ${
-              pakaiTitik ? "translate-x-[18px]" : "translate-x-0.5"
+            className={`w-10 h-6 rounded-full relative transition-colors ${
+              pakaiTitik ? "bg-success-base" : "bg-outline-variant"
             }`}
-          />
-        </span>
-      </button>
+          >
+            <span
+              className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-transform ${
+                pakaiTitik ? "translate-x-[18px]" : "translate-x-0.5"
+              }`}
+            />
+          </span>
+        </button>
 
-      {pakaiTitik ? (
-        <>
-          <label className="flex flex-col gap-1">
-            <span className="font-caption text-caption text-text-muted">
-              Titik koordinat
-            </span>
+        {pakaiTitik ? (
+          <>
+            <label className="flex flex-col gap-1">
+              <span className="font-caption text-caption text-text-muted">
+                Titik koordinat
+              </span>
+              <input
+                value={koordinat}
+                onChange={(e) => setKoordinat(e.target.value)}
+                placeholder="-6.2000000, 106.8166660"
+                inputMode="decimal"
+                className={kelas}
+              />
+            </label>
+
+            <label className="flex flex-col gap-1">
+              <span className="font-caption text-caption text-text-muted">
+                Radius toleransi (meter)
+              </span>
+              <input
+                value={radius}
+                onChange={(e) => setRadius(e.target.value)}
+                inputMode="numeric"
+                className={kelas}
+              />
+            </label>
+          </>
+        ) : null}
+
+        <div>
+          <p className="font-caption text-caption text-text-muted mb-1">
+            Jam lapangan
+          </p>
+          <div className="grid grid-cols-2 gap-3">
             <input
-              value={koordinat}
-              onChange={(e) => setKoordinat(e.target.value)}
-              placeholder="-6.2000000, 106.8166660"
-              inputMode="decimal"
+              type="time"
+              value={lapanganMasuk}
+              onChange={(e) => setLapanganMasuk(e.target.value)}
+              aria-label="Jam masuk lapangan"
               className={kelas}
             />
-          </label>
-
-          <label className="flex flex-col gap-1">
-            <span className="font-caption text-caption text-text-muted">
-              Radius toleransi (meter)
-            </span>
             <input
-              value={radius}
-              onChange={(e) => setRadius(e.target.value)}
-              inputMode="numeric"
+              type="time"
+              value={lapanganPulang}
+              onChange={(e) => setLapanganPulang(e.target.value)}
+              aria-label="Jam pulang lapangan"
               className={kelas}
             />
-          </label>
-        </>
-      ) : null}
-
-      <div>
-        <p className="font-caption text-caption text-text-muted mb-1">
-          Jam lapangan
-        </p>
-        <div className="grid grid-cols-2 gap-3">
-          <input
-            type="time"
-            value={lapanganMasuk}
-            onChange={(e) => setLapanganMasuk(e.target.value)}
-            aria-label="Jam masuk lapangan"
-            className={kelas}
-          />
-          <input
-            type="time"
-            value={lapanganPulang}
-            onChange={(e) => setLapanganPulang(e.target.value)}
-            aria-label="Jam pulang lapangan"
-            className={kelas}
-          />
+          </div>
         </div>
-      </div>
 
-      <div>
-        <p className="font-caption text-caption text-text-muted mb-1">
-          Jam kantor
-        </p>
-        <div className="grid grid-cols-2 gap-3">
-          <input
-            type="time"
-            value={kantorMasuk}
-            onChange={(e) => setKantorMasuk(e.target.value)}
-            aria-label="Jam masuk kantor"
-            className={kelas}
-          />
-          <input
-            type="time"
-            value={kantorPulang}
-            onChange={(e) => setKantorPulang(e.target.value)}
-            aria-label="Jam pulang kantor"
-            className={kelas}
-          />
+        <div>
+          <p className="font-caption text-caption text-text-muted mb-1">
+            Jam kantor
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <input
+              type="time"
+              value={kantorMasuk}
+              onChange={(e) => setKantorMasuk(e.target.value)}
+              aria-label="Jam masuk kantor"
+              className={kelas}
+            />
+            <input
+              type="time"
+              value={kantorPulang}
+              onChange={(e) => setKantorPulang(e.target.value)}
+              aria-label="Jam pulang kantor"
+              className={kelas}
+            />
+          </div>
         </div>
-      </div>
 
-      {galat ? (
-        <p
-          role="alert"
-          className="bg-danger-surface text-danger-text rounded-xl px-3 py-2 font-caption text-caption"
+        {galat ? (
+          <p
+            role="alert"
+            className="bg-danger-surface text-danger-text rounded-xl px-3 py-2 font-caption text-caption"
+          >
+            {galat}
+          </p>
+        ) : null}
+
+        <button
+          type="button"
+          onClick={() => void kirim()}
+          disabled={sibuk || Boolean(masalah)}
+          className="w-full h-12 rounded-full primary-gradient text-white font-body-bold text-body-bold flex items-center justify-center gap-2 clay-fab active:scale-[0.98] transition-transform disabled:opacity-50"
         >
-          {galat}
-        </p>
-      ) : null}
-
-      <button
-        type="button"
-        onClick={() => void kirim()}
-        disabled={sibuk || Boolean(masalah)}
-        className="w-full h-12 rounded-full primary-gradient text-white font-body-bold text-body-bold flex items-center justify-center gap-2 clay-fab active:scale-[0.98] transition-transform disabled:opacity-50"
-      >
-        <Icon name={sibuk ? "hourglass_top" : "add_business"} className="text-[20px]" />
-        {sibuk ? "Membuat..." : "Buat Cabang"}
-      </button>
-    </div>
+          <Icon name={sibuk ? "hourglass_top" : "add_business"} className="text-[20px]" />
+          {sibuk ? "Membuat..." : "Buat Cabang"}
+        </button>
+      </div>
+    </Modal>
   );
 }

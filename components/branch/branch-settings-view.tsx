@@ -287,8 +287,8 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
   }
 
   return (
-    <div className="px-gutter py-4 pb-nav flex flex-col gap-4">
-      <section className="clay-card p-4 flex flex-col gap-3">
+    <div className="px-gutter py-4 pb-nav flex flex-col gap-4 lg:grid lg:grid-cols-3 lg:gap-6 lg:items-start lg:px-6 lg:py-6">
+      <section className="clay-card p-4 flex flex-col gap-3 lg:col-span-3">
         <div className="flex items-center justify-between">
           <h1 className="font-headline-2 text-headline-2 text-text-primary">
             Pengaturan Cabang
@@ -333,6 +333,8 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
         ) : null}
       </section>
 
+      {/* Left column: identity + GPS + hours */}
+      <div className="flex flex-col gap-4 lg:col-span-2">
       <section className="clay-card p-4 flex flex-col gap-3">
         <h2 className="font-body-bold text-body-bold text-text-primary flex items-center gap-2">
           <Icon name="info" className="text-[20px] text-brand-600" />
@@ -544,7 +546,10 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
           Absensi setelah jam tutup akan dihitung terlambat oleh sistem.
         </p>
       </section>
+      </div>{/* end lg:col-span-2 */}
 
+      {/* Right column: status + meta */}
+      <div className="flex flex-col gap-4 lg:col-span-1">
       <section className="clay-card p-4 flex flex-col gap-2">
         <button
           type="button"
@@ -570,6 +575,7 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
           </p>
         ) : null}
       </section>
+      </div>{/* end lg:col-span-1 */}
 
       {/*
        * Bilah ini pernah memakai bottom-0 dengan z-40, sementara navigasi
@@ -578,7 +584,7 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
        * Sekarang posisinya di atas navigasi dengan z yang lebih rendah
        * supaya navigasi tetap di atas dan tidak pernah menutupinya.
        */}
-      <div className="fixed bottom-nav-offset left-0 right-0 z-action-bar px-gutter pb-3 pt-3 bg-surface/95 backdrop-blur-md border-t border-outline-variant">
+      <div className="fixed bottom-nav-offset left-0 right-0 z-action-bar px-gutter pb-3 pt-3 bg-surface/95 backdrop-blur-md border-t border-outline-variant lg:left-[72px] lg:px-6">
         {feedback ? (
           <p
             className={`mb-2 p-2 rounded-xl font-caption text-caption ${

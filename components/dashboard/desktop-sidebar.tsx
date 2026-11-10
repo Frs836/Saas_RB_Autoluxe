@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { profileMenuFor, roleLabel } from "@/lib/rbac";
+import { bottomNavFor, profileMenuFor, roleLabel } from "@/lib/rbac";
 import { initials } from "@/lib/format";
 import { Icon } from "@/components/ui/icon";
 
@@ -50,16 +50,26 @@ export function DesktopSidebar({
     window.dispatchEvent(new CustomEvent("rba-sidebar-toggle", { detail: { collapsed: next } }));
   }
 
-  // Build nav items: deduplicate by href, first occurrence wins, max 12
-  const allItems = profileMenuFor(role);
+  // Build primary nav: Dashboard first, then bottomNavFor(role)
+  const primaryRaw = bottomNavFor(role);
   const seen = new Set<string>();
-  const navItems: typeof allItems = [];
-  for (const item of allItems) {
+  const primaryNav: typeof primaryRaw = [];
+  for (const item of primaryRaw) {
     if (!seen.has(item.href)) {
       seen.add(item.href);
-      navItems.push(item);
+      primaryNav.push(item);
     }
-    if (navItems.length >= 12) break;
+  }
+
+  // Build secondary nav: profileMenuFor(role), deduplicated, up to 12 total combined
+  const secondaryRaw = profileMenuFor(role);
+  const secondaryNav: typeof secondaryRaw = [];
+  for (const item of secondaryRaw) {
+    if (primaryNav.length + secondaryNav.length >= 12) break;
+    if (!seen.has(item.href)) {
+      seen.add(item.href);
+      secondaryNav.push(item);
+    }
   }
 
   const sidebarWidth = collapsed ? "w-[72px]" : "w-[240px]";
@@ -112,7 +122,43 @@ export function DesktopSidebar({
 
       {/* Nav items */}
       <nav className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-1 flex flex-col gap-1">
-        {navItems.map((item) => {
+      {/* Primary nav items (bottomNavFor) */}
+        {primaryNav.map((item) => {
+          const active = pathname === item.href || pathname.startsWith(item.href + "/");
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              prefetch={false}
+              title={collapsed ? item.label : undefined}
+              className={`flex items-center gap-3 rounded-xl transition-colors
+                ${collapsed ? "justify-center w-11 h-11 mx-auto" : "px-3 py-2.5"}
+                ${
+                  active
+                    ? "primary-gradient text-white"
+                    : "text-text-muted hover:bg-brand-50 hover:text-text-primary"
+                }`}
+            >
+              <Icon
+                name={item.icon}
+                className={`text-[22px] shrink-0 ${active ? "text-white" : ""}`}
+              />
+              {!collapsed && (
+                <span className="font-body-regular text-body-regular truncate text-[13px]">
+                  {item.label}
+                </span>
+              )}
+            </Link>
+          );
+        })}
+
+        {/* Separator between primary and secondary nav */}
+        {secondaryNav.length > 0 && (
+          <div className="my-1 mx-2 h-px bg-border-subtle shrink-0" />
+        )}
+
+        {/* Secondary nav items (profileMenuFor) */}
+        {secondaryNav.map((item) => {
           const active = pathname === item.href || pathname.startsWith(item.href + "/");
           return (
             <Link

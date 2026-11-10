@@ -28,7 +28,8 @@ export function DashboardHeader({
   return (
     <header className="sticky top-0 z-40 bg-surface/90 backdrop-blur-md shadow-[0_2px_4px_rgba(15,23,42,0.03)] px-gutter pt-safe lg:pt-3 pb-3">
       <div className="flex items-center justify-between gap-space-sm">
-        <div className="flex items-center gap-space-sm min-w-0">
+        {/* Branding: mobile only — desktop has sidebar branding */}
+        <div className="flex items-center gap-space-sm min-w-0 lg:hidden">
           <Image
             src="/rb-logo-new.png"
             alt="RB AUTOLUXE"
@@ -58,6 +59,18 @@ export function DashboardHeader({
             )}
           </div>
         </div>
+
+        {/* Branch switcher: desktop only (branding lives in sidebar) */}
+        {canSwitchBranch && (
+          <div className="hidden lg:flex items-center gap-space-sm min-w-0">
+            <BranchSwitcher
+              branches={branches}
+              activeBranchId={activeBranchId}
+              scope={branchScope}
+              variant="header"
+            />
+          </div>
+        )}
 
         <div className="flex items-center gap-space-sm shrink-0">
           <NotificationBell />

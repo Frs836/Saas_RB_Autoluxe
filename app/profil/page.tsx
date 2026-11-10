@@ -3,8 +3,6 @@ import { createClient } from "@/lib/supabase/server";
 import { BottomNav } from "@/components/dashboard/bottom-nav";
 import { SubPageHeader } from "@/components/pos/sub-page-header";
 import { ProfilView } from "@/components/profil/profil-view";
-import { AccountSettings } from "@/components/profil/account-settings";
-import { PushSubscribeButton } from "@/components/mobile/push-subscribe-button";
 import { urlAvatar } from "@/lib/avatar";
 import { can, profileMenuFor, roleLabel, toRole } from "@/lib/rbac";
 import { getSessionProfile } from "@/lib/rbac-guard";
@@ -20,7 +18,7 @@ export default async function ProfilPage() {
   const supabase = await createClient();
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, phone_number, date_of_birth, avatar_path")
+    .select("id, avatar_path")
     .eq("auth_id", session.authId)
     .maybeSingle();
 
@@ -47,7 +45,7 @@ export default async function ProfilPage() {
           id: session.id,
           fullName: session.fullName,
           email: session.email,
-          phone: profile?.phone_number ? String(profile.phone_number) : null,
+          phone: null,
           role,
           roleLabel: roleLabel(role),
         }}
@@ -68,21 +66,6 @@ export default async function ProfilPage() {
         canManageLocation={can(role, "attendance.manage_location")}
         avatarUrl={profile?.avatar_path ? urlAvatar(profile.avatar_path) : null}
       />
-      <AccountSettings
-        nama={session.fullName}
-        telepon={profile?.phone_number ? String(profile.phone_number) : ""}
-        tanggalLahir={
-          profile?.date_of_birth
-            ? String(profile.date_of_birth).slice(0, 10)
-            : ""
-        }
-        email={session.email}
-        avatarUrl={profile?.avatar_path ? urlAvatar(profile.avatar_path) : null}
-      />
-      <div className="px-gutter pb-4">
-        <p className="font-caption text-caption text-text-muted mb-2">Notifikasi Perangkat</p>
-        <PushSubscribeButton />
-      </div>
       <BottomNav role={toRole(role)} />
     </div>
   );

@@ -78,29 +78,38 @@ export function ProfilView({
           <div className="absolute -right-6 -bottom-6 opacity-10 pointer-events-none text-white">
             <Icon name="account_circle" className="text-[130px]" />
           </div>
-          <div className="relative z-10 flex items-center gap-4">
-            <div className="w-16 h-16 rounded-[22px] bg-white/20 backdrop-blur-md flex items-center justify-center font-headline-1 text-headline-1 text-white shrink-0 overflow-hidden">
-              {avatarUrl ? (
-                <img
-                  src={avatarUrl}
-                  alt=""
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                initialsValue
-              )}
+          <div className="relative z-10">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-[22px] bg-white/20 backdrop-blur-md flex items-center justify-center font-headline-1 text-headline-1 text-white shrink-0 overflow-hidden">
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt=""
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  initialsValue
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h1 className="font-headline-2 text-headline-2 text-white leading-tight truncate">
+                  {profile.fullName}
+                </h1>
+                <span className="font-micro-badge text-micro-badge uppercase tracking-wider text-brand-100 block mt-0.5">
+                  {profile.roleLabel}
+                </span>
+                <span className="font-caption text-caption text-blue-50 block truncate mt-1">
+                  {profile.email}
+                </span>
+              </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <h1 className="font-headline-2 text-headline-2 text-white leading-tight truncate">
-                {profile.fullName}
-              </h1>
-              <span className="font-micro-badge text-micro-badge uppercase tracking-wider text-brand-100 block mt-0.5">
-                {profile.roleLabel}
-              </span>
-              <span className="font-caption text-caption text-blue-50 block truncate mt-1">
-                {profile.email}
-              </span>
-            </div>
+            <Link
+              href="/profil/edit"
+              className="mt-3 h-9 px-4 rounded-xl bg-white/20 text-white font-caption text-caption inline-flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+            >
+              <Icon name="edit" className="text-[16px]" />
+              Edit Profil
+            </Link>
           </div>
         </div>
       </section>

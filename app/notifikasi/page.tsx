@@ -4,6 +4,7 @@ import { getSessionProfile } from "@/lib/rbac-guard";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { NotificationList } from "@/components/dashboard/notification-list";
+import { PushToggleSwitch } from "@/components/notification/push-toggle-switch";
 
 
 export const metadata = { title: "Notifikasi" };
@@ -37,6 +38,10 @@ export default async function NotificationPage() {
         backHref="/dashboard"
       />
       <main className="flex-1">
+        <div className="px-4 pt-4">
+          <p className="font-caption text-caption text-text-muted mb-2">Pengaturan</p>
+          <PushToggleSwitch />
+        </div>
         <NotificationList
           awal={error ? [] : (data ?? []).map((row) => ({ ...row, payload: row.payload as Record<string, unknown> | null }))}
           bisaTandaiSemua={!error}

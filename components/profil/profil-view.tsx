@@ -72,166 +72,193 @@ export function ProfilView({
 
   return (
     <div className="flex flex-col w-full pb-nav-plain">
-      {/* Kartu identitas */}
-      <section className="px-gutter pt-4">
-        <div className="relative overflow-hidden rounded-[24px] p-5 primary-gradient text-on-primary clay-glow">
-          <div className="absolute -right-6 -bottom-6 opacity-10 pointer-events-none text-white">
-            <Icon name="account_circle" className="text-[130px]" />
-          </div>
-          <div className="relative z-10">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-[22px] bg-white/20 backdrop-blur-md flex items-center justify-center font-headline-1 text-headline-1 text-white shrink-0 overflow-hidden">
-                {avatarUrl ? (
-                  <img
-                    src={avatarUrl}
-                    alt=""
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  initialsValue
-                )}
+      {/* Desktop 2-column grid wrapper */}
+      <div className="lg:grid lg:grid-cols-3 lg:gap-6 lg:items-start lg:px-gutter lg:pt-6">
+
+        {/* LEFT COLUMN — identitas + cabang */}
+        <div className="lg:col-span-1 lg:sticky lg:top-20 flex flex-col">
+          {/* Kartu identitas */}
+          <section className="px-gutter pt-4 lg:px-0 lg:pt-0">
+            <div className="relative overflow-hidden rounded-[24px] p-5 primary-gradient text-on-primary clay-glow">
+              <div className="absolute -right-6 -bottom-6 opacity-10 pointer-events-none text-white">
+                <Icon name="account_circle" className="text-[130px]" />
+              </div>
+              <div className="relative z-10">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-[22px] bg-white/20 backdrop-blur-md flex items-center justify-center font-headline-1 text-headline-1 text-white shrink-0 overflow-hidden">
+                    {avatarUrl ? (
+                      <img
+                        src={avatarUrl}
+                        alt=""
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      initialsValue
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h1 className="font-headline-2 text-headline-2 text-white leading-tight truncate">
+                      {profile.fullName}
+                    </h1>
+                    <span className="font-micro-badge text-micro-badge uppercase tracking-wider text-brand-100 block mt-0.5">
+                      {profile.roleLabel}
+                    </span>
+                    <span className="font-caption text-caption text-blue-50 block truncate mt-1">
+                      {profile.email}
+                    </span>
+                  </div>
+                </div>
+                <Link
+                  href="/profil/edit"
+                  className="mt-3 h-9 px-4 rounded-xl bg-white/20 text-white font-caption text-caption inline-flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+                >
+                  <Icon name="edit" className="text-[16px]" />
+                  Edit Profil
+                </Link>
+              </div>
+            </div>
+          </section>
+
+          {/* Kartu cabang */}
+          <section className="px-gutter pt-2.5 lg:px-0">
+            <div className="bg-surface rounded-[20px] p-4 clay-card border border-white/80 flex items-center gap-3">
+              <div className="w-11 h-11 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
+                <Icon name="garage" className="text-[22px]" />
               </div>
               <div className="flex-1 min-w-0">
-                <h1 className="font-headline-2 text-headline-2 text-white leading-tight truncate">
-                  {profile.fullName}
-                </h1>
-                <span className="font-micro-badge text-micro-badge uppercase tracking-wider text-brand-100 block mt-0.5">
-                  {profile.roleLabel}
+                <span className="font-caption text-caption text-text-muted block">
+                  Cabang Penempatan
                 </span>
-                <span className="font-caption text-caption text-blue-50 block truncate mt-1">
-                  {profile.email}
+                <span className="font-body-bold text-body-bold text-text-primary block truncate">
+                  {branch.name}
+                </span>
+                <span className="font-caption text-caption text-text-secondary block">
+                  Jam operasional {branch.openTime.slice(0, 5)} -{" "}
+                  {branch.closeTime.slice(0, 5)} WIB
                 </span>
               </div>
+              <span
+                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-micro-badge text-micro-badge shrink-0 ${
+                  branchConfigured
+                    ? "bg-success-surface text-success-text"
+                    : "bg-warning-surface text-warning-text"
+                }`}
+              >
+                <Icon name={branchConfigured ? "verified" : "wrong_location"} className="text-[13px]" />
+                {branchConfigured ? "Lokasi OK" : "Belum Diatur"}
+              </span>
             </div>
-            <Link
-              href="/profil/edit"
-              className="mt-3 h-9 px-4 rounded-xl bg-white/20 text-white font-caption text-caption inline-flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
-            >
-              <Icon name="edit" className="text-[16px]" />
-              Edit Profil
-            </Link>
-          </div>
+          </section>
+
+          {/* Keluar — di desktop ada di kiri bawah */}
+          <section className="px-gutter pt-3 lg:px-0 hidden lg:block">
+            <form action="/auth/signout" method="post">
+              <button
+                type="submit"
+                className="w-full h-[50px] rounded-full bg-danger-surface text-danger-text font-body-bold text-body-bold flex items-center justify-center gap-2.5 active:scale-[0.98] transition-transform"
+              >
+                <Icon name="logout" className="text-[20px]" />
+                Keluar dari Aplikasi
+              </button>
+            </form>
+            <p className="font-caption text-caption text-text-muted text-center mt-2">
+              RB Autoluxe Workshop OS · v0.1
+            </p>
+          </section>
         </div>
-      </section>
 
-      {/* Kartu cabang */}
-      <section className="px-gutter pt-2.5">
-        <div className="bg-surface rounded-[20px] p-4 clay-card border border-white/80 flex items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
-            <Icon name="garage" className="text-[22px]" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <span className="font-caption text-caption text-text-muted block">
-              Cabang Penempatan
-            </span>
-            <span className="font-body-bold text-body-bold text-text-primary block truncate">
-              {branch.name}
-            </span>
-            <span className="font-caption text-caption text-text-secondary block">
-              Jam operasional {branch.openTime.slice(0, 5)} -{" "}
-              {branch.closeTime.slice(0, 5)} WIB
-            </span>
-          </div>
-          <span
-            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-micro-badge text-micro-badge shrink-0 ${
-              branchConfigured
-                ? "bg-success-surface text-success-text"
-                : "bg-warning-surface text-warning-text"
-            }`}
-          >
-            <Icon name={branchConfigured ? "verified" : "wrong_location"} className="text-[13px]" />
-            {branchConfigured ? "Lokasi OK" : "Belum Diatur"}
-          </span>
-        </div>
-      </section>
-
-      {/* Menu modul - Tabs dengan Dropdown per kategori */}
-      <section className="px-gutter pt-2.5">
-        <div className="bg-surface rounded-[20px] p-2 clay-card border border-white/80">
-          <div className="flex items-center gap-2 px-3 pt-2.5 pb-1.5">
-            <Icon name="apps" className="text-brand-600 text-[18px]" />
-            <span className="font-body-bold text-body-bold text-text-primary">
-              Modul Saya
-            </span>
-          </div>
-          
-          {/* Tab buttons */}
-          <div className="flex gap-1 overflow-x-auto pb-2 -mx-3 px-3" role="tablist">
-            {CATEGORY_ORDER.map((cat) => {
-              const items = menuByCategory[cat];
-              if (!items || items.length === 0) return null;
-              return (
-                <button
-                  key={cat}
-                  role="tab"
-                  aria-selected={openCategory === cat}
-                  onClick={() => setOpenCategory(openCategory === cat ? null : cat)}
-                  className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                    openCategory === cat
-                      ? "bg-primary text-white"
-                      : "bg-surface-container text-text-secondary hover:bg-surface-container-high"
-                  }`}
-                >
-                  <Icon name={CATEGORY_ICONS[cat]} className="text-[16px] mr-1" />
-                  {CATEGORY_LABELS[cat]}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Dropdown content */}
-          {openCategory && menuByCategory[openCategory] && (
-            <div className="mt-2 animate-in slide-in-from-top-2 duration-200">
-              <div className="bg-surface-container rounded-[16px] p-2 border border-border-subtle">
-                {menuByCategory[openCategory].map((item) => (
-                  <Link
-                    key={item.label}
-                    href={item.href}
-                    className="flex items-center gap-3 px-3 py-3 rounded-xl active:bg-surface-container-low active:scale-[0.99] transition-all"
-                  >
-                    <div className="w-10 h-10 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
-                      <Icon name={item.icon} className="text-[20px]" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <span className="font-body-bold text-body-bold text-text-primary block">
-                        {item.label}
-                      </span>
-                      <span className="font-caption text-caption text-text-muted block truncate">
-                        {item.caption}
-                      </span>
-                    </div>
-                    <Icon name="chevron_right" className="text-text-muted text-[20px] shrink-0" />
-                  </Link>
-                ))}
+        {/* RIGHT COLUMN — modul + konten bawah */}
+        <div className="lg:col-span-2 flex flex-col">
+          {/* Menu modul - Tabs dengan Dropdown per kategori */}
+          <section className="px-gutter pt-2.5 lg:px-0 lg:pt-0">
+            <div className="bg-surface rounded-[20px] p-2 clay-card border border-white/80">
+              <div className="flex items-center gap-2 px-3 pt-2.5 pb-1.5">
+                <Icon name="apps" className="text-brand-600 text-[18px]" />
+                <span className="font-body-bold text-body-bold text-text-primary">
+                  Modul Saya
+                </span>
               </div>
+              
+              {/* Tab buttons */}
+              <div className="flex gap-1 overflow-x-auto pb-2 -mx-3 px-3" role="tablist">
+                {CATEGORY_ORDER.map((cat) => {
+                  const items = menuByCategory[cat];
+                  if (!items || items.length === 0) return null;
+                  return (
+                    <button
+                      key={cat}
+                      role="tab"
+                      aria-selected={openCategory === cat}
+                      onClick={() => setOpenCategory(openCategory === cat ? null : cat)}
+                      className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                        openCategory === cat
+                          ? "bg-primary text-white"
+                          : "bg-surface-container text-text-secondary hover:bg-surface-container-high"
+                      }`}
+                    >
+                      <Icon name={CATEGORY_ICONS[cat]} className="text-[16px] mr-1" />
+                      {CATEGORY_LABELS[cat]}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Dropdown content */}
+              {openCategory && menuByCategory[openCategory] && (
+                <div className="mt-2 animate-in slide-in-from-top-2 duration-200">
+                  <div className="bg-surface-container rounded-[16px] p-2 border border-border-subtle">
+                    {menuByCategory[openCategory].map((item) => (
+                      <Link
+                        key={item.label}
+                        href={item.href}
+                        className="flex items-center gap-3 px-3 py-3 rounded-xl active:bg-surface-container-low active:scale-[0.99] transition-all"
+                      >
+                        <div className="w-10 h-10 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
+                          <Icon name={item.icon} className="text-[20px]" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <span className="font-body-bold text-body-bold text-text-primary block">
+                            {item.label}
+                          </span>
+                          <span className="font-caption text-caption text-text-muted block truncate">
+                            {item.caption}
+                          </span>
+                        </div>
+                        <Icon name="chevron_right" className="text-text-muted text-[20px] shrink-0" />
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-          )}
+          </section>
+
+          {/* Catatan lokasi cabang */}
+          {!branchConfigured && canManageLocation ? (
+            <section className="px-gutter pt-2.5 lg:px-0">
+              <Link
+                href="/absensi"
+                className="block bg-warning-surface rounded-[16px] p-3.5 flex items-start gap-2.5 active:scale-[0.99] transition-transform"
+              >
+                <Icon name="wrong_location" className="text-warning-text text-[20px] mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <span className="font-body-bold text-body-bold text-warning-text block">
+                    Lokasi cabang belum diatur
+                  </span>
+                  <span className="font-caption text-caption text-warning-text/90 block mt-0.5">
+                    Atur titik koordinat cabang dari halaman Absensi Biometrik agar
+                    geofence kehadiran aktif.
+                  </span>
+                </div>
+              </Link>
+            </section>
+          ) : null}
         </div>
-      </section>
 
-      {/* Catatan lokasi cabang */}
-      {!branchConfigured && canManageLocation ? (
-        <section className="px-gutter pt-2.5">
-          <Link
-            href="/absensi"
-            className="block bg-warning-surface rounded-[16px] p-3.5 flex items-start gap-2.5 active:scale-[0.99] transition-transform"
-          >
-            <Icon name="wrong_location" className="text-warning-text text-[20px] mt-0.5" />
-            <div className="flex-1 min-w-0">
-              <span className="font-body-bold text-body-bold text-warning-text block">
-                Lokasi cabang belum diatur
-              </span>
-              <span className="font-caption text-caption text-warning-text/90 block mt-0.5">
-                Atur titik koordinat cabang dari halaman Absensi Biometrik agar
-                geofence kehadiran aktif.
-              </span>
-            </div>
-          </Link>
-        </section>
-      ) : null}
+      </div>
 
-      {/* Keluar */}
-      <section className="px-gutter pt-3">
+      {/* Keluar — di mobile ada di bawah (di luar grid) */}
+      <section className="px-gutter pt-3 lg:hidden">
         <form action="/auth/signout" method="post">
           <button
             type="submit"

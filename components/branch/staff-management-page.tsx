@@ -124,13 +124,98 @@ export function StaffManagementPage({ session, branches, branchId }: Props) {
   return (
     <div className="flex flex-col w-full min-h-screen">
       <main className="flex-1">
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="kelola">Kelola Staf</TabsTrigger>
-            {bisaKelolaStaf && <TabsTrigger value="tambah">Tambah Staf</TabsTrigger>}
-          </TabsList>
+        {/* Mobile: tabs layout */}
+        <div className="lg:hidden">
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="kelola">Kelola Staf</TabsTrigger>
+              {bisaKelolaStaf && <TabsTrigger value="tambah">Tambah Staf</TabsTrigger>}
+            </TabsList>
 
-          <TabsContent value="kelola" className="px-gutter py-4 flex flex-col gap-3">
+            <TabsContent value="kelola" className="px-gutter py-4 flex flex-col gap-3">
+              {/* Search */}
+              <div className="relative">
+                <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[20px]" />
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Cari nama staf atau cabang..."
+                  className="w-full h-11 pl-10 pr-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+                />
+              </div>
+
+              {/* Filter bar */}
+              <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-gutter px-gutter">
+                {isAllBranches && branches.length > 0 && (
+                  <select
+                    value={filterBranch}
+                    onChange={(e) => setFilterBranch(e.target.value)}
+                    className="shrink-0 h-9 px-3 rounded-full bg-surface-container-low font-caption text-caption text-text-secondary outline-none focus:ring-2 focus:ring-brand-400"
+                  >
+                    <option value="all">Semua Cabang</option>
+                    {branches.map((b) => (
+                      <option key={b.id} value={b.id}>{b.name}</option>
+                    ))}
+                  </select>
+                )}
+                <select
+                  value={filterRole}
+                  onChange={(e) => setFilterRole(e.target.value)}
+                  className="shrink-0 h-9 px-3 rounded-full bg-surface-container-low font-caption text-caption text-text-secondary outline-none focus:ring-2 focus:ring-brand-400"
+                >
+                  <option value="all">Semua Jabatan</option>
+                  <option value="karyawan">Karyawan</option>
+                  <option value="admin_kasir">Admin Kasir</option>
+                  <option value="maintainer">Maintainer</option>
+                  <option value="owner">Owner</option>
+                </select>
+                <button
+                  type="button"
+                  onClick={() => setShowInactive((v) => !v)}
+                  className={`shrink-0 h-9 px-3 rounded-full font-caption text-caption transition-colors ${
+                    showInactive
+                      ? "bg-warning-surface text-warning-text"
+                      : "bg-surface-container-low text-text-secondary"
+                  }`}
+                >
+                  {showInactive ? "Sembunyikan Nonaktif" : "Tampilkan Nonaktif"}
+                </button>
+              </div>
+
+              <p className="font-caption text-caption text-text-muted">
+                Menampilkan <b className="text-text-primary">{filtered.length}</b> dari {staff.length} staf
+                {filterBranch !== "all" && ` • ${branches.find(b => b.id === filterBranch)?.name}`}
+                {filterRole   !== "all" && ` • ${ROLE_LABELS[filterRole] ?? filterRole}`}
+              </p>
+
+              {loading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : (
+                <StaffManagement
+                  staff={filtered}
+                  branches={branches}
+                  bisaUbahJabatan={session.role === "owner" || session.role === "maintainer"}
+                  bisaHapus={session.role === "owner" || session.role === "maintainer"}
+                />
+              )}
+            </TabsContent>
+
+            {bisaKelolaStaf && (
+              <TabsContent value="tambah" className="px-gutter py-4">
+                <StaffCreateForm branches={branches} />
+              </TabsContent>
+            )}
+          </Tabs>
+        </div>
+
+        {/* Desktop: 2-column grid */}
+        <div className="hidden lg:grid lg:grid-cols-3 lg:gap-6 lg:items-start lg:px-gutter lg:py-6">
+          {/* LEFT — daftar staf */}
+          <div className="lg:col-span-1 flex flex-col gap-3">
+            <h2 className="font-headline-3 text-headline-3 text-text-primary">Kelola Staf</h2>
+
             {/* Search */}
             <div className="relative">
               <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[20px]" />
@@ -143,13 +228,12 @@ export function StaffManagementPage({ session, branches, branchId }: Props) {
             </div>
 
             {/* Filter bar */}
-            <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-gutter px-gutter">
-              {/* Filter cabang — hanya untuk lintas cabang */}
+            <div className="flex flex-col gap-2">
               {isAllBranches && branches.length > 0 && (
                 <select
                   value={filterBranch}
                   onChange={(e) => setFilterBranch(e.target.value)}
-                  className="shrink-0 h-9 px-3 rounded-full bg-surface-container-low font-caption text-caption text-text-secondary outline-none focus:ring-2 focus:ring-brand-400"
+                  className="h-9 px-3 rounded-full bg-surface-container-low font-caption text-caption text-text-secondary outline-none focus:ring-2 focus:ring-brand-400"
                 >
                   <option value="all">Semua Cabang</option>
                   {branches.map((b) => (
@@ -157,12 +241,10 @@ export function StaffManagementPage({ session, branches, branchId }: Props) {
                   ))}
                 </select>
               )}
-
-              {/* Filter role */}
               <select
                 value={filterRole}
                 onChange={(e) => setFilterRole(e.target.value)}
-                className="shrink-0 h-9 px-3 rounded-full bg-surface-container-low font-caption text-caption text-text-secondary outline-none focus:ring-2 focus:ring-brand-400"
+                className="h-9 px-3 rounded-full bg-surface-container-low font-caption text-caption text-text-secondary outline-none focus:ring-2 focus:ring-brand-400"
               >
                 <option value="all">Semua Jabatan</option>
                 <option value="karyawan">Karyawan</option>
@@ -170,12 +252,10 @@ export function StaffManagementPage({ session, branches, branchId }: Props) {
                 <option value="maintainer">Maintainer</option>
                 <option value="owner">Owner</option>
               </select>
-
-              {/* Toggle nonaktif */}
               <button
                 type="button"
                 onClick={() => setShowInactive((v) => !v)}
-                className={`shrink-0 h-9 px-3 rounded-full font-caption text-caption transition-colors ${
+                className={`h-9 px-3 rounded-full font-caption text-caption transition-colors text-left ${
                   showInactive
                     ? "bg-warning-surface text-warning-text"
                     : "bg-surface-container-low text-text-secondary"
@@ -185,11 +265,8 @@ export function StaffManagementPage({ session, branches, branchId }: Props) {
               </button>
             </div>
 
-            {/* Summary badge */}
             <p className="font-caption text-caption text-text-muted">
               Menampilkan <b className="text-text-primary">{filtered.length}</b> dari {staff.length} staf
-              {filterBranch !== "all" && ` • ${branches.find(b => b.id === filterBranch)?.name}`}
-              {filterRole   !== "all" && ` • ${ROLE_LABELS[filterRole] ?? filterRole}`}
             </p>
 
             {loading ? (
@@ -204,14 +281,28 @@ export function StaffManagementPage({ session, branches, branchId }: Props) {
                 bisaHapus={session.role === "owner" || session.role === "maintainer"}
               />
             )}
-          </TabsContent>
+          </div>
 
-          {bisaKelolaStaf && (
-            <TabsContent value="tambah" className="px-gutter py-4">
-              <StaffCreateForm branches={branches} />
-            </TabsContent>
-          )}
-        </Tabs>
+          {/* RIGHT — form tambah staf atau placeholder */}
+          <div className="lg:col-span-2">
+            {bisaKelolaStaf ? (
+              <div className="bg-surface rounded-[20px] clay-card border border-white/80 p-6">
+                <h2 className="font-headline-3 text-headline-3 text-text-primary mb-4">Tambah Staf Baru</h2>
+                <StaffCreateForm branches={branches} />
+              </div>
+            ) : (
+              <div className="bg-surface rounded-[20px] clay-card border border-white/80 p-8 flex flex-col items-center justify-center gap-3 text-center min-h-[300px]">
+                <Icon name="manage_accounts" className="text-[48px] text-text-tertiary" />
+                <p className="font-body-bold text-body-bold text-text-primary">
+                  Panel Manajemen Staf
+                </p>
+                <p className="font-caption text-caption text-text-muted max-w-xs">
+                  Pilih staf dari daftar di sebelah kiri untuk melihat dan mengatur detail, atau gunakan tab Tambah Staf untuk mendaftarkan anggota baru.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
       </main>
       <BottomNav role={session.role} />
     </div>

@@ -645,61 +645,134 @@ export function RekapConsole({
 
   return (
     <div className="flex flex-col w-full pb-nav-plain">
-      {/* Micro-bar: status geofence + export */}
-      <section className="px-gutter pt-3">
-        <div className="bg-clay-overlay rounded-xl px-3 py-2.5 flex items-center justify-between border border-border-subtle">
-          <span className="font-caption text-caption text-success-text flex items-center gap-1.5">
-            <Icon name="radar" className="text-[15px]" />
-            {crossBranch
-              ? "Geofence mengikuti cabang tiap staf"
-              : `Radius catatan ${Math.round(branch.radius)}m`}
-          </span>
-          <button
-            type="button"
-            onClick={() => void exportExcel()}
-            disabled={exporting}
-            className="min-h-11 px-3 rounded-lg bg-brand-50 text-brand-700 font-caption text-caption flex items-center gap-1.5 active:scale-95 transition-transform disabled:opacity-60"
-          >
-            <Icon name={exporting ? "hourglass_top" : "download"} className="text-[15px]" />
-            {exporting ? "Menyusun" : mode === "tiga_bulan" ? "Excel 3 Bulan" : "Laporan"}
-          </button>
-        </div>
-      </section>
+      {/* Desktop 2-column grid: filter sidebar kiri, konten utama kanan */}
+      <div className="lg:grid lg:grid-cols-4 lg:gap-6 lg:items-start lg:px-gutter lg:pt-4">
 
-      {/* Pemilih tampilan: harian, kalender bulanan, atau tiga bulan bergulir */}
-      <section className="px-gutter pt-3">
-        <div
-          role="tablist"
-          aria-label="Tampilan rekap"
-          className="bg-clay-overlay rounded-xl p-1 flex gap-1 border border-border-subtle"
-        >
-          {(
-            [
-              { key: "harian", label: "Harian", icon: "today" },
-              { key: "bulanan", label: "Bulanan", icon: "calendar_month" },
-              { key: "tiga_bulan", label: "3 Bulan", icon: "date_range" },
-            ] as { key: Mode; label: string; icon: string }[]
-          ).map((tab) => (
-            <button
-              key={tab.key}
-              type="button"
-              role="tab"
-              aria-selected={mode === tab.key}
-              onClick={() => setMode(tab.key)}
-              className={
-                "flex-1 min-h-11 rounded-lg font-caption text-caption flex items-center " +
-                "justify-center gap-1.5 transition-colors " +
-                (mode === tab.key
-                  ? "bg-white text-text-primary shadow-sm font-body-bold"
-                  : "text-text-secondary active:scale-95 transition-transform")
-              }
+        {/* LEFT COLUMN — filter & navigasi */}
+        <div className="lg:col-span-1 lg:sticky lg:top-20 flex flex-col">
+          {/* Pemilih tampilan: harian, kalender bulanan, atau tiga bulan bergulir */}
+          <section className="px-gutter pt-3 lg:px-0 lg:pt-0">
+            <div
+              role="tablist"
+              aria-label="Tampilan rekap"
+              className="bg-clay-overlay rounded-xl p-1 flex gap-1 lg:flex-col border border-border-subtle"
             >
-              <Icon name={tab.icon} className="text-[15px]" />
-              {tab.label}
-            </button>
-          ))}
+              {(
+                [
+                  { key: "harian", label: "Harian", icon: "today" },
+                  { key: "bulanan", label: "Bulanan", icon: "calendar_month" },
+                  { key: "tiga_bulan", label: "3 Bulan", icon: "date_range" },
+                ] as { key: Mode; label: string; icon: string }[]
+              ).map((tab) => (
+                <button
+                  key={tab.key}
+                  type="button"
+                  role="tab"
+                  aria-selected={mode === tab.key}
+                  onClick={() => setMode(tab.key)}
+                  className={
+                    "flex-1 min-h-11 rounded-lg font-caption text-caption flex items-center " +
+                    "justify-center gap-1.5 transition-colors " +
+                    (mode === tab.key
+                      ? "bg-white text-text-primary shadow-sm font-body-bold"
+                      : "text-text-secondary active:scale-95 transition-transform")
+                  }
+                >
+                  <Icon name={tab.icon} className="text-[15px]" />
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          {/* Navigasi tanggal — hanya di mode harian */}
+          {mode === "harian" && (
+            <section className="px-gutter pt-4 lg:px-0">
+              <div className="bg-surface rounded-2xl p-3 clay-card border border-white/80 flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setDate(shiftDate(-1))}
+                  disabled={loading}
+                  aria-label="Hari sebelumnya"
+                  className="w-11 h-11 rounded-xl bg-surface-container-low text-text-secondary flex items-center justify-center active:scale-95 transition-transform disabled:opacity-50"
+                >
+                  <Icon name="chevron_left" className="text-[20px]" />
+                </button>
+                <div className="flex-1 text-center">
+                  <span
+                    className={`font-body-bold text-body-bold block ${
+                      loading ? "opacity-50" : ""
+                    }`}
+                  >
+                    {dateLabel}
+                  </span>
+                  <span className="font-caption text-caption text-text-muted">
+                    {isToday
+                      ? "Hari ini"
+                      : profile.role === "owner" || profile.role === "maintainer"
+                        ? "Arsip kehadiran"
+                        : "Arsip kehadiran"}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setDate(shiftDate(1))}
+                  disabled={loading || isToday}
+                  aria-label="Hari berikutnya"
+                  className="w-11 h-11 rounded-xl bg-surface-container-low text-text-secondary flex items-center justify-center active:scale-95 transition-transform disabled:opacity-50"
+                >
+                  <Icon name="chevron_right" className="text-[20px]" />
+                </button>
+              </div>
+            </section>
+          )}
+
+          {/* Filter pill — hanya di mode harian */}
+          {mode === "harian" && (
+            <section className="px-gutter pt-4 lg:px-0">
+              <div className="flex gap-2 overflow-x-auto no-scrollbar lg:flex-col lg:overflow-x-visible">
+                {filterPills.map((pill) => (
+                  <button
+                    key={pill.key}
+                    type="button"
+                    onClick={() => setFilter(pill.key)}
+                    className={`min-h-11 px-3.5 rounded-full font-caption text-caption shrink-0 flex items-center gap-1.5 active:scale-95 transition-transform lg:w-full lg:justify-start ${
+                      filter === pill.key
+                        ? "primary-gradient text-white"
+                        : "bg-surface text-text-secondary clay-card"
+                    }`}
+                  >
+                    {pill.label} ({pill.count})
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Micro-bar: status geofence + export */}
+          <section className="px-gutter pt-3 lg:px-0">
+            <div className="bg-clay-overlay rounded-xl px-3 py-2.5 flex items-center justify-between lg:flex-col lg:items-stretch lg:gap-2 border border-border-subtle">
+              <span className="font-caption text-caption text-success-text flex items-center gap-1.5">
+                <Icon name="radar" className="text-[15px]" />
+                {crossBranch
+                  ? "Geofence mengikuti cabang tiap staf"
+                  : `Radius catatan ${Math.round(branch.radius)}m`}
+              </span>
+              <button
+                type="button"
+                onClick={() => void exportExcel()}
+                disabled={exporting}
+                className="min-h-11 px-3 rounded-lg bg-brand-50 text-brand-700 font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform disabled:opacity-60"
+              >
+                <Icon name={exporting ? "hourglass_top" : "download"} className="text-[15px]" />
+                {exporting ? "Menyusun" : mode === "tiga_bulan" ? "Excel 3 Bulan" : "Laporan"}
+              </button>
+            </div>
+          </section>
         </div>
-      </section>
+
+        {/* RIGHT COLUMN — konten utama */}
+        <div className="lg:col-span-3 flex flex-col">
 
       {mode !== "harian" ? (
         <BulananPanel
@@ -722,7 +795,7 @@ export function RekapConsole({
         <>
 
       {/* Hero ringkasan */}
-      <section className="px-gutter pt-4">
+      <section className="px-gutter pt-4 lg:px-0 lg:pt-0">
         <div className="relative overflow-hidden rounded-[24px] p-5 primary-gradient text-on-primary clay-glow">
           <div className="absolute -right-6 -bottom-6 opacity-10 pointer-events-none text-white">
             <Icon name="groups" className="text-[130px]" />
@@ -780,8 +853,8 @@ export function RekapConsole({
         </div>
       </section>
 
-      {/* Navigasi tanggal */}
-      <section className="px-gutter pt-4">
+      {/* Navigasi tanggal — mobile only (desktop ada di sidebar) */}
+      <section className="px-gutter pt-4 lg:hidden">
         <div className="bg-surface rounded-2xl p-3 clay-card border border-white/80 flex items-center gap-3">
           <button
             type="button"
@@ -820,8 +893,8 @@ export function RekapConsole({
         </div>
       </section>
 
-      {/* Filter pill */}
-      <section className="px-gutter pt-4">
+      {/* Filter pill — mobile only (desktop ada di sidebar) */}
+      <section className="px-gutter pt-4 lg:hidden">
         <div className="flex gap-2 overflow-x-auto no-scrollbar">
           {filterPills.map((pill) => (
             <button
@@ -841,7 +914,7 @@ export function RekapConsole({
       </section>
 
       {error ? (
-        <section className="px-gutter pt-3">
+        <section className="px-gutter pt-3 lg:px-0">
           <div className="p-3 rounded-xl bg-danger-surface text-danger-text font-body text-body flex items-center gap-2">
             <Icon name="error" className="text-[18px]" />
             <span className="flex-1">{error}</span>
@@ -850,7 +923,7 @@ export function RekapConsole({
       ) : null}
 
       {/* Kartu staf */}
-      <section className="px-gutter pt-3 space-y-2.5">
+      <section className="px-gutter pt-3 lg:px-0 space-y-2.5">
         {visibleStaff.length === 0 ? (
           <div className="bg-surface rounded-2xl p-5 clay-card text-center">
             <span className="font-caption text-caption text-text-muted">
@@ -1032,7 +1105,7 @@ export function RekapConsole({
       </section>
 
       {/* Micro footer */}
-      <section className="px-gutter pt-3">
+      <section className="px-gutter pt-3 lg:px-0">
         <p className="font-caption text-caption text-text-muted text-center">
           Auto-Sync Cloud POS: Real-Time • Data kehadiran diverifikasi geofence &
           Face ID
@@ -1054,6 +1127,8 @@ export function RekapConsole({
       ) : null}
         </>
       )}
+        </div>{/* end right column */}
+      </div>{/* end desktop grid */}
     </div>
   );
 }

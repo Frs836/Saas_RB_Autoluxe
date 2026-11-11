@@ -163,6 +163,11 @@ export function OrderDetailView({
   const [teamDraft, setTeamDraft] = useState<string[]>([]);
   const [teamBusy, setTeamBusy] = useState(false);
   const [teamError, setTeamError] = useState<string | null>(null);
+  const [addMemberOpen, setAddMemberOpen] = useState(false);
+  const [addMemberDraft, setAddMemberDraft] = useState<string[]>([]);
+  const [addMemberBusy, setAddMemberBusy] = useState(false);
+  const [addMemberError, setAddMemberError] = useState<string | null>(null);
+  const [removeMemberBusy, setRemoveMemberBusy] = useState<string | null>(null);
 
   // Modal kirim nota WhatsApp
   const [waModalOpen, setWaModalOpen] = useState(false);
@@ -383,6 +388,51 @@ export function OrderDetailView({
       setTeamError(err instanceof Error ? err.message : "Gagal menyimpan tim.");
     } finally {
       setTeamBusy(false);
+    }
+  }
+
+  async function tambahAnggota() {
+    if (addMemberBusy || addMemberDraft.length === 0) return;
+    setAddMemberBusy(true);
+    setAddMemberError(null);
+    try {
+      const supabase = createClient();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any).rpc("add_order_team_member", {
+        p_order_id: order.id,
+        p_profile_ids: addMemberDraft,
+      });
+      if (error) throw new Error(error.message);
+      setAddMemberOpen(false);
+      setAddMemberDraft([]);
+      setSuccess(`${addMemberDraft.length} anggota ditambahkan ke tim.`);
+      router.refresh();
+    } catch (err) {
+      setAddMemberError(err instanceof Error ? err.message : "Gagal menambah anggota.");
+    } finally {
+      setAddMemberBusy(false);
+    }
+  }
+
+  async function lepasAnggota(profileId: string, namaAnggota: string) {
+    const alasan = window.prompt(`Alasan melepas ${namaAnggota} dari tim:`, "Pindah ke unit lain");
+    if (alasan === null) return;
+    setRemoveMemberBusy(profileId);
+    try {
+      const supabase = createClient();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any).rpc("remove_order_team_member", {
+        p_order_id: order.id,
+        p_profile_id: profileId,
+        p_reason: alasan.trim() || "Dilepas dari tim",
+      });
+      if (error) throw new Error(error.message);
+      setSuccess(`${namaAnggota} dilepas dari tim.`);
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Gagal melepas anggota.");
+    } finally {
+      setRemoveMemberBusy(null);
     }
   }
 
@@ -667,9 +717,25 @@ export function OrderDetailView({
 
           <div className="flex flex-wrap items-center gap-2 pt-1">
             {order.team.length > 0 ? (
-              <span className="px-2 py-1 rounded-full bg-surface-container text-text-secondary font-caption text-caption">
-                Tim: {order.team.map((m) => m.full_name).join(", ")}
-              </span>
+              order.team.map((m) => (
+                <div key={m.id} className="flex items-center gap-1.5">
+                  <span className="px-2 py-1 rounded-full bg-surface-container text-text-secondary font-caption text-caption flex items-center gap-1">
+                    {m.is_lead && <Icon name="star" className="text-[12px] text-brand-500" />}
+                    {m.full_name}
+                  </span>
+                  {canAddToActiveTeam && ["in_progress", "qc_review"].includes(order.status) && order.team.length > 1 && (
+                    <button
+                      type="button"
+                      disabled={removeMemberBusy === m.id}
+                      onClick={() => void lepasAnggota(m.id, m.full_name)}
+                      title={`Lepas ${m.full_name} dari tim`}
+                      className="w-6 h-6 rounded-full bg-danger-surface text-danger-text flex items-center justify-center active:scale-95 transition-transform disabled:opacity-60"
+                    >
+                      <Icon name="close" className="text-[12px]" />
+                    </button>
+                  )}
+                </div>
+              ))
             ) : (
               <span className="px-2 py-1 rounded-full bg-surface-container text-text-secondary font-caption text-caption">
                 Belum ada teknisi
@@ -689,6 +755,16 @@ export function OrderDetailView({
                 Atur Tim
               </button>
             ) : null}
+            {canAddToActiveTeam && ["in_progress", "qc_review"].includes(order.status) && (
+              <button
+                type="button"
+                onClick={() => { setAddMemberDraft([]); setAddMemberError(null); setAddMemberOpen(true); }}
+                className="min-h-9 px-3 rounded-full bg-success-surface text-success-text font-caption text-caption flex items-center gap-1 active:scale-95 transition-transform"
+              >
+                <Icon name="person_add" className="text-[16px]" />
+                Tambah Anggota
+              </button>
+            )}
             <span className="px-2 py-1 rounded-full bg-surface-container text-text-secondary font-caption text-caption">
               Dibuat {formatDateWib(order.createdAt)} {formatTimeWib(order.createdAt)}
             </span>
@@ -1129,6 +1205,60 @@ export function OrderDetailView({
           </div>
         </div>
       ) : null}
+
+      {addMemberOpen && (
+        <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center">
+          <div className="w-full max-w-[440px] max-h-[85vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl bg-surface p-4 flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <h2 className="font-headline-2 text-headline-2 text-text-primary">Tambah Anggota Tim</h2>
+              <button type="button" onClick={() => setAddMemberOpen(false)} className="w-10 h-10 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary">
+                <Icon name="close" className="text-[22px]" />
+              </button>
+            </div>
+            <p className="font-caption text-caption text-text-muted">
+              Order {order.orderNumber} sedang dikerjakan. Pilih teknisi yang akan ditambahkan ke tim.
+            </p>
+            {addMemberError && (
+              <p className="p-2 rounded-xl bg-danger-surface text-danger-text font-caption text-caption">{addMemberError}</p>
+            )}
+            <div className="flex flex-col gap-1">
+              {teamCandidates
+                .filter(c => !order.team.some(m => m.id === c.id))
+                .map(candidate => {
+                  const selected = addMemberDraft.includes(candidate.id);
+                  return (
+                    <button
+                      key={candidate.id}
+                      type="button"
+                      disabled={Boolean(candidate.busy)}
+                      onClick={() => setAddMemberDraft(prev =>
+                        prev.includes(candidate.id)
+                          ? prev.filter(id => id !== candidate.id)
+                          : [...prev, candidate.id]
+                      )}
+                      className={`flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl transition-colors text-left ${
+                        selected ? "bg-primary text-white" :
+                        candidate.busy ? "bg-surface-container-low text-text-muted opacity-60 cursor-not-allowed" :
+                        "bg-surface-container-low text-text-secondary"
+                      }`}
+                    >
+                      <span className="font-body text-body truncate">{candidate.full_name}</span>
+                      {candidate.busy && <span className="font-micro-badge text-micro-badge bg-warning-surface text-warning-text px-2 py-0.5 rounded-full shrink-0">Sibuk</span>}
+                      {selected && <Icon name="check_circle" className="text-[20px] text-white shrink-0" />}
+                    </button>
+                  );
+                })
+              }
+            </div>
+            <div className="flex gap-3 pt-1">
+              <button type="button" onClick={() => setAddMemberOpen(false)} className="flex-1 h-12 rounded-xl bg-surface-container text-text-secondary font-body-bold text-body-bold">Batal</button>
+              <button type="button" onClick={() => void tambahAnggota()} disabled={addMemberBusy || addMemberDraft.length === 0} className="flex-1 h-12 rounded-xl bg-primary text-white font-body-bold text-body-bold disabled:opacity-60">
+                {addMemberBusy ? "Menambahkan..." : `Tambah ${addMemberDraft.length > 0 ? addMemberDraft.length + " Orang" : ""}`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {cameraOpen ? (
         <div className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex flex-col items-center justify-center gap-3 p-6">

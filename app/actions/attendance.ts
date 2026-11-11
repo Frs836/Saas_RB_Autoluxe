@@ -13,7 +13,6 @@ type CheckInParams = {
   p_latitude: number;
   p_longitude: number;
   p_accuracy_meters?: number;
-  p_photo_url?: string;
   p_face_descriptor: number[];
   p_liveness_trace?: string | number | boolean | null | { [key: string]: unknown } | unknown[];
   p_late_reason?: string;

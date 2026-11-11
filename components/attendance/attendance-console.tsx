@@ -503,11 +503,10 @@ export function AttendanceConsole({
 
     try {
       setBusy("submit");
-      // Foto adalah lampiran bukti, bukan syarat. Kalau perangkat tidak
-      // menghasilkan berkas, absensi tetap dicatat dan kolom foto diisi null.
-      // Yang wajib ada adalah vektor wajah, karena itu yang dibandingkan
-      // server dengan sampel tersimpan.
-      const photoPath = capturedBlob ? await uploadPhoto(capturedBlob) : null;
+      // Foto bukti harian tidak lagi disimpan; yang membuktikan kehadiran
+      // adalah vektor wajah (dibandingkan server dengan sampel tersimpan)
+      // dan koordinat GPS. Foto referensi tetap disimpan saat pendaftaran
+      // wajah via handleRegisterFace, bukan di sini.
       const supabase = createClient();
 
       // Yang dikirim adalah vektor hasil pindai, bukan angka kemiripan.
@@ -521,7 +520,6 @@ export function AttendanceConsole({
           p_latitude: gps.lat,
           p_longitude: gps.lng,
           p_accuracy_meters: gps.accuracy ?? undefined,
-          p_photo_url: photoPath ?? undefined,
           p_face_descriptor: scanWajah,
           p_liveness_trace: liveRef.current.jejak(),
           p_late_reason: isLate ? lateReason.trim() : undefined,
@@ -541,7 +539,6 @@ export function AttendanceConsole({
     }
   }, [
     branchConfigured,
-    capturedBlob,
     capturedDescriptor,
     gps,
     isLate,
@@ -549,7 +546,6 @@ export function AttendanceConsole({
     lateReasonValid,
     mode,
     similarity,
-    uploadPhoto,
   ]);
 
   const handleSaveLocation = useCallback(async () => {

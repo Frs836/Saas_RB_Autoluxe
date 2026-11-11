@@ -97,7 +97,7 @@ export default async function OrderDetailPage({ params }: { params: Params }) {
         ? supabase
             .from("profiles")
             .select("id, full_name")
-            .eq("role", "karyawan")
+            .in("role", ["karyawan", "kepala_karyawan"])
             .eq("is_active", true)
             .eq("branch_id", order.branch_id)
             .order("full_name", { ascending: true })
@@ -216,6 +216,7 @@ export default async function OrderDetailPage({ params }: { params: Params }) {
         canDecideQc={can(session.role, "qc.review")}
         canDeleteAny={can(session.role, "inspection.delete_any")}
         canManageTeam={can(session.role, "order.manage_status")}
+        canAddToActiveTeam={can(session.role, "order.manage_status")}
         teamCandidates={(candidateRes.data ?? []).map((row) => ({
           id: row.id as string,
           full_name: (row.full_name as string) ?? "Karyawan",

@@ -63,6 +63,7 @@ type Props = {
   canDecideQc: boolean;
   canDeleteAny: boolean;
   canManageTeam: boolean;
+  canAddToActiveTeam: boolean;
   teamCandidates: TeamCandidate[];
   viewerId: string;
   branchName: string;
@@ -135,6 +136,7 @@ export function OrderDetailView({
   canDecideQc,
   canDeleteAny,
   canManageTeam,
+  canAddToActiveTeam,
   teamCandidates,
   viewerId,
   branchName,

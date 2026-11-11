@@ -235,9 +235,11 @@ export function ShiftConsole({
   }, [expectedOpen, handoff, notes, notesRequired, parseAmount, physical, router, kunciTutup]);
 
   return (
-    <div className="flex flex-col w-full pb-nav print:hidden">
+    <div className="flex flex-col w-full pb-nav print:hidden lg:grid lg:grid-cols-2 lg:gap-6 lg:px-6 lg:py-6 lg:items-start">
+      {/* Left column: status card + history */}
+      <div className="lg:col-span-1 flex flex-col">
       {/* Kartu status shift & kasir */}
-      <section className="px-gutter pt-4">
+      <section className="px-gutter pt-4 lg:px-0 lg:pt-0">
         <div className="bg-surface rounded-[24px] p-5 clay-card border border-white/80 flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <div className="flex flex-col gap-1">
@@ -290,7 +292,7 @@ export function ShiftConsole({
       </section>
 
       {/* Riwayat audit */}
-      <section className="px-gutter pt-3">
+      <section className="px-gutter pt-3 lg:px-0">
         <button
           type="button"
           onClick={() => {
@@ -347,6 +349,10 @@ export function ShiftConsole({
         ) : null}
       </section>
 
+      </div>{/* end left column */}
+
+      {/* Right column: form buka/tutup shift + pintasan */}
+      <div className="lg:col-span-1 flex flex-col">
       {handoff === null ? (
         <BukaKasForm
           opening={opening}
@@ -431,6 +437,8 @@ export function ShiftConsole({
           </Link>
         </div>
       </section>
+
+      </div>{/* end right column */}
 
       <StrukPrint
         handoff={handoff}

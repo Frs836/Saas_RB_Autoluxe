@@ -188,7 +188,7 @@ export function OmsetView({
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
         <div className="clay-card p-4 flex flex-col gap-1">
           <div className="w-9 h-9 rounded-xl bg-success-surface flex items-center justify-center">
             <Icon name="check_circle" className="text-success-text text-[20px]" />
@@ -223,7 +223,7 @@ export function OmsetView({
 
       {/* Top layanan */}
       {topServices.length > 0 && (
-        <div className="clay-card p-4 flex flex-col gap-3">
+        <div className="clay-card p-4 flex flex-col gap-3 lg:mt-6">
           <h3 className="font-headline-2 text-headline-2 text-text-primary">Top Layanan</h3>
           <div className="flex flex-col gap-2">
             {topServices.map(([name, data]) => (

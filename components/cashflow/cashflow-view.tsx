@@ -139,7 +139,9 @@ export function CashFlowView({
   const net     = report?.net_cash ?? 0;
 
   return (
-    <div className="px-gutter py-4 flex flex-col gap-4">
+    <div className="px-gutter py-4 flex flex-col gap-4 lg:grid lg:grid-cols-3 lg:gap-6 lg:px-6 lg:py-6 lg:items-start">
+      {/* Left column: filter + summary */}
+      <div className="lg:col-span-1 flex flex-col gap-4">
       {/* Filter */}
       <div className="clay-card p-4 flex flex-col gap-3">
         <div className="flex items-center justify-between">
@@ -170,6 +172,15 @@ export function CashFlowView({
 
       {error && (
         <div className="p-3 rounded-xl bg-danger-surface text-danger-text font-caption text-caption flex items-center gap-2">
+          <Icon name="error" className="text-[18px] shrink-0" />{error}
+        </div>
+      )}
+      </div>{/* end left column */}
+
+      {/* Right column: report content */}
+      <div className="lg:col-span-2 flex flex-col gap-4">
+      {error && (
+        <div className="p-3 rounded-xl bg-danger-surface text-danger-text font-caption text-caption flex items-center gap-2 lg:hidden">
           <Icon name="error" className="text-[18px] shrink-0" />{error}
         </div>
       )}
@@ -275,6 +286,7 @@ export function CashFlowView({
           </button>
         </>
       )}
+      </div>{/* end right column */}
     </div>
   );
 }

@@ -113,7 +113,7 @@ export function KomisiView({
   const totalRevenue = filtered.reduce((s, r) => s + r.totalRevenue, 0);
 
   return (
-    <div className="px-gutter py-4 flex flex-col gap-4">
+    <div className="px-gutter py-4 flex flex-col gap-4 lg:max-w-5xl lg:mx-auto lg:px-6">
 
       {/* Filter Tanggal */}
       <div className="clay-card p-4 flex flex-col gap-3">

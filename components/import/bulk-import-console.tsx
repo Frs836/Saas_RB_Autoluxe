@@ -182,7 +182,7 @@ export function BulkImportConsole({
   }
 
   return (
-    <div className="px-gutter py-4 flex flex-col gap-4">
+    <div className="px-gutter py-4 flex flex-col gap-4 lg:max-w-xl lg:mx-auto lg:px-6 lg:py-6">
       {/* Jenis import */}
       <div className="clay-card p-4 flex flex-col gap-3">
         <h2 className="font-headline-2 text-headline-2 text-text-primary">Jenis Data</h2>

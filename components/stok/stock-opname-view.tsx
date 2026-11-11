@@ -209,7 +209,8 @@ export function StockOpnameView({
    * memperhitungkan navigasi bawah, sehingga baris input terakhir tertutup
    * bilah aksi itu dan tidak bisa diketuk.
    */
-  <div className="px-gutter py-4 pb-nav flex flex-col gap-4">
+  <div className="px-gutter py-4 pb-nav flex flex-col gap-4 lg:grid lg:grid-cols-3 lg:gap-6 lg:items-start">
+      <div className="lg:col-span-1 flex flex-col gap-4">
       <section className="clay-card p-4 flex items-center justify-between">
         <div>
           <h1 className="font-headline-2 text-headline-2 text-text-primary">
@@ -288,6 +289,10 @@ export function StockOpnameView({
         </p>
       ) : null}
 
+      </div>{/* end left column */}
+
+      {/* Right column: detail opname table */}
+      <div className="lg:col-span-2 flex flex-col gap-4">
       {selected ? (
         <section className="clay-card p-4 flex flex-col gap-3">
           <div className="flex items-center justify-between">
@@ -409,6 +414,7 @@ export function StockOpnameView({
           </button>
         </div>
       ) : null}
+      </div>{/* end right column */}
     </div>
   );
 }

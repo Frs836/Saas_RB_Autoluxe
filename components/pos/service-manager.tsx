@@ -452,7 +452,7 @@ export function ServiceManager({
 
           {/* Harga per ukuran ditampilkan ringkas supaya kasir bisa
               Membandingkan tanpa membuka form. */}
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-1.5 lg:overflow-visible">
             {HARGA.map((h) => {
               const nilai = row[h.key] as number;
               return (

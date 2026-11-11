@@ -75,7 +75,9 @@ export function StatistikSayaView({
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3 lg:grid lg:grid-cols-3 lg:gap-6 lg:px-6 lg:py-6 lg:items-start">
+      {/* Filter - left col */}
+      <div className="lg:col-span-1">
       {/* Filter */}
       <div className="clay-card p-4 flex flex-col gap-3">
         <div className="flex items-center justify-between">
@@ -102,8 +104,10 @@ export function StatistikSayaView({
               className="h-11 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none" />
           </label>
         </div>
+        </div>
       </div>
 
+      <div className="lg:col-span-2 flex flex-col gap-3">
       {/* Order list */}
       {orders.length === 0 ? (
         <div className="clay-card p-8 flex flex-col items-center text-center gap-2">
@@ -151,6 +155,7 @@ export function StatistikSayaView({
           </div>
         </>
       )}
+      </div>{/* end right column */}
     </div>
   );
 }

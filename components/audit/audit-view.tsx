@@ -161,8 +161,10 @@ export function AuditView({
   }, {} as Record<string, number>);
 
   return (
-    <div className="px-gutter py-4 flex flex-col gap-4">
+    <div className="px-gutter py-4 flex flex-col gap-4 lg:grid lg:grid-cols-4 lg:gap-6 lg:px-6 lg:py-6 lg:items-start">
 
+      {/* Filter left column */}
+      <div className="lg:col-span-1 lg:sticky lg:top-20 flex flex-col gap-4">
       {/* Filter periode */}
       <div className="clay-card p-4 flex flex-col gap-3">
         <div className="flex items-center justify-between">
@@ -193,8 +195,12 @@ export function AuditView({
         </div>
       </div>
 
+      </div>{/* end left column filter */}
+
+      {/* Right column: log list */}
+      <div className="lg:col-span-3 flex flex-col gap-4">
       {/* Category filter tabs */}
-      <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-gutter px-gutter">
+      <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-gutter px-gutter lg:mx-0 lg:px-0">
         {CATEGORY_FILTERS.map((f) => (
           <button key={f.key} type="button"
             onClick={() => { setCategory(f.key); fetchRows(f.key, from, to); }}
@@ -314,6 +320,7 @@ export function AuditView({
           })}
         </div>
       )}
+      </div>{/* end right column */}
     </div>
   );
 }

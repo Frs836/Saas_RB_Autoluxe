@@ -603,7 +603,9 @@ export function OrderDetailView({
         </div>
       </div>
 
-      <div className="px-gutter pt-[calc(env(safe-area-inset-top)+5.5rem)] pb-32 flex flex-col gap-4">
+      <div className="px-gutter pt-[calc(env(safe-area-inset-top)+5.5rem)] pb-32 flex flex-col gap-4 lg:grid lg:grid-cols-2 lg:gap-6 lg:px-6 lg:py-6 lg:items-start lg:pt-6">
+        {/* Left column: order info + items + photos */}
+        <div className="lg:col-span-1 flex flex-col gap-4">
         <section className="clay-card p-4 flex flex-col gap-3">
           <div className="flex items-start gap-3">
             <div className="w-12 h-12 rounded-xl bg-surface-container flex items-center justify-center shrink-0 text-brand-600">
@@ -780,6 +782,10 @@ export function OrderDetailView({
           ) : null}
         </section>
 
+        </div>{/* end left column */}
+
+        {/* Right column: progress timeline + actions (sticky) */}
+        <div className="lg:col-span-1 flex flex-col gap-4 lg:sticky lg:top-20">
         {/* Progress bar adaptif per jenis layanan */}
         {order.status !== "cancelled" && (
           <section className="clay-card p-4 flex flex-col gap-3">
@@ -824,8 +830,10 @@ export function OrderDetailView({
             </ol>
           </section>
         )}
+        </div>{/* end right column */}
 
-        <section className="clay-card p-4 flex flex-col gap-3">
+        {/* Inspection photos: lg goes back to left column (auto-placed by grid) */}
+        <section className="clay-card p-4 flex flex-col gap-3 lg:col-span-1">
           <div className="flex items-center justify-between">
             <h2 className="font-headline-2 text-headline-2 text-text-primary">
               Inspeksi &amp; Sertifikat

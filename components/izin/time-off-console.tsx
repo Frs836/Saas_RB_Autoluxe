@@ -263,8 +263,8 @@ export function TimeOffConsole({ requests, canDecide, todayIso }: Props) {
 
   return (
     <div className="flex flex-col w-full min-h-screen">
-      <div className="px-gutter pt-4 pb-6 flex flex-col gap-4">
-        <section className="clay-card p-4 flex flex-col gap-3">
+      <div className="px-gutter pt-4 pb-6 flex flex-col gap-4 lg:grid lg:grid-cols-3 lg:gap-6 lg:px-6 lg:py-6 lg:items-start">
+        <section className="clay-card p-4 flex flex-col gap-3 lg:col-span-1 lg:sticky lg:top-20">
           <div className="flex items-center justify-between">
             <h1 className="font-headline-2 text-headline-2 text-text-primary">
               Pengajuan Izin
@@ -415,7 +415,7 @@ export function TimeOffConsole({ requests, canDecide, todayIso }: Props) {
           </button>
         </section>
 
-        <section className="clay-card p-4 flex flex-col gap-3">
+        <section className="clay-card p-4 flex flex-col gap-3 lg:col-span-2">
           <div className="flex items-center justify-between">
             <h2 className="font-headline-2 text-headline-2 text-text-primary">
               Daftar Pengajuan

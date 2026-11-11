@@ -481,7 +481,7 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-2 lg:grid-cols-3 xl:grid-cols-4">
                 {itemsTerfilter.map((item) => {
               const stock = Number(item.current_stock);
               const min = Number(item.min_stock_alert) || 1;

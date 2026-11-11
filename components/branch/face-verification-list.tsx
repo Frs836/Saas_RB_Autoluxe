@@ -98,7 +98,7 @@ function FaceReferencePhoto({
 
   return (
     <figure className="flex flex-col gap-1.5">
-      <div className="rounded-xl overflow-hidden bg-[#0F172A] aspect-[4/3]">
+      <div className="rounded-xl overflow-hidden bg-[#0F172A] aspect-[4/3] lg:aspect-[3/4]">
         {url ? (
           <img
             src={url}
@@ -221,6 +221,7 @@ export function FaceVerificationList({
         </p>
       ) : null}
 
+      <div className="lg:grid lg:grid-cols-2 xl:grid-cols-3 lg:gap-4">
       {registrations.map((row) => {
         const meta = STATUS_META[row.face_verification];
         const busy = busyId === row.profile_id;
@@ -288,6 +289,7 @@ export function FaceVerificationList({
           </section>
         );
       })}
+      </div>{/* end grid */}
     </div>
   );
 }

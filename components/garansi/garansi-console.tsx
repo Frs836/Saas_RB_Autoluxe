@@ -156,8 +156,8 @@ export function GaransiConsole({
 
   return (
     <div className="min-h-screen bg-canvas">
-      <div className="pb-nav-plain lg:pb-8 px-gutter pt-4 space-y-space-lg">
-        <section className="clay-card flex flex-col gap-space-md p-space-lg">
+      <div className="pb-nav-plain lg:pb-8 px-gutter pt-4 space-y-space-lg lg:grid lg:grid-cols-3 lg:gap-6 lg:px-6 lg:py-6 lg:items-start">
+        <section className="clay-card flex flex-col gap-space-md p-space-lg lg:col-span-1 lg:sticky lg:top-20">
           <div className="flex items-center justify-between">
             <h2 className="font-headline-2 text-headline-2 text-text-primary">Klaim Garansi</h2>
             <span className="px-2 py-0.5 rounded-full bg-brand-50 text-brand-600 font-micro-badge text-micro-badge">
@@ -297,6 +297,7 @@ export function GaransiConsole({
           </form>
         </section>
 
+        <div className="lg:col-span-2 flex flex-col gap-space-lg">
         <section className="clay-card flex flex-col gap-space-md p-space-lg">
           <div className="flex items-center justify-between">
             <h2 className="font-headline-2 text-headline-2 text-text-primary">
@@ -384,6 +385,7 @@ export function GaransiConsole({
             )}
           </div>
         </section>
+        </div>{/* end right col-span-2 */}
       </div>
     </div>
   );

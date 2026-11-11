@@ -107,7 +107,7 @@ export function InvoiceHistory({ invoices }: { invoices: InvoiceRow[] }) {
   }
 
   return (
-    <main className="flex-1 px-gutter pt-4 pb-nav-plain lg:pb-8 flex flex-col gap-3">
+    <main className="flex-1 px-gutter pt-4 pb-nav-plain lg:pb-8 flex flex-col gap-3 lg:max-w-4xl lg:mx-auto lg:px-6">
       <div className="grid grid-cols-3 gap-2">
         <div className="clay-card p-3 flex flex-col items-center gap-0.5">
           <span className="font-headline-2 text-headline-2 text-text-primary">
@@ -228,6 +228,24 @@ export function InvoiceHistory({ invoices }: { invoices: InvoiceRow[] }) {
                 >
                   <Icon name="link" className="text-[18px]" />
                   Lacak
+                </a>
+              ) : null}
+              {row.customerPhone ? (
+                <a
+                  href={whatsappLink(
+                    row.customerPhone,
+                    `Halo ${row.customerName}, berikut salinan invoice ${row.invoiceNumber} dari RB Autoluxe. Nominal ${formatRupiah(row.totalPrice)}${
+                      row.trackingToken
+                        ? `. Lacak status: ${typeof window !== "undefined" ? window.location.origin : ""}/track/${row.trackingToken}`
+                        : ""
+                    }`,
+                  )}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="min-h-11 w-11 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center justify-center active:scale-95 transition-transform"
+                  aria-label="Kirim ke WhatsApp"
+                >
+                  <Icon name="chat" className="text-[18px]" />
                 </a>
               ) : null}
             </div>

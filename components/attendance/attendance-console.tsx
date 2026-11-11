@@ -716,7 +716,7 @@ export function AttendanceConsole({
   })();
 
   return (
-    <div className="flex flex-col w-full pb-nav-plain lg:pb-8">
+    <div className="flex flex-col w-full pb-nav-plain lg:pb-8 lg:grid lg:grid-cols-2 lg:gap-6 lg:max-w-5xl lg:mx-auto lg:px-6 lg:py-6 lg:items-start">
       {/* Ringkasan shift hari ini (owner / admin_kasir / maintainer) */}
       {canAudit ? (
         <section className="px-gutter pt-4">
@@ -931,8 +931,10 @@ export function AttendanceConsole({
         </section>
       ) : null}
 
+      {/* Desktop layout: left column (camera) starts here */}
+      <div className="lg:col-span-1 lg:max-w-[420px] lg:w-full">
       {/* Kartu kamera */}
-      <section className="px-gutter pt-4">
+      <section className="px-gutter pt-4 lg:px-0 lg:pt-4">
         <div className="bg-surface rounded-[24px] p-4 sm:p-5 clay-card border border-white/80 inner-clay-highlight space-y-4">
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-2">
@@ -1190,9 +1192,12 @@ export function AttendanceConsole({
           ) : null}
         </div>
       </section>
+      </div>{/* end lg left column */}
 
+      {/* Desktop right column: GPS info + status + history */}
+      <div className="lg:col-span-1">
       {/* Keterangan lokasi, bukan syarat absen */}
-      <section className="px-gutter pt-3">
+      <section className="px-gutter pt-3 lg:px-0 lg:pt-4">
         <div
           className={`rounded-xl p-3 flex items-start gap-2 border ${
             insideRadius
@@ -1449,6 +1454,7 @@ export function AttendanceConsole({
           </div>
         </section>
       ) : null}
+      </div>{/* end lg right column */}
     </div>
   );
 }

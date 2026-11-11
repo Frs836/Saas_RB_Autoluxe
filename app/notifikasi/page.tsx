@@ -37,8 +37,8 @@ export default async function NotificationPage() {
         branchName="Semua Peringatan"
         backHref="/dashboard"
       />
-      <main className="flex-1">
-        <div className="px-4 pt-4">
+      <main className="flex-1 lg:max-w-2xl lg:mx-auto lg:w-full">
+        <div className="px-4 pt-4 lg:px-6">
           <p className="font-caption text-caption text-text-muted mb-2">Pengaturan</p>
           <PushToggleSwitch />
         </div>

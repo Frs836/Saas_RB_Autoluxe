@@ -265,8 +265,8 @@ export function WhatsappConsole({
 
   return (
     <div className="min-h-screen bg-canvas">
-      <div className="pb-nav-plain lg:pb-8 px-gutter pt-4 space-y-space-lg">
-        <section className="clay-card flex flex-col gap-space-md p-space-lg">
+      <div className="pb-nav-plain lg:pb-8 px-gutter pt-4 space-y-space-lg lg:grid lg:grid-cols-2 lg:gap-6 lg:px-6 lg:py-6 lg:items-start">
+        <section className="clay-card flex flex-col gap-space-md p-space-lg lg:col-span-1">
           <div className="flex items-center justify-between gap-3">
             <div>
               <h2 className="font-headline-2 text-headline-2 text-text-primary">
@@ -421,7 +421,7 @@ export function WhatsappConsole({
           </div>
         </section>
 
-        <section className="clay-card flex flex-col gap-space-md p-space-lg">
+        <section className="clay-card flex flex-col gap-space-md p-space-lg lg:col-span-1">
           <div className="flex items-center justify-between">
             <h2 className="font-headline-2 text-headline-2 text-text-primary">
               Order dengan Nomor WhatsApp

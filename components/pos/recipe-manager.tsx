@@ -272,7 +272,7 @@ export function RecipeManager({
   };
 
   return (
-    <main className="flex-1 px-gutter pt-4 pb-nav-plain lg:pb-8 flex flex-col gap-3">
+    <main className="flex-1 px-gutter pt-4 pb-nav-plain lg:pb-8 flex flex-col gap-3 lg:grid lg:grid-cols-3 lg:gap-6 lg:px-6 lg:py-6 lg:items-start">
       {error ? (
         <p className="clay-card p-3 font-body text-body text-danger-text">{error}</p>
       ) : null}
@@ -280,6 +280,7 @@ export function RecipeManager({
         <p className="clay-card p-3 font-body text-body text-success-text">{sukses}</p>
       ) : null}
 
+      <div className="lg:col-span-1 flex flex-col gap-3">
       <label className="flex flex-col gap-1.5">
         <span className="font-body-bold text-body-bold text-text-primary">Pilih jasa</span>
         <select
@@ -374,6 +375,10 @@ export function RecipeManager({
         )}
       </section>
 
+      </div>{/* end left column */}
+
+      {/* Right col-span-2: add/edit form */}
+      <div className="lg:col-span-2 flex flex-col gap-3">
       <section className="clay-card p-4 flex flex-col gap-3">
         <h2 className="font-headline-3 text-headline-3 text-text-primary">
           Tambah / ubah bahan
@@ -443,6 +448,7 @@ export function RecipeManager({
           </button>
         </div>
       </section>
+      </div>{/* end right column */}
     </main>
   );
 }

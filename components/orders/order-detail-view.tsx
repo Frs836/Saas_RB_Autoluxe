@@ -4,6 +4,7 @@ import { useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatDateWib, formatRupiah, formatTimeWib } from "@/lib/format";
 import { canvasToWebp, captureSquareCanvas, fileToSquareWebp } from "@/lib/attendance";
+import { uploadImageToCloudinary } from "@/lib/cloudinary-upload";
 import { createClient } from "@/lib/supabase/client";
 import { PAYMENT_LABELS, whatsappLink } from "@/lib/pos";
 import { Icon } from "@/components/ui/icon";
@@ -299,22 +300,19 @@ export function OrderDetailView({
       const blob = photoBlobRef.current;
       if (!blob) throw new Error("Ambil foto inspeksi terlebih dahulu.");
 
-      // Path memuat tracking_token supaya bucket publik tidak bisa ditebak
-      // tanpa mengetahui token order tersebut.
-      const path = `${user.id}/${order.id}/${order.trackingToken}-${phase}-${Date.now()}.webp`;
-      const { error: upErr } = await supabase.storage
-        .from("inspection-photos")
-        .upload(path, blob, { contentType: "image/webp", upsert: false });
-      if (upErr) throw new Error(`Gagal mengunggah foto: ${upErr.message}`);
+      // Foto inspeksi kini diunggah ke Cloudinary (bucket publik) alih-alih
+      // Supabase Storage. Cloudinary mengembalikan URL absolut (https) yang
+      // disimpan langsung ke kolom photo_url lewat RPC add_order_inspection;
+      // foto lawas berupa path relatif tetap ditangani oleh photoUrl().
+      const { secureUrl } = await uploadImageToCloudinary(blob);
 
       const { error: rpcError } = await supabase.rpc("add_order_inspection", {
         p_order_id: order.id,
         p_phase: phase,
-        p_photo_path: path,
+        p_photo_path: secureUrl,
         p_notes: notes.trim(),
       });
       if (rpcError) {
-        await supabase.storage.from("inspection-photos").remove([path]);
         throw new Error(pesanInspeksi(rpcError.message));
       }
 
@@ -327,7 +325,7 @@ export function OrderDetailView({
     } finally {
       setBusy(false);
     }
-  }, [closeCamera, notes, order.id, order.trackingToken, phase, router]);
+  }, [closeCamera, notes, order.id, phase, router]);
 
   async function changeStatus(next: string) {
     setBusy(true);

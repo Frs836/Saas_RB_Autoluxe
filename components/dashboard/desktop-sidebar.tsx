@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { bottomNavFor, profileMenuFor, roleLabel } from "@/lib/rbac";
+import { bottomNavFor, can, profileMenuFor, roleLabel } from "@/lib/rbac";
 import { initials } from "@/lib/format";
 import { Icon } from "@/components/ui/icon";
 
@@ -51,6 +51,7 @@ export function DesktopSidebar({
   }
 
   // Build primary nav: Dashboard first, then bottomNavFor(role)
+  // Tambah POS jika role punya pos.create tapi belum ada di bottomNav
   const primaryRaw = bottomNavFor(role);
   const seen = new Set<string>();
   const primaryNav: typeof primaryRaw = [];
@@ -59,6 +60,29 @@ export function DesktopSidebar({
       seen.add(item.href);
       primaryNav.push(item);
     }
+  }
+
+  // Inject POS item jika role punya pos.create dan belum ada di primaryNav
+  if (can(role, "pos.create") && !seen.has("/pos")) {
+    seen.add("/pos");
+    // Tambahkan setelah item pertama (Dashboard/Beranda), sebelum item lainnya
+    primaryNav.splice(1, 0, {
+      label: "Buat Order POS",
+      icon: "add_task",
+      href: "/pos",
+      permission: "pos.create",
+    } as (typeof primaryRaw)[0]);
+  }
+
+  // Inject Antrean Order jika belum ada
+  if (!seen.has("/pos/orders")) {
+    seen.add("/pos/orders");
+    primaryNav.splice(2, 0, {
+      label: "Antrean Order",
+      icon: "assignment",
+      href: "/pos/orders",
+      permission: null,
+    } as (typeof primaryRaw)[0]);
   }
 
   // Build secondary nav: profileMenuFor(role), deduplicated, up to 12 total combined

@@ -109,5 +109,66 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  // -----------------------------------------------------------------
+  // Anomali device fingerprint — notifikasi ke owner/manager per cabang.
+  // Baris yang sudah ditandai "[notified]" pada anomaly_reason dilewati
+  // agar tidak spam setiap menit cron berjalan.
+  // -----------------------------------------------------------------
+  try {
+    const { data: anomalyRows } = await db
+      .from("attendance_logs")
+      .select("id, profile_id, anomaly_reason")
+      .eq("anomaly_flag", true);
+
+    const toNotify = (anomalyRows ?? []).filter(
+      (row) => !(row.anomaly_reason ?? "").includes("[notified]"),
+    );
+
+    if (toNotify.length > 0) {
+      const profileIds = Array.from(
+        new Set(toNotify.map((r) => r.profile_id as string)),
+      );
+      const { data: profiles } = await db
+        .from("profiles")
+        .select("id, full_name, branch_id")
+        .in("id", profileIds);
+
+      const profileMap = new Map(
+        (profiles ?? []).map((p) => [p.id as string, p]),
+      );
+
+      for (const row of toNotify) {
+        const profile = profileMap.get(row.profile_id as string);
+        const branchId = profile?.branch_id as string | undefined;
+        const staffName = (profile?.full_name as string) ?? "Karyawan";
+        if (!branchId) continue;
+
+        const targets = await getNotifTargets(branchId, ["owner", "manager"]);
+        if (targets.length > 0) {
+          await sendPushToProfiles({
+            profileIds: targets,
+            title: "Absensi Anomali",
+            body: `Absensi Anomali: ${staffName} absen dengan device berbeda`,
+            url: "/rekap",
+          });
+          notifsSent += targets.length;
+        }
+
+        // Tandai sudah dinotif agar tidak dikirim ulang.
+        const marker = "[notified]";
+        const baseReason = row.anomaly_reason ?? "device_changed";
+        const newReason = baseReason.includes(marker)
+          ? baseReason
+          : `${baseReason} ${marker}`;
+        await db
+          .from("attendance_logs")
+          .update({ anomaly_reason: newReason })
+          .eq("id", row.id);
+      }
+    }
+  } catch (err) {
+    console.error("[cron] anomaly notification failed:", err);
+  }
+
   return NextResponse.json({ ok: true, notifsSent });
 }

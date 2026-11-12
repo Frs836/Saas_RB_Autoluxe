@@ -1,0 +1,24 @@
+{
+  "verdict": "APPROVED",
+  "findings": [
+    {
+      "label": "Concurrent-registration race (TOCTOU)",
+      "confidence": "confirmed",
+      "blocking": false,
+      "detail": "The duplicate check is a SELECT loop followed by an UPDATE with no lock and no elevated isolation (default READ COMMITTED), so two same-face registrations that overlap in time can both pass and both commit. If the one-face-one-account guarantee must hold under concurrency, take a transaction-scoped advisory lock (or LOCK TABLE profiles IN SHARE ROW EXCLUSIVE MODE, or SERIALIZABLE isolation) inside the function."
+    },
+    {
+      "label": "search_path weakened to public",
+      "confidence": "likely",
+      "blocking": false,
+      "detail": "The prior 0028 version and sibling attendance_check_in use SET search_path = ''; this function uses SET search_path = public. All internal calls are schema-qualified so practical risk is low, but it is a regression from the hardened posture the rest of the face code holds. Restore '' for consistency."
+    },
+    {
+      "label": "Linear scan per registration",
+      "confidence": "confirmed",
+      "blocking": false,
+      "detail": "Every registration scans all profiles holding a valid-length descriptor and runs face_similarity (1434-dim) for each, so cost is O(n) per signup. Fine at current staff counts; add a partial index or cap the candidate set once the account base grows."
+    }
+  ],
+  "reviewDoc": "c:\\Users\\User\\Desktop\\Saas_RB_Autoluxe\\.agents\\tasks\\storage-overhaul\\batch3-review.md"
+}

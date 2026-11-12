@@ -16,6 +16,7 @@ type CheckInParams = {
   p_face_descriptor: number[];
   p_liveness_trace?: string | number | boolean | null | { [key: string]: unknown } | unknown[];
   p_late_reason?: string;
+  p_device_fingerprint?: string;
 };
 
 type ActionResult = { ok: true } | { ok: false; message: string };

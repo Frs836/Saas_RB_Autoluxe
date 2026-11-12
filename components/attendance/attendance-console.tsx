@@ -516,6 +516,15 @@ export function AttendanceConsole({
       const scanWajah = capturedDescriptor;
 
       if (mode === "checkin") {
+        // Device fingerprint sederhana (user agent + resolusi + bahasa).
+        // Dipakai server untuk mendeteksi anomali perangkat berbeda pada
+        // absensi profil yang sama. Tidak menyangkut logika liveness.
+        const deviceFingerprint = btoa(
+          navigator.userAgent +
+            screen.width +
+            screen.height +
+            navigator.language,
+        );
         const result = await attendanceCheckInAction({
           p_latitude: gps.lat,
           p_longitude: gps.lng,
@@ -523,6 +532,7 @@ export function AttendanceConsole({
           p_face_descriptor: scanWajah,
           p_liveness_trace: liveRef.current.jejak(),
           p_late_reason: isLate ? lateReason.trim() : undefined,
+          p_device_fingerprint: deviceFingerprint,
         });
         if (!result.ok) throw new Error(result.message);
         setInfo("Check-in berhasil dicatat.");

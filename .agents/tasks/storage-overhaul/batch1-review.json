@@ -1,0 +1,24 @@
+{
+  "verdict": "APPROVED",
+  "findings": [
+    {
+      "label": "public_id discarded",
+      "severity": "low",
+      "confidence": "confirmed",
+      "detail": "uploadImageToCloudinary returns publicId but submitInspection only destructures secureUrl, because the generated add_order_inspection Args type (p_notes, p_order_id, p_phase, p_photo_path) has no p_public_id. order_inspections.public_id will be null for all new Cloudinary photos. To populate it, extend the add_order_inspection RPC to accept p_public_id (DB change, out of scope for this client-side batch) and pass it through here."
+    },
+    {
+      "label": "Orphaned Cloudinary asset on RPC failure",
+      "severity": "low",
+      "confidence": "confirmed",
+      "detail": "The previous Supabase storage.remove rollback on RPC failure is gone (as the task required, since unsigned uploads cannot be deleted from the browser). A photo that reaches Cloudinary but fails add_order_inspection now stays in Cloudinary with no DB row and no client-side way to remove it. Consider a server-side sweeper using CLOUDINARY_API_KEY/SECRET to reap uploaded-but-unreferenced assets, consistent with the cleanup strategy already described in system_architecture_rb_autoluxe.md."
+    },
+    {
+      "label": "Raw Cloudinary error shown to technician",
+      "severity": "low",
+      "confidence": "confirmed",
+      "detail": "On a non-2xx response the helper appends the raw response body (Cloudinary's JSON error) to the thrown message, which surfaces as the user-facing error string. A technician sees raw API JSON instead of a friendly reason. Map the common Cloudinary error codes (preset misconfigured, cloud name wrong, quota exceeded) to Indonesian messages, or log the raw body and show a generic failure."
+    }
+  ],
+  "reviewDoc": "c:\\Users\\User\\Desktop\\Saas_RB_Autoluxe\\.agents\\tasks\\storage-overhaul\\batch1-review.md"
+}

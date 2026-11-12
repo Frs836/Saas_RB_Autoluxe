@@ -796,7 +796,7 @@ export function PosConsole({
           </div>
 
           {itemCount > 0 ? (
-            <div className="fixed bottom-nav-offset left-0 right-0 z-action-bar px-gutter lg:sticky lg:bottom-0 lg:left-auto lg:right-auto">
+            <div className="fixed bottom-nav-offset left-0 right-0 z-action-bar px-gutter lg:hidden">
               <div className="bg-surface rounded-[24px] clay-fab px-4 py-3 border border-outline-variant">
                 <div className="flex items-center justify-between mb-2">
                   <span className="font-caption text-caption text-text-secondary">

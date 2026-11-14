@@ -114,13 +114,17 @@ export default async function DashboardPage() {
         .eq("profile_id", profile.id)
         .eq("date", today)
         .maybeSingle(),
-      // Handoff kas cabang HANYA untuk role berwenang. Karyawan tidak boleh
-      // menarik data ini sama sekali, bukan sekadar disembunyikan.
-      canSeeBranchCash
+      // Handoff: semua role dengan branchId bisa melihat status/opened_at/opened_by/closed_at
+      // agar badge kasir bisa ditampilkan. Role dengan cash.view_branch mendapat field kas tambahan.
+      branchId
         ? scopeBranchQuery(
             supabase
               .from("shift_handoffs")
-              .select("opening_cash, expected_cash, actual_cash, status"),
+              .select(
+                canSeeBranchCash
+                  ? "opening_cash, expected_cash, actual_cash, status, opened_at, opened_by, closed_at"
+                  : "status, opened_at, opened_by, closed_at"
+              ),
             branchId,
             "shift_handoffs",
           )
@@ -157,7 +161,30 @@ export default async function DashboardPage() {
   const branch = branchRes.data;
   const shift = shiftRes.data;
   const attendance = attendanceRes.data;
-  const handoff = canSeeBranchCash ? handoffRes.data : null;
+
+  // Untuk badge: semua role yang punya branchId bisa lihat status
+  const handoffRaw = handoffRes.data as {
+    status?: string | null;
+    opened_at?: string | null;
+    opened_by?: string | null;
+    closed_at?: string | null;
+    opening_cash?: number | null;
+    expected_cash?: number | null;
+    actual_cash?: number | null;
+  } | null;
+
+  // Untuk kartu kas shift (hanya canSeeBranchCash):
+  const handoff = canSeeBranchCash ? handoffRaw : null;
+
+  let handoffOpenerName: string | null = null;
+  if (handoffRaw?.opened_by && branchId) {
+    const { data: openerData } = await supabase
+      .from("profiles")
+      .select("full_name")
+      .eq("id", handoffRaw.opened_by)
+      .maybeSingle();
+    handoffOpenerName = (openerData as { full_name?: string | null } | null)?.full_name ?? null;
+  }
   const activeOrders = ordersRes.data ?? [];
   const note = notifRes.data;
   const myHold = (Array.isArray(holdRes.data) ? holdRes.data[0] : holdRes.data) as
@@ -373,6 +400,46 @@ const jamSekarang = wibNow();
             </div>
           </div>
         </section>
+
+        {/* Badge Status Kasir — visible untuk semua role di cabang yang sama */}
+        {branchId && (
+          <section className="col-span-2 lg:col-span-4 rounded-[20px] p-4 bg-surface clay-card flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div
+                className={`w-3 h-3 rounded-full shrink-0 ${
+                  handoffRaw?.status === "open"
+                    ? "bg-success-base animate-pulse"
+                    : "bg-surface-container-high"
+                }`}
+              />
+              <div className="flex flex-col gap-0.5">
+                <span className="font-body-bold text-body-bold text-text-primary">
+                  {handoffRaw?.status === "open"
+                    ? "Kasir Sedang Buka"
+                    : handoffRaw?.status === "closed"
+                    ? "Kasir Sudah Tutup"
+                    : "Kasir Belum Buka Hari Ini"}
+                </span>
+                <span className="font-caption text-caption text-text-muted">
+                  {handoffRaw?.status === "open" && handoffOpenerName
+                    ? `Dibuka oleh ${handoffOpenerName} • ${formatTimeWib(handoffRaw.opened_at)} WIB`
+                    : handoffRaw?.status === "closed"
+                    ? `Ditutup pukul ${formatTimeWib(handoffRaw.closed_at)} WIB`
+                    : "Hubungi admin kasir atau kepala karyawan"}
+                </span>
+              </div>
+            </div>
+            {can(role, "cash.shift_manage") && (
+              <Link
+                href="/shift"
+                className="shrink-0 h-9 px-4 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center gap-1.5 active:scale-95 transition-transform"
+              >
+                <Icon name="point_of_sale" className="text-[16px]" />
+                {handoffRaw?.status === "open" ? "Tutup Kasir" : "Buka Kasir"}
+              </Link>
+            )}
+          </section>
+        )}
 
         {!canSeeBranchCash && unpaidCount > 0 ? (
           <Link

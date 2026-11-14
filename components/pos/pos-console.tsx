@@ -29,7 +29,7 @@ import type { Role } from "@/lib/rbac";
 import { Icon } from "@/components/ui/icon";
 import { useSingleFlight } from "@/lib/use-single-flight";
 
-type CartLine = { serviceId: string; qty: number };
+type CartLine = { serviceId: string; qty: number; customPrice?: number; discountNote?: string };
 
 type TeamOption = { id: string; full_name: string; busy?: boolean };
 
@@ -113,9 +113,11 @@ export function PosConsole({
       cart.flatMap((line) => {
         const service = serviceById.get(line.serviceId);
         if (!service) return [];
-        const price = priceForSize(service, effSize);
-        if (price <= 0) return [];
-        return [{ serviceId: line.serviceId, qty: line.qty, service, price }];
+        const catalogPrice = priceForSize(service, effSize);
+        if (catalogPrice <= 0) return [];
+        // Pakai custom price jika ada, otherwise harga katalog
+        const price = line.customPrice !== undefined ? line.customPrice : catalogPrice;
+        return [{ serviceId: line.serviceId, qty: line.qty, service, price, catalogPrice, customPrice: line.customPrice, discountNote: line.discountNote }];
       }),
     [cart, serviceById, effSize],
   );
@@ -272,6 +274,8 @@ export function PosConsole({
         name: line.service.name,
         price: line.price,
         qty: line.qty,
+        ...(line.customPrice !== undefined ? { custom_price: line.customPrice } : {}),
+        ...(line.discountNote ? { discount_note: line.discountNote } : {}),
       }));
       const mainNames = resolved
         .filter((l) => !l.service.is_addon)
@@ -1166,20 +1170,70 @@ export function PosConsole({
             </section>
 
             <section className="clay-card p-4 flex flex-col gap-2">
-              <h2 className="font-body-bold text-body-bold text-text-primary">
-                Rincian Pesanan
-              </h2>
+              <div className="flex items-center justify-between">
+                <h2 className="font-body-bold text-body-bold text-text-primary">
+                  Rincian Pesanan
+                </h2>
+                <span className="font-caption text-caption text-text-muted">
+                  Ketuk harga untuk ubah
+                </span>
+              </div>
               {resolved.map((line) => (
-                <div
-                  key={line.serviceId}
-                  className="flex items-center justify-between font-body text-body"
-                >
-                  <span className="text-text-secondary">
-                    {line.qty}x {line.service.name}
-                  </span>
-                  <span className="text-text-primary font-body-bold">
-                    {formatRupiah(line.price * line.qty)}
-                  </span>
+                <div key={line.serviceId} className="flex flex-col gap-1">
+                  <div className="flex items-center justify-between font-body text-body">
+                    <span className="text-text-secondary">
+                      {line.qty}x {line.service.name}
+                    </span>
+                    {/* Tombol edit harga */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const input = window.prompt(
+                          `Harga custom untuk "${line.service.name}":\n(Kosongkan untuk pakai harga katalog: ${formatRupiah(line.catalogPrice)})`,
+                          line.customPrice !== undefined ? String(line.customPrice) : ""
+                        );
+                        if (input === null) return; // cancel
+                        const trimmed = input.trim();
+                        const newPrice = trimmed === "" ? undefined : Number(trimmed.replace(/\D/g, ""));
+                        if (trimmed !== "" && (isNaN(newPrice!) || newPrice! < 0)) return;
+
+                        // Jika ada custom price, minta alasan
+                        let note: string | undefined;
+                        if (newPrice !== undefined && newPrice !== line.catalogPrice) {
+                          const noteInput = window.prompt(
+                            `Alasan penyesuaian harga (promo/nego):\nContoh: "Promo lebaran", "Nego pelanggan"`,
+                            line.discountNote ?? ""
+                          );
+                          if (noteInput === null) return;
+                          note = noteInput.trim() || "Harga disesuaikan";
+                        }
+
+                        setCart(prev => prev.map(c =>
+                          c.serviceId === line.serviceId
+                            ? { ...c, customPrice: newPrice, discountNote: note }
+                            : c
+                        ));
+                      }}
+                      className="flex flex-col items-end active:scale-95 transition-transform"
+                    >
+                      <span className={`font-body-bold ${line.customPrice !== undefined ? "text-warning-text" : "text-text-primary"}`}>
+                        {formatRupiah(line.price * line.qty)}
+                      </span>
+                      {line.customPrice !== undefined && (
+                        <span className="font-micro-badge text-micro-badge text-text-muted line-through">
+                          {formatRupiah(line.catalogPrice * line.qty)}
+                        </span>
+                      )}
+                    </button>
+                  </div>
+                  {line.discountNote && (
+                    <div className="flex items-center gap-1 px-2 py-0.5 bg-warning-surface rounded-lg w-fit">
+                      <Icon name="local_offer" className="text-[12px] text-warning-text" />
+                      <span className="font-micro-badge text-micro-badge text-warning-text">
+                        {line.discountNote}
+                      </span>
+                    </div>
+                  )}
                 </div>
               ))}
               <div className="h-px bg-outline-variant my-1" />
@@ -1191,6 +1245,14 @@ export function PosConsole({
                   {formatRupiah(total)}
                 </span>
               </div>
+              {resolved.some(l => l.customPrice !== undefined) && (
+                <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-warning-surface rounded-xl">
+                  <Icon name="local_offer" className="text-[14px] text-warning-text shrink-0" />
+                  <span className="font-caption text-caption text-warning-text">
+                    Ada penyesuaian harga — pastikan sudah disetujui atasan
+                  </span>
+                </div>
+              )}
             </section>
 
             {error ? (

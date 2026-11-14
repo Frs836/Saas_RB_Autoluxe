@@ -133,6 +133,7 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "stock.claim",
     "stock.approve",
     "cash.view_own_hold",
+    "cash.shift_manage",
     "warranty.manage",
     "reports.self",
   ],

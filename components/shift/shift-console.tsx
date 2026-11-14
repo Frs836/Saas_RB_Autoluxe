@@ -77,6 +77,8 @@ export function ShiftConsole({
   const [history, setHistory] = useState<HistoryRow[]>([]);
   const [historyPending, setHistoryPending] = useState(false);
   const [nowClock, setNowClock] = useState<string | null>(null);
+  // State untuk buka shift baru setelah shift sebelumnya closed
+  const [forceNewShift, setForceNewShift] = useState(false);
   const router = useRouter();
 
   type ReportData = {
@@ -128,7 +130,7 @@ export function ShiftConsole({
     busy === null;
 
   const canSubmitOpen =
-    handoff === null && opening !== "" && parseAmount(opening) >= 0 && busy === null;
+    (handoff === null || forceNewShift) && opening !== "" && parseAmount(opening) >= 0 && busy === null;
 
   const fetchHistory = useCallback(async () => {
     if (historyPending) return;
@@ -443,7 +445,7 @@ export function ShiftConsole({
 
       {/* Right column: form buka/tutup shift + pintasan */}
       <div className="lg:col-span-1 flex flex-col">
-      {handoff === null ? (
+      {handoff === null || forceNewShift ? (
         <BukaKasForm
           opening={opening}
           setOpening={setOpening}
@@ -460,6 +462,13 @@ export function ShiftConsole({
           handoff={handoff}
           userNames={userNames}
           handlePrint={handlePrint}
+          onBukaShiftBaru={() => {
+            setForceNewShift(true);
+            setOpening("");
+            setNotes("");
+            setError(null);
+            setInfo(null);
+          }}
         />
       ) : success !== null || (handoff.status === "closed" && success !== null) ? (
         <SuccessCard
@@ -980,10 +989,12 @@ function ClosedSummary({
   handoff,
   userNames,
   handlePrint,
+  onBukaShiftBaru,
 }: {
   handoff: Handoff;
   userNames: Record<string, string>;
   handlePrint: () => void;
+  onBukaShiftBaru?: () => void;
 }) {
   const diff = handoff.difference ?? 0;
   return (
@@ -1070,6 +1081,18 @@ function ClosedSummary({
           <Icon name="print" className="text-[22px]" />
           Cetak Bukti (Opsional)
         </button>
+
+        {/* Tombol buka shift baru — untuk lanjut shift atau shift sore */}
+        {onBukaShiftBaru && (
+          <button
+            type="button"
+            onClick={onBukaShiftBaru}
+            className="w-full h-12 rounded-xl bg-brand-50 text-brand-700 font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform"
+          >
+            <Icon name="play_circle" className="text-[20px]" />
+            Buka Shift Kasir Baru
+          </button>
+        )}
       </div>
     </section>
   );

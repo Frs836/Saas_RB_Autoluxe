@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { formatRupiah, formatTimeWib, initials } from "@/lib/format";
 import { Icon } from "@/components/ui/icon";
 import { useSingleFlight } from "@/lib/use-single-flight";
+import { whatsappLink } from "@/lib/pos";
 
 type Handoff = {
   id: string;
@@ -40,6 +41,7 @@ export function ShiftConsole({
   handoff,
   cash,
   userNames,
+  ownerPhone,
 }: {
   profile: { id: string; fullName: string; role: string; roleLabel: string };
   branch: { id: string; name: string; openTime: string; closeTime: string };
@@ -47,6 +49,7 @@ export function ShiftConsole({
   handoff: Handoff | null;
   cash: CashSummary;
   userNames: Record<string, string>;
+  ownerPhone?: string | null;
 }) {
   const [opening, setOpening] = useState("");
   const [physical, setPhysical] = useState("");
@@ -67,6 +70,19 @@ export function ShiftConsole({
   const [historyPending, setHistoryPending] = useState(false);
   const [nowClock, setNowClock] = useState<string | null>(null);
   const router = useRouter();
+
+  type ReportData = {
+    totalOrders: number;
+    washOrders: number;
+    coatingOrders: number;
+    unpaidOrders: number;
+    unpaidTotal: number;
+    presentCount: number;
+    totalStaff: number;
+    absentNames: string[];
+    auditNotes: string;
+  };
+  const [reportData, setReportData] = useState<ReportData | null>(null);
 
   useEffect(() => {
     const id = window.setTimeout(() => setNowClock(formatTimeWib(new Date())), 0);
@@ -226,6 +242,72 @@ export function ShiftConsole({
       // bukti (state `success`) yang sedang tampil, sedangkan reload penuh
       // akan menghapusnya.
       router.refresh();
+
+      // Fetch report data pentru WhatsApp setelah close berhasil
+      try {
+        const supabaseReport = createClient();
+        const todayStart = `${today}T00:00:00+07:00`;
+        const todayEnd = `${today}T23:59:59+07:00`;
+
+        const [ordersRes, staffRes] = await Promise.all([
+          supabaseReport
+            .from("orders")
+            .select("id, payment_state, service_package, total_price")
+            .eq("branch_id", branch.id)
+            .gte("created_at", todayStart)
+            .lte("created_at", todayEnd),
+          supabaseReport
+            .from("profiles")
+            .select("id, full_name, role")
+            .eq("branch_id", branch.id)
+            .eq("is_active", true)
+            .in("role", ["karyawan", "kepala_karyawan", "admin_kasir", "manager"]),
+        ]);
+
+        const orders = ordersRes.data ?? [];
+        const allStaff = staffRes.data ?? [];
+
+        // attendance_logs tidak punya branch_id; filter via profile_id staf cabang ini.
+        const staffIds = allStaff.map((s) => s.id);
+        const attendanceRes = await supabaseReport
+          .from("attendance_logs")
+          .select("profile_id, status")
+          .eq("date", today)
+          .in("profile_id", staffIds.length > 0 ? staffIds : ["00000000-0000-0000-0000-000000000000"]);
+
+        const attendanceLogs = attendanceRes.data ?? [];
+
+        const washOrders = orders.filter((o) =>
+          (o.service_package ?? "").toLowerCase().includes("wash") ||
+          (o.service_package ?? "").toLowerCase().includes("cuci")
+        ).length;
+        const coatingOrders = orders.filter((o) =>
+          (o.service_package ?? "").toLowerCase().includes("coating") ||
+          (o.service_package ?? "").toLowerCase().includes("detailing")
+        ).length;
+        const unpaidOrders = orders.filter((o) => o.payment_state !== "paid");
+
+        const presentIds = new Set(
+          attendanceLogs
+            .filter((a) => a.status === "hadir")
+            .map((a) => a.profile_id)
+        );
+        const absentStaff = allStaff.filter((s) => !presentIds.has(s.id));
+
+        setReportData({
+          totalOrders: orders.length,
+          washOrders,
+          coatingOrders,
+          unpaidOrders: unpaidOrders.length,
+          unpaidTotal: unpaidOrders.reduce((s, o) => s + Number(o.total_price ?? 0), 0),
+          presentCount: presentIds.size,
+          totalStaff: allStaff.length,
+          absentNames: absentStaff.map((s) => s.full_name ?? "Staf"),
+          auditNotes: notes.trim(),
+        });
+      } catch {
+        // report data gagal tidak menghentikan flow utama
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Gagal menutup audit shift.");
       setBusy(null);
@@ -377,6 +459,20 @@ export function ShiftConsole({
           handlePrint={handlePrint}
           onReload={() => window.location.reload()}
           hash={success?.hash ?? ""}
+          ownerPhone={ownerPhone}
+          whatsappMessage={
+            success && reportData
+              ? generateWhatsAppReport({
+                  handoff,
+                  success,
+                  cash,
+                  branch,
+                  profile,
+                  reportData,
+                  today,
+                })
+              : undefined
+          }
         />
       ) : (
         <AuditForm
@@ -925,18 +1021,81 @@ function ClosedSummary({
   );
 }
 
+function generateWhatsAppReport(params: {
+  handoff: Handoff;
+  success: { actual: number; expected: number; difference: number; hash: string };
+  cash: CashSummary;
+  branch: { name: string };
+  profile: { fullName: string };
+  reportData: {
+    totalOrders: number;
+    washOrders: number;
+    coatingOrders: number;
+    unpaidOrders: number;
+    unpaidTotal: number;
+    presentCount: number;
+    totalStaff: number;
+    absentNames: string[];
+    auditNotes: string;
+  };
+  today: string;
+}): string {
+  const { handoff, success, cash, branch, profile, reportData, today } = params;
+  const selisihText =
+    success.difference === 0
+      ? "SESUAI ✓"
+      : `${success.difference > 0 ? "LEBIH" : "KURANG"} Rp ${formatRupiah(Math.abs(success.difference))}`;
+
+  return [
+    `📊 *LAPORAN TUTUP KAS — RB AUTOLUXE*`,
+    `Cabang: ${branch.name} | Tanggal: ${today}`,
+    `Tutup: ${formatTimeWib(new Date())} WIB | Oleh: ${profile.fullName}`,
+    ``,
+    `💰 *RINGKASAN KAS*`,
+    `Modal Awal: ${formatRupiah(handoff.openingCash)}`,
+    `Penjualan Tunai: ${formatRupiah(cash.cashInCash)}`,
+    `Kas Keluar: ${formatRupiah(cash.cashOut)}`,
+    `Ekspektasi: ${formatRupiah(success.expected)}`,
+    `Fisik Dihitung: ${formatRupiah(success.actual)}`,
+    `Selisih: *${selisihText}*`,
+    ``,
+    `🛻 *RINGKASAN ORDER*`,
+    `Total Order: ${reportData.totalOrders}`,
+    `• Wash: ${reportData.washOrders} order`,
+    `• Coating/Detailing: ${reportData.coatingOrders} order`,
+    reportData.unpaidOrders > 0
+      ? `⚠️ Belum Lunas: ${reportData.unpaidOrders} order (${formatRupiah(reportData.unpaidTotal)})`
+      : `Semua order lunas ✓`,
+    ``,
+    `👥 *KEHADIRAN STAF*`,
+    `Hadir: ${reportData.presentCount} / ${reportData.totalStaff} staf`,
+    reportData.absentNames.length > 0
+      ? `Tidak Hadir: ${reportData.absentNames.join(", ")}`
+      : `Semua staf hadir ✓`,
+    ``,
+    reportData.auditNotes ? `📌 *Catatan:* ${reportData.auditNotes}` : "",
+    `🔐 Hash: ${success.hash.slice(0, 16)}...`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
 function SuccessCard({
   handoff,
   success,
   handlePrint,
   onReload,
   hash,
+  whatsappMessage,
+  ownerPhone,
 }: {
   handoff: Handoff;
   success: { actual: number; expected: number; difference: number; hash: string } | null;
   handlePrint: () => void;
   onReload: () => void;
   hash: string;
+  whatsappMessage?: string;
+  ownerPhone?: string | null;
 }) {
   const diff = success?.difference ?? 0;
   const finalActual = success?.actual ?? handoff.actualCash ?? 0;
@@ -1010,6 +1169,17 @@ function SuccessCard({
           selalu bisa dipakai: kembali ke beranda atau cetak bukti.
         */}
         <div className="flex flex-col gap-2">
+          {ownerPhone && whatsappMessage && (
+            <a
+              href={whatsappLink(ownerPhone, whatsappMessage)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full h-12 rounded-full bg-[#25D366]/10 text-[#25D366] font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-[0.98] transition-all border border-[#25D366]/20"
+            >
+              <Icon name="chat" className="text-[20px]" />
+              Kirim Laporan ke WhatsApp
+            </a>
+          )}
           <button
             type="button"
             onClick={handlePrint}

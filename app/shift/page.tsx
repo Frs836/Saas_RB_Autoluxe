@@ -117,6 +117,18 @@ export default async function ShiftPage() {
     }
   }
 
+  const { data: ownerProfileData } = await supabase
+    .from("profiles")
+    .select("phone_number")
+    .eq("branch_id", branchId)
+    .in("role", ["owner", "manager"])
+    .eq("is_active", true)
+    .order("role") // owner lebih dulu
+    .limit(1)
+    .maybeSingle();
+
+  const ownerPhone = (ownerProfileData as { phone_number?: string | null } | null)?.phone_number ?? null;
+
   return (
     <div className="flex flex-col w-full min-h-screen pb-nav lg:pb-8">
       <SubPageHeader
@@ -167,6 +179,7 @@ export default async function ShiftPage() {
         }
         cash={cashBreakdown((cashRes.data ?? []) as never[])}
         userNames={userNames}
+        ownerPhone={ownerPhone}
       />
       <BottomNav role={session.role} />
     </div>

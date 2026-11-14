@@ -32,6 +32,12 @@ type CashSummary = {
   transactions: number;
 };
 
+export type CashHoldRow = {
+  amount: number;
+  staffName: string;
+  paymentMethod: string;
+};
+
 type HistoryRow = Handoff & { shiftDate: string };
 
 export function ShiftConsole({
@@ -42,6 +48,7 @@ export function ShiftConsole({
   cash,
   userNames,
   ownerPhone,
+  pendingHolds,
 }: {
   profile: { id: string; fullName: string; role: string; roleLabel: string };
   branch: { id: string; name: string; openTime: string; closeTime: string };
@@ -50,6 +57,7 @@ export function ShiftConsole({
   cash: CashSummary;
   userNames: Record<string, string>;
   ownerPhone?: string | null;
+  pendingHolds?: CashHoldRow[];
 }) {
   const [opening, setOpening] = useState("");
   const [physical, setPhysical] = useState("");
@@ -445,6 +453,7 @@ export function ShiftConsole({
           busy={busy === "open"}
           onSubmit={handleOpen}
           shiftWindow={shiftWindow}
+          pendingHolds={pendingHolds}
         />
       ) : handoff.status === "closed" && !success ? (
         <ClosedSummary
@@ -567,6 +576,7 @@ function BukaKasForm({
   busy,
   onSubmit,
   shiftWindow,
+  pendingHolds,
 }: {
   opening: string;
   setOpening: (v: string) => void;
@@ -576,6 +586,7 @@ function BukaKasForm({
   busy: boolean;
   onSubmit: () => void;
   shiftWindow: string;
+  pendingHolds?: CashHoldRow[];
 }) {
   const add = (value: number) => {
     const current = Number(opening.replace(/[^\d]/g, "") || 0);
@@ -596,6 +607,49 @@ function BukaKasForm({
           </div>
           <span className="font-caption text-caption text-text-muted">{shiftWindow}</span>
         </div>
+
+        {pendingHolds && pendingHolds.length > 0 && (
+          <div className="bg-warning-surface rounded-2xl p-3.5 flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <span className="font-body-bold text-body-bold text-warning-text">
+                Kas Titipan Belum Diserahkan
+              </span>
+              <span className="font-caption text-caption text-warning-text">
+                {pendingHolds.length} karyawan
+              </span>
+            </div>
+            {pendingHolds.map((hold, i) => (
+              <div key={i} className="flex items-center justify-between gap-2">
+                <span className="font-caption text-caption text-text-secondary truncate">
+                  {hold.staffName} • {hold.paymentMethod}
+                </span>
+                <span className="font-body-bold text-body-bold text-text-primary shrink-0">
+                  {formatRupiah(hold.amount)}
+                </span>
+              </div>
+            ))}
+            <div className="border-t border-warning-text/20 pt-2 flex items-center justify-between">
+              <span className="font-body-bold text-body-bold text-warning-text">
+                Total Titipan
+              </span>
+              <span className="font-headline-2 text-headline-2 text-warning-text">
+                {formatRupiah(pendingHolds.reduce((s, h) => s + h.amount, 0))}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() =>
+                setOpening(
+                  String(pendingHolds.reduce((s, h) => s + h.amount, 0))
+                )
+              }
+              className="h-10 rounded-xl bg-warning-text text-white font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+            >
+              <Icon name="auto_fix_high" className="text-[16px]" />
+              Auto-isi dari Total Titipan
+            </button>
+          </div>
+        )}
 
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">

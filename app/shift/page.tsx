@@ -73,6 +73,7 @@ export default async function ShiftPage() {
   const today = wibNow().dateIso;
 
   const [branchRes, handoffRes, cashRes] = await Promise.all([
+
     supabase
       .from("branches")
       .select("branch_name, operating_open_time, operating_close_time")
@@ -95,6 +96,40 @@ export default async function ShiftPage() {
       .gte("created_at", `${today}T00:00:00+07:00`)
       .lte("created_at", `${today}T23:59:59.999+07:00`),
   ]);
+
+  const { data: cashHoldsRaw } = branchId
+    ? await (supabase as any)
+        .from("orders")
+        .select(
+          "cash_hold_amount, cash_hold_payment_method, holder:profiles!orders_cash_hold_profile_id_fkey(full_name, phone_number)"
+        )
+        .eq("branch_id", branchId)
+        .eq("payment_state", "paid")
+        .not("cash_hold_profile_id", "is", null)
+        .gte("created_at", `${today}T00:00:00+07:00`)
+        .lte("created_at", `${today}T23:59:59+07:00`)
+    : { data: [] };
+
+  type CashHoldRow = {
+    amount: number;
+    staffName: string;
+    paymentMethod: string;
+  };
+
+  const pendingHolds: CashHoldRow[] = ((cashHoldsRaw ?? []) as Array<{
+    cash_hold_amount: number | null;
+    cash_hold_payment_method: string | null;
+    holder: { full_name?: string | null } | { full_name?: string | null }[] | null;
+  }>)
+    .map((r) => {
+      const holderRaw = Array.isArray(r.holder) ? r.holder[0] : r.holder;
+      return {
+        amount: Number(r.cash_hold_amount ?? 0),
+        staffName: holderRaw?.full_name ?? "Staf",
+        paymentMethod: r.cash_hold_payment_method ?? "cash",
+      };
+    })
+    .filter((h) => h.amount > 0);
 
   const branch = branchRes.data;
   const handoff = handoffRes.data;
@@ -180,6 +215,7 @@ export default async function ShiftPage() {
         cash={cashBreakdown((cashRes.data ?? []) as never[])}
         userNames={userNames}
         ownerPhone={ownerPhone}
+        pendingHolds={pendingHolds}
       />
       <BottomNav role={session.role} />
     </div>

@@ -107,164 +107,166 @@ export function StaffCreateForm({ branches }: { branches: { id: string; name: st
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 max-w-md mx-auto">
-      {/* Nama Lengkap */}
-      <div>
-        <label className="block text-sm font-medium text-text-secondary mb-1">
-          Nama Lengkap <span className="text-danger">*</span>
-        </label>
-        <input
-          name="fullName"
-          value={formData.fullName}
-          onChange={e => setFormData({ ...formData, fullName: e.target.value })}
-          required={true}
-          className={`w-full px-3 py-2 rounded-xl border ${errors.fullName ? "border-danger" : "border-border-subtle"} bg-surface text-text-primary focus:ring-2 focus:ring-brand-400`}
-          placeholder="Nama lengkap staf"
-        />
-        {errors.fullName && <p className="text-sm text-danger mt-1">{errors.fullName}</p>}
-      </div>
-
-      {/* Email */}
-      <div>
-        <label className="block text-sm font-medium text-text-secondary mb-1">
-          Email <span className="text-danger">*</span>
-        </label>
-        <input
-          type="email"
-          name="email"
-          value={formData.email}
-          onChange={e => setFormData({ ...formData, email: e.target.value })}
-          required={true}
-          autoComplete="email"
-          className={`w-full px-3 py-2 rounded-xl border ${errors.email ? "border-danger" : "border-border-subtle"} bg-surface text-text-primary focus:ring-2 focus:ring-brand-400`}
-          placeholder="staf@rbautoluxe.com"
-        />
-        {errors.email && <p className="text-sm text-danger mt-1">{errors.email}</p>}
-      </div>
-
-      {/* Password */}
-      <div>
-        <label className="block text-sm font-medium text-text-secondary mb-1">
-          Password <span className="text-danger">*</span>
-        </label>
-        <div className="relative">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-5 w-full">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Nama Lengkap */}
+        <div>
+          <label className="block text-sm font-medium text-text-secondary mb-1">
+            Nama Lengkap <span className="text-danger">*</span>
+          </label>
           <input
-            type={passwordVisible ? "text" : "password"}
-            name="password"
-            value={formData.password}
-            onChange={e => setFormData({ ...formData, password: e.target.value })}
-            minLength={8}
+            name="fullName"
+            value={formData.fullName}
+            onChange={e => setFormData({ ...formData, fullName: e.target.value })}
             required={true}
-            autoComplete="new-password"
-            className={`w-full px-3 py-2 rounded-xl border ${errors.password ? "border-danger" : "border-border-subtle"} bg-surface text-text-primary focus:ring-2 focus:ring-brand-400 pr-12`}
-            placeholder="Minimal 8 karakter"
+            className={`w-full px-3.5 py-2.5 rounded-xl border ${errors.fullName ? "border-danger" : "border-border-subtle"} bg-surface text-text-primary focus:ring-2 focus:ring-brand-400`}
+            placeholder="Nama lengkap staf"
           />
-          <button
-            type="button"
-            onClick={() => setPasswordVisible(!passwordVisible)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"
-            aria-label={passwordVisible ? "Sembunyikan password" : "Tampilkan password"}
-          >
-            <Icon name={passwordVisible ? "visibility_off" : "visibility"} className="text-[20px]" />
-          </button>
+          {errors.fullName && <p className="text-sm text-danger mt-1">{errors.fullName}</p>}
         </div>
-        {errors.password && <p className="text-sm text-danger mt-1">{errors.password}</p>}
-        <p className="text-xs text-text-muted mt-1">Minimal 8 karakter</p>
-      </div>
 
-      {/* Nomor WhatsApp */}
-      <div>
-        <label className="block text-sm font-medium text-text-secondary mb-1">Nomor WhatsApp</label>
-        <input
-          name="phoneNumber"
-          type="tel"
-          value={formData.phoneNumber}
-          onChange={e => setFormData({ ...formData, phoneNumber: e.target.value })}
-          placeholder="0812 3456 7890"
-          autoComplete="tel"
-          className="w-full px-3 py-2 rounded-xl border border-border-subtle bg-surface text-text-primary focus:ring-2 focus:ring-brand-400"
-        />
-      </div>
+        {/* Email */}
+        <div>
+          <label className="block text-sm font-medium text-text-secondary mb-1">
+            Email <span className="text-danger">*</span>
+          </label>
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={e => setFormData({ ...formData, email: e.target.value })}
+            required={true}
+            autoComplete="email"
+            className={`w-full px-3.5 py-2.5 rounded-xl border ${errors.email ? "border-danger" : "border-border-subtle"} bg-surface text-text-primary focus:ring-2 focus:ring-brand-400`}
+            placeholder="staf@rbautoluxe.com"
+          />
+          {errors.email && <p className="text-sm text-danger mt-1">{errors.email}</p>}
+        </div>
 
-      {/* Tanggal Lahir */}
-      <div>
-        <label className="block text-sm font-medium text-text-secondary mb-1">Tanggal Lahir <span className="text-danger">*</span></label>
-        <input
-          type="date"
-          name="dateOfBirth"
-          value={formData.dateOfBirth}
-          onChange={e => setFormData({ ...formData, dateOfBirth: e.target.value })}
-          max={new Date().toISOString().split("T")[0]}
-          required={true}
-          autoComplete="bday"
-          className={`w-full px-3 py-2 rounded-xl border ${errors.dateOfBirth ? "border-danger" : "border-border-subtle"} bg-surface text-text-primary focus:ring-2 focus:ring-brand-400`}
-        />
-        {errors.dateOfBirth && <p className="text-sm text-danger mt-1">{errors.dateOfBirth}</p>}
-      </div>
+        {/* Password */}
+        <div>
+          <label className="block text-sm font-medium text-text-secondary mb-1">
+            Password <span className="text-danger">*</span>
+          </label>
+          <div className="relative">
+            <input
+              type={passwordVisible ? "text" : "password"}
+              name="password"
+              value={formData.password}
+              onChange={e => setFormData({ ...formData, password: e.target.value })}
+              minLength={8}
+              required={true}
+              autoComplete="new-password"
+              className={`w-full px-3.5 py-2.5 rounded-xl border ${errors.password ? "border-danger" : "border-border-subtle"} bg-surface text-text-primary focus:ring-2 focus:ring-brand-400 pr-12`}
+              placeholder="Minimal 8 karakter"
+            />
+            <button
+              type="button"
+              onClick={() => setPasswordVisible(!passwordVisible)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"
+              aria-label={passwordVisible ? "Sembunyikan password" : "Tampilkan password"}
+            >
+              <Icon name={passwordVisible ? "visibility_off" : "visibility"} className="text-[20px]" />
+            </button>
+          </div>
+          {errors.password && <p className="text-sm text-danger mt-1">{errors.password}</p>}
+          <p className="text-xs text-text-muted mt-1">Minimal 8 karakter</p>
+        </div>
 
-      {/* Cabang */}
-      <div>
-        <label className="block text-sm font-medium text-text-secondary mb-1">Cabang <span className="text-danger">*</span></label>
-        <select
-          name="branchId"
-          value={formData.branchId}
-          onChange={e => setFormData({ ...formData, branchId: e.target.value })}
-          required={true}
-          className={`w-full px-3 py-2 rounded-xl border ${errors.branchId ? "border-danger" : "border-border-subtle"} bg-surface text-text-primary focus:ring-2 focus:ring-brand-400`}
-        >
-          <option value="">Pilih cabang</option>
-          {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-        </select>
-        {errors.branchId && <p className="text-sm text-danger mt-1">{errors.branchId}</p>}
-      </div>
+        {/* Nomor WhatsApp */}
+        <div>
+          <label className="block text-sm font-medium text-text-secondary mb-1">Nomor WhatsApp</label>
+          <input
+            name="phoneNumber"
+            type="tel"
+            value={formData.phoneNumber}
+            onChange={e => setFormData({ ...formData, phoneNumber: e.target.value })}
+            placeholder="0812 3456 7890"
+            autoComplete="tel"
+            className="w-full px-3.5 py-2.5 rounded-xl border border-border-subtle bg-surface text-text-primary focus:ring-2 focus:ring-brand-400"
+          />
+        </div>
 
-      {/* Role */}
-      <div>
-        <label className="block text-sm font-medium text-text-secondary mb-1">Role <span className="text-danger">*</span></label>
-        <select
-          name="role"
-          value={formData.role}
-          onChange={e => setFormData({ ...formData, role: e.target.value as any })}
-          required
-          className="w-full px-3 py-2 rounded-xl border border-border-subtle bg-surface text-text-primary focus:ring-2 focus:ring-brand-400"
-        >
-          <option value="karyawan">Karyawan</option>
-          <option value="kepala_karyawan">Kepala Karyawan</option>
-          <option value="admin_kasir">Admin Kasir</option>
-          <option value="finance">Finance</option>
-          <option value="manager">Manager Cabang</option>
-          <option value="maintainer">Maintainer</option>
-          <option value="owner">Owner</option>
-        </select>
-      </div>
+        {/* Tanggal Lahir */}
+        <div>
+          <label className="block text-sm font-medium text-text-secondary mb-1">Tanggal Lahir <span className="text-danger">*</span></label>
+          <input
+            type="date"
+            name="dateOfBirth"
+            value={formData.dateOfBirth}
+            onChange={e => setFormData({ ...formData, dateOfBirth: e.target.value })}
+            max={new Date().toISOString().split("T")[0]}
+            required={true}
+            autoComplete="bday"
+            className={`w-full px-3.5 py-2.5 rounded-xl border ${errors.dateOfBirth ? "border-danger" : "border-border-subtle"} bg-surface text-text-primary focus:ring-2 focus:ring-brand-400`}
+          />
+          {errors.dateOfBirth && <p className="text-sm text-danger mt-1">{errors.dateOfBirth}</p>}
+        </div>
 
-      {/* Jadwal Kerja */}
-      <div>
-        <label className="block text-sm font-medium text-text-secondary mb-1">Jadwal Kerja</label>
-        <select
-          name="workSchedule"
-          value={formData.workSchedule}
-          onChange={e => setFormData({ ...formData, workSchedule: e.target.value as any })}
-          className="w-full px-3 py-2 rounded-xl border border-border-subtle bg-surface text-text-primary focus:ring-2 focus:ring-brand-400"
-        >
-          <option value="field">Lapangan</option>
-          <option value="office">Kantor</option>
-        </select>
+        {/* Cabang */}
+        <div>
+          <label className="block text-sm font-medium text-text-secondary mb-1">Cabang <span className="text-danger">*</span></label>
+          <select
+            name="branchId"
+            value={formData.branchId}
+            onChange={e => setFormData({ ...formData, branchId: e.target.value })}
+            required={true}
+            className={`w-full px-3.5 py-2.5 rounded-xl border ${errors.branchId ? "border-danger" : "border-border-subtle"} bg-surface text-text-primary focus:ring-2 focus:ring-brand-400`}
+          >
+            <option value="">Pilih cabang</option>
+            {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+          </select>
+          {errors.branchId && <p className="text-sm text-danger mt-1">{errors.branchId}</p>}
+        </div>
+
+        {/* Role */}
+        <div>
+          <label className="block text-sm font-medium text-text-secondary mb-1">Role <span className="text-danger">*</span></label>
+          <select
+            name="role"
+            value={formData.role}
+            onChange={e => setFormData({ ...formData, role: e.target.value as any })}
+            required
+            className="w-full px-3.5 py-2.5 rounded-xl border border-border-subtle bg-surface text-text-primary focus:ring-2 focus:ring-brand-400"
+          >
+            <option value="karyawan">Karyawan</option>
+            <option value="kepala_karyawan">Kepala Karyawan</option>
+            <option value="admin_kasir">Admin Kasir</option>
+            <option value="finance">Finance</option>
+            <option value="manager">Manager Cabang</option>
+            <option value="maintainer">Maintainer</option>
+            <option value="owner">Owner</option>
+          </select>
+        </div>
+
+        {/* Jadwal Kerja */}
+        <div>
+          <label className="block text-sm font-medium text-text-secondary mb-1">Jadwal Kerja</label>
+          <select
+            name="workSchedule"
+            value={formData.workSchedule}
+            onChange={e => setFormData({ ...formData, workSchedule: e.target.value as any })}
+            className="w-full px-3.5 py-2.5 rounded-xl border border-border-subtle bg-surface text-text-primary focus:ring-2 focus:ring-brand-400"
+          >
+            <option value="field">Lapangan (Workshop/Teknisi)</option>
+            <option value="office">Kantor (Admin/Office)</option>
+          </select>
+        </div>
       </div>
 
       {/* Submit */}
-      <div className="flex gap-2 pt-2">
+      <div className="flex items-center justify-end gap-3 pt-4 border-t border-outline-variant/30">
         <button
           type="button"
           onClick={() => router.back()}
-          className="flex-1 py-3 rounded-xl bg-surface-container text-text-secondary font-medium active:scale-95"
+          className="px-6 py-2.5 rounded-xl bg-surface-container text-text-secondary font-medium active:scale-95 transition-transform"
         >
           Batal
         </button>
         <button
           type="submit"
           disabled={loading}
-          className="flex-1 py-3 rounded-xl bg-primary text-white font-medium active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2"
+          className="px-6 py-2.5 rounded-xl bg-primary text-white font-medium active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2 transition-transform shadow-sm"
         >
           {loading ? (
             <>

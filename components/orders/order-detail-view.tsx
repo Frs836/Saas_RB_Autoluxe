@@ -721,7 +721,7 @@ export function OrderDetailView({
         </div>
       </div>
 
-      <div className="px-gutter py-4 lg:px-6 lg:py-6 pb-nav lg:pb-8 flex flex-col gap-4 lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start">
+      <div className="px-gutter py-4 lg:px-6 lg:py-6 pb-48 lg:pb-8 flex flex-col gap-4 lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start">
         {/* Left column: order info + items + photos */}
         <div className="lg:col-span-1 flex flex-col gap-4">
         <section className="clay-card p-4 flex flex-col gap-3">

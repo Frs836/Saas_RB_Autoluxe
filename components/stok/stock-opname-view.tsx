@@ -209,7 +209,7 @@ export function StockOpnameView({
    * memperhitungkan navigasi bawah, sehingga baris input terakhir tertutup
    * bilah aksi itu dan tidak bisa diketuk.
    */
-  <div className="px-gutter py-4 pb-nav flex flex-col gap-4 lg:grid lg:grid-cols-3 lg:gap-6 lg:items-start">
+  <div className="px-gutter py-4 pb-48 lg:pb-36 flex flex-col gap-4 lg:grid lg:grid-cols-3 lg:gap-6 lg:items-start lg:px-6 lg:py-6">
       <div className="lg:col-span-1 flex flex-col gap-4">
       <section className="clay-card p-4 flex items-center justify-between">
         <div>

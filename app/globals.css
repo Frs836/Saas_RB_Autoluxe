@@ -75,7 +75,7 @@
   padding-bottom: calc(
     var(--nav-h-fab) +
       env(safe-area-inset-bottom, 0px) +
-      24px +
+      32px +
       var(--action-bar-h)
   );
 }
@@ -94,10 +94,10 @@
 
 @media (min-width: 1024px) {
   .pb-nav {
-    padding-bottom: 2rem;
+    padding-bottom: calc(var(--action-bar-h) + 4rem);
   }
   .pb-nav-plain {
-    padding-bottom: 2rem;
+    padding-bottom: 3rem;
   }
   .bottom-nav-offset {
     bottom: 0px;

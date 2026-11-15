@@ -18,7 +18,11 @@ import { Modal } from "@/components/ui/modal";
  * Kolom yang diisi di sini sama persis dengan yang bisa diubah nanti di
  * pengaturan cabang, jadi cabang baru tidak perlu diisi ulang setelah dibuat.
  */
-export function CreateBranchPanel() {
+export function CreateBranchPanel({
+  triggerClassName = "w-full h-11 px-4 rounded-xl primary-gradient text-on-primary font-body-bold text-body-bold flex items-center justify-center gap-2 clay-fab active:scale-[0.98] transition-transform",
+}: {
+  triggerClassName?: string;
+} = {}) {
   const router = useRouter();
   const toast = useToast();
   const [buka, setBuka] = useState(false);
@@ -99,7 +103,7 @@ export function CreateBranchPanel() {
       <button
         type="button"
         onClick={() => setBuka(true)}
-        className="w-full h-12 px-4 rounded-xl primary-gradient text-on-primary font-body-bold text-body-bold flex items-center justify-center gap-2 clay-fab active:scale-[0.98] transition-transform"
+        className={triggerClassName}
       >
         <Icon name="add_business" className="text-[20px]" />
         Tambah Cabang

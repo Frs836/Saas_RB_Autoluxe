@@ -287,7 +287,7 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
   }
 
   return (
-    <div className="px-gutter py-4 pb-nav flex flex-col gap-4 lg:grid lg:grid-cols-3 lg:gap-6 lg:items-start lg:px-6 lg:py-6">
+    <div className="px-gutter py-4 pb-48 lg:pb-40 flex flex-col gap-4 lg:grid lg:grid-cols-3 lg:gap-6 lg:items-start lg:px-6 lg:py-6">
       <section className="clay-card p-4 flex flex-col gap-3 lg:col-span-3">
         <div className="flex items-center justify-between">
           <h1 className="font-headline-2 text-headline-2 text-text-primary">
@@ -597,12 +597,12 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
           </p>
         ) : null}
 
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-row items-center gap-3">
           <button
             type="button"
             onClick={submit}
             disabled={busy || Boolean(validation)}
-            className="w-full py-3.5 rounded-full primary-gradient text-on-primary font-body-bold text-body-bold flex items-center justify-center gap-2 clay-fab active:scale-95 transition-transform disabled:opacity-50"
+            className="flex-1 h-11 px-4 rounded-xl primary-gradient text-on-primary font-body-bold text-body flex items-center justify-center gap-2 clay-fab active:scale-95 transition-transform disabled:opacity-50"
           >
             <Icon name="save" className="text-[20px]" />
             {busy ? "Menyimpan..." : "Simpan Konfigurasi"}
@@ -611,10 +611,11 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
           {/*
             Pembuatan cabang punya formularnya sendiri karena butuh nilai yang
             tidak ada di cabang mana pun: nama, alamat, titik, dan jam. Ditaruh
-            di luar bilah simpan supaya tidak bersaing dengan perubahan
-            cabang yang sedang dipilih.
+            berdampingan agar tidak memakan ruang vertikal.
           */}
-          <CreateBranchPanel />
+          <CreateBranchPanel
+            triggerClassName="flex-1 h-11 px-4 rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200 font-body-bold text-body flex items-center justify-center gap-2 active:scale-95 transition-transform"
+          />
         </div>
       </div>
     </div>

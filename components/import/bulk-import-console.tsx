@@ -4,8 +4,9 @@ import { useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Icon } from "@/components/ui/icon";
 import { useRouter } from "next/navigation";
+import { bulkCreateStaffProfiles, type CreateStaffData } from "@/app/actions/staff";
 
-type ImportType = "inventory" | "cash_flow";
+type ImportType = "inventory" | "cash_flow" | "staff";
 
 type ImportResult = {
   imported: number;
@@ -18,6 +19,18 @@ const TEMPLATES: Record<ImportType, {
   headers: string[]; example: (string | number)[][];
   description: string;
 }> = {
+  staff: {
+    label: "Data Karyawan / Staf",
+    icon: "badge",
+    color: "bg-blue-50 text-blue-700",
+    description: "Import akun dan profil karyawan baru dari file Excel. Password default jika kosong: 'RBAutoluxe123!'. Role: karyawan, kepala_karyawan, admin_kasir, manager, finance.",
+    headers: ["full_name", "email", "password", "phone_number", "date_of_birth", "role", "work_schedule"],
+    example: [
+      ["Budi Santoso", "budi@rbautoluxe.com", "RBAutoluxe123!", "081234567890", "1998-05-15", "karyawan", "field"],
+      ["Siti Rahma", "siti@rbautoluxe.com", "RBAutoluxe123!", "081298765432", "1995-10-20", "admin_kasir", "office"],
+      ["Ahmad Fauzi", "ahmad@rbautoluxe.com", "RBAutoluxe123!", "081311223344", "1992-03-12", "kepala_karyawan", "field"],
+    ],
+  },
   inventory: {
     label: "Stok & Inventaris",
     icon: "inventory_2",
@@ -44,17 +57,41 @@ const TEMPLATES: Record<ImportType, {
   },
 };
 
+function findVal(row: Record<string, unknown>, patterns: string[]): string {
+  const rowKeys = Object.keys(row);
+  for (const p of patterns) {
+    const cleanP = p.toLowerCase().replace(/[^a-z0-9]/g, "");
+    for (const rk of rowKeys) {
+      const cleanRk = rk.toLowerCase().replace(/[^a-z0-9]/g, "");
+      if (cleanRk === cleanP) {
+        const val = row[rk];
+        if (val instanceof Date) {
+          return val.toISOString().split("T")[0];
+        }
+        return val !== null && val !== undefined ? String(val).trim() : "";
+      }
+    }
+  }
+  return "";
+}
+
 export function BulkImportConsole({
   branchId,
   branches,
+  initialType,
 }: {
   branchId: string | null;
   branches: { id: string; name: string }[];
+  initialType?: string;
 }) {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const [activeType, setActiveType] = useState<ImportType>("inventory");
+  const [activeType, setActiveType] = useState<ImportType>(
+    initialType === "staff" || initialType === "cash_flow" || initialType === "inventory"
+      ? (initialType as ImportType)
+      : "inventory"
+  );
   const [selectedBranch, setSelectedBranch] = useState(branchId ?? branches[0]?.id ?? "");
   const [rows, setRows] = useState<Record<string, unknown>[]>([]);
   const [fileName, setFileName] = useState<string | null>(null);
@@ -114,6 +151,48 @@ export function BulkImportConsole({
     const errors: { item?: string; row?: unknown; error: string }[] = [];
 
     try {
+      if (activeType === "staff") {
+        const staffPayload: CreateStaffData[] = rows.map((row) => {
+          const fullName = findVal(row, ["full_name", "nama_lengkap", "nama", "fullname", "name"]);
+          const email = findVal(row, ["email", "surel", "mail"]);
+          const password = findVal(row, ["password", "kata_sandi", "pass", "sandi"]) || "RBAutoluxe123!";
+          const phoneNumber = findVal(row, ["phone_number", "no_wa", "whatsapp", "no_hp", "telepon", "phone", "nohp", "nowa"]);
+          const dateOfBirth = findVal(row, ["date_of_birth", "tanggal_lahir", "tgl_lahir", "dob", "birth_date"]);
+
+          const rawRole = findVal(row, ["role", "jabatan", "posisi", "role_staf", "bagian"]).toLowerCase();
+          let role: "karyawan" | "kepala_karyawan" | "admin_kasir" | "maintainer" | "owner" | "manager" | "finance" = "karyawan";
+          if (rawRole.includes("kasir") || rawRole.includes("cashier") || rawRole === "admin") role = "admin_kasir";
+          else if (rawRole.includes("kepala") || rawRole.includes("leader") || rawRole.includes("mandor") || rawRole.includes("spv")) role = "kepala_karyawan";
+          else if (rawRole.includes("manag") || rawRole.includes("manajer")) role = "manager";
+          else if (rawRole.includes("finan") || rawRole.includes("uang")) role = "finance";
+          else if (rawRole === "owner" || rawRole.includes("pemilik")) role = "owner";
+          else if (rawRole === "maintainer") role = "maintainer";
+
+          const rawSchedule = findVal(row, ["work_schedule", "jadwal_kerja", "jadwal", "schedule"]).toLowerCase();
+          const workSchedule: "field" | "office" = rawSchedule.includes("office") || rawSchedule.includes("kantor") ? "office" : "field";
+
+          return {
+            fullName,
+            email,
+            password,
+            phoneNumber,
+            dateOfBirth,
+            role,
+            workSchedule,
+            branchId: selectedBranch,
+            isActive: true,
+          };
+        });
+
+        const res = await bulkCreateStaffProfiles(staffPayload, selectedBranch);
+        setResult(res);
+        setRows([]);
+        setFileName(null);
+        if (fileRef.current) fileRef.current.value = "";
+        router.refresh();
+        return;
+      }
+
       if (activeType === "inventory") {
         for (const row of rows) {
           const itemName = String(row["item_name"] ?? "").trim();
@@ -186,7 +265,7 @@ export function BulkImportConsole({
       {/* Jenis import */}
       <div className="clay-card p-4 flex flex-col gap-3">
         <h2 className="font-headline-2 text-headline-2 text-text-primary">Jenis Data</h2>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           {(Object.keys(TEMPLATES) as ImportType[]).map((t) => {
             const tmplItem = TEMPLATES[t];
             return (
@@ -220,7 +299,7 @@ export function BulkImportConsole({
       <button type="button" onClick={downloadTemplate}
         className="flex items-center justify-center gap-2 py-3 rounded-xl bg-surface-container-low text-text-secondary font-caption text-caption active:scale-95 transition-transform">
         <Icon name="download" className="text-[18px]" />
-        Download Template Excel ({activeType === "inventory" ? "Stok" : "Kas"})
+        Download Template Excel ({activeType === "inventory" ? "Stok" : activeType === "cash_flow" ? "Kas" : "Karyawan"})
       </button>
 
       {/* Upload file */}

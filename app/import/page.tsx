@@ -6,7 +6,12 @@ import { createClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "Import Data - RB AUTOLUXE" };
 
-export default async function ImportPage() {
+export default async function ImportPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ type?: string }>;
+}) {
+  const params = searchParams ? await searchParams : undefined;
   const session = await requirePermission("staff.manage");
   const supabase = await createClient();
   const branchId = scopedBranchId(session);
@@ -30,6 +35,7 @@ export default async function ImportPage() {
       <BulkImportConsole
         branchId={branchId}
         branches={(branches ?? []).map((b) => ({ id: b.id, name: b.branch_name ?? "" }))}
+        initialType={params?.type}
       />
       <BottomNav role={session.role} />
     </div>

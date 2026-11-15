@@ -160,3 +160,192 @@ export async function createStaffProfile(data: CreateStaffData): Promise<CreateS
 
   return { ok: true, data: { profile, authUserId } };
 }
+
+export type BulkImportStaffResult = {
+  imported: number;
+  skipped: number;
+  errors: { item?: string; row?: unknown; error: string }[];
+};
+
+/**
+ * Import karyawan sekaligus banyak dari parsed file Excel.
+ * Hanya owner dan maintainer yang memiliki izin melakukan import bulk.
+ */
+export async function bulkCreateStaffProfiles(
+  staffList: CreateStaffData[],
+  defaultBranchId?: string,
+): Promise<BulkImportStaffResult> {
+  const supabase = await createClient();
+  const admin    = adminClient();
+
+  // 1. Validasi sesi pelaku
+  const { data: { user: authUser } } = await supabase.auth.getUser();
+  if (!authUser) {
+    return {
+      imported: 0,
+      skipped: staffList.length,
+      errors: [{ error: "Sesi tidak valid. Silakan login kembali." }],
+    };
+  }
+
+  const { data: actorProfile } = await supabase
+    .from("profiles")
+    .select("id, role, branch_id")
+    .eq("auth_id", authUser.id)
+    .maybeSingle();
+
+  if (!actorProfile || !["owner", "maintainer"].includes(actorProfile.role)) {
+    return {
+      imported: 0,
+      skipped: staffList.length,
+      errors: [{ error: "Hanya owner dan maintainer yang boleh mengimport data staf." }],
+    };
+  }
+
+  // 2. Ambil daftar user auth saat ini untuk pengecekan duplikasi email cepat
+  const { data: listData } = await admin.auth.admin.listUsers({ perPage: 1000 });
+  const existingEmailSet = new Set(
+    (listData?.users ?? []).map((u) => u.email?.toLowerCase().trim()).filter(Boolean),
+  );
+
+  let imported = 0;
+  let skipped = 0;
+  const errors: { item?: string; row?: unknown; error: string }[] = [];
+
+  const allowedRoles = ["karyawan", "kepala_karyawan", "admin_kasir", "maintainer", "owner", "manager", "finance"];
+
+  for (let i = 0; i < staffList.length; i++) {
+    const item = staffList[i];
+    const rowNum = i + 1;
+    const fullName = item.fullName?.trim();
+    const email = item.email?.toLowerCase().trim();
+    const password = item.password?.trim() || "RBAutoluxe123!";
+    const targetBranchId = item.branchId || defaultBranchId || actorProfile.branch_id;
+
+    if (!fullName) {
+      skipped++;
+      errors.push({ item: `Baris ${rowNum}`, error: "Nama lengkap wajib diisi." });
+      continue;
+    }
+
+    if (!email) {
+      skipped++;
+      errors.push({ item: fullName, error: "Email wajib diisi." });
+      continue;
+    }
+
+    if (!/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(email)) {
+      skipped++;
+      errors.push({ item: fullName, error: `Format email '${email}' tidak valid.` });
+      continue;
+    }
+
+    if (password.length < 8) {
+      skipped++;
+      errors.push({ item: fullName, error: "Password minimal 8 karakter." });
+      continue;
+    }
+
+    if (!targetBranchId) {
+      skipped++;
+      errors.push({ item: fullName, error: "Cabang tujuan belum ditentukan." });
+      continue;
+    }
+
+    if (existingEmailSet.has(email)) {
+      skipped++;
+      errors.push({ item: fullName, error: `Email '${email}' sudah terdaftar.` });
+      continue;
+    }
+
+    // Normalisasi role
+    const normalizedRole = allowedRoles.includes(item.role) ? item.role : "karyawan";
+    const normalizedSchedule = item.workSchedule === "office" ? "office" : "field";
+
+    // Validasi tgl lahir opsional
+    let dob: string | null = null;
+    if (item.dateOfBirth) {
+      const parsedDate = new Date(item.dateOfBirth);
+      if (!isNaN(parsedDate.getTime()) && parsedDate <= new Date()) {
+        dob = parsedDate.toISOString().split("T")[0];
+      }
+    }
+
+    try {
+      // 1. Buat user di Supabase Auth
+      const { data: authData, error: authError } = await admin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: {
+          full_name: fullName,
+          phone_number: item.phoneNumber?.trim() || null,
+          date_of_birth: dob,
+        },
+      });
+
+      if (authError || !authData.user) {
+        skipped++;
+        errors.push({ item: fullName, error: authError?.message || "Gagal membuat akun auth." });
+        continue;
+      }
+
+      const authUserId = authData.user.id;
+      existingEmailSet.add(email);
+
+      // 2. Update profil (trigger Supabase auth biasanya otomatis insert awal)
+      const { error: profileError } = await admin
+        .from("profiles")
+        .update({
+          full_name:     fullName,
+          phone_number:  item.phoneNumber?.trim() || null,
+          date_of_birth: dob,
+          role:          normalizedRole as any,
+          branch_id:     targetBranchId,
+          work_schedule: normalizedSchedule as any,
+          is_active:     item.isActive ?? true,
+          updated_at:    new Date().toISOString(),
+        } as any)
+        .eq("auth_id", authUserId);
+
+      if (profileError) {
+        // Fallback upsert jika profil belum terbuat oleh trigger
+        await admin.from("profiles").upsert({
+          id:            authUserId,
+          auth_id:       authUserId,
+          full_name:     fullName,
+          phone_number:  item.phoneNumber?.trim() || null,
+          date_of_birth: dob,
+          role:          normalizedRole as any,
+          branch_id:     targetBranchId,
+          work_schedule: normalizedSchedule as any,
+          is_active:     item.isActive ?? true,
+        } as any);
+      }
+
+      // 3. Catat aktivitas audit
+      await admin.from("activity_logs").insert({
+        actor_id:  actorProfile.id,
+        action:    "staff.bulk_import",
+        entity:    "profile",
+        entity_id: authUserId,
+        metadata:  {
+          full_name: fullName,
+          email,
+          role:      normalizedRole,
+          branch_id: targetBranchId,
+        },
+      } as any);
+
+      imported++;
+    } catch (err) {
+      skipped++;
+      errors.push({
+        item: fullName,
+        error: err instanceof Error ? err.message : "Kesalahan server tak terduga.",
+      });
+    }
+  }
+
+  return { imported, skipped, errors };
+}

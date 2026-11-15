@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { StaffManagement } from "@/components/branch/staff-management";
 import { StaffCreateForm } from "@/components/branch/staff-create-form";
@@ -203,7 +204,25 @@ export function StaffManagementPage({ session, branches, branchId }: Props) {
             </TabsContent>
 
             {bisaKelolaStaf && (
-              <TabsContent value="tambah" className="px-gutter py-4">
+              <TabsContent value="tambah" className="px-gutter py-4 flex flex-col gap-4">
+                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-brand-50 border border-brand-200 text-brand-800">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-brand-500/10 flex items-center justify-center text-brand-600 shrink-0">
+                      <Icon name="table_view" className="text-[20px]" />
+                    </div>
+                    <div className="text-left min-w-0">
+                      <p className="font-caption text-caption font-semibold">Punya banyak data staf?</p>
+                      <p className="font-micro-badge text-micro-badge text-brand-700/80">Import sekaligus dari file Excel (.xlsx / .csv)</p>
+                    </div>
+                  </div>
+                  <Link
+                    href="/import?type=staff"
+                    className="px-3 py-2 rounded-xl bg-brand-600 text-white font-caption text-caption flex items-center gap-1 active:scale-95 shrink-0 transition-transform shadow-sm"
+                  >
+                    <Icon name="upload" className="text-[16px]" />
+                    Import Excel
+                  </Link>
+                </div>
                 <StaffCreateForm branches={branches} />
               </TabsContent>
             )}
@@ -286,8 +305,20 @@ export function StaffManagementPage({ session, branches, branchId }: Props) {
           {/* RIGHT — form tambah staf atau placeholder */}
           <div className="lg:col-span-2">
             {bisaKelolaStaf ? (
-              <div className="bg-surface rounded-[20px] clay-card border border-white/80 p-6">
-                <h2 className="font-headline-3 text-headline-3 text-text-primary mb-4">Tambah Staf Baru</h2>
+              <div className="bg-surface rounded-[20px] clay-card border border-white/80 p-6 flex flex-col gap-4">
+                <div className="flex items-center justify-between pb-2 border-b border-outline-variant/30">
+                  <div>
+                    <h2 className="font-headline-3 text-headline-3 text-text-primary">Tambah Staf Baru</h2>
+                    <p className="font-caption text-caption text-text-muted mt-0.5">Input perorangan atau import data sekaligus</p>
+                  </div>
+                  <Link
+                    href="/import?type=staff"
+                    className="px-3.5 py-2 rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200 font-caption text-caption font-semibold flex items-center gap-1.5 active:scale-95 transition-transform"
+                  >
+                    <Icon name="upload_file" className="text-[18px]" />
+                    Import Data Excel
+                  </Link>
+                </div>
                 <StaffCreateForm branches={branches} />
               </div>
             ) : (

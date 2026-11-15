@@ -13,7 +13,7 @@ import { sendPushToProfiles, getNotifTargets } from "@/lib/push";
 type ActionResult = { ok: true } | { ok: false; message: string };
 
 type SubmitTimeOffParams = {
-  p_type: "izin" | "sakit" | "cuti";
+  p_type: "izin" | "sakit" | "cuti" | "libur_pengganti";
   p_start_date: string;
   p_end_date: string;
   p_reason: string;
@@ -129,5 +129,22 @@ export async function cancelTimeOffAction(
 
   revalidatePath("/izin");
 
+  return { ok: true };
+}
+
+export async function adjustOffInLieuAction(
+  profileId: string,
+  amount: number,
+  reason: string,
+): Promise<ActionResult> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("adjust_off_in_lieu_balance", {
+    p_profile_id: profileId,
+    p_change_amount: amount,
+    p_reason: reason,
+  });
+  if (error) return { ok: false, message: error.message };
+  revalidatePath("/izin");
+  revalidatePath("/pengaturan/karyawan");
   return { ok: true };
 }

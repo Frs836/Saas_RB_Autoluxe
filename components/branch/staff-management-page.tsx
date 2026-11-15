@@ -20,6 +20,7 @@ export type ManagedStaff = {
   workSchedule: "field" | "office";
   isActive: boolean;
   defaultOffDay: number | null;
+  offInLieuBalance: number;
   facePhotoUrl: string | null;
   faceStatus: string;
 };
@@ -67,7 +68,7 @@ export function StaffManagementPage({ session, branches, branchId }: Props) {
 
       let query = supabase
         .from("profiles")
-        .select("id, full_name, role, branch_id, work_schedule, is_active, default_off_day, avatar_path, face_verification")
+        .select("id, full_name, role, branch_id, work_schedule, is_active, default_off_day, off_in_lieu_balance, avatar_path, face_verification")
         .order("full_name");
 
       // Kalau ada branchId terpilih, filter per cabang; kalau "Seluruh Cabang" ambil semua
@@ -80,7 +81,7 @@ export function StaffManagementPage({ session, branches, branchId }: Props) {
       if (error) {
         setStaff([]);
       } else {
-        setStaff((data ?? []).map((p) => ({
+        setStaff((data ?? []).map((p: any) => ({
           id:           p.id,
           fullName:     p.full_name ?? "Staf",
           role:         p.role ?? "karyawan",
@@ -90,6 +91,7 @@ export function StaffManagementPage({ session, branches, branchId }: Props) {
           workSchedule: (p.work_schedule as "field" | "office") ?? "field",
           isActive:     p.is_active ?? true,
           defaultOffDay: p.default_off_day,
+          offInLieuBalance: p.off_in_lieu_balance ?? 0,
           facePhotoUrl: p.avatar_path
             ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/profile-avatars/${p.avatar_path}`
             : null,

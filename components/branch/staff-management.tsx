@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { initials } from "@/lib/format";
 import { Icon } from "@/components/ui/icon";
+import { adjustOffInLieuAction } from "@/app/actions/izin";
 
 export type ManagedStaff = {
   id: string;
@@ -16,6 +17,7 @@ export type ManagedStaff = {
   workSchedule: "field" | "office";
   isActive: boolean;
   defaultOffDay: number | null;
+  offInLieuBalance?: number;
   facePhotoUrl: string | null;
   faceStatus: string;
 };
@@ -72,11 +74,43 @@ export function StaffManagement({
   const [sibuk, setSibuk] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sukses, setSukses] = useState<string | null>(null);
+  const [adjustState, setAdjustState] = useState<{
+    profileId: string;
+    amount: number;
+    reason: string;
+  } | null>(null);
   // Track IDs whose photo failed to load so we fall back to initials
   const [photoError, setPhotoError] = useState<Set<string>>(new Set());
   const handlePhotoError = useCallback((id: string) => {
     setPhotoError((prev) => new Set(prev).add(id));
   }, []);
+
+  async function handleAdjustOffInLieu(
+    profileId: string,
+    amount: number,
+    reason: string,
+  ) {
+    if (!amount || isNaN(amount)) {
+      setError("Jumlah hari harus diisi dan tidak boleh 0");
+      return;
+    }
+    if (!reason.trim()) {
+      setError("Keterangan penyesuaian harus diisi");
+      return;
+    }
+    setSibuk(profileId);
+    setError(null);
+    setSukses(null);
+    const res = await adjustOffInLieuAction(profileId, amount, reason.trim());
+    setSibuk(null);
+    if (!res.ok) {
+      setError(`Gagal menyesuaikan saldo: ${res.message}`);
+      return;
+    }
+    setSukses("Saldo tabungan libur berhasil disesuaikan.");
+    setAdjustState(null);
+    router.refresh();
+  }
 
   /**
    * Menyimpan perubahan staf.
@@ -204,6 +238,12 @@ export function StaffManagement({
                     <Icon name="face_retouching_natural" className="text-[13px]" />
                     {s.faceStatus}
                   </span>
+                  {(s.offInLieuBalance ?? 0) > 0 ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-600 font-micro-badge text-micro-badge font-semibold">
+                      <Icon name="event_repeat" className="text-[13px]" />
+                      Libur: {s.offInLieuBalance} hr
+                    </span>
+                  ) : null}
                 </div>
               </div>
             </div>
@@ -369,6 +409,99 @@ export function StaffManagement({
                       : `Setiap ${hariLabel(s.defaultOffDay)}, sistem menandai kehadiran sebagai libur shift.`}
                   </span>
                 </label>
+
+                {/* Tabungan Libur Pengganti */}
+                <div className="p-3 rounded-xl bg-surface-container/60 border border-outline-variant/30 flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <Icon name="event_repeat" className="text-[18px] text-brand-600" />
+                      <span className="font-caption text-caption font-semibold text-text-primary">
+                        Tabungan Libur Pengganti
+                      </span>
+                    </div>
+                    <span className="px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-600 font-micro-badge text-micro-badge font-bold">
+                      {s.offInLieuBalance ?? 0} hari
+                    </span>
+                  </div>
+                  <p className="font-micro-badge text-micro-badge text-text-muted leading-relaxed">
+                    Staf mendapat +1 hari otomatis jika hadir bekerja di hari libur rutinnya. Saldo dapat dipakai untuk pengajuan izin libur pengganti.
+                  </p>
+
+                  {bisaUbahJabatan ? (
+                    adjustState?.profileId === s.id ? (
+                      <div className="pt-2 border-t border-outline-variant/20 flex flex-col gap-2">
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                          <label className="flex flex-col gap-0.5">
+                            <span className="font-micro-badge text-micro-badge text-text-muted">Perubahan (hari)</span>
+                            <div className="flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => setAdjustState((prev) => (prev ? { ...prev, amount: prev.amount - 1 } : null))}
+                                className="w-8 h-8 rounded-lg bg-surface-container text-text-primary flex items-center justify-center font-bold text-sm active:scale-95 border border-outline-variant/40"
+                              >
+                                -
+                              </button>
+                              <input
+                                type="number"
+                                value={adjustState.amount}
+                                onChange={(e) => {
+                                  const val = parseInt(e.target.value, 10);
+                                  setAdjustState((prev) => (prev ? { ...prev, amount: isNaN(val) ? 0 : val } : null));
+                                }}
+                                className="w-16 h-8 text-center rounded-lg bg-surface-container font-body text-body text-text-primary outline-none focus:ring-1 focus:ring-brand-400 border border-outline-variant/40"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setAdjustState((prev) => (prev ? { ...prev, amount: prev.amount + 1 } : null))}
+                                className="w-8 h-8 rounded-lg bg-surface-container text-text-primary flex items-center justify-center font-bold text-sm active:scale-95 border border-outline-variant/40"
+                              >
+                                +
+                              </button>
+                            </div>
+                          </label>
+                          <label className="flex-1 flex flex-col gap-0.5">
+                            <span className="font-micro-badge text-micro-badge text-text-muted">Keterangan / Alasan</span>
+                            <input
+                              type="text"
+                              placeholder="Misal: Lembur kejar deadline"
+                              value={adjustState.reason}
+                              onChange={(e) => setAdjustState((prev) => (prev ? { ...prev, reason: e.target.value } : null))}
+                              className="h-8 px-2 rounded-lg bg-surface-container font-body text-caption text-text-primary outline-none focus:ring-1 focus:ring-brand-400 border border-outline-variant/40"
+                            />
+                          </label>
+                        </div>
+                        <div className="flex justify-end gap-2 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => setAdjustState(null)}
+                            className="px-2.5 py-1 text-xs rounded-lg text-text-muted hover:bg-surface-container"
+                          >
+                            Batal
+                          </button>
+                          <button
+                            type="button"
+                            disabled={sibukBaris || adjustState.amount === 0 || !adjustState.reason.trim()}
+                            onClick={() => handleAdjustOffInLieu(s.id, adjustState.amount, adjustState.reason)}
+                            className="px-3 py-1 text-xs font-semibold rounded-lg bg-brand-500 text-white active:scale-95 transition-transform disabled:opacity-50"
+                          >
+                            Simpan Saldo
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="pt-1 flex items-center justify-end">
+                        <button
+                          type="button"
+                          onClick={() => setAdjustState({ profileId: s.id, amount: 1, reason: "" })}
+                          className="text-xs font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1 active:scale-95"
+                        >
+                          <Icon name="tune" className="text-[14px]" />
+                          Sesuaikan Saldo Manual
+                        </button>
+                      </div>
+                    )
+                  ) : null}
+                </div>
               </div>
             ) : null}
           </article>

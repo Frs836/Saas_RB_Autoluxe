@@ -50,6 +50,32 @@ export default async function IzinPage() {
     );
   }
 
+  // Ambil saldo tabungan libur pemohon dan mutasi terakhir
+  const [profileRes, lieuLogsRes] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("off_in_lieu_balance")
+      .eq("id", session.id)
+      .maybeSingle(),
+    supabase
+      .from("off_in_lieu_logs")
+      .select("id, change_amount, previous_balance, new_balance, reason, reference_date, created_at")
+      .eq("profile_id", session.id)
+      .order("created_at", { ascending: false })
+      .limit(10),
+  ]);
+
+  const offInLieuBalance = profileRes.data?.off_in_lieu_balance ?? 0;
+  const offInLieuLogs = (lieuLogsRes.data ?? []).map((l) => ({
+    id: l.id,
+    changeAmount: l.change_amount,
+    previousBalance: l.previous_balance,
+    newBalance: l.new_balance,
+    reason: l.reason,
+    referenceDate: l.reference_date,
+    createdAt: l.created_at,
+  }));
+
   const requests: TimeOffRow[] = filtered.map((row) => ({
     id: row.id as string,
     type: row.type as TimeOffRow["type"],
@@ -79,6 +105,8 @@ export default async function IzinPage() {
           requests={requests}
           canDecide={canDecide}
           todayIso={wibNow().dateIso}
+          offInLieuBalance={offInLieuBalance}
+          offInLieuLogs={offInLieuLogs}
         />
       </main>
       <BottomNav role={session.role} />

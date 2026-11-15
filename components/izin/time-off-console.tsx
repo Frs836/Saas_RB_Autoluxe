@@ -14,7 +14,7 @@ import {
 
 export type TimeOffRow = {
   id: string;
-  type: "izin" | "cuti" | "sakit";
+  type: "izin" | "cuti" | "sakit" | "libur_pengganti";
   startDate: string;
   endDate: string;
   reason: string;
@@ -27,16 +27,29 @@ export type TimeOffRow = {
   createdAt: string;
 };
 
+export type OffInLieuLogItem = {
+  id: string;
+  changeAmount: number;
+  previousBalance: number;
+  newBalance: number;
+  reason: string;
+  referenceDate: string | null;
+  createdAt: string;
+};
+
 type Props = {
   requests: TimeOffRow[];
   canDecide: boolean;
   todayIso: string;
+  offInLieuBalance?: number;
+  offInLieuLogs?: OffInLieuLogItem[];
 };
 
 const TYPES = [
   { value: "izin", label: "Izin", icon: "schedule", hint: "Sebentar, masih masuk shift" },
   { value: "cuti", label: "Cuti", icon: "beach_access", hint: "Cuti tahunan" },
   { value: "sakit", label: "Sakit", icon: "healing", hint: "Perlu surat dokter" },
+  { value: "libur_pengganti", label: "Libur Pengganti", icon: "event_repeat", hint: "Klaim dari saldo tabungan libur" },
 ] as const;
 
 type TypeValue = (typeof TYPES)[number]["value"];
@@ -53,7 +66,13 @@ function dayCount(start: string, end: string) {
   return Math.floor(ms / 86400000) + 1;
 }
 
-export function TimeOffConsole({ requests, canDecide, todayIso }: Props) {
+export function TimeOffConsole({
+  requests,
+  canDecide,
+  todayIso,
+  offInLieuBalance = 0,
+  offInLieuLogs = [],
+}: Props) {
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -64,18 +83,11 @@ export function TimeOffConsole({ requests, canDecide, todayIso }: Props) {
   const [reason, setReason] = useState("");
   const [cameraOpen, setCameraOpen] = useState(false);
   const [proofPreview, setProofPreview] = useState<string | null>(null);
-  /**
-   * Blob bukti yang sudah diambil. Disimpan sebagai blob, bukan path, karena
-   * <video> di-unmount begitu preview tampil. Submit memakai blob ini, bukan
-   * membaca ulang elemen video yang sudah tidak ada.
-   */
   const [proofBlob, setProofBlob] = useState<Blob | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  // Maintainer dan Owner membuka halaman ini untuk memutuskan, bukan untuk
-  // melihat pengajuan sendiri. Membuka tab "Milik Saya" untuk mereka hanya
-  // menampilkan daftar kosong dan menyembunyikan antrean yang harus mereka tangani.
+  const [showHistory, setShowHistory] = useState(false);
   const [filter, setFilter] = useState<"all" | "mine" | "pending">(
     canDecide ? "pending" : "mine",
   );
@@ -90,7 +102,13 @@ export function TimeOffConsole({ requests, canDecide, todayIso }: Props) {
       return "Tanggal selesai tidak boleh lebih awal dari tanggal mulai.";
     if (startDate < todayIso) return "Tanggal mulai tidak boleh di masa lalu.";
     if (duration > 90) return "Durasi maksimal 90 hari.";
-    if (reasonLength < 10) return `Alasan minimal 10 karakter (${reasonLength}/10).`;
+    if (type === "libur_pengganti") {
+      if (offInLieuBalance <= 0)
+        return "Anda belum memiliki saldo Tabungan Libur Pengganti.";
+      if (duration > offInLieuBalance)
+        return `Saldo tidak mencukupi (Tersedia ${offInLieuBalance} hari, Diajukan ${duration} hari).`;
+    }
+    if (reasonLength < 5) return `Alasan minimal 5 karakter (${reasonLength}/5).`;
     if (needsProof && !proofBlob) return "Pengajuan sakit wajib melampirkan foto surat dokter.";
     return null;
   })();
@@ -267,14 +285,91 @@ export function TimeOffConsole({ requests, canDecide, todayIso }: Props) {
         <section className="clay-card p-4 flex flex-col gap-3 lg:col-span-1 lg:sticky lg:top-20">
           <div className="flex items-center justify-between">
             <h1 className="font-headline-2 text-headline-2 text-text-primary">
-              Pengajuan Izin
+              Pengajuan Izin & Cuti
             </h1>
             <span className="px-2 py-0.5 rounded-full bg-brand-50 text-brand-600 font-micro-badge text-micro-badge">
               {TYPES.find((t) => t.value === type)?.label}
             </span>
           </div>
 
-          <div className="grid grid-cols-3 gap-2">
+          {/* Card Info Tabungan Libur Pengganti */}
+          <div className="p-3.5 rounded-2xl bg-gradient-to-br from-blue-500/10 via-brand-50 to-indigo-500/10 border border-blue-200/70 flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                  <Icon name="event_repeat" className="text-[22px]" />
+                </div>
+                <div>
+                  <span className="font-micro-badge text-micro-badge text-blue-700 font-semibold uppercase tracking-wider block">
+                    Tabungan Libur Pengganti
+                  </span>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="font-headline-2 text-headline-2 text-text-primary">
+                      {offInLieuBalance}
+                    </span>
+                    <span className="font-caption text-caption text-text-secondary">
+                      Hari Tersedia
+                    </span>
+                  </div>
+                </div>
+              </div>
+              {offInLieuLogs.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setShowHistory((v) => !v)}
+                  className="px-2.5 py-1.5 rounded-xl bg-surface border border-border-subtle font-micro-badge text-micro-badge text-text-secondary flex items-center gap-1 active:scale-95 transition-transform"
+                >
+                  <Icon name="history" className="text-[14px]" />
+                  {showHistory ? "Tutup" : "Riwayat"}
+                </button>
+              )}
+            </div>
+
+            {/* Riwayat mutasi saldo jika diklik */}
+            {showHistory && offInLieuLogs.length > 0 && (
+              <div className="mt-1 p-2.5 rounded-xl bg-surface/95 border border-border-subtle flex flex-col gap-2 max-h-48 overflow-y-auto">
+                <span className="font-micro-badge text-micro-badge font-semibold text-text-secondary">
+                  Riwayat Mutasi Saldo
+                </span>
+                {offInLieuLogs.map((log) => (
+                  <div key={log.id} className="flex items-start justify-between text-xs border-b border-outline-variant/30 pb-1.5 last:border-b-0">
+                    <div className="flex flex-col">
+                      <span className="text-text-primary font-medium">{log.reason}</span>
+                      <span className="text-[10px] text-text-muted">{formatDateWib(log.createdAt)}</span>
+                    </div>
+                    <span className={`font-semibold shrink-0 ml-2 ${log.changeAmount > 0 ? "text-success-text" : "text-danger-text"}`}>
+                      {log.changeAmount > 0 ? `+${log.changeAmount}` : log.changeAmount} hari
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {type === "libur_pengganti" ? (
+              <div className="mt-1 p-2.5 rounded-xl bg-surface/90 border border-blue-100 flex flex-col gap-1 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-text-secondary">Saldo saat ini:</span>
+                  <span className="font-semibold text-text-primary">{offInLieuBalance} hari</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-text-secondary">Durasi diajukan:</span>
+                  <span className="font-semibold text-text-primary">{duration} hari</span>
+                </div>
+                <div className="flex justify-between border-t border-outline-variant/30 pt-1 font-semibold">
+                  <span>Sisa setelah klaim:</span>
+                  <span className={offInLieuBalance - duration < 0 ? "text-danger-text" : "text-success-text"}>
+                    {offInLieuBalance - duration} hari
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <p className="font-micro-badge text-micro-badge text-text-muted leading-relaxed">
+                Diperoleh otomatis saat masuk di hari libur karena kejar deadline workshop.
+              </p>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
             {TYPES.map((item) => {
               const active = type === item.value;
               return (
@@ -283,14 +378,14 @@ export function TimeOffConsole({ requests, canDecide, todayIso }: Props) {
                   type="button"
                   onClick={() => setType(item.value)}
                   aria-pressed={active}
-                  className={`py-3 rounded-xl flex flex-col items-center gap-1 active:scale-95 transition-transform ${
+                  className={`py-2.5 px-2 rounded-xl flex flex-col items-center gap-1 active:scale-95 transition-transform ${
                     active
                       ? "bg-primary text-white shadow-[0px_8px_16px_rgba(37,99,235,0.22)]"
                       : "bg-surface-container-low text-text-secondary"
                   }`}
                 >
                   <Icon name={item.icon} className="text-[20px]" />
-                  <span className="font-caption text-caption">{item.label}</span>
+                  <span className="font-caption text-caption text-center leading-tight">{item.label}</span>
                 </button>
               );
             })}

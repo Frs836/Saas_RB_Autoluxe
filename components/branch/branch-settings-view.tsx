@@ -16,6 +16,8 @@ import {
   type BranchRecord,
 } from "@/lib/branch";
 import { Icon } from "@/components/ui/icon";
+import { Modal } from "@/components/ui/modal";
+import { useToast } from "@/components/toast";
 
 type Props = {
   branches: BranchRecord[];
@@ -64,6 +66,7 @@ const FORM_KOSONG: BranchRecord = {
 
 export function BranchSettingsView({ branches, activeBranchId }: Props) {
   const router = useRouter();
+  const toast = useToast();
   const initial =
     branches.find((b) => b.id === activeBranchId) ?? branches[0] ?? null;
 
@@ -88,6 +91,9 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
   } | null>(null);
 
   const [busy, setBusy] = useState(false);
+
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const [feedback, setFeedback] = useState<{
     tone: "ok" | "error";
@@ -220,6 +226,29 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
     return { ok: true as const, message: aktif ? "Cabang diaktifkan." : "Cabang dinonaktifkan." };
   }
 
+  async function hapusCabang() {
+    if (!selectedId) return;
+    setDeleting(true);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.rpc("delete_branch", {
+        p_branch_id: selectedId,
+      });
+      if (error) {
+        setDeleteConfirmOpen(false);
+        toast.gagal("Gagal menghapus cabang", error.message);
+        return;
+      }
+      setDeleteConfirmOpen(false);
+      toast.sukses(`Cabang "${selected?.name}" berhasil dihapus permanen.`);
+      router.refresh();
+    } catch {
+      toast.gagal("Gagal menghapus cabang", "Terjadi kesalahan tak terduga.");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   async function submit() {
     if (validation) {
       setFeedback({ tone: "error", text: validation });
@@ -321,9 +350,17 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
             <span className="px-2 py-1 rounded-full bg-surface-container text-text-secondary font-micro-badge text-micro-badge">
               {selected.staffCount} staf terdaftar
             </span>
-            <span className="px-2 py-1 rounded-full bg-surface-container text-text-secondary font-micro-badge text-micro-badge">
-              {selected.isActive ? "Aktif" : "Nonaktif"}
-            </span>
+            {selected.isActive ? (
+              <span className="px-2 py-1 rounded-full bg-success-surface text-success-text font-micro-badge text-micro-badge flex items-center gap-1">
+                <Icon name="check_circle" className="text-[12px]" />
+                Aktif
+              </span>
+            ) : (
+              <span className="px-2 py-1 rounded-full bg-danger-surface text-danger-text font-micro-badge text-micro-badge flex items-center gap-1">
+                <Icon name="block" className="text-[12px]" />
+                Tutup Permanen
+              </span>
+            )}
             {selected.latitude === null ? (
               <span className="px-2 py-1 rounded-full bg-warning-surface text-warning-text font-micro-badge text-micro-badge">
                 Geofence belum dipasang
@@ -550,6 +587,18 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
 
       {/* Right column: status + meta */}
       <div className="flex flex-col gap-4 lg:col-span-1">
+      {!form.isActive && (
+        <div className="flex items-center gap-2.5 px-4 py-3 rounded-2xl bg-danger-surface text-danger-text border border-danger-base/20">
+          <Icon name="block" className="text-[22px] shrink-0" />
+          <div>
+            <p className="font-body-bold text-body-bold">Tutup Permanen</p>
+            <p className="font-micro-badge text-micro-badge opacity-80">
+              Cabang ini sudah dinonaktifkan dan tidak menerima order baru.
+            </p>
+          </div>
+        </div>
+      )}
+
       <section className="clay-card p-4 flex flex-col gap-2">
         <button
           type="button"
@@ -574,6 +623,27 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
             dipindahkan.
           </p>
         ) : null}
+      </section>
+
+      {/* Zona Berbahaya — Hapus Cabang */}
+      <section className="clay-card p-4 flex flex-col gap-2">
+        <h3 className="font-body-bold text-body-bold text-danger-text flex items-center gap-1.5">
+          <Icon name="delete_forever" className="text-[18px]" />
+          Zona Berbahaya
+        </h3>
+        <p className="font-caption text-caption text-text-muted">
+          Menghapus cabang secara permanen. Hanya bisa dilakukan jika cabang
+          belum memiliki riwayat order, arus kas, invoice, atau klaim stok.
+        </p>
+        <button
+          type="button"
+          onClick={() => setDeleteConfirmOpen(true)}
+          disabled={busy || deleting}
+          className="w-full h-11 rounded-xl bg-danger-surface text-danger-text font-body-bold text-body flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-50"
+        >
+          <Icon name="delete_forever" className="text-[18px]" />
+          Hapus Cabang Permanen
+        </button>
       </section>
       </div>{/* end lg:col-span-1 */}
 
@@ -618,6 +688,53 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
           />
         </div>
       </div>
+
+      {deleteConfirmOpen && (
+        <Modal
+          open={deleteConfirmOpen}
+          onClose={() => {
+            if (!deleting) setDeleteConfirmOpen(false);
+          }}
+          title="Hapus Cabang Permanen"
+        >
+          <div className="flex flex-col gap-4">
+            <div className="flex items-start gap-3 p-3 rounded-2xl bg-danger-surface text-danger-text">
+              <Icon name="warning" className="text-[28px] shrink-0 text-danger-base mt-0.5" />
+              <div className="flex flex-col gap-1">
+                <p className="font-body-bold text-body-bold">
+                  Yakin ingin menghapus cabang &quot;{selected?.name}&quot;?
+                </p>
+                <p className="font-caption text-caption opacity-90">
+                  Tindakan ini tidak bisa dibatalkan. Cabang hanya bisa dihapus jika belum pernah memiliki riwayat transaksi (order, arus kas, faktur).
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 mt-2">
+              <button
+                type="button"
+                onClick={() => setDeleteConfirmOpen(false)}
+                disabled={deleting}
+                className="flex-1 h-11 rounded-xl bg-surface-container-low text-text-secondary font-body-bold text-body active:scale-95 transition-transform disabled:opacity-50"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={() => void hapusCabang()}
+                disabled={deleting}
+                className="flex-1 h-11 rounded-xl bg-danger-base hover:bg-danger-base/90 text-white font-body-bold text-body flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-50"
+              >
+                <Icon
+                  name={deleting ? "hourglass_top" : "delete_forever"}
+                  className={`text-[18px] ${deleting ? "animate-spin" : ""}`}
+                />
+                {deleting ? "Menghapus..." : "Hapus Permanen"}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

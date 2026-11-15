@@ -280,7 +280,7 @@ export function CashFlowView({
 
           {/* Export */}
           <button type="button" onClick={exportExcel}
-            className="w-full py-4 rounded-2xl bg-success-base text-white font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform">
+            className="w-full py-4 lg:py-2.5 rounded-2xl lg:rounded-xl bg-success-base text-white font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform">
             <Icon name="download" className="text-[22px]" />
             Export Excel (.xlsx)
           </button>

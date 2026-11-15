@@ -498,7 +498,7 @@ export function PosConsole({
               href={result.waHref}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full py-4 rounded-2xl bg-whatsapp text-white font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-[0_8px_20px_-6px_rgba(37,211,102,0.6)]"
+              className="w-full py-4 lg:py-2.5 rounded-2xl lg:rounded-xl bg-whatsapp text-white font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-[0_8px_20px_-6px_rgba(37,211,102,0.6)]"
             >
               <Icon name="chat" className="text-[22px]" />
               Kirim Nota ke WhatsApp Pelanggan
@@ -519,7 +519,7 @@ export function PosConsole({
           ) : null}
           <Link
             href="/pos/orders"
-            className="w-full py-4 rounded-2xl bg-primary text-white font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform"
+            className="w-full py-4 lg:py-2.5 rounded-2xl lg:rounded-xl bg-primary text-white font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform"
           >
             <Icon name="list_alt" className="text-[22px]" />
             Lihat Antrean Order
@@ -527,7 +527,7 @@ export function PosConsole({
           <button
             type="button"
             onClick={resetOrder}
-            className="w-full py-4 rounded-2xl bg-surface-container-low text-text-primary font-body-bold text-body-bold active:scale-95 transition-transform"
+            className="w-full py-4 lg:py-2.5 rounded-2xl lg:rounded-xl bg-surface-container-low text-text-primary font-body-bold text-body-bold active:scale-95 transition-transform"
           >
             Buat Order Baru
           </button>
@@ -550,8 +550,8 @@ export function PosConsole({
         className={`${step === "catalog" ? "block" : "hidden"} lg:block lg:col-span-3 lg:overflow-y-auto lg:max-h-screen`}
       >
         <div className="pb-[calc(14rem+env(safe-area-inset-bottom))] lg:pb-6">
-          <div className="sticky top-0 z-40 bg-surface/90 backdrop-blur-md pt-safe shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
-            <div className="h-16 px-gutter flex items-center justify-between gap-space-sm">
+          <div className="sticky top-0 z-40 bg-surface/90 backdrop-blur-md pt-safe lg:pt-3 shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+            <div className="h-16 px-gutter lg:px-6 flex items-center justify-between gap-space-sm">
               <div className="flex items-center gap-space-sm min-w-0">
                 <div className="w-8 h-8 rounded-lg bg-surface-container-low flex items-center justify-center shrink-0 p-1">
                   <svg
@@ -836,8 +836,8 @@ export function PosConsole({
            * Header checkout: tombol kembali hanya tampil di mobile karena di
            * desktop katalog dan checkout terlihat bersamaan.
            */}
-          <div className="sticky top-0 z-40 bg-surface/90 backdrop-blur-md pt-safe shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
-            <div className="h-16 px-gutter flex items-center gap-3">
+          <div className="sticky top-0 z-40 bg-surface/90 backdrop-blur-md pt-safe lg:pt-3 shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+            <div className="h-16 px-gutter lg:px-6 flex items-center gap-3">
               <button
                 type="button"
                 onClick={() => {
@@ -855,7 +855,7 @@ export function PosConsole({
             </div>
           </div>
 
-          <div className="px-gutter py-4 flex flex-col gap-4">
+          <div className="px-gutter lg:px-6 py-4 flex flex-col gap-4">
             <section className="clay-card p-4 flex flex-col gap-3">
               <h2 className="font-body-bold text-body-bold text-text-primary flex items-center gap-2">
                 <Icon name="directions_car" className="text-[20px] text-brand-600" />
@@ -1272,12 +1272,12 @@ export function PosConsole({
            * bayangan sendiri, jaraknya diberikan oleh token --nav-h-fab. Tinggi
            * navigasi sendiri 68px, jadi jaraknya selalu terlihat.
            */}
-          <div className="fixed bottom-nav-offset left-0 right-0 z-action-bar px-gutter lg:sticky lg:bottom-0 lg:left-auto lg:right-auto">
+          <div className="fixed bottom-nav-offset left-0 right-0 z-action-bar px-gutter lg:sticky lg:bottom-0 lg:left-auto lg:right-auto lg:px-4 lg:py-3 lg:bg-white/95 lg:backdrop-blur-sm lg:border-t lg:border-slate-100">
             <button
               type="button"
               disabled={submitting}
               onClick={submitOrder}
-              className="w-full py-4 rounded-full primary-gradient text-white font-body-bold text-body-bold flex items-center justify-center gap-2 clay-fab active:scale-95 transition-transform disabled:opacity-60"
+              className="w-full py-4 lg:py-3 rounded-full primary-gradient text-white font-body-bold text-body-bold flex items-center justify-center gap-2 clay-fab active:scale-95 transition-transform disabled:opacity-60"
             >
               <Icon name={submitting ? "hourglass_top" : "check_circle"} className="text-[22px]" />
               {submitting

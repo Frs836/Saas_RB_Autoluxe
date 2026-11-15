@@ -92,6 +92,18 @@
   bottom: calc(var(--nav-h-fab) + env(safe-area-inset-bottom, 0px));
 }
 
+@media (min-width: 1024px) {
+  .pb-nav {
+    padding-bottom: 2rem;
+  }
+  .pb-nav-plain {
+    padding-bottom: 2rem;
+  }
+  .bottom-nav-offset {
+    bottom: 0px;
+  }
+}
+
 /*
  * Lapisan tetap untuk elemen yang saling menimpa.
  * Nilai ini bukan arcane: navigasi bawah harus di atas bilah aksi supaya

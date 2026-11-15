@@ -625,10 +625,78 @@ export function OrderDetailView({
     });
   }
 
+  const actionControls = (primaryActions.length > 0 || canUpload) && (
+    <div className="flex flex-col gap-2.5">
+      {error ? (
+        <p className="p-2.5 rounded-xl bg-danger-surface text-danger-text font-caption text-caption flex items-center gap-1.5">
+          <Icon name="error" className="text-[16px] shrink-0" />
+          <span>{error}</span>
+        </p>
+      ) : null}
+      {success ? (
+        <p className="p-2.5 rounded-xl bg-success-surface text-success-text font-caption text-caption flex items-center gap-1.5">
+          <Icon name="check_circle" className="text-[16px] shrink-0" />
+          <span>{success}</span>
+        </p>
+      ) : null}
+
+      {primaryActions.length > 0 ? (
+        <div className="flex flex-wrap gap-2">
+          {primaryActions.map((action) => (
+            <button
+              key={action.status}
+              type="button"
+              disabled={busy || (butuhTeknisi && action.status === "in_progress")}
+              title={
+                butuhTeknisi && action.status === "in_progress"
+                  ? "Pilih teknisi dulu lewat tombol Atur Tim."
+                  : undefined
+              }
+              onClick={() => changeStatus(action.status)}
+              className={`flex-1 min-w-[140px] py-3 rounded-xl font-body-bold text-body-bold flex items-center justify-center gap-1.5 active:scale-95 transition-transform disabled:opacity-60 shadow-sm ${action.cls}`}
+            >
+              <Icon name={action.icon} className="text-[18px]" />
+              {action.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
+
+      {butuhTeknisi ? (
+        <p className="px-1 font-caption text-caption text-warning-text flex items-center gap-1">
+          <Icon name="info" className="text-[16px] shrink-0" />
+          Pilih minimal satu teknisi lewat Atur Tim sebelum memulai pengerjaan.
+        </p>
+      ) : null}
+
+      {canUpload && !cameraOpen && adaFaseBoleh ? (
+        <button
+          type="button"
+          onClick={() => {
+            setPhase(pekerjaanSelesai && hasBefore ? "after" : "before");
+            void openCamera();
+          }}
+          className="w-full py-3 rounded-xl bg-primary/10 text-primary flex items-center justify-center gap-2 border border-primary/20 active:scale-95 transition-transform font-body-bold text-body-bold"
+        >
+          <Icon name="add_a_photo" className="text-[20px]" />
+          Tambah Foto Inspeksi
+        </button>
+      ) : null}
+
+      {canUpload && !cameraOpen && !adaFaseBoleh ? (
+        <p className="font-caption text-caption text-text-muted text-center py-1">
+          {order.status === "cancelled"
+            ? "Order dibatalkan, inspeksi foto sudah tidak dibuka."
+            : "Foto kondisi awal diambil saat pengerjaan berjalan. Foto hasil akhir dibuka setelah pengerjaan selesai atau unit siap diambil."}
+        </p>
+      ) : null}
+    </div>
+  );
+
   return (
     <div className="flex flex-col w-full min-h-screen">
-      <div className="sticky top-0 z-40 bg-surface/90 backdrop-blur-md pt-safe shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
-        <div className="h-16 px-gutter flex items-center gap-3">
+      <div className="sticky top-0 z-40 bg-surface/90 backdrop-blur-md pt-safe lg:pt-3 shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+        <div className="h-16 px-gutter lg:px-6 flex items-center gap-3">
           <button
             type="button"
             onClick={() => router.back()}
@@ -653,7 +721,7 @@ export function OrderDetailView({
         </div>
       </div>
 
-      <div className="px-gutter pt-[calc(env(safe-area-inset-top)+5.5rem)] pb-32 flex flex-col gap-4 lg:grid lg:grid-cols-2 lg:gap-6 lg:px-6 lg:py-6 lg:items-start lg:pt-6">
+      <div className="px-gutter py-4 lg:px-6 lg:py-6 pb-nav lg:pb-8 flex flex-col gap-4 lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start">
         {/* Left column: order info + items + photos */}
         <div className="lg:col-span-1 flex flex-col gap-4">
         <section className="clay-card p-4 flex flex-col gap-3">
@@ -860,8 +928,16 @@ export function OrderDetailView({
 
         </div>{/* end left column */}
 
-        {/* Right column: progress timeline + actions (sticky) */}
+        {/* Right column: progress timeline + actions (sticky on desktop) */}
         <div className="lg:col-span-1 flex flex-col gap-4 lg:sticky lg:top-20">
+
+        {/* Action controls — desktop only (card in sidebar) */}
+        {actionControls ? (
+          <section className="hidden lg:block clay-card p-4">
+            {actionControls}
+          </section>
+        ) : null}
+
         {/* Progress bar adaptif per jenis layanan */}
         {order.status !== "cancelled" && (
           <section className="clay-card p-4 flex flex-col gap-3">
@@ -1027,72 +1103,10 @@ export function OrderDetailView({
         </section>
       </div>
 
-      {primaryActions.length > 0 || canUpload ? (
-        <div className="fixed top-0 left-0 right-0 z-40 px-gutter pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-3 bg-surface/95 backdrop-blur-md border-b border-outline-variant">
-          {error ? (
-            <p className="mb-2 p-2 rounded-xl bg-danger-surface text-danger-text font-caption text-caption">
-              {error}
-            </p>
-          ) : null}
-          {success ? (
-            <p className="mb-2 p-2 rounded-xl bg-success-surface text-success-text font-caption text-caption">
-              {success}
-            </p>
-          ) : null}
-
-          {primaryActions.length > 0 ? (
-            <div className="flex gap-2 mb-2">
-              {primaryActions.map((action) => (
-                <button
-                  key={action.status}
-                  type="button"
-                  disabled={busy || (butuhTeknisi && action.status === "in_progress")}
-                  title={
-                    butuhTeknisi && action.status === "in_progress"
-                      ? "Pilih teknisi dulu lewat tombol Atur Tim."
-                      : undefined
-                  }
-                  onClick={() => changeStatus(action.status)}
-                  className={`flex-1 py-3 rounded-2xl font-body-bold text-body-bold flex items-center justify-center gap-1.5 active:scale-95 transition-transform disabled:opacity-60 ${action.cls}`}
-                >
-                  <Icon name={action.icon} className="text-[18px]" />
-                  {action.label}
-                </button>
-              ))}
-            </div>
-          ) : null}
-
-          {butuhTeknisi ? (
-            <p className="mb-2 px-0.5 font-caption text-caption text-warning-text flex items-center gap-1">
-              <Icon name="info" className="text-[16px]" />
-              Pilih minimal satu teknisi lewat Atur Tim sebelum memulai pengerjaan.
-            </p>
-          ) : null}
-
-          {canUpload && !cameraOpen && adaFaseBoleh ? (
-            <button
-              type="button"
-              // Fase dibuka langsung ke tahap yang sedang boleh. Kalau "after"
-              // yang boleh, membuka kamera dengan "before" terpilih membuat
-              // teknisi menekan tombol yang mati.
-              onClick={() => {
-                setPhase(pekerjaanSelesai && hasBefore ? "after" : "before");
-                void openCamera();
-              }}
-              className="w-full py-3.5 rounded-2xl bg-primary/10 text-primary flex items-center justify-center gap-2 border border-primary/20 active:scale-95 transition-transform"
-            >
-              <Icon name="add_a_photo" className="text-[20px]" />
-              Tambah Foto Inspeksi
-            </button>
-          ) : null}
-
-          {canUpload && !cameraOpen && !adaFaseBoleh ? (
-            <p className="font-caption text-caption text-text-muted text-center">
-              {order.status === "cancelled"
-                ? "Order dibatalkan, inspeksi foto sudah tidak dibuka."
-                : "Foto kondisi awal diambil saat pengerjaan berjalan. Foto hasil akhir dibuka setelah pengerjaan selesai atau unit siap diambil."}
-            </p>
-          ) : null}
+      {/* Mobile floating action bar (hidden on desktop — shown in right column card) */}
+      {actionControls ? (
+        <div className="lg:hidden fixed bottom-nav-offset left-0 right-0 z-action-bar px-gutter pb-3 pt-3 bg-surface/95 backdrop-blur-md border-t border-outline-variant">
+          {actionControls}
         </div>
       ) : null}
 

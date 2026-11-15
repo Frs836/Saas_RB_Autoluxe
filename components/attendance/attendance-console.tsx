@@ -725,7 +725,7 @@ export function AttendanceConsole({
     <div className="flex flex-col w-full pb-nav-plain lg:pb-8 lg:grid lg:grid-cols-2 lg:gap-6 lg:max-w-5xl lg:mx-auto lg:px-6 lg:py-6 lg:items-start">
       {/* Ringkasan shift hari ini (owner / admin_kasir / maintainer) */}
       {canAudit ? (
-        <section className="px-gutter pt-4">
+        <section className="px-gutter pt-4 lg:px-0 lg:pt-0">
           <div className="bg-surface rounded-[20px] p-4 clay-card border border-white/80">
             <div className="flex items-center justify-between gap-2 mb-2.5">
               <div className="flex items-center gap-2.5">
@@ -794,7 +794,7 @@ export function AttendanceConsole({
 
       {/* Kartu status hari ini */}
       {mode !== "checkin" ? (
-        <section className="px-gutter pt-4">
+        <section className="px-gutter pt-4 lg:px-0 lg:pt-0">
           <div className="bg-surface rounded-[24px] p-5 clay-card border border-white/80 flex items-start gap-3">
             <div
               className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${
@@ -845,7 +845,7 @@ export function AttendanceConsole({
 
       {/* Peringatan pendaftaran Face ID */}
       {!hasFace ? (
-        <section className="px-gutter pt-4">
+        <section className="px-gutter pt-4 lg:px-0 lg:pt-0">
           <div className="bg-brand-50 border border-brand-100 rounded-[16px] p-3.5 flex items-start gap-2.5">
             <Icon name="badge" className="text-brand-600 text-[20px] mt-0.5" />
             <div className="flex flex-col gap-0.5">
@@ -862,7 +862,7 @@ export function AttendanceConsole({
 
       {/* Lokasi cabang belum dikonfigurasi */}
       {!branchConfigured ? (
-        <section className="px-gutter pt-4">
+        <section className="px-gutter pt-4 lg:px-0 lg:pt-0">
           <div className="bg-warning-surface rounded-[16px] p-3.5 flex flex-col gap-2.5">
             <div className="flex items-start gap-2.5">
               <Icon name="wrong_location" className="text-warning-text text-[20px] mt-0.5" />
@@ -889,7 +889,7 @@ export function AttendanceConsole({
           </div>
         </section>
       ) : canManageLocation && showLocationSetup ? null : canManageLocation ? (
-        <section className="px-gutter pt-4">
+        <section className="px-gutter pt-4 lg:px-0 lg:pt-0">
           <button
             type="button"
             onClick={() => setShowLocationSetup(true)}
@@ -902,7 +902,7 @@ export function AttendanceConsole({
       ) : null}
 
       {canManageLocation && showLocationSetup ? (
-        <section className="px-gutter pt-4">
+        <section className="px-gutter pt-4 lg:px-0 lg:pt-0">
           <div className="bg-surface rounded-[16px] p-3.5 clay-card flex flex-col gap-3">
             <span className="font-body-bold text-body-bold text-text-primary">
               Atur titik koordinat cabang
@@ -1235,7 +1235,7 @@ export function AttendanceConsole({
 
       {/* Kartu keterlambatan */}
       {mode === "checkin" ? (
-        <section className="px-gutter pt-4">
+        <section className="px-gutter pt-4 lg:px-0 lg:pt-0">
           <div className="bg-brand-50 border border-brand-100 rounded-[16px] p-3.5 space-y-3">
             <div className="flex items-center justify-between pb-2.5 border-b border-brand-200/60">
               <div className="flex items-center gap-2 text-text-primary">
@@ -1322,7 +1322,7 @@ export function AttendanceConsole({
       ) : null}
 
       {/* Aksi utama */}
-      <section className="px-gutter pt-4 space-y-2.5">
+      <section className="px-gutter pt-4 lg:px-0 lg:pt-0 space-y-2.5">
         {mode !== "done" ? (
           <SyaratBelumTerpenuhi
             syarat={syaratSubmit}
@@ -1419,7 +1419,7 @@ export function AttendanceConsole({
 
       {/* Riwayat kehadiran */}
       {history.length ? (
-        <section className="px-gutter pt-4">
+        <section className="px-gutter pt-4 lg:px-0 lg:pt-0">
           <div className="bg-surface rounded-[20px] p-4 clay-card border border-white/80">
             <div className="flex items-center gap-2 mb-3">
               <Icon name="history" className="text-brand-600 text-[18px]" />

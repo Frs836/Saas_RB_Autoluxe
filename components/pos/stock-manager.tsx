@@ -689,7 +689,7 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
               type="button"
               disabled={submitting}
               onClick={submitClaim}
-              className="w-full py-4 rounded-2xl bg-primary text-white font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-60"
+              className="w-full py-4 lg:py-2.5 rounded-2xl lg:rounded-xl bg-primary text-white font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-60"
             >
               <Icon name={submitting ? "hourglass_top" : "send"} className="text-[22px]" />
               {submitting ? "Mengirim..." : "Ajukan Klaim"}

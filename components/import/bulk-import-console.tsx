@@ -292,7 +292,7 @@ export function BulkImportConsole({
 
       {/* Import button */}
       <button type="button" onClick={handleImport} disabled={loading || !rows.length}
-        className="w-full py-4 rounded-2xl bg-primary text-white font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-60">
+        className="w-full py-4 lg:py-2.5 rounded-2xl lg:rounded-xl bg-primary text-white font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-60">
         {loading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Icon name="upload" className="text-[22px]" />}
         {loading ? "Mengimport..." : `Import ${tmpl.label}`}
       </button>

@@ -393,12 +393,12 @@ export function StockOpnameView({
       ) : null}
 
       {selected && !readOnly ? (
-        <div className="fixed bottom-nav-offset left-0 right-0 z-action-bar px-gutter pb-3 pt-3 bg-surface/95 backdrop-blur-md border-t border-outline-variant flex gap-2">
+        <div className="fixed bottom-nav-offset left-0 right-0 z-action-bar px-gutter pb-3 pt-3 bg-surface/95 backdrop-blur-md border-t border-outline-variant flex gap-2 lg:left-[72px] lg:px-6">
           <button
             type="button"
             disabled={busy}
             onClick={saveCounts}
-            className="flex-1 py-3.5 rounded-2xl bg-surface-container text-text-secondary font-body-bold text-body-bold flex items-center justify-center gap-1.5 active:scale-95 transition-transform disabled:opacity-60"
+            className="flex-1 py-3.5 lg:py-2.5 rounded-2xl lg:rounded-xl bg-surface-container text-text-secondary font-body-bold text-body-bold flex items-center justify-center gap-1.5 active:scale-95 transition-transform disabled:opacity-60"
           >
             <Icon name="save" className="text-[20px]" />
             Simpan Draf
@@ -407,7 +407,7 @@ export function StockOpnameView({
             type="button"
             disabled={busy}
             onClick={submit}
-            className="flex-1 py-3.5 rounded-2xl primary-gradient text-on-primary font-body-bold text-body-bold flex items-center justify-center gap-1.5 active:scale-95 transition-transform disabled:opacity-60"
+            className="flex-1 py-3.5 lg:py-2.5 rounded-2xl lg:rounded-xl primary-gradient text-on-primary font-body-bold text-body-bold flex items-center justify-center gap-1.5 active:scale-95 transition-transform disabled:opacity-60"
           >
             <Icon name={busy ? "hourglass_top" : "task_alt"} className="text-[20px]" />
             Kirim dan Koreksi

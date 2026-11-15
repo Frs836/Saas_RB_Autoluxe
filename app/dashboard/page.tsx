@@ -258,7 +258,7 @@ const jamSekarang = wibNow();
         branchScope={profile.branchScope}
       />
 
-      <div className="px-gutter pt-space-md grid grid-cols-2 lg:grid-cols-4 gap-space-md">
+      <div className="px-gutter lg:px-6 pt-space-md lg:pt-6 grid grid-cols-2 lg:grid-cols-4 gap-space-md">
         <section className="col-span-2 relative overflow-hidden rounded-[20px] p-5 primary-gradient text-on-primary clay-glow">
           <div className="absolute -right-6 -bottom-6 opacity-10 pointer-events-none text-white">
             <Icon name="directions_car" className="text-[130px]" />

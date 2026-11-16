@@ -124,6 +124,7 @@ const [tab, setTab] = useState<"items" | "claims">("items");
   // yang panjang harus digulir satu per satu hanya untuk menemukan satu nama.
   const [cariItem, setCariItem] = useState("");
   const [huruf, setHuruf] = useState<string>("all");
+  const [expandedClaimId, setExpandedClaimId] = useState<string | null>(null);
 
 // Diturunkan setelah seluruh state dideklarasikan. Barisnya sebelumnya diletakkan
 // di atas deklarasi state sehingga memicu zona mati temporal dan membuat seluruh
@@ -616,59 +617,137 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
           {claims.map((claim) => {
             const meta = CLAIM_STATUS[claim.status] ?? CLAIM_STATUS.pending;
             const busy = busyId === claim.id;
+            const isExpanded = expandedClaimId === claim.id;
             return (
-              <div key={claim.id} className="clay-card p-4 flex flex-col gap-2">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex flex-col min-w-0">
-                    <span className="font-body-bold text-body-bold text-text-primary truncate">
-                      {claim.item_name}
+              <div
+                key={claim.id}
+                className="clay-card rounded-2xl overflow-hidden border border-border-subtle transition-all"
+              >
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setExpandedClaimId(isExpanded ? null : claim.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      setExpandedClaimId(isExpanded ? null : claim.id);
+                    }
+                  }}
+                  className="p-4 flex items-start justify-between gap-2 cursor-pointer hover:bg-surface-container-low/40 transition-colors"
+                >
+                  <div className="flex items-start gap-3 min-w-0">
+                    <span
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl mt-0.5 ${meta.cls}`}
+                    >
+                      <Icon name={meta.icon} className="text-[18px]" />
                     </span>
-                    <span className="font-caption text-caption text-text-muted">
-                      {formatAngka(claim.quantity)} {claim.unit} •{" "}
-                      {claim.claimed_by_name}
-                    </span>
+                    <div className="flex flex-col min-w-0">
+                      <span className="font-body-bold text-body-bold text-text-primary truncate">
+                        {claim.item_name}
+                      </span>
+                      <span className="font-caption text-caption text-text-muted">
+                        Jumlah: <span className="font-semibold text-text-primary">{formatAngka(claim.quantity)} {claim.unit}</span> • Oleh {claim.claimed_by_name}
+                      </span>
+                      <span className="font-caption text-caption text-text-secondary mt-0.5">
+                        {formatDateWib(claim.created_at)} pukul {formatTimeWib(claim.created_at)} WIB
+                      </span>
+                    </div>
                   </div>
-                  <span
-                    className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-caption text-caption shrink-0 ${meta.cls}`}
-                  >
-                    <Icon name={meta.icon} className="text-[14px]" />
-                    {meta.label}
-                  </span>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-caption text-caption shrink-0 font-medium ${meta.cls}`}
+                    >
+                      <Icon name={meta.icon} className="text-[14px]" />
+                      {meta.label}
+                    </span>
+                    <Icon
+                      name={isExpanded ? "expand_less" : "expand_more"}
+                      className="text-text-muted text-[20px]"
+                    />
+                  </div>
                 </div>
-                {claim.note ? (
-                  <p className="font-caption text-caption text-text-secondary">
-                    Catatan: {claim.note}
-                  </p>
-                ) : null}
-                <span className="font-caption text-caption text-text-muted">
-                  {formatDateWib(claim.created_at)} •{" "}
-                  {formatTimeWib(claim.created_at)} WIB
-                  {claim.confirmed_by_name
-                    ? ` • Diproses ${claim.confirmed_by_name}`
-                    : ""}
-                </span>
-                {canManage && claim.status === "pending" ? (
-                  <div className="flex gap-2 pt-1">
-                    <button
-                      type="button"
-                      disabled={busy}
-                      onClick={() => confirmClaim(claim)}
-                      className="flex-1 py-2.5 rounded-xl bg-success-surface text-success-text font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform disabled:opacity-60"
-                    >
-                      <Icon name="check" className="text-[18px]" />
-                      Setujui
-                    </button>
-                    <button
-                      type="button"
-                      disabled={busy}
-                      onClick={() => rejectClaim(claim)}
-                      className="flex-1 py-2.5 rounded-xl bg-danger-surface text-danger-text font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform disabled:opacity-60"
-                    >
-                      <Icon name="close" className="text-[18px]" />
-                      Tolak
-                    </button>
+
+                {/* Dropdown Rincian Lengkap */}
+                {isExpanded && (
+                  <div className="px-4 pb-4 pt-1 border-t border-border-subtle/80 bg-surface/70 flex flex-col gap-2.5">
+                    <div className="grid grid-cols-2 gap-2 pt-1 text-xs">
+                      <div className="p-2.5 rounded-xl bg-surface-container-low border border-border-subtle/50 flex flex-col">
+                        <span className="text-[11px] text-text-muted">Barang Diminta</span>
+                        <span className="font-bold text-text-primary mt-0.5">{claim.item_name}</span>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-surface-container-low border border-border-subtle/50 flex flex-col">
+                        <span className="text-[11px] text-text-muted">Jumlah Pengambilan</span>
+                        <span className="font-bold text-brand-600 mt-0.5">
+                          {formatAngka(claim.quantity)} {claim.unit}
+                        </span>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-surface-container-low border border-border-subtle/50 flex flex-col">
+                        <span className="text-[11px] text-text-muted">Diajukan Oleh</span>
+                        <span className="font-bold text-text-primary mt-0.5">{claim.claimed_by_name}</span>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-surface-container-low border border-border-subtle/50 flex flex-col">
+                        <span className="text-[11px] text-text-muted">Status Pengajuan</span>
+                        <span className={`font-bold mt-0.5 ${meta.cls.split(" ")[1]}`}>
+                          {meta.label}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="p-2.5 rounded-xl bg-surface-container-low/70 flex flex-col gap-1 text-[11px]">
+                      <div className="flex items-center justify-between">
+                        <span className="text-text-muted">Waktu Pengajuan:</span>
+                        <span className="font-medium text-text-primary">
+                          {formatDateWib(claim.created_at)}, {formatTimeWib(claim.created_at)} WIB
+                        </span>
+                      </div>
+                      {claim.confirmed_at && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-text-muted">Waktu Verifikasi:</span>
+                          <span className="font-medium text-text-primary">
+                            {formatDateWib(claim.confirmed_at)}, {formatTimeWib(claim.confirmed_at)} WIB
+                          </span>
+                        </div>
+                      )}
+                      {claim.confirmed_by_name && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-text-muted">Petugas Verifikasi:</span>
+                          <span className="font-medium text-text-primary">
+                            {claim.confirmed_by_name}
+                          </span>
+                        </div>
+                      )}
+                      <div className="pt-1 border-t border-border-subtle/40 flex flex-col gap-0.5">
+                        <span className="text-text-muted">Catatan Keperluan:</span>
+                        <span className="text-text-primary italic">
+                          {claim.note ? `"${claim.note}"` : "Tidak ada catatan keperluan khusus."}
+                        </span>
+                      </div>
+                    </div>
+
+                    {canManage && claim.status === "pending" ? (
+                      <div className="flex gap-2 pt-1">
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={() => confirmClaim(claim)}
+                          className="flex-1 py-2.5 rounded-xl bg-success-surface text-success-text font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform disabled:opacity-60"
+                        >
+                          <Icon name="check" className="text-[18px]" />
+                          Setujui Pengambilan
+                        </button>
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={() => rejectClaim(claim)}
+                          className="flex-1 py-2.5 rounded-xl bg-danger-surface text-danger-text font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform disabled:opacity-60"
+                        >
+                          <Icon name="close" className="text-[18px]" />
+                          Tolak
+                        </button>
+                      </div>
+                    ) : null}
                   </div>
-                ) : null}
+                )}
               </div>
             );
           })}

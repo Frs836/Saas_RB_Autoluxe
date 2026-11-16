@@ -106,6 +106,7 @@ export function KasConsole({
   const [success, setSuccess] = useState<string | null>(null);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [proofPath, setProofPath] = useState<string | null>(null);
+  const [expandedPettyId, setExpandedPettyId] = useState<string | null>(null);
 
   // Payment modal state
   const [paymentModal, setPaymentModal] = useState<UnpaidOrder | null>(null);
@@ -515,21 +516,125 @@ export function KasConsole({
                 Belum ada transaksi
               </div>
             ) : (
-              pettyCash.slice(0, 20).map((row) => (
-                <div key={row.id} className="flex items-start justify-between gap-space-sm py-2 border-b border-border-subtle last:border-b-0">
-                  <div className="flex flex-col min-w-0">
-                    <p className="font-body-bold text-body-bold text-text-primary truncate">{row.category}</p>
-                    <p className="font-caption text-caption text-text-muted truncate">{row.description || "-"}</p>
-                    <p className="font-caption text-caption text-text-muted">{row.paymentMethod.toUpperCase()}</p>
+              pettyCash.slice(0, 30).map((row) => {
+                const isExpanded = expandedPettyId === row.id;
+                const methodLabel =
+                  row.paymentMethod === "cash"
+                    ? "Tunai (Kas Laci)"
+                    : row.paymentMethod === "qris"
+                      ? "QRIS"
+                      : row.paymentMethod === "bank_transfer"
+                        ? "Transfer Bank"
+                        : row.paymentMethod.toUpperCase();
+
+                const formattedDate = new Date(row.createdAt).toLocaleDateString("id-ID", {
+                  weekday: "short",
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                });
+
+                return (
+                  <div
+                    key={row.id}
+                    className="rounded-2xl border border-border-subtle bg-surface-container-low/60 hover:bg-surface-container-low transition-all overflow-hidden"
+                  >
+                    {/* Ringkasan Baris */}
+                    <button
+                      type="button"
+                      onClick={() => setExpandedPettyId(isExpanded ? null : row.id)}
+                      className="w-full p-3.5 flex items-start justify-between gap-3 text-left"
+                    >
+                      <div className="flex items-start gap-3 min-w-0">
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-danger-surface text-danger-text mt-0.5">
+                          <Icon name="receipt_long" className="text-[18px]" />
+                        </span>
+                        <div className="flex flex-col min-w-0">
+                          <span className="font-body-bold text-body-bold text-text-primary truncate">
+                            {row.category}
+                          </span>
+                          <span className="font-caption text-caption text-text-muted truncate">
+                            {row.description || "Pengeluaran operasional"}
+                          </span>
+                          <span className="font-caption text-caption text-text-secondary mt-0.5">
+                            {methodLabel} • {formattedDate}, {formatTimeWib(row.createdAt)} WIB
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0 text-right">
+                        <div>
+                          <p className="font-body-bold text-body-bold text-danger-text">
+                            -{formatRupiah(row.amount)}
+                          </p>
+                        </div>
+                        <Icon
+                          name={isExpanded ? "expand_less" : "expand_more"}
+                          className="text-text-muted text-[20px]"
+                        />
+                      </div>
+                    </button>
+
+                    {/* Dropdown Rincian Lengkap */}
+                    {isExpanded && (
+                      <div className="px-3.5 pb-3.5 pt-1 border-t border-border-subtle/80 bg-surface/80 flex flex-col gap-2.5">
+                        <div className="grid grid-cols-2 gap-2 pt-1 text-xs">
+                          <div className="p-2.5 rounded-xl bg-surface-container-low border border-border-subtle/50 flex flex-col">
+                            <span className="text-[11px] text-text-muted">Kategori Biaya</span>
+                            <span className="font-bold text-text-primary mt-0.5">{row.category}</span>
+                          </div>
+                          <div className="p-2.5 rounded-xl bg-surface-container-low border border-border-subtle/50 flex flex-col">
+                            <span className="text-[11px] text-text-muted">Metode Pembayaran</span>
+                            <span className="font-bold text-text-primary mt-0.5">{methodLabel}</span>
+                          </div>
+                          <div className="p-2.5 rounded-xl bg-surface-container-low border border-border-subtle/50 flex flex-col">
+                            <span className="text-[11px] text-text-muted">Total Pengeluaran</span>
+                            <span className="font-bold text-danger-text mt-0.5">
+                              {formatRupiah(row.amount)}
+                            </span>
+                          </div>
+                          <div className="p-2.5 rounded-xl bg-surface-container-low border border-border-subtle/50 flex flex-col">
+                            <span className="text-[11px] text-text-muted">Waktu Pencatatan</span>
+                            <span className="font-bold text-text-primary mt-0.5">
+                              {formatTimeWib(row.createdAt)} WIB
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="p-2.5 rounded-xl bg-surface-container-low/70 flex flex-col gap-1 text-[11px]">
+                          <span className="text-text-muted">Keterangan / Keperluan:</span>
+                          <span className="text-text-primary font-medium">
+                            {row.description || "Tidak ada catatan keterangan."}
+                          </span>
+                        </div>
+
+                        {row.proofPhotoUrl && (
+                          <div className="p-2.5 rounded-xl bg-surface-container-low/70 flex flex-col gap-2 text-[11px]">
+                            <span className="text-text-muted font-medium">Foto Bukti / Struk:</span>
+                            <div className="flex items-center gap-3">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={row.proofPhotoUrl}
+                                alt="Bukti pengeluaran"
+                                className="h-16 w-16 object-cover rounded-xl border border-border-subtle shadow-sm"
+                              />
+                              <a
+                                href={row.proofPhotoUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="px-3 py-1.5 rounded-xl bg-brand-50 text-brand-600 font-bold hover:bg-brand-100 transition-colors inline-flex items-center gap-1.5"
+                              >
+                                <Icon name="open_in_new" className="text-[16px]" />
+                                Buka Foto Penuh
+                              </a>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  <div className="text-right">
-                    <p className="font-body-bold text-body-bold text-danger-text">{formatRupiah(row.amount)}</p>
-                    <p className="font-caption text-caption text-text-muted">
-                      {formatTimeWib(row.createdAt)} WIB
-                    </p>
-                  </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </section>

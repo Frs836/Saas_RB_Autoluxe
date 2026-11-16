@@ -132,3 +132,92 @@ export async function createStockClaimAction(params: {
 
   return { ok: true };
 }
+
+export async function createBundleClaimAction(params: {
+  p_bundle_id: string;
+  p_quantity: number;
+  p_note?: string;
+}): Promise<ActionResult> {
+  const supabase = await createClient();
+
+  const { error: rpcErr } = await (supabase as any).rpc("create_bundle_claim", params);
+  if (rpcErr) return { ok: false, message: rpcErr.message };
+
+  revalidatePath("/stok");
+  revalidatePath("/stok/racikan");
+
+  return { ok: true };
+}
+
+export async function confirmBundleClaimAction(
+  claimId: string,
+): Promise<ActionResult> {
+  const supabase = await createClient();
+
+  const { error: rpcErr } = await (supabase as any).rpc("confirm_bundle_claim", {
+    p_claim_id: claimId,
+  });
+  if (rpcErr) return { ok: false, message: rpcErr.message };
+
+  revalidatePath("/stok");
+  revalidatePath("/stok/racikan");
+
+  return { ok: true };
+}
+
+export async function rejectBundleClaimAction(
+  claimId: string,
+  reason: string,
+): Promise<ActionResult> {
+  const supabase = await createClient();
+
+  const { error: rpcErr } = await supabase.rpc("reject_stock_claim", {
+    p_claim_id: claimId,
+    p_reason: reason,
+  });
+  if (rpcErr) return { ok: false, message: rpcErr.message };
+
+  revalidatePath("/stok");
+  revalidatePath("/stok/racikan");
+
+  return { ok: true };
+}
+
+export async function setBundleDefinitionAction(params: {
+  p_branch_id: string;
+  p_bundle_name: string;
+  p_unit: string;
+  p_description?: string;
+  p_components: { item_id: string; quantity: number }[];
+}): Promise<ActionResult> {
+  const supabase = await createClient();
+
+  const { error: rpcErr } = await (supabase as any).rpc("set_bundle_definition", {
+    p_branch_id: params.p_branch_id,
+    p_bundle_name: params.p_bundle_name,
+    p_unit: params.p_unit,
+    p_description: params.p_description ?? null,
+    p_components: params.p_components,
+  });
+  if (rpcErr) return { ok: false, message: rpcErr.message };
+
+  revalidatePath("/stok/racikan");
+  revalidatePath("/pengaturan/resep");
+
+  return { ok: true };
+}
+
+export async function deleteBundleAction(bundleId: string): Promise<ActionResult> {
+  const supabase = await createClient();
+
+  const { error: rpcErr } = await (supabase as any).rpc("delete_bundle", {
+    p_bundle_id: bundleId,
+  });
+  if (rpcErr) return { ok: false, message: rpcErr.message };
+
+  revalidatePath("/stok/racikan");
+  revalidatePath("/pengaturan/resep");
+
+  return { ok: true };
+}
+

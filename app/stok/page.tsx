@@ -45,7 +45,8 @@ export default async function StockPage() {
         .from("stock_claims")
         .select(
           "id, item_id, quantity, unit, note, status, claimed_by, confirmed_by, created_at, confirmed_at",
-        ),
+        )
+        .not("item_id", "is", null),
       branchId,
       "stock_claims",
     )
@@ -80,19 +81,21 @@ export default async function StockPage() {
     );
   }
 
-  const claims: StockClaim[] = rawClaims.map((c) => ({
-    id: c.id,
-    item_id: c.item_id,
-    item_name: itemNameById[c.item_id] ?? "Item",
-    quantity: Number(c.quantity),
-    unit: c.unit,
-    note: c.note,
-    status: c.status,
-    claimed_by_name: nameById[c.claimed_by] ?? "Staf",
-    confirmed_by_name: c.confirmed_by ? nameById[c.confirmed_by] ?? "Staf" : null,
-    created_at: c.created_at,
-    confirmed_at: c.confirmed_at,
-  }));
+  const claims: StockClaim[] = rawClaims
+    .filter((c): c is typeof c & { item_id: string } => Boolean(c.item_id))
+    .map((c) => ({
+      id: c.id,
+      item_id: c.item_id,
+      item_name: itemNameById[c.item_id] ?? "Item",
+      quantity: Number(c.quantity),
+      unit: c.unit,
+      note: c.note,
+      status: c.status,
+      claimed_by_name: nameById[c.claimed_by] ?? "Staf",
+      confirmed_by_name: c.confirmed_by ? nameById[c.confirmed_by] ?? "Staf" : null,
+      created_at: c.created_at,
+      confirmed_at: c.confirmed_at,
+    }));
 
   const canManage = can(session.role, "stock.approve");
 
@@ -113,8 +116,21 @@ export default async function StockPage() {
         branches={can(session.role, "branch.switch") ? branchOptions : []}
         activeBranchId={branchId}
       />
-      {canManage ? (
-        <div className="px-4 pt-4">
+      <div className="px-4 pt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <Link
+          href="/stok/racikan"
+          className="flex items-center gap-3 bg-surface rounded-[16px] p-3.5 clay-card border border-white/80 active:scale-[0.99] transition-transform"
+        >
+          <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+            <Icon name="science" className="text-[18px]" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <span className="font-body-bold text-body-bold text-text-primary block">Stok Racikan</span>
+            <span className="font-caption text-caption text-text-muted block">Paket racikan bahan (HF + HCL dll)</span>
+          </div>
+          <Icon name="chevron_right" className="text-text-muted text-[20px] shrink-0" />
+        </Link>
+        {canManage ? (
           <Link
             href="/stok/opname"
             className="flex items-center gap-3 bg-surface rounded-[16px] p-3.5 clay-card border border-white/80 active:scale-[0.99] transition-transform"
@@ -128,8 +144,8 @@ export default async function StockPage() {
             </div>
             <Icon name="chevron_right" className="text-text-muted text-[20px] shrink-0" />
           </Link>
-        </div>
-      ) : null}
+        ) : null}
+      </div>
       <StockManager
         items={items as InventoryItem[]}
         claims={claims}

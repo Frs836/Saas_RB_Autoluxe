@@ -41,7 +41,7 @@ export default async function ServiceRecipePage({
 
   const supabase = await createClient();
 
-  const [servicesRes, itemsRes, recipesRes] = await Promise.all([
+  const [servicesRes, itemsRes, recipesRes, bundlesRes] = await Promise.all([
     supabase
       .from("services")
       .select("id, name, is_active")
@@ -54,9 +54,15 @@ export default async function ServiceRecipePage({
     supabase
       .from("service_material_recipes")
       .select(
-        "service_id, item_id, qty_s, qty_m, qty_l, qty_xl, qty_motor_s, qty_motor_m, qty_motor_l, qty_motor_xl"
+        "service_id, item_id, bundle_item_id, qty_s, qty_m, qty_l, qty_xl, qty_motor_s, qty_motor_m, qty_motor_l, qty_motor_xl"
       )
       .eq("branch_id", branchId),
+    supabase
+      .from("bundle_items")
+      .select("id, bundle_name, unit")
+      .eq("branch_id", branchId)
+      .eq("is_active", true)
+      .order("bundle_name", { ascending: true }),
   ]);
 
   const services: RecipeService[] = (servicesRes.data ?? []).map((row) => ({
@@ -69,20 +75,46 @@ export default async function ServiceRecipePage({
     item_name: (row.item_name as string) ?? "",
     current_stock: Number(row.current_stock ?? 0),
     unit: (row.unit as string) ?? "",
+    unit_cost: row.unit_cost !== null && row.unit_cost !== undefined ? Number(row.unit_cost) : null,
   }));
 
-  const recipes: RecipeRow[] = (recipesRes.data ?? []).map((row) => ({
-    service_id: row.service_id as string,
-    item_id: row.item_id as string,
-    qty_s: row.qty_s !== null && row.qty_s !== undefined ? Number(row.qty_s) : undefined,
-    qty_m: row.qty_m !== null && row.qty_m !== undefined ? Number(row.qty_m) : undefined,
-    qty_l: row.qty_l !== null && row.qty_l !== undefined ? Number(row.qty_l) : undefined,
-    qty_xl: row.qty_xl !== null && row.qty_xl !== undefined ? Number(row.qty_xl) : undefined,
-    qty_motor_s: row.qty_motor_s !== null && row.qty_motor_s !== undefined ? Number(row.qty_motor_s) : undefined,
-    qty_motor_m: row.qty_motor_m !== null && row.qty_motor_m !== undefined ? Number(row.qty_motor_m) : undefined,
-    qty_motor_l: row.qty_motor_l !== null && row.qty_motor_l !== undefined ? Number(row.qty_motor_l) : undefined,
-    qty_motor_xl: row.qty_motor_xl !== null && row.qty_motor_xl !== undefined ? Number(row.qty_motor_xl) : undefined,
+  const bundles = (bundlesRes.data ?? []).map((b) => ({
+    id: b.id as string,
+    bundle_name: (b.bundle_name as string) ?? "",
+    unit: (b.unit as string) ?? "",
   }));
+
+  const rawRecipes = recipesRes.data ?? [];
+
+  const recipes: RecipeRow[] = rawRecipes
+    .filter((row) => row.item_id !== null && row.item_id !== undefined)
+    .map((row) => ({
+      service_id: row.service_id as string,
+      item_id: row.item_id as string,
+      qty_s: row.qty_s !== null && row.qty_s !== undefined ? Number(row.qty_s) : undefined,
+      qty_m: row.qty_m !== null && row.qty_m !== undefined ? Number(row.qty_m) : undefined,
+      qty_l: row.qty_l !== null && row.qty_l !== undefined ? Number(row.qty_l) : undefined,
+      qty_xl: row.qty_xl !== null && row.qty_xl !== undefined ? Number(row.qty_xl) : undefined,
+      qty_motor_s: row.qty_motor_s !== null && row.qty_motor_s !== undefined ? Number(row.qty_motor_s) : undefined,
+      qty_motor_m: row.qty_motor_m !== null && row.qty_motor_m !== undefined ? Number(row.qty_motor_m) : undefined,
+      qty_motor_l: row.qty_motor_l !== null && row.qty_motor_l !== undefined ? Number(row.qty_motor_l) : undefined,
+      qty_motor_xl: row.qty_motor_xl !== null && row.qty_motor_xl !== undefined ? Number(row.qty_motor_xl) : undefined,
+    }));
+
+  const bundleRecipes = rawRecipes
+    .filter((row) => row.bundle_item_id !== null && row.bundle_item_id !== undefined)
+    .map((row) => ({
+      service_id: row.service_id as string,
+      bundle_item_id: row.bundle_item_id as string,
+      qty_s: row.qty_s !== null && row.qty_s !== undefined ? Number(row.qty_s) : undefined,
+      qty_m: row.qty_m !== null && row.qty_m !== undefined ? Number(row.qty_m) : undefined,
+      qty_l: row.qty_l !== null && row.qty_l !== undefined ? Number(row.qty_l) : undefined,
+      qty_xl: row.qty_xl !== null && row.qty_xl !== undefined ? Number(row.qty_xl) : undefined,
+      qty_motor_s: row.qty_motor_s !== null && row.qty_motor_s !== undefined ? Number(row.qty_motor_s) : undefined,
+      qty_motor_m: row.qty_motor_m !== null && row.qty_motor_m !== undefined ? Number(row.qty_motor_m) : undefined,
+      qty_motor_l: row.qty_motor_l !== null && row.qty_motor_l !== undefined ? Number(row.qty_motor_l) : undefined,
+      qty_motor_xl: row.qty_motor_xl !== null && row.qty_motor_xl !== undefined ? Number(row.qty_motor_xl) : undefined,
+    }));
 
   const branchName =
     branches.find((branch) => branch.id === branchId)?.name ?? "Cabang";
@@ -113,12 +145,12 @@ export default async function ServiceRecipePage({
         </p>
       )}
 
-      {services.length === 0 || items.length === 0 ? (
+      {services.length === 0 || (items.length === 0 && bundles.length === 0) ? (
         <main className="flex-1 px-gutter py-6">
           <p className="font-body text-body text-text-secondary">
             {services.length === 0
               ? "Belum ada jasa di katalog. Tambahkan jasa lebih dulu di Kelola Jasa POS."
-              : "Belum ada bahan di gudang cabang ini. Tambahkan stok lebih dulu."}
+              : "Belum ada bahan atau racikan di gudang cabang ini. Tambahkan stok atau racikan lebih dulu."}
           </p>
         </main>
       ) : (
@@ -127,6 +159,8 @@ export default async function ServiceRecipePage({
           services={services}
           items={items}
           initialRecipes={recipes}
+          bundles={bundles}
+          initialBundleRecipes={bundleRecipes}
         />
       )}
 

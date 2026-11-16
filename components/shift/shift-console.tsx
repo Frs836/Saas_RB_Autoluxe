@@ -76,6 +76,7 @@ export function ShiftConsole({
   const [showHistory, setShowHistory] = useState(false);
   const [history, setHistory] = useState<HistoryRow[]>([]);
   const [historyPending, setHistoryPending] = useState(false);
+  const [expandedShiftId, setExpandedShiftId] = useState<string | null>(null);
   const [nowClock, setNowClock] = useState<string | null>(null);
   // State untuk buka shift baru setelah shift sebelumnya closed
   const [forceNewShift, setForceNewShift] = useState(false);
@@ -408,33 +409,147 @@ export function ShiftConsole({
                 Belum ada penutupan kas tercatat.
               </p>
             ) : (
-              <div className="flex flex-col divide-y divide-border-subtle">
-                {history.map((row) => (
-                  <div key={row.id} className="py-2.5 flex items-center justify-between gap-3">
-                    <div className="flex flex-col gap-0.5 min-w-0">
-                      <span className="font-caption text-caption text-text-primary">
-                        {row.shiftDate} • Tutup {formatTimeWib(row.closedAt)} WIB
-                      </span>
-                      <span className="font-caption text-caption text-text-muted truncate">
-                        Kas: {formatRupiah(row.actualCash)} dari ekspektasi{" "}
-                        {formatRupiah(row.expectedCash)}
-                      </span>
-                    </div>
-                    <span
-                      className={`px-2 py-0.5 rounded-full font-caption text-caption shrink-0 ${
-                        row.difference === 0
-                          ? "bg-success-surface text-success-text"
-                          : "bg-warning-surface text-warning-text"
-                      }`}
+              <div className="flex flex-col gap-2.5">
+                {history.map((row) => {
+                  const isExpanded = expandedShiftId === row.id;
+                  const openedByName = (row.openedBy && userNames[row.openedBy]) || "Kasir";
+                  const closedByName = (row.closedBy && userNames[row.closedBy]) || "Kasir";
+                  const isSesuai = row.difference === 0 || row.difference === null;
+                  const isLebih = (row.difference ?? 0) > 0;
+
+                  return (
+                    <div
+                      key={row.id}
+                      className="rounded-2xl border border-border-subtle bg-surface-container-low/60 hover:bg-surface-container-low transition-all overflow-hidden"
                     >
-                      {row.difference === 0
-                        ? "SESUAI"
-                        : `${row.difference && row.difference > 0 ? "+" : "-"}${formatRupiah(
-                            Math.abs(row.difference ?? 0),
-                          )}`}
-                    </span>
-                  </div>
-                ))}
+                      {/* Baris Ringkasan yang Dapat Diklik */}
+                      <button
+                        type="button"
+                        onClick={() => setExpandedShiftId(isExpanded ? null : row.id)}
+                        className="w-full p-3.5 flex items-center justify-between gap-3 text-left"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <span
+                            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
+                              isSesuai
+                                ? "bg-success-surface text-success-text"
+                                : isLebih
+                                  ? "bg-warning-surface text-warning-text"
+                                  : "bg-danger-surface text-danger-text"
+                            }`}
+                          >
+                            <Icon
+                              name={isSesuai ? "task_alt" : isLebih ? "trending_up" : "trending_down"}
+                              className="text-[18px]"
+                            />
+                          </span>
+                          <div className="flex flex-col min-w-0">
+                            <span className="font-body-bold text-body-bold text-text-primary truncate">
+                              {row.shiftDate}
+                            </span>
+                            <span className="font-caption text-caption text-text-muted">
+                              Tutup: {formatTimeWib(row.closedAt)} WIB • Fisik: {formatRupiah(row.actualCash)}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span
+                            className={`px-2.5 py-1 rounded-full font-caption text-caption font-semibold ${
+                              isSesuai
+                                ? "bg-success-surface text-success-text"
+                                : isLebih
+                                  ? "bg-warning-surface text-warning-text"
+                                  : "bg-danger-surface text-danger-text"
+                            }`}
+                          >
+                            {isSesuai
+                              ? "Sesuai ✓"
+                              : isLebih
+                                ? `+${formatRupiah(row.difference ?? 0)} (Lebih)`
+                                : `-${formatRupiah(Math.abs(row.difference ?? 0))} (Kurang)`}
+                          </span>
+                          <Icon
+                            name={isExpanded ? "expand_less" : "expand_more"}
+                            className="text-text-muted text-[20px]"
+                          />
+                        </div>
+                      </button>
+
+                      {/* Dropdown Rincian Lengkap */}
+                      {isExpanded && (
+                        <div className="px-3.5 pb-3.5 pt-1 border-t border-border-subtle/80 bg-surface/80 flex flex-col gap-2.5">
+                          <div className="grid grid-cols-2 gap-2 pt-1 text-xs">
+                            <div className="p-2.5 rounded-xl bg-surface-container-low border border-border-subtle/50 flex flex-col">
+                              <span className="text-[11px] text-text-muted">Modal Kas Awal</span>
+                              <span className="font-bold text-text-primary mt-0.5">
+                                {formatRupiah(row.openingCash)}
+                              </span>
+                            </div>
+                            <div className="p-2.5 rounded-xl bg-surface-container-low border border-border-subtle/50 flex flex-col">
+                              <span className="text-[11px] text-text-muted">Target Kas Sistem</span>
+                              <span className="font-bold text-text-primary mt-0.5">
+                                {formatRupiah(row.expectedCash ?? 0)}
+                              </span>
+                            </div>
+                            <div className="p-2.5 rounded-xl bg-surface-container-low border border-border-subtle/50 flex flex-col">
+                              <span className="text-[11px] text-text-muted">Kas Fisik Dihitung</span>
+                              <span className="font-bold text-text-primary mt-0.5">
+                                {formatRupiah(row.actualCash ?? 0)}
+                              </span>
+                            </div>
+                            <div className="p-2.5 rounded-xl bg-surface-container-low border border-border-subtle/50 flex flex-col">
+                              <span className="text-[11px] text-text-muted">Hasil Selisih</span>
+                              <span
+                                className={`font-bold mt-0.5 ${
+                                  isSesuai
+                                    ? "text-success-text"
+                                    : isLebih
+                                      ? "text-warning-text"
+                                      : "text-danger-text"
+                                }`}
+                              >
+                                {isSesuai
+                                  ? "Rp 0 (Sempurna)"
+                                  : isLebih
+                                    ? `+${formatRupiah(row.difference ?? 0)}`
+                                    : `-${formatRupiah(Math.abs(row.difference ?? 0))}`}
+                              </span>
+                            </div>
+                          </div>
+
+                          {row.unknownMethodCash > 0 && (
+                            <div className="p-2 rounded-xl bg-warning-surface/50 text-warning-text text-[11px] flex items-center justify-between">
+                              <span>Pembayaran Tak Teridentifikasi:</span>
+                              <span className="font-bold">{formatRupiah(row.unknownMethodCash)}</span>
+                            </div>
+                          )}
+
+                          <div className="p-2.5 rounded-xl bg-surface-container-low/70 flex flex-col gap-1 text-[11px]">
+                            <div className="flex items-center justify-between">
+                              <span className="text-text-muted">Petugas Buka Shift:</span>
+                              <span className="font-medium text-text-primary">
+                                {openedByName} • {formatTimeWib(row.openedAt)} WIB
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-text-muted">Petugas Tutup Shift:</span>
+                              <span className="font-medium text-text-primary">
+                                {closedByName} • {formatTimeWib(row.closedAt)} WIB
+                              </span>
+                            </div>
+                            <div className="pt-1 border-t border-border-subtle/40 flex flex-col gap-0.5">
+                              <span className="text-text-muted">Catatan Serah Terima:</span>
+                              <span className="text-text-primary italic">
+                                {row.notes ? `"${row.notes}"` : "Tidak ada catatan tambahan."}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

@@ -37,6 +37,25 @@ export type RecipeRow = {
   qty_motor_xl?: number;
 };
 
+export type BundleRecipeItem = {
+  id: string;        // bundle_items.id
+  bundle_name: string;
+  unit: string;
+};
+
+export type BundleRecipeRow = {
+  service_id: string;
+  bundle_item_id: string;
+  qty_s?: number;
+  qty_m?: number;
+  qty_l?: number;
+  qty_xl?: number;
+  qty_motor_s?: number;
+  qty_motor_m?: number;
+  qty_motor_l?: number;
+  qty_motor_xl?: number;
+};
+
 type SizeKey = "qty_s" | "qty_m" | "qty_l" | "qty_xl" | "qty_motor_s" | "qty_motor_m" | "qty_motor_l" | "qty_motor_xl";
 
 const SIZE_LABELS: Record<SizeKey, { label: string; group: "mobil" | "motor" }> = {
@@ -54,11 +73,25 @@ const SIZE_KEYS_MOBIL: SizeKey[] = ["qty_s", "qty_m", "qty_l", "qty_xl"];
 const SIZE_KEYS_MOTOR: SizeKey[] = ["qty_motor_s", "qty_motor_m", "qty_motor_l", "qty_motor_xl"];
 const ALL_SIZE_KEYS: SizeKey[] = [...SIZE_KEYS_MOBIL, ...SIZE_KEYS_MOTOR];
 
+function emptyFormQty(): Record<SizeKey, string> {
+  return {
+    qty_s: "",
+    qty_m: "",
+    qty_l: "",
+    qty_xl: "",
+    qty_motor_s: "",
+    qty_motor_m: "",
+    qty_motor_l: "",
+    qty_motor_xl: "",
+  };
+}
+
 /**
  * Pengaturan bahan yang terpakai per layanan, per ukuran kendaraan.
  *
  * Resep disimpan per cabang karena stok juga per cabang. Penulisan lewat RPC
- * set_service_recipe supaya validasi cabang dan peran tetap di server.
+ * set_service_recipe (stok biasa) dan set_service_bundle_recipe (racikan)
+ * supaya validasi cabang dan peran tetap di server.
  *
  * Setiap ukuran (S/M/L/XL + Motor S/M/L/XL) punya quantity sendiri.
  * Kosong = size tersebut tidak memakai bahan ini (stok tidak terpotong).
@@ -68,41 +101,49 @@ export function RecipeManager({
   services,
   items,
   initialRecipes,
+  bundles,
+  initialBundleRecipes,
 }: {
   branchId: string;
   services: RecipeService[];
   items: RecipeItem[];
   initialRecipes: RecipeRow[];
+  bundles: BundleRecipeItem[];
+  initialBundleRecipes: BundleRecipeRow[];
 }) {
   const supabase = useMemo(() => createClient(), []);
-  const [recipes, setRecipes] = useState<RecipeRow[]>(initialRecipes);
+
+  // ── Shared state ──────────────────────────────────────────────────────────
   const [serviceId, setServiceId] = useState(services[0]?.id ?? "");
-  const [itemId, setItemId] = useState(items[0]?.id ?? "");
   const [sibuk, setSibuk] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sukses, setSukses] = useState<string | null>(null);
+
+  // ── Stok biasa ───────────────────────────────────────────────────────────
+  const [recipes, setRecipes] = useState<RecipeRow[]>(initialRecipes);
+  const [itemId, setItemId] = useState(items[0]?.id ?? "");
   const [activeTab, setActiveTab] = useState<"mobil" | "motor">("mobil");
+  const [formQty, setFormQty] = useState<Record<SizeKey, string>>(emptyFormQty());
 
-  // Form input untuk tambah/ubah
-  const [formQty, setFormQty] = useState<Record<SizeKey, string>>({
-    qty_s: "",
-    qty_m: "",
-    qty_l: "",
-    qty_xl: "",
-    qty_motor_s: "",
-    qty_motor_m: "",
-    qty_motor_l: "",
-    qty_motor_xl: "",
-  });
+  // ── Bahan Racikan ────────────────────────────────────────────────────────
+  const [bundleRecipes, setBundleRecipes] = useState<BundleRecipeRow[]>(initialBundleRecipes);
+  const [bundleId, setBundleId] = useState(bundles[0]?.id ?? "");
+  const [bundleActiveTab, setBundleActiveTab] = useState<"mobil" | "motor">("mobil");
+  const [bundleFormQty, setBundleFormQty] = useState<Record<SizeKey, string>>(emptyFormQty());
 
+  // ── Derived maps ─────────────────────────────────────────────────────────
   const itemById = useMemo(
     () => Object.fromEntries(items.map((item) => [item.id, item])),
     [items],
   );
+  const bundleById = useMemo(
+    () => Object.fromEntries(bundles.map((b) => [b.id, b])),
+    [bundles],
+  );
 
   const service = services.find((row) => row.id === serviceId) ?? null;
 
-  // Resep untuk jasa yang dipilih, di-flatten dengan info item
+  // Resep stok biasa untuk jasa yang dipilih
   const rows = useMemo(
     () =>
       recipes
@@ -113,6 +154,19 @@ export function RecipeManager({
         })
         .sort((a, b) => a.item.item_name.localeCompare(b.item.item_name, "id")),
     [recipes, serviceId, itemById],
+  );
+
+  // Resep racikan untuk jasa yang dipilih
+  const bundleRows = useMemo(
+    () =>
+      bundleRecipes
+        .filter((row) => row.service_id === serviceId)
+        .flatMap((row) => {
+          const bundle = bundleById[row.bundle_item_id];
+          return bundle ? [{ ...row, bundle }] : [];
+        })
+        .sort((a, b) => a.bundle.bundle_name.localeCompare(b.bundle.bundle_name, "id")),
+    [bundleRecipes, serviceId, bundleById],
   );
 
   const costPerSize = useMemo(() => {
@@ -139,22 +193,11 @@ export function RecipeManager({
   }, [rows]);
 
   const selectedItem = itemById[itemId] ?? null;
+  const selectedBundle = bundleById[bundleId] ?? null;
 
-  // Ambil nilai qty untuk size tertentu dari row
-  const getRowQty = (row: RecipeRow, key: SizeKey): number | undefined => row[key];
-
-  // Set formQty dari row yang diklik "Ubah"
+  // ── Helpers ───────────────────────────────────────────────────────────────
   const isiFormDariRow = (row: RecipeRow) => {
-    const newForm: Record<SizeKey, string> = {
-      qty_s: "",
-      qty_m: "",
-      qty_l: "",
-      qty_xl: "",
-      qty_motor_s: "",
-      qty_motor_m: "",
-      qty_motor_l: "",
-      qty_motor_xl: "",
-    };
+    const newForm: Record<SizeKey, string> = emptyFormQty();
     (ALL_SIZE_KEYS as SizeKey[]).forEach((key) => {
       const val = row[key];
       if (val !== undefined && val !== null && val > 0) {
@@ -167,26 +210,36 @@ export function RecipeManager({
     setSukses(null);
   };
 
-  // Kosongkan form
-  const resetForm = () => {
-    setFormQty({
-      qty_s: "",
-      qty_m: "",
-      qty_l: "",
-      qty_xl: "",
-      qty_motor_s: "",
-      qty_motor_m: "",
-      qty_motor_l: "",
-      qty_motor_xl: "",
+  const isiFormBundleDariRow = (row: BundleRecipeRow) => {
+    const newForm: Record<SizeKey, string> = emptyFormQty();
+    (ALL_SIZE_KEYS as SizeKey[]).forEach((key) => {
+      const val = row[key];
+      if (val !== undefined && val !== null && val > 0) {
+        newForm[key] = String(val);
+      }
     });
+    setBundleFormQty(newForm);
+    setBundleId(row.bundle_item_id);
     setError(null);
     setSukses(null);
   };
 
+  const resetForm = () => {
+    setFormQty(emptyFormQty());
+    setError(null);
+    setSukses(null);
+  };
+
+  const resetBundleForm = () => {
+    setBundleFormQty(emptyFormQty());
+    setError(null);
+    setSukses(null);
+  };
+
+  // ── Simpan stok biasa ─────────────────────────────────────────────────────
   async function kirim(remove: boolean) {
     if (sibuk || !serviceId || !itemId) return;
 
-    // Validasi: minimal satu size diisi
     const hasValue = ALL_SIZE_KEYS.some((key) => {
       const val = Number(formQty[key].replace(",", "."));
       return !remove && Number.isFinite(val) && val > 0;
@@ -228,7 +281,6 @@ export function RecipeManager({
       return;
     }
 
-    // Update local state
     setRecipes((prev) => {
       const tanpaItem = prev.filter(
         (row) => !(row.service_id === serviceId && row.item_id === itemId),
@@ -236,11 +288,7 @@ export function RecipeManager({
       if (remove) return tanpaItem;
 
       const saved = (Array.isArray(data) ? data[0] : data) as Partial<RecipeRow> | null;
-
-      const newRow: RecipeRow = {
-        service_id: serviceId,
-        item_id: itemId,
-      };
+      const newRow: RecipeRow = { service_id: serviceId, item_id: itemId };
 
       (ALL_SIZE_KEYS as SizeKey[]).forEach((key) => {
         if (saved && saved[key] !== undefined && saved[key] !== null) {
@@ -267,8 +315,92 @@ export function RecipeManager({
     resetForm();
   }
 
-  // Render input grid untuk tab Mobil atau Motor
-  const renderSizeInputs = (group: "mobil" | "motor", disabled: boolean) => {
+  // ── Simpan racikan ────────────────────────────────────────────────────────
+  async function kirimBundle(remove: boolean) {
+    if (sibuk || !serviceId || !bundleId) return;
+
+    const hasValue = ALL_SIZE_KEYS.some((key) => {
+      const val = Number(bundleFormQty[key].replace(",", "."));
+      return !remove && Number.isFinite(val) && val > 0;
+    });
+    if (!remove && !hasValue) {
+      setError("Minimal satu ukuran harus diisi (angka > 0).");
+      return;
+    }
+
+    setSibuk(true);
+    setError(null);
+    setSukses(null);
+
+    const payload: Record<string, unknown> = {
+      p_branch_id: branchId,
+      p_service_id: serviceId,
+      p_bundle_item_id: bundleId,
+      p_remove: remove,
+    };
+
+    if (!remove) {
+      (ALL_SIZE_KEYS as SizeKey[]).forEach((key) => {
+        const val = bundleFormQty[key].trim();
+        if (val !== "") {
+          const num = Number(val.replace(",", "."));
+          if (Number.isFinite(num) && num > 0) {
+            payload[`p_${key}`] = num;
+          }
+        }
+      });
+    }
+
+    const { data, error: rpcError } = await (supabase as any).rpc("set_service_bundle_recipe", payload as never);
+
+    setSibuk(false);
+
+    if (rpcError) {
+      setError(rpcError.message);
+      return;
+    }
+
+    setBundleRecipes((prev) => {
+      const tanpaBundle = prev.filter(
+        (row) => !(row.service_id === serviceId && row.bundle_item_id === bundleId),
+      );
+      if (remove) return tanpaBundle;
+
+      const saved = (Array.isArray(data) ? data[0] : data) as Partial<BundleRecipeRow> | null;
+      const newRow: BundleRecipeRow = { service_id: serviceId, bundle_item_id: bundleId };
+
+      (ALL_SIZE_KEYS as SizeKey[]).forEach((key) => {
+        if (saved && saved[key] !== undefined && saved[key] !== null) {
+          newRow[key] = Number(saved[key]);
+        } else {
+          const formVal = bundleFormQty[key].trim();
+          if (formVal !== "") {
+            const num = Number(formVal.replace(",", "."));
+            if (Number.isFinite(num) && num > 0) {
+              newRow[key] = num;
+            }
+          }
+        }
+      });
+
+      return [...tanpaBundle, newRow];
+    });
+
+    setSukses(
+      remove
+        ? "Bahan racikan dihapus dari resep."
+        : `Resep racikan disimpan: ${bundleById[bundleId]?.bundle_name ?? "racikan"} untuk ${Object.entries(bundleFormQty).filter(([, v]) => v.trim() !== "").length} ukuran.`,
+    );
+    resetBundleForm();
+  }
+
+  // ── Render helpers ────────────────────────────────────────────────────────
+  const renderSizeInputs = (
+    group: "mobil" | "motor",
+    disabled: boolean,
+    qty: Record<SizeKey, string>,
+    setQty: (q: Record<SizeKey, string>) => void,
+  ) => {
     const keys = group === "mobil" ? SIZE_KEYS_MOBIL : SIZE_KEYS_MOTOR;
     return (
       <div className="grid grid-cols-4 gap-2">
@@ -282,8 +414,8 @@ export function RecipeManager({
               inputMode="decimal"
               min="0"
               step="0.01"
-              value={formQty[key]}
-              onChange={(e) => setFormQty({ ...formQty, [key]: e.target.value })}
+              value={qty[key]}
+              onChange={(e) => setQty({ ...qty, [key]: e.target.value })}
               disabled={disabled || sibuk}
               className="h-11 rounded-2xl bg-surface px-3 font-body text-body text-text-primary text-center outline-none focus:ring-2 focus:ring-brand-400"
               placeholder="—"
@@ -295,203 +427,342 @@ export function RecipeManager({
     );
   };
 
+  const totalBahan = rows.length + bundleRows.length;
+
   return (
     <main className="flex-1 px-gutter pt-4 pb-nav-plain lg:pb-8 flex flex-col gap-3 lg:grid lg:grid-cols-3 lg:gap-6 lg:px-6 lg:py-6 lg:items-start">
       {error ? (
-        <p className="clay-card p-3 font-body text-body text-danger-text">{error}</p>
+        <p className="clay-card p-3 font-body text-body text-danger-text lg:col-span-3">{error}</p>
       ) : null}
       {sukses ? (
-        <p className="clay-card p-3 font-body text-body text-success-text">{sukses}</p>
+        <p className="clay-card p-3 font-body text-body text-success-text lg:col-span-3">{sukses}</p>
       ) : null}
 
+      {/* Left column */}
       <div className="lg:col-span-1 flex flex-col gap-3">
-      <label className="flex flex-col gap-1.5">
-        <span className="font-body-bold text-body-bold text-text-primary">Pilih jasa</span>
-        <select
-          value={serviceId}
-          onChange={(e) => {
-            setServiceId(e.target.value);
-            setError(null);
-            setSukses(null);
-            resetForm();
-          }}
-          className="h-12 rounded-2xl bg-surface px-3 font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
-        >
-          {services.map((row) => (
-            <option key={row.id} value={row.id}>
-              {row.name}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      <section className="clay-card p-4 flex flex-col gap-3">
-        <div className="flex items-start justify-between gap-2">
-          <div>
-            <h2 className="font-headline-3 text-headline-3 text-text-primary">
-              Bahan terpakai
-            </h2>
-            <p className="font-caption text-caption text-text-muted">
-              {service ? service.name : "Belum ada jasa dipilih"}
-            </p>
-          </div>
-          <span className="shrink-0 rounded-full bg-brand-50 px-3 py-1 font-caption text-caption text-brand-700">
-            {rows.length} bahan
-          </span>
-        </div>
-
-        {rows.length === 0 ? (
-          <p className="font-body text-body text-text-secondary">
-            Belum ada bahan. Tambahkan bahan di bawah supaya stok gudang otomatis
-            terpotong saat jasa ini di-checkout sesuai ukuran kendaraan.
-          </p>
-        ) : (
-          <ul className="flex flex-col gap-2">
-            {rows.map((row) => (
-              <li
-                key={row.item_id}
-                className="flex items-center gap-3 rounded-2xl bg-surface p-3"
-              >
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
-                  <Icon name="inventory_2" className="text-[20px]" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-body-bold text-body-bold text-text-primary">
-                    {row.item.item_name}
-                  </p>
-                  <p className="font-caption text-caption text-text-muted">
-                    {(() => {
-                      const parts: string[] = [];
-                      (ALL_SIZE_KEYS as SizeKey[]).forEach((key) => {
-                        const val = row[key];
-                        if (val !== undefined && val !== null && val > 0) {
-                          parts.push(`${SIZE_LABELS[key].label}: ${formatAngka(val)} ${row.item.unit}`);
-                        }
-                      });
-                      return parts.length > 0 ? parts.join(" • ") : "Belum ada ukuran diisi";
-                    })()}
-                    · stok {formatAngka(row.item.current_stock)} {row.item.unit}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  disabled={sibuk}
-                  onClick={() => isiFormDariRow(row)}
-                  className="min-h-10 rounded-xl px-2 font-caption text-caption text-brand-600 disabled:opacity-50"
-                >
-                  Ubah
-                </button>
-                <button
-                  type="button"
-                  disabled={sibuk}
-                  onClick={() => {
-                    setItemId(row.item_id);
-                    void kirim(true);
-                  }}
-                  className="flex h-10 w-10 items-center justify-center rounded-xl text-danger-text disabled:opacity-50"
-                  aria-label={`Hapus ${row.item.item_name} dari resep`}
-                >
-                  <Icon name="delete" className="text-[20px]" />
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {rows.length > 0 ? (
-          <div className="p-3.5 rounded-2xl bg-brand-50/70 border border-brand-100 flex flex-col gap-2 mt-2">
-            <div className="flex items-center gap-1.5 text-brand-900 font-headline-3 text-caption font-bold">
-              <Icon name="paid" className="text-[18px] text-brand-600" />
-              <span>Estimasi Modal Bahan (HPP) per Ukuran</span>
-            </div>
-            <div className="grid grid-cols-4 gap-1.5 text-center">
-              {SIZE_KEYS_MOBIL.map((k) => (
-                <div key={k} className="p-2 rounded-xl bg-surface border border-brand-100 shadow-sm">
-                  <div className="text-[10px] text-text-muted font-medium">{SIZE_LABELS[k].label}</div>
-                  <div className="font-bold text-xs text-brand-700 mt-0.5">
-                    Rp {costPerSize[k].toLocaleString("id-ID")}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : null}
-      </section>
-
-      </div>{/* end left column */}
-
-      {/* Right col-span-2: add/edit form */}
-      <div className="lg:col-span-2 flex flex-col gap-3">
-      <section className="clay-card p-4 flex flex-col gap-3">
-        <h2 className="font-headline-3 text-headline-3 text-text-primary">
-          Tambah / ubah bahan
-        </h2>
-
         <label className="flex flex-col gap-1.5">
-          <span className="font-body-bold text-body-bold text-text-primary">Bahan gudang</span>
+          <span className="font-body-bold text-body-bold text-text-primary">Pilih jasa</span>
           <select
-            value={itemId}
+            value={serviceId}
             onChange={(e) => {
-              setItemId(e.target.value);
+              setServiceId(e.target.value);
+              setError(null);
+              setSukses(null);
               resetForm();
+              resetBundleForm();
             }}
             className="h-12 rounded-2xl bg-surface px-3 font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
           >
-            {items.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.item_name} — stok {formatAngka(item.current_stock)} {item.unit}
+            {services.map((row) => (
+              <option key={row.id} value={row.id}>
+                {row.name}
               </option>
             ))}
           </select>
         </label>
 
-        {/* Tabs Mobil / Motor */}
-        <div className="flex gap-1 bg-surface rounded-xl p-1">
-          <button
-            type="button"
-            onClick={() => setActiveTab("mobil")}
-            className={`flex-1 h-10 rounded-lg font-body-bold text-body-bold transition-colors ${
-              activeTab === "mobil"
-                ? "bg-brand-600 text-white"
-                : "text-text-secondary hover:bg-brand-50"
-            }`}
-          >
-            Mobil (S, M, L, XL)
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("motor")}
-            className={`flex-1 h-10 rounded-lg font-body-bold text-body-bold transition-colors ${
-              activeTab === "motor"
-                ? "bg-brand-600 text-white"
-                : "text-text-secondary hover:bg-brand-50"
-            }`}
-          >
-            Motor (S, M, L, XL)
-          </button>
-        </div>
+        <section className="clay-card p-4 flex flex-col gap-3">
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <h2 className="font-headline-3 text-headline-3 text-text-primary">
+                Bahan terpakai
+              </h2>
+              <p className="font-caption text-caption text-text-muted">
+                {service ? service.name : "Belum ada jasa dipilih"}
+              </p>
+            </div>
+            <span className="shrink-0 rounded-full bg-brand-50 px-3 py-1 font-caption text-caption text-brand-700">
+              {totalBahan} bahan
+            </span>
+          </div>
 
-        <div className="flex flex-col gap-2">
-          {renderSizeInputs(activeTab, false)}
+          {totalBahan === 0 ? (
+            <p className="font-body text-body text-text-secondary">
+              Belum ada bahan. Tambahkan bahan di bawah supaya stok gudang otomatis
+              terpotong saat jasa ini di-checkout sesuai ukuran kendaraan.
+            </p>
+          ) : (
+            <ul className="flex flex-col gap-2">
+              {/* Stok biasa */}
+              {rows.map((row) => (
+                <li
+                  key={`item-${row.item_id}`}
+                  className="flex items-center gap-3 rounded-2xl bg-surface p-3"
+                >
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
+                    <Icon name="inventory_2" className="text-[20px]" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-body-bold text-body-bold text-text-primary">
+                      {row.item.item_name}
+                    </p>
+                    <p className="font-caption text-caption text-text-muted">
+                      {(() => {
+                        const parts: string[] = [];
+                        (ALL_SIZE_KEYS as SizeKey[]).forEach((key) => {
+                          const val = row[key];
+                          if (val !== undefined && val !== null && val > 0) {
+                            parts.push(`${SIZE_LABELS[key].label}: ${formatAngka(val)} ${row.item.unit}`);
+                          }
+                        });
+                        return parts.length > 0 ? parts.join(" • ") : "Belum ada ukuran diisi";
+                      })()}
+                      · stok {formatAngka(row.item.current_stock)} {row.item.unit}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={sibuk}
+                    onClick={() => isiFormDariRow(row)}
+                    className="min-h-10 rounded-xl px-2 font-caption text-caption text-brand-600 disabled:opacity-50"
+                  >
+                    Ubah
+                  </button>
+                  <button
+                    type="button"
+                    disabled={sibuk}
+                    onClick={() => {
+                      setItemId(row.item_id);
+                      void kirim(true);
+                    }}
+                    className="flex h-10 w-10 items-center justify-center rounded-xl text-danger-text disabled:opacity-50"
+                    aria-label={`Hapus ${row.item.item_name} dari resep`}
+                  >
+                    <Icon name="delete" className="text-[20px]" />
+                  </button>
+                </li>
+              ))}
 
-          <p className="font-caption text-caption text-text-muted text-center">
-            Isi dalam satuan stok bahan
-            {selectedItem ? ` (${selectedItem.unit})` : ""}.
-            Kosong = size tersebut tidak memakai bahan ini.
-          </p>
+              {/* Racikan */}
+              {bundleRows.map((row) => (
+                <li
+                  key={`bundle-${row.bundle_item_id}`}
+                  className="flex items-center gap-3 rounded-2xl bg-surface p-3"
+                >
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-50 text-purple-600">
+                    <Icon name="science" className="text-[20px]" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="truncate font-body-bold text-body-bold text-text-primary">
+                        {row.bundle.bundle_name}
+                      </p>
+                      <span className="shrink-0 rounded-full bg-purple-100 px-2 py-0.5 font-caption text-caption text-purple-700 text-[10px]">
+                        Racikan
+                      </span>
+                    </div>
+                    <p className="font-caption text-caption text-text-muted">
+                      {(() => {
+                        const parts: string[] = [];
+                        (ALL_SIZE_KEYS as SizeKey[]).forEach((key) => {
+                          const val = row[key];
+                          if (val !== undefined && val !== null && val > 0) {
+                            parts.push(`${SIZE_LABELS[key].label}: ${formatAngka(val)} ${row.bundle.unit}`);
+                          }
+                        });
+                        return parts.length > 0 ? parts.join(" • ") : "Belum ada ukuran diisi";
+                      })()}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={sibuk}
+                    onClick={() => isiFormBundleDariRow(row)}
+                    className="min-h-10 rounded-xl px-2 font-caption text-caption text-brand-600 disabled:opacity-50"
+                  >
+                    Ubah
+                  </button>
+                  <button
+                    type="button"
+                    disabled={sibuk}
+                    onClick={() => {
+                      setBundleId(row.bundle_item_id);
+                      void kirimBundle(true);
+                    }}
+                    className="flex h-10 w-10 items-center justify-center rounded-xl text-danger-text disabled:opacity-50"
+                    aria-label={`Hapus ${row.bundle.bundle_name} dari resep`}
+                  >
+                    <Icon name="delete" className="text-[20px]" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
 
-          <button
-            type="button"
-            disabled={sibuk || !serviceId || !itemId}
-            onClick={() => void kirim(false)}
-            className="flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-brand-600 px-4 font-body-bold text-body-bold text-white active:scale-[0.99] disabled:opacity-50"
-          >
-            <Icon name="add" className="text-[20px]" />
-            {sibuk ? "Menyimpan..." : "Simpan bahan"}
-          </button>
-        </div>
-      </section>
-      </div>{/* end right column */}
+          {rows.length > 0 ? (
+            <div className="p-3.5 rounded-2xl bg-brand-50/70 border border-brand-100 flex flex-col gap-2 mt-2">
+              <div className="flex items-center gap-1.5 text-brand-900 font-headline-3 text-caption font-bold">
+                <Icon name="paid" className="text-[18px] text-brand-600" />
+                <span>Estimasi Modal Bahan (HPP) per Ukuran</span>
+              </div>
+              <div className="grid grid-cols-4 gap-1.5 text-center">
+                {SIZE_KEYS_MOBIL.map((k) => (
+                  <div key={k} className="p-2 rounded-xl bg-surface border border-brand-100 shadow-sm">
+                    <div className="text-[10px] text-text-muted font-medium">{SIZE_LABELS[k].label}</div>
+                    <div className="font-bold text-xs text-brand-700 mt-0.5">
+                      Rp {costPerSize[k].toLocaleString("id-ID")}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </section>
+      </div>
+
+      {/* Right col-span-2: add/edit forms */}
+      <div className="lg:col-span-2 flex flex-col gap-3">
+        {/* Section stok biasa */}
+        {items.length > 0 && (
+          <section className="clay-card p-4 flex flex-col gap-3">
+            <h2 className="font-headline-3 text-headline-3 text-text-primary">
+              Tambah / ubah bahan
+            </h2>
+
+            <label className="flex flex-col gap-1.5">
+              <span className="font-body-bold text-body-bold text-text-primary">Bahan gudang</span>
+              <select
+                value={itemId}
+                onChange={(e) => {
+                  setItemId(e.target.value);
+                  resetForm();
+                }}
+                className="h-12 rounded-2xl bg-surface px-3 font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+              >
+                {items.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.item_name} — stok {formatAngka(item.current_stock)} {item.unit}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            {/* Tabs Mobil / Motor */}
+            <div className="flex gap-1 bg-surface rounded-xl p-1">
+              <button
+                type="button"
+                onClick={() => setActiveTab("mobil")}
+                className={`flex-1 h-10 rounded-lg font-body-bold text-body-bold transition-colors ${
+                  activeTab === "mobil"
+                    ? "bg-brand-600 text-white"
+                    : "text-text-secondary hover:bg-brand-50"
+                }`}
+              >
+                Mobil (S, M, L, XL)
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("motor")}
+                className={`flex-1 h-10 rounded-lg font-body-bold text-body-bold transition-colors ${
+                  activeTab === "motor"
+                    ? "bg-brand-600 text-white"
+                    : "text-text-secondary hover:bg-brand-50"
+                }`}
+              >
+                Motor (S, M, L, XL)
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              {renderSizeInputs(activeTab, false, formQty, setFormQty)}
+
+              <p className="font-caption text-caption text-text-muted text-center">
+                Isi dalam satuan stok bahan
+                {selectedItem ? ` (${selectedItem.unit})` : ""}.
+                Kosong = size tersebut tidak memakai bahan ini.
+              </p>
+
+              <button
+                type="button"
+                disabled={sibuk || !serviceId || !itemId}
+                onClick={() => void kirim(false)}
+                className="flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-brand-600 px-4 font-body-bold text-body-bold text-white active:scale-[0.99] disabled:opacity-50"
+              >
+                <Icon name="add" className="text-[20px]" />
+                {sibuk ? "Menyimpan..." : "Simpan bahan"}
+              </button>
+            </div>
+          </section>
+        )}
+
+        {/* Section bahan racikan */}
+        {bundles.length > 0 && (
+          <section className="clay-card p-4 flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-purple-50 text-purple-600">
+                <Icon name="science" className="text-[18px]" />
+              </span>
+              <h2 className="font-headline-3 text-headline-3 text-text-primary">
+                Bahan Racikan
+              </h2>
+            </div>
+
+            <label className="flex flex-col gap-1.5">
+              <span className="font-body-bold text-body-bold text-text-primary">Pilih racikan</span>
+              <select
+                value={bundleId}
+                onChange={(e) => {
+                  setBundleId(e.target.value);
+                  resetBundleForm();
+                }}
+                className="h-12 rounded-2xl bg-surface px-3 font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+              >
+                {bundles.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.bundle_name} ({b.unit})
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            {/* Tabs Mobil / Motor untuk racikan */}
+            <div className="flex gap-1 bg-surface rounded-xl p-1">
+              <button
+                type="button"
+                onClick={() => setBundleActiveTab("mobil")}
+                className={`flex-1 h-10 rounded-lg font-body-bold text-body-bold transition-colors ${
+                  bundleActiveTab === "mobil"
+                    ? "bg-purple-600 text-white"
+                    : "text-text-secondary hover:bg-purple-50"
+                }`}
+              >
+                Mobil (S, M, L, XL)
+              </button>
+              <button
+                type="button"
+                onClick={() => setBundleActiveTab("motor")}
+                className={`flex-1 h-10 rounded-lg font-body-bold text-body-bold transition-colors ${
+                  bundleActiveTab === "motor"
+                    ? "bg-purple-600 text-white"
+                    : "text-text-secondary hover:bg-purple-50"
+                }`}
+              >
+                Motor (S, M, L, XL)
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              {renderSizeInputs(bundleActiveTab, false, bundleFormQty, setBundleFormQty)}
+
+              <p className="font-caption text-caption text-text-muted text-center">
+                Isi dalam satuan racikan
+                {selectedBundle ? ` (${selectedBundle.unit})` : ""}.
+                Kosong = size tersebut tidak memakai racikan ini.
+              </p>
+
+              <button
+                type="button"
+                disabled={sibuk || !serviceId || !bundleId}
+                onClick={() => void kirimBundle(false)}
+                className="flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-purple-600 px-4 font-body-bold text-body-bold text-white active:scale-[0.99] disabled:opacity-50"
+              >
+                <Icon name="science" className="text-[20px]" />
+                {sibuk ? "Menyimpan..." : "Simpan bahan racikan"}
+              </button>
+            </div>
+          </section>
+        )}
+      </div>
     </main>
   );
 }

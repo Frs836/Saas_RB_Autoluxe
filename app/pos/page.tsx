@@ -18,7 +18,7 @@ export default async function PosPage() {
   const branchId = scopedBranchId(profile);
   // Baris order selalu mengikuti cabang penempatan teknisi, bukan cabang yang
   // sedang dipilih manajer, supaya kas titipan tidak masuk ke cabang lain.
-  const staffBranchId = profile.homeBranchId;
+  const staffBranchId = profile.homeBranchId ?? branchId;
 
   const [servicesRes, teamRes, busyRes, branchRes] = await Promise.all([
     supabase
@@ -33,7 +33,7 @@ export default async function PosPage() {
       ? supabase
           .from("profiles")
           .select("id, full_name")
-          .eq("role", "karyawan")
+          .in("role", ["karyawan", "kepala_karyawan"])
           .eq("is_active", true)
           .eq("branch_id", staffBranchId)
           .order("full_name", { ascending: true })

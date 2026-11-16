@@ -48,7 +48,7 @@ export default async function ServiceRecipePage({
       .order("name", { ascending: true }),
     supabase
       .from("inventory_items")
-      .select("id, item_name, current_stock, unit")
+      .select("id, item_name, current_stock, unit, unit_cost")
       .eq("branch_id", branchId)
       .order("item_name", { ascending: true }),
     supabase

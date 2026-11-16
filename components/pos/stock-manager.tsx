@@ -22,6 +22,10 @@ export type InventoryItem = {
   current_stock: number;
   unit: string;
   min_stock_alert: number;
+  purchase_unit?: string | null;
+  purchase_price?: number | null;
+  purchase_content_qty?: number | null;
+  unit_cost?: number | null;
 };
 
 export type StockClaim = {
@@ -87,12 +91,24 @@ const [tab, setTab] = useState<"items" | "claims">("items");
   // Modal tambah item baru
   const [newItemOpen, setNewItemOpen] = useState(false);
   const [newItemName, setNewItemName] = useState("");
-  const [newItemUnit, setNewItemUnit] = useState("pcs");
-  const [newItemStock, setNewItemStock] = useState("0");
-  const [newItemMin, setNewItemMin] = useState("0");
+  const [newItemUnit, setNewItemUnit] = useState("ml");
+  const [newItemPurchaseUnit, setNewItemPurchaseUnit] = useState("Botol");
+  const [newItemPurchasePrice, setNewItemPurchasePrice] = useState("");
+  const [newItemPurchaseContentQty, setNewItemPurchaseContentQty] = useState("1000");
+  const [newItemStock, setNewItemStock] = useState("1000");
+  const [newItemMin, setNewItemMin] = useState("200");
   const [newItemCost, setNewItemCost] = useState("");
   const [newItemLoading, setNewItemLoading] = useState(false);
   const [newItemError, setNewItemError] = useState<string | null>(null);
+
+  const previewUnitCost = useMemo(() => {
+    const price = Number(newItemPurchasePrice);
+    const content = Number(newItemPurchaseContentQty);
+    if (price > 0 && content > 0) {
+      return Math.round((price / content) * 100) / 100;
+    }
+    return Number(newItemCost) || 0;
+  }, [newItemPurchasePrice, newItemPurchaseContentQty, newItemCost]);
   const [deleteTarget, setDeleteTarget] = useState<InventoryItem | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -268,17 +284,31 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
     setNewItemError(null);
     try {
       const supabase = createClient();
+      const pPrice = Number(newItemPurchasePrice) || 0;
+      const pQty = Number(newItemPurchaseContentQty) || 1;
+      const computedCost = pPrice > 0 && pQty > 0 ? Math.round((pPrice / pQty) * 100) / 100 : (Number(newItemCost) || null);
+
       const { error: rpcErr } = await (supabase as any).rpc("create_inventory_item", {
-        p_item_name:       newItemName.trim(),
-        p_unit:            newItemUnit.trim() || "pcs",
-        p_current_stock:   Number(newItemStock) || 0,
-        p_min_stock_alert: Number(newItemMin) || 0,
-        p_unit_cost:       newItemCost.trim() ? Number(newItemCost) : null,
+        p_item_name:            newItemName.trim(),
+        p_unit:                 newItemUnit.trim() || "pcs",
+        p_current_stock:        Number(newItemStock) || 0,
+        p_min_stock_alert:      Number(newItemMin) || 0,
+        p_unit_cost:            computedCost,
+        p_purchase_unit:        newItemPurchaseUnit.trim() || "Pcs",
+        p_purchase_price:       pPrice,
+        p_purchase_content_qty: pQty,
       });
       if (rpcErr) { setNewItemError(rpcErr.message); return; }
       toast.sukses("Item baru berhasil ditambahkan", `${newItemName.trim()} ditambahkan ke inventaris.`);
       setNewItemOpen(false);
-      setNewItemName(""); setNewItemUnit("pcs"); setNewItemStock("0"); setNewItemMin("0"); setNewItemCost("");
+      setNewItemName("");
+      setNewItemUnit("ml");
+      setNewItemPurchaseUnit("Botol");
+      setNewItemPurchasePrice("");
+      setNewItemPurchaseContentQty("1000");
+      setNewItemStock("1000");
+      setNewItemMin("200");
+      setNewItemCost("");
       router.refresh();
     } catch(e) {
       setNewItemError(e instanceof Error ? e.message : "Gagal menambahkan item.");
@@ -521,6 +551,18 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
                   <span className="font-body-bold text-body-bold text-text-primary leading-tight">
                     {item.item_name}
                   </span>
+                  {item.unit_cost !== null && item.unit_cost !== undefined ? (
+                    <div className="flex flex-col gap-0.5">
+                      <span className="font-caption text-caption text-brand-600 font-semibold">
+                        Rp {formatAngka(Number(item.unit_cost))} / {item.unit}
+                      </span>
+                      {item.purchase_unit ? (
+                        <span className="font-micro-badge text-[10px] text-text-muted">
+                          Beli: {item.purchase_unit} @ {formatAngka(Number(item.purchase_content_qty || 1))} {item.unit}
+                        </span>
+                      ) : null}
+                    </div>
+                  ) : null}
                   <div className="w-full bg-surface-container rounded-full h-1.5 overflow-hidden">
                     <div
                       className={`h-1.5 rounded-full ${
@@ -881,30 +923,63 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
               <label className="flex flex-col gap-1">
                 <span className="font-caption text-caption text-text-secondary">Nama Item <span className="text-danger-text">*</span></span>
                 <input value={newItemName} onChange={(e) => setNewItemName(e.target.value)}
-                  placeholder="contoh: Nano Ceramic 10H" autoFocus
+                  placeholder="contoh: Nano Ceramic 10H / Cairan A" autoFocus
                   className="h-11 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400" />
               </label>
+
+              {/* Bagian Satuan Pemakaian Workshop */}
               <div className="grid grid-cols-2 gap-3">
                 <label className="flex flex-col gap-1">
-                  <span className="font-caption text-caption text-text-secondary">Satuan</span>
+                  <span className="font-caption text-caption text-text-secondary">Satuan Pakai (Workshop) <span className="text-danger-text">*</span></span>
                   <input value={newItemUnit} onChange={(e) => setNewItemUnit(e.target.value)}
-                    placeholder="pcs / botol / liter"
+                    placeholder="ml / pcs / gram"
                     className="h-11 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400" />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="font-caption text-caption text-text-secondary">Harga Beli</span>
-                  <input value={newItemCost} onChange={(e) => setNewItemCost(e.target.value.replace(/\D/g,""))}
-                    placeholder="opsional" inputMode="numeric"
+                  <span className="font-caption text-caption text-text-secondary">Satuan Beli (Supplier)</span>
+                  <input value={newItemPurchaseUnit} onChange={(e) => setNewItemPurchaseUnit(e.target.value)}
+                    placeholder="Botol / Jerigen / Pcs"
                     className="h-11 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400" />
                 </label>
+              </div>
+
+              {/* Matematika Belanja & Kemasan */}
+              <div className="p-3 rounded-xl bg-brand-50/60 border border-brand-100 flex flex-col gap-2">
+                <span className="font-caption text-caption font-semibold text-brand-900">
+                  Matematika Kemasan Belanja
+                </span>
+                <div className="grid grid-cols-2 gap-2">
+                  <label className="flex flex-col gap-1">
+                    <span className="font-micro-badge text-micro-badge text-text-secondary">Harga Beli Kemasan (Rp)</span>
+                    <input value={newItemPurchasePrice} onChange={(e) => setNewItemPurchasePrice(e.target.value.replace(/\D/g,""))}
+                      placeholder="cth: 100000" inputMode="numeric"
+                      className="h-10 px-2.5 rounded-lg bg-surface font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400" />
+                  </label>
+                  <label className="flex flex-col gap-1">
+                    <span className="font-micro-badge text-micro-badge text-text-secondary">Isi Bersih ({newItemUnit || "satuan"})</span>
+                    <input value={newItemPurchaseContentQty} onChange={(e) => setNewItemPurchaseContentQty(e.target.value.replace(/\D/g,""))}
+                      placeholder="cth: 800" inputMode="numeric"
+                      className="h-10 px-2.5 rounded-lg bg-surface font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400" />
+                  </label>
+                </div>
+
+                {previewUnitCost > 0 ? (
+                  <div className="flex items-center justify-between pt-1 border-t border-brand-100 text-xs text-brand-800">
+                    <span>Biaya per {newItemUnit || "unit"}:</span>
+                    <span className="font-bold text-brand-900">Rp {previewUnitCost.toLocaleString("id-ID")} / {newItemUnit || "unit"}</span>
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
                 <label className="flex flex-col gap-1">
-                  <span className="font-caption text-caption text-text-secondary">Stok Awal</span>
+                  <span className="font-caption text-caption text-text-secondary">Stok Awal ({newItemUnit})</span>
                   <input value={newItemStock} onChange={(e) => setNewItemStock(e.target.value.replace(/\D/g,""))}
                     inputMode="numeric"
                     className="h-11 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400" />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="font-caption text-caption text-text-secondary">Min. Alert</span>
+                  <span className="font-caption text-caption text-text-secondary">Min. Alert ({newItemUnit})</span>
                   <input value={newItemMin} onChange={(e) => setNewItemMin(e.target.value.replace(/\D/g,""))}
                     inputMode="numeric"
                     className="h-11 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400" />

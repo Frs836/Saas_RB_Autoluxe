@@ -15,6 +15,7 @@ export type RecipeItem = {
   item_name: string;
   current_stock: number;
   unit: string;
+  unit_cost?: number | null;
 };
 
 /**
@@ -113,6 +114,29 @@ export function RecipeManager({
         .sort((a, b) => a.item.item_name.localeCompare(b.item.item_name, "id")),
     [recipes, serviceId, itemById],
   );
+
+  const costPerSize = useMemo(() => {
+    const totals: Record<SizeKey, number> = {
+      qty_s: 0,
+      qty_m: 0,
+      qty_l: 0,
+      qty_xl: 0,
+      qty_motor_s: 0,
+      qty_motor_m: 0,
+      qty_motor_l: 0,
+      qty_motor_xl: 0,
+    };
+    for (const r of rows) {
+      const uCost = Number(r.item.unit_cost ?? 0);
+      for (const k of ALL_SIZE_KEYS) {
+        const q = Number(r[k] ?? 0);
+        if (q > 0 && uCost > 0) {
+          totals[k] += q * uCost;
+        }
+      }
+    }
+    return totals;
+  }, [rows]);
 
   const selectedItem = itemById[itemId] ?? null;
 
@@ -373,6 +397,25 @@ export function RecipeManager({
             ))}
           </ul>
         )}
+
+        {rows.length > 0 ? (
+          <div className="p-3.5 rounded-2xl bg-brand-50/70 border border-brand-100 flex flex-col gap-2 mt-2">
+            <div className="flex items-center gap-1.5 text-brand-900 font-headline-3 text-caption font-bold">
+              <Icon name="paid" className="text-[18px] text-brand-600" />
+              <span>Estimasi Modal Bahan (HPP) per Ukuran</span>
+            </div>
+            <div className="grid grid-cols-4 gap-1.5 text-center">
+              {SIZE_KEYS_MOBIL.map((k) => (
+                <div key={k} className="p-2 rounded-xl bg-surface border border-brand-100 shadow-sm">
+                  <div className="text-[10px] text-text-muted font-medium">{SIZE_LABELS[k].label}</div>
+                  <div className="font-bold text-xs text-brand-700 mt-0.5">
+                    Rp {costPerSize[k].toLocaleString("id-ID")}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
       </section>
 
       </div>{/* end left column */}

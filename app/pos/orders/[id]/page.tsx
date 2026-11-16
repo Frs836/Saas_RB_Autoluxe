@@ -57,6 +57,7 @@ export default async function OrderDetailPage({ params }: { params: Params }) {
     creatorRes,
     candidateRes,
     busyRes,
+    costRes,
   ] = await Promise.all([
       supabase
         .from("order_items")
@@ -111,6 +112,8 @@ export default async function OrderDetailPage({ params }: { params: Params }) {
             .eq("orders.branch_id", order.branch_id)
             .neq("order_id", order.id)
         : Promise.resolve({ data: [] }),
+      // Biaya modal bahan & riwayat pemakaian stok order
+      supabase.rpc("get_order_production_cost", { p_order_id: id }),
     ]);
 
   const teamRows = teamRes.data ?? [];
@@ -224,6 +227,13 @@ export default async function OrderDetailPage({ params }: { params: Params }) {
         }))}
         viewerId={session.id}
         branchName={branchRes.data?.branch_name ?? "Cabang Utama"}
+        productionCosts={((costRes as any)?.data ?? []).map((c: any) => ({
+          itemName: c.item_name,
+          quantity: Number(c.quantity),
+          unit: c.unit,
+          unitCost: Number(c.unit_cost),
+          costAmount: Number(c.cost_amount),
+        }))}
       />
       <BottomNav role={session.role} />
       </div>

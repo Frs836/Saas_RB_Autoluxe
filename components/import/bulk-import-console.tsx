@@ -35,12 +35,12 @@ const TEMPLATES: Record<ImportType, {
     label: "Stok & Inventaris",
     icon: "inventory_2",
     color: "bg-orange-50 text-orange-700",
-    description: "Import item stok baru atau update stok yang sudah ada. Jika nama item + cabang sudah ada, stok akan di-update.",
-    headers: ["item_name", "unit", "current_stock", "min_stock_alert", "unit_cost"],
+    description: "Import stok dengan matematika kemasan belanja (purchase_unit, purchase_price, purchase_content_qty) dan satuan pakai workshop (unit). unit_cost otomatis dihitung (harga beli / isi).",
+    headers: ["item_name", "purchase_unit", "purchase_price", "purchase_content_qty", "unit", "current_stock", "min_stock_alert", "unit_cost"],
     example: [
-      ["Nano Ceramic 10H", "botol", 10, 2, 150000],
-      ["Microfiber Towel", "pcs",   50, 10, 25000],
-      ["Shampoo Carwash",  "liter", 20, 5,  35000],
+      ["Nano Ceramic 10H", "botol", 500000, 50, "ml", 150, 20, 10000],
+      ["Microfiber Towel", "pack", 120000, 10, "pcs", 50, 10, 12000],
+      ["Shampoo Carwash",  "jerigen", 250000, 5000, "ml", 10000, 2000, 50],
     ],
   },
   cash_flow: {
@@ -198,9 +198,18 @@ export function BulkImportConsole({
           const itemName = String(row["item_name"] ?? "").trim();
           if (!itemName) { skipped++; continue; }
           const unit = String(row["unit"] ?? "pcs").trim();
+          const purchaseUnit = String(row["purchase_unit"] ?? "Pcs").trim() || "Pcs";
+          const purchasePrice = Number(row["purchase_price"] ?? 0);
+          const purchaseContentQty = Number(row["purchase_content_qty"] ?? 1) || 1;
           const currentStock = Number(row["current_stock"] ?? 0);
           const minStockAlert = Number(row["min_stock_alert"] ?? 0);
-          const unitCost = row["unit_cost"] !== undefined && row["unit_cost"] !== "" ? Number(row["unit_cost"]) : null;
+          
+          let unitCost: number | null = null;
+          if (purchasePrice > 0 && purchaseContentQty > 0) {
+            unitCost = Math.round((purchasePrice / purchaseContentQty) * 100) / 100;
+          } else if (row["unit_cost"] !== undefined && row["unit_cost"] !== "") {
+            unitCost = Number(row["unit_cost"]);
+          }
 
           // Check if item exists
           const { data: existing, error: selErr } = await supabase
@@ -216,7 +225,15 @@ export function BulkImportConsole({
             // UPDATE
             const { error: updErr } = await supabase
               .from("inventory_items")
-              .update({ current_stock: currentStock, min_stock_alert: minStockAlert, unit_cost: unitCost })
+              .update({
+                current_stock: currentStock,
+                min_stock_alert: minStockAlert,
+                purchase_unit: purchaseUnit,
+                purchase_price: purchasePrice,
+                purchase_content_qty: purchaseContentQty,
+                unit_cost: unitCost,
+                unit,
+              })
               .eq("id", existing.id);
             if (updErr) { errors.push({ item: itemName, error: updErr.message }); }
             else { imported++; }
@@ -224,7 +241,17 @@ export function BulkImportConsole({
             // INSERT
             const { error: insErr } = await supabase
               .from("inventory_items")
-              .insert({ item_name: itemName, unit, current_stock: currentStock, min_stock_alert: minStockAlert, unit_cost: unitCost, branch_id: selectedBranch });
+              .insert({
+                item_name: itemName,
+                unit,
+                purchase_unit: purchaseUnit,
+                purchase_price: purchasePrice,
+                purchase_content_qty: purchaseContentQty,
+                unit_cost: unitCost,
+                current_stock: currentStock,
+                min_stock_alert: minStockAlert,
+                branch_id: selectedBranch,
+              });
             if (insErr) { errors.push({ item: itemName, error: insErr.message }); }
             else { imported++; }
           }

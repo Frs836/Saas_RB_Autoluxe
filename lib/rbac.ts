@@ -452,6 +452,7 @@ export const PROFILE_MENU: readonly ProfileMenuItem[] = [
   { label: "Kas Keluar", caption: "Petty cash operasional + foto nota", icon: "receipt_long", href: "/kas", permission: "cash.petty_manage", category: "keuangan" },
   { label: "Riwayat Invoice", caption: "Cari & cetak ulang nota pelanggan", icon: "print", href: "/invoice", permission: "reports.branch", category: "keuangan" },
   { label: "Laporan Cabang", caption: "Finansial, omzet, komisi & stok", icon: "insights", href: "/laporan", permission: "reports.branch", category: "keuangan" },
+  { label: "Biaya Produksi (HPP)", caption: "Modal bahan per size mobil & margin kotor", icon: "science", href: "/laporan/produksi", permission: "reports.branch", category: "keuangan" },
   { label: "Laporan Komisi Staf", caption: "Data unit & revenue semua karyawan", icon: "badge", href: "/komisi", permission: "reports.komisi", category: "keuangan" },
   { label: "Omset", caption: "Ringkasan omset harian, mingguan, bulanan", icon: "trending_up", href: "/omset", permission: "reports.omset", category: "keuangan" },
   { label: "Log Aktivitas", caption: "Audit trail — siapa melakukan apa dan kapan", icon: "history", href: "/laporan/aktivitas", permission: "reports.audit", category: "keuangan" },

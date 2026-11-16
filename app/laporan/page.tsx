@@ -290,7 +290,20 @@ const data = {
         branches={can(session.role, "branch.switch") ? branchOptions : []}
         activeBranchId={branchId}
       />
-      <div className="px-4 pt-4 flex gap-3">
+      <div className="px-4 pt-4 flex flex-col sm:flex-row gap-3">
+        <Link
+          href="/laporan/produksi"
+          className="flex-1 bg-surface rounded-[16px] p-3.5 clay-card border border-white/80 flex items-center gap-2.5 active:scale-[0.99] transition-transform"
+        >
+          <div className="w-9 h-9 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
+            <Icon name="science" className="text-[18px]" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <span className="font-body-bold text-body-bold text-text-primary block">Biaya Produksi</span>
+            <span className="font-caption text-caption text-text-muted block">HPP modal bahan per size</span>
+          </div>
+          <Icon name="chevron_right" className="text-text-muted text-[20px] shrink-0 ml-auto" />
+        </Link>
         <Link
           href="/laporan/cashflow"
           className="flex-1 bg-surface rounded-[16px] p-3.5 clay-card border border-white/80 flex items-center gap-2.5 active:scale-[0.99] transition-transform"

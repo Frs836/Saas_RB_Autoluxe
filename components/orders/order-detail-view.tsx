@@ -54,6 +54,14 @@ export type OrderDetailWarranty = {
 
 export type TeamCandidate = { id: string; full_name: string; busy?: boolean };
 
+export type ProductionCostItem = {
+  itemName: string;
+  quantity: number;
+  unit: string;
+  unitCost: number;
+  costAmount: number;
+};
+
 type Props = {
   order: OrderDetailOrder;
   inspections: InspectionPhoto[];
@@ -67,6 +75,7 @@ type Props = {
   teamCandidates: TeamCandidate[];
   viewerId: string;
   branchName: string;
+  productionCosts?: ProductionCostItem[];
 };
 
 const PHASES = [
@@ -140,6 +149,7 @@ export function OrderDetailView({
   teamCandidates,
   viewerId,
   branchName,
+  productionCosts = [],
 }: Props) {
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -793,6 +803,38 @@ export function OrderDetailView({
                   </span>
                 </div>
               ))}
+            </div>
+          ) : null}
+
+          {productionCosts && productionCosts.length > 0 ? (
+            <div className="mt-2 p-3 rounded-2xl bg-brand-50/60 border border-brand-100 flex flex-col gap-2">
+              <div className="flex items-center justify-between text-caption font-bold text-brand-900">
+                <span className="flex items-center gap-1.5">
+                  <Icon name="science" className="text-[16px] text-brand-600" />
+                  Modal Bahan Terpakai (HPP)
+                </span>
+                <span className="text-danger-text">
+                  {formatRupiah(productionCosts.reduce((acc, c) => acc + c.costAmount, 0))}
+                </span>
+              </div>
+              <div className="flex flex-col gap-1 text-xs">
+                {productionCosts.map((c, i) => (
+                  <div key={i} className="flex items-center justify-between text-text-secondary">
+                    <span className="truncate">{c.quantity} {c.unit} {c.itemName}</span>
+                    <span className="text-text-primary font-medium shrink-0">{formatRupiah(c.costAmount)}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="pt-1.5 border-t border-brand-100 flex items-center justify-between text-xs font-semibold text-success-text">
+                <span>Margin Kotor Jasa:</span>
+                <span>
+                  {formatRupiah(order.totalPrice - productionCosts.reduce((acc, c) => acc + c.costAmount, 0))} (
+                  {order.totalPrice > 0
+                    ? Math.round(((order.totalPrice - productionCosts.reduce((acc, c) => acc + c.costAmount, 0)) / order.totalPrice) * 100)
+                    : 0}
+                  %)
+                </span>
+              </div>
             </div>
           ) : null}
 

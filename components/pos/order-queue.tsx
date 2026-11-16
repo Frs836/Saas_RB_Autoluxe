@@ -78,7 +78,9 @@ function detectCat(servicePackage: string | null): "wash" | "detailing" | "coati
   if (pkg === "graphene package" || pkg.includes("graphene")) return "coating";
   if (pkg === "premium package"  || pkg === "light package")   return "coating";
   if (pkg.includes("coating") || pkg.includes("ceramic") || pkg.includes("nano") || pkg.includes("layer")) return "coating";
-  // Detailing
+  // Wash — dicek sebelum detailing agar "Wash Poles" atau "Cuci & Interior" tetap WASH!
+  if (pkg.includes("wash") || pkg.includes("cuci")) return "wash";
+  // Detailing (murni detailing tanpa kata wash)
   if (pkg === "full package" || pkg.includes("full package")) return "detailing";
   if (pkg === "interior" || pkg === "polish")                  return "detailing";
   if (pkg.includes("detailing") || pkg.includes("interior"))   return "detailing";
@@ -91,11 +93,20 @@ function actionsFor(status: string, servicePackage: string | null) {
   const allActions = TRANSITIONS[status] ?? [];
   const cat = detectCat(servicePackage);
   if (status === "in_progress") {
-    // Wash: hanya tombol "Selesaikan" (skip QC)
-    // Poles/Coating: hanya tombol "Ajukan QC" (wajib QC)
-    return cat === "wash"
-      ? allActions.filter((a) => a.status === "completed")
-      : allActions.filter((a) => a.status === "qc_review");
+    // ATURAN RESMI: Hanya COATING yang wajib QC!
+    // Wash dan Detailing langsung Selesaikan (skip QC).
+    return cat === "coating"
+      ? allActions.filter((a) => a.status === "qc_review")
+      : allActions.filter((a) => a.status === "completed");
+  }
+  if (status === "qc_review") {
+    // Jika order non-coating terlanjur berada di qc_review, beri tombol Selesaikan langsung
+    if (cat !== "coating") {
+      return [
+        { status: "completed", label: "Selesaikan", icon: "task_alt", cls: "bg-success-surface text-success-text" },
+        ...allActions,
+      ];
+    }
   }
   return allActions;
 }

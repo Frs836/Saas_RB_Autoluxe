@@ -87,17 +87,17 @@ function detectCategory(servicePackage: string | null): ServiceCategory {
   if (pkg === "light package"    || pkg.includes("2 layer") || pkg.includes("light package")) return "coating_light";
   if (pkg.includes("3 layer") || pkg.includes("nano ceramic"))       return "coating_premium";
   if (pkg.includes("coating") || pkg.includes("ceramic") || pkg.includes("nano")) return "coating_light";
+  // Wash variants — dicek sebelum kata poles/interior agar "Wash Poles", "Cuci & Interior" tetap WASH!
+  if (pkg.includes("premium wash"))  return "wash_premium";
+  if (pkg.includes("super wash"))    return "wash_super";
+  if (pkg.includes("jamur kaca") || pkg.includes("jamur")) return "wash_jamur";
+  if (pkg.includes("basic wash") || pkg.includes("wash") || pkg.includes("cuci")) return "wash_basic";
   // Detailing
   if (pkg === "full package" || pkg.includes("full package") || pkg.includes("detailing full")) return "detailing_full";
   if (pkg === "interior"     || pkg.includes("interior detailing"))  return "detailing_interior";
   if (pkg === "polish"       || pkg.includes("polish detailing"))    return "detailing_polish";
   if (pkg.includes("detailing") || pkg.includes("interior"))         return "detailing_full";
   if (pkg.includes("polish") || pkg.includes("poles") || pkg.includes("compound")) return "detailing_polish";
-  // Wash variants — check BEFORE generic wash
-  if (pkg.includes("premium wash"))  return "wash_premium";
-  if (pkg.includes("super wash"))    return "wash_super";
-  if (pkg.includes("jamur kaca") || pkg.includes("jamur")) return "wash_jamur";
-  if (pkg.includes("basic wash") || pkg.includes("wash")) return "wash_basic";
   return "wash_basic";
 }
 
@@ -138,22 +138,19 @@ const STEP_MAP: Record<ServiceCategory, Step[]> = {
   detailing_polish: [
     { key: "queued",      label: "Antre",                    icon: "schedule"  },
     { key: "in_progress", label: "Paint Correction / Poles", icon: "healing"   },
-    { key: "qc_review",   label: "Quality Control",          icon: "fact_check" },
-    { key: "completed",   label: "QC Lulus",                 icon: "task_alt"  },
+    { key: "completed",   label: "Poles Selesai",            icon: "task_alt"  },
     ...TAIL,
   ],
   detailing_interior: [
     { key: "queued",      label: "Antre",                    icon: "schedule"  },
     { key: "in_progress", label: "Interior Deep Clean",      icon: "healing"   },
-    { key: "qc_review",   label: "Quality Control",          icon: "fact_check" },
-    { key: "completed",   label: "QC Lulus",                 icon: "task_alt"  },
+    { key: "completed",   label: "Interior Selesai",         icon: "task_alt"  },
     ...TAIL,
   ],
   detailing_full: [
     { key: "queued",      label: "Antre",                    icon: "schedule"  },
     { key: "in_progress", label: "Interior + Poles + Detail", icon: "healing"  },
-    { key: "qc_review",   label: "Quality Control",          icon: "fact_check" },
-    { key: "completed",   label: "QC Lulus",                 icon: "task_alt"  },
+    { key: "completed",   label: "Detailing Selesai",        icon: "task_alt"  },
     ...TAIL,
   ],
   coating_light: [

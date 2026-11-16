@@ -463,23 +463,28 @@ export function OrderDetailView({
   const pkg = (order.servicePackage ?? "").toLowerCase().trim();
   type ServiceCat = "coating_graphene"|"coating_premium"|"coating_light"|"detailing_full"|"detailing_polish"|"detailing_interior"|"wash_premium"|"wash_super"|"wash_jamur"|"wash_basic";
   const serviceCategory: ServiceCat =
+    // Coating first
     pkg === "graphene package" || pkg.includes("graphene") ? "coating_graphene"
     : pkg === "premium package" || pkg.includes("5 layer") ? "coating_graphene"
     : pkg === "light package" || pkg.includes("2 layer") ? "coating_light"
     : pkg.includes("3 layer") || pkg.includes("nano ceramic") ? "coating_premium"
     : pkg.includes("coating") || pkg.includes("ceramic") || pkg.includes("nano") ? "coating_light"
+    // Wash dicek sebelum detailing agar "Wash Poles" atau "Cuci & Interior" tetap WASH!
+    : pkg.includes("premium wash") ? "wash_premium"
+    : pkg.includes("super wash") ? "wash_super"
+    : pkg.includes("jamur") ? "wash_jamur"
+    : pkg.includes("wash") || pkg.includes("cuci") ? "wash_basic"
+    // Detailing
     : pkg === "full package" || pkg.includes("full package") ? "detailing_full"
     : pkg === "interior" || pkg.includes("interior detailing") ? "detailing_interior"
     : pkg === "polish" || pkg.includes("polish detailing") ? "detailing_polish"
     : pkg.includes("detailing") || pkg.includes("interior") ? "detailing_full"
     : pkg.includes("polish") || pkg.includes("poles") || pkg.includes("compound") ? "detailing_polish"
-    : pkg.includes("premium wash") ? "wash_premium"
-    : pkg.includes("super wash") ? "wash_super"
-    : pkg.includes("jamur") ? "wash_jamur"
     : "wash_basic";
 
-  const needsQc = ["coating_graphene","coating_premium","coating_light","detailing_full","detailing_polish","detailing_interior"].includes(serviceCategory);
-  const hasWarranty = ["coating_graphene","coating_premium","coating_light"].includes(serviceCategory);
+  // ATURAN RESMI: Hanya COATING yang wajib QC & Garansi!
+  const needsQc = serviceCategory.startsWith("coating");
+  const hasWarranty = serviceCategory.startsWith("coating");
 
   const catLabel =
     serviceCategory.startsWith("coating") ? "Coating" :
@@ -529,20 +534,17 @@ export function OrderDetailView({
     ] : serviceCategory === "detailing_polish" ? [
       {key:"queued",label:"Antre",icon:"schedule"},
       {key:"in_progress",label:"Paint Correction / Poles",icon:"healing"},
-      {key:"qc_review",label:"QC",icon:"fact_check"},
-      {key:"completed",label:"QC Lulus",icon:"task_alt"},
+      {key:"completed",label:"Poles Selesai",icon:"task_alt"},
       ...PTAIL,
     ] : serviceCategory === "detailing_interior" ? [
       {key:"queued",label:"Antre",icon:"schedule"},
       {key:"in_progress",label:"Interior Deep Clean",icon:"healing"},
-      {key:"qc_review",label:"QC",icon:"fact_check"},
-      {key:"completed",label:"QC Lulus",icon:"task_alt"},
+      {key:"completed",label:"Interior Selesai",icon:"task_alt"},
       ...PTAIL,
     ] : serviceCategory === "detailing_full" ? [
       {key:"queued",label:"Antre",icon:"schedule"},
       {key:"in_progress",label:"Interior + Polish + Detail",icon:"healing"},
-      {key:"qc_review",label:"QC",icon:"fact_check"},
-      {key:"completed",label:"QC Lulus",icon:"task_alt"},
+      {key:"completed",label:"Detailing Selesai",icon:"task_alt"},
       ...PTAIL,
     ] : serviceCategory === "coating_light" ? [
       {key:"queued",label:"Antre & Checking",icon:"schedule"},
@@ -577,7 +579,7 @@ export function OrderDetailView({
   }
   if (order.status === "in_progress" && canUpload) {
     if (!needsQc) {
-      // Wash: selesaikan langsung tanpa QC
+      // Wash & Detailing: selesaikan langsung tanpa QC
       primaryActions.push({
         label: `Selesaikan (${catLabel} Selesai)`,
         icon: "task_alt",
@@ -585,7 +587,7 @@ export function OrderDetailView({
         cls: "bg-success-base text-white",
       });
     } else {
-      // Detailing/Coating: ajukan QC
+      // Hanya Coating: ajukan QC
       primaryActions.push({
         label: `Ajukan QC ${catLabel}`,
         icon: "fact_check",
@@ -610,19 +612,30 @@ export function OrderDetailView({
       cls: "bg-success-base text-white",
     });
   }
-  if (order.status === "qc_review" && canDecideQc) {
-    primaryActions.push({
-      label: "QC Lulus ✓",
-      icon: "verified",
-      status: "completed",
-      cls: "bg-success-base text-white",
-    });
-    primaryActions.push({
-      label: "Gagal QC — Revisi",
-      icon: "undo",
-      status: "in_progress",
-      cls: "bg-warning-surface text-warning-text",
-    });
+  if (order.status === "qc_review") {
+    // Jika order non-coating terlanjur berada di qc_review, izinkan langsung diselesaikan
+    if (!needsQc && canUpload) {
+      primaryActions.push({
+        label: `Selesaikan (${catLabel} Selesai)`,
+        icon: "task_alt",
+        status: "completed",
+        cls: "bg-success-base text-white",
+      });
+    }
+    if (canDecideQc) {
+      primaryActions.push({
+        label: "QC Lulus ✓",
+        icon: "verified",
+        status: "completed",
+        cls: "bg-success-base text-white",
+      });
+      primaryActions.push({
+        label: "Gagal QC — Revisi",
+        icon: "undo",
+        status: "in_progress",
+        cls: "bg-warning-surface text-warning-text",
+      });
+    }
   }
 
   const actionControls = (primaryActions.length > 0 || canUpload) && (

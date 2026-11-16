@@ -337,7 +337,7 @@ export function PosConsole({
       }
 
       const recordedState: PaymentState =
-        paymentState === "dp" ? "unpaid"
+        paymentState === "dp" ? "dp"
         : (order.payment_state as PaymentState | null) ?? effectivePaymentState;
 
       const receipt = buildReceiptText({
@@ -463,7 +463,9 @@ export function PosConsole({
             </span>
             <span className="font-body-bold text-body-bold text-text-primary">
               {result.paymentState === "paid"
-                ? "Sudah Dibayar"
+                ? "Sudah Dibayar (Lunas)"
+                : result.paymentState === "dp"
+                ? "DP Diterima (Sebagian)"
                 : "Belum Dibayar (Bayar Nanti)"}
             </span>
             {isEmployee && result.paymentState === "paid" ? (
@@ -472,6 +474,14 @@ export function PosConsole({
                 <span>
                   Rp {formatRupiah(result.total)} tercatat sebagai kas titipan
                   atas nama Anda. Serahkan ke Admin Kasir saat shift dibuka.
+                </span>
+              </div>
+            ) : result.paymentState === "dp" ? (
+              <div className="mt-3 p-3 rounded-xl bg-info-surface text-info-text font-caption text-caption flex items-start gap-2">
+                <Icon name="payments" className="text-[18px] shrink-0" />
+                <span>
+                  DP telah berhasil dicatat. Sisa tagihan dapat dilunasi nanti via menu{" "}
+                  <b>Kas &rsaquo; Bayar Nanti</b>.
                 </span>
               </div>
             ) : result.paymentState === "unpaid" ? (

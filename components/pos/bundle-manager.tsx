@@ -1,15 +1,18 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { useToast } from "@/components/toast";
 import { Icon } from "@/components/ui/icon";
 import { Modal } from "@/components/ui/modal";
+import { formatAngka } from "@/lib/pos";
 import {
   createBundleClaimAction,
   confirmBundleClaimAction,
   rejectBundleClaimAction,
   setBundleDefinitionAction,
   deleteBundleAction,
+  opnameBundleAction,
 } from "@/app/actions/stok";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -20,6 +23,7 @@ export type BundleComponent = {
   unit: string;
   quantity: number;
   unit_cost: number;
+  current_stock?: number;
 };
 
 export type BundleItem = {
@@ -48,6 +52,7 @@ export type BundleClaim = {
   bundle_name: string;
   quantity: number;
   unit: string;
+  claim_type: "produce" | "use";
   note: string | null;
   order_id: string | null;
   order_label: string | null;
@@ -59,6 +64,14 @@ export type BundleClaim = {
   components: BundleComponent[];
 };
 
+export type AvailableItem = {
+  id: string;
+  item_name: string;
+  unit: string;
+  unit_cost: number;
+  current_stock?: number;
+};
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const STATUS_MAP: Record<string, { label: string; cls: string; icon: string }> = {
@@ -68,7 +81,7 @@ const STATUS_MAP: Record<string, { label: string; cls: string; icon: string }> =
     icon: "pending",
   },
   confirmed: {
-    label: "Disetujui & Stok Bertambah",
+    label: "Disetujui",
     cls: "bg-success-surface text-success-text",
     icon: "task_alt",
   },
@@ -102,15 +115,224 @@ function formatDateTimeWib(value: string | null | undefined): string {
   return `${formatted} WIB`;
 }
 
-function componentsPreview(components: BundleComponent[], outputQty: number, unit: string): string {
-  if (components.length === 0) return "Belum ada bahan";
-  const parts = components.map((c) => `${c.quantity} ${c.unit} ${c.item_name}`).join(" + ");
-  return `1x racik (${outputQty} ${unit}) = ${parts}`;
+// ─── Modal 1: Produksi Racikan (Trigger Potong Bahan Baku & Tambah Stok) ─────
+
+function ProductionModal({
+  bundles,
+  initialBundle,
+  availableItems,
+  onClose,
+}: {
+  bundles: BundleItem[];
+  initialBundle: BundleItem | null;
+  availableItems: AvailableItem[];
+  onClose: () => void;
+}) {
+  const toast = useToast();
+  const router = useRouter();
+  const [selectedId, setSelectedId] = useState<string>(
+    initialBundle?.id ?? (bundles[0]?.id || ""),
+  );
+  const [batchCount, setBatchCount] = useState("1");
+  const [note, setNote] = useState("");
+  const [pending, startTransition] = useTransition();
+
+  const bundle = bundles.find((b) => b.id === selectedId) ?? initialBundle ?? bundles[0];
+  const itemById = useMemo(
+    () => Object.fromEntries(availableItems.map((i) => [i.id, i])),
+    [availableItems],
+  );
+
+  const batches = Math.max(1, Number(batchCount) || 1);
+  const totalProduced = bundle ? batches * (bundle.output_qty || 1) : 0;
+  const totalCost = bundle ? batches * (bundle.total_hpp_batch || 0) : 0;
+
+  // Cek kecukupan stok bahan baku di gudang
+  const materialChecks = useMemo(() => {
+    if (!bundle) return [];
+    return bundle.components.map((comp) => {
+      const inv = itemById[comp.item_id];
+      const available = inv?.current_stock ?? comp.current_stock ?? 0;
+      const needed = comp.quantity * batches;
+      return {
+        ...comp,
+        available,
+        needed,
+        isSufficient: available >= needed,
+      };
+    });
+  }, [bundle, batches, itemById]);
+
+  const hasInsufficientStock = materialChecks.some((c) => !c.isSufficient);
+
+  function handleSubmit() {
+    if (!bundle) return;
+    const qtyNum = Number(batchCount);
+    if (!qtyNum || qtyNum <= 0) {
+      toast.gagal("Jumlah tidak valid", "Jumlah batch produksi harus lebih dari 0");
+      return;
+    }
+
+    startTransition(async () => {
+      const res = await createBundleClaimAction({
+        p_bundle_id: bundle.id,
+        p_quantity: qtyNum,
+        p_claim_type: "produce",
+        p_note: note.trim() || undefined,
+      });
+
+      if (res.ok) {
+        toast.sukses(
+          "Pengajuan Produksi Terkirim",
+          `Pengajuan produksi ${bundle.bundle_name} (${qtyNum} batch) berhasil dikirim untuk diverifikasi.`,
+        );
+        onClose();
+        router.refresh();
+      } else {
+        toast.gagal("Gagal mengajukan", res.message ?? "Terjadi kesalahan sistem");
+      }
+    });
+  }
+
+  return (
+    <Modal open onClose={onClose} title="Produksi / Tambah Stok Racikan">
+      <div className="flex flex-col gap-4">
+        {/* Pilih Racikan jika belum spesifik */}
+        {bundles.length > 1 && (
+          <div className="flex flex-col gap-1">
+            <label className="font-label text-label text-text-secondary">Pilih Racikan</label>
+            <select
+              value={selectedId}
+              onChange={(e) => setSelectedId(e.target.value)}
+              className="w-full rounded-2xl border border-outline-variant bg-surface-container-low px-4 py-3 text-text-primary font-body text-body outline-none focus:border-brand-500"
+            >
+              {bundles.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.bundle_name} (Sisa fisik: {formatAngka(b.current_stock)} {b.unit})
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {bundle ? (
+          <>
+            {/* Kartu Estimasi Hasil Produksi */}
+            <div className="rounded-2xl bg-brand-50 border border-brand-200/80 p-4 flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <span className="font-caption text-caption text-brand-700 font-medium">
+                  Estimasi Tambahan Stok Racikan:
+                </span>
+                <span className="font-headline-2 text-headline-2 text-brand-900">
+                  +{formatAngka(totalProduced)} {bundle.unit}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-xs text-brand-700 border-t border-brand-200/60 pt-2">
+                <span>
+                  {batches} batch @ {formatAngka(bundle.output_qty)} {bundle.unit}
+                </span>
+                <span className="font-semibold">Estimasi HPP Total: {formatRupiah(totalCost)}</span>
+              </div>
+            </div>
+
+            {/* Input Berapa Batch */}
+            <div className="flex flex-col gap-1">
+              <label className="font-label text-label text-text-secondary">
+                Berapa Kali Meracik (Batch)?
+              </label>
+              <input
+                type="number"
+                min="1"
+                step="1"
+                value={batchCount}
+                onChange={(e) => setBatchCount(e.target.value)}
+                placeholder="1"
+                className="w-full rounded-2xl border border-outline-variant bg-surface-container-low px-4 py-3 text-text-primary font-body text-body outline-none focus:border-brand-500"
+              />
+              <span className="font-caption text-caption text-text-muted mt-0.5">
+                1 batch menghasilkan {formatAngka(bundle.output_qty)} {bundle.unit} racikan siap pakai.
+              </span>
+            </div>
+
+            {/* Rincian Bahan Baku yang Akan Terpotong dari Gudang */}
+            <div className="rounded-2xl bg-surface-container-low p-3.5 flex flex-col gap-2 border border-outline-variant/40">
+              <span className="font-label text-label text-text-secondary">
+                Bahan Baku Gudang yang Akan Terpotong:
+              </span>
+              <div className="flex flex-col gap-1.5">
+                {materialChecks.map((c) => (
+                  <div
+                    key={c.item_id}
+                    className="flex items-center justify-between text-xs py-1 border-b border-outline-variant/30 last:border-none"
+                  >
+                    <div className="flex flex-col min-w-0">
+                      <span className="font-medium text-text-primary truncate">{c.item_name}</span>
+                      <span className="text-[11px] text-text-muted">
+                        Stok gudang: {formatAngka(c.available)} {c.unit}
+                      </span>
+                    </div>
+                    <div className="flex flex-col items-end shrink-0">
+                      <span
+                        className={`font-semibold ${
+                          c.isSufficient ? "text-text-primary" : "text-danger-text"
+                        }`}
+                      >
+                        -{formatAngka(c.needed)} {c.unit}
+                      </span>
+                      {!c.isSufficient && (
+                        <span className="text-[10px] text-danger-text font-bold">Stok kurang!</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {hasInsufficientStock && (
+              <div className="p-3 rounded-xl bg-danger-surface text-danger-text text-xs flex items-center gap-2">
+                <Icon name="block" className="text-[18px] shrink-0" />
+                <span>
+                  Perhatian: Sebagian bahan baku di gudang tidak mencukupi untuk {batches} batch.
+                  Pengajuan tetap dapat dikirim namun persetujuan membutuhkan stok yang cukup.
+                </span>
+              </div>
+            )}
+
+            {/* Catatan Tambahan */}
+            <div className="flex flex-col gap-1">
+              <label className="font-label text-label text-text-secondary">
+                Catatan Produksi (opsional)
+              </label>
+              <textarea
+                rows={2}
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="mis: Persiapan semir ban untuk akhir pekan"
+                className="w-full rounded-2xl border border-outline-variant bg-surface-container-low px-4 py-2.5 text-text-primary font-body text-body outline-none focus:border-brand-500 resize-none"
+              />
+            </div>
+
+            <button
+              type="button"
+              disabled={pending}
+              onClick={handleSubmit}
+              className="w-full rounded-2xl bg-brand-500 text-white font-label-bold text-label-bold py-3.5 flex items-center justify-center gap-2 active:scale-[0.98] transition-transform disabled:opacity-50"
+            >
+              <Icon name="science" className="text-[20px]" />
+              {pending ? "Mengajukan Produksi…" : "Ajukan Produksi Racikan"}
+            </button>
+          </>
+        ) : (
+          <p className="text-text-muted text-sm py-4 text-center">Belum ada data racikan.</p>
+        )}
+      </div>
+    </Modal>
+  );
 }
 
-// ─── Claim / Produksi Modal ──────────────────────────────────────────────────
+// ─── Modal 2: Klaim Pemakaian Racikan (Ambil dari Stok Fisik) ────────────────
 
-function ClaimModal({
+function ClaimUsageModal({
   bundle,
   activeOrders,
   onClose,
@@ -120,30 +342,35 @@ function ClaimModal({
   onClose: () => void;
 }) {
   const toast = useToast();
-  const [qty, setQty] = useState("1");
+  const router = useRouter();
+  const [qty, setQty] = useState("50");
   const [selectedOrderId, setSelectedOrderId] = useState<string>("");
   const [note, setNote] = useState("");
   const [pending, startTransition] = useTransition();
 
-  const batchCount = Math.max(1, Number(qty) || 1);
-  const totalProduced = batchCount * (bundle.output_qty || 1);
-
   function handleSubmit() {
     const qtyNum = Number(qty);
     if (!qtyNum || qtyNum <= 0) {
-      toast.gagal("Jumlah tidak valid", "Jumlah kali racik harus lebih dari 0");
+      toast.gagal("Jumlah tidak valid", `Jumlah pemakaian harus lebih dari 0 ${bundle.unit}`);
       return;
     }
+
     startTransition(async () => {
       const res = await createBundleClaimAction({
         p_bundle_id: bundle.id,
         p_quantity: qtyNum,
+        p_claim_type: "use",
         p_order_id: selectedOrderId || undefined,
         p_note: note.trim() || undefined,
       });
+
       if (res.ok) {
-        toast.sukses("Klaim diajukan", "Pengajuan produksi racikan berhasil dikirim.");
+        toast.sukses(
+          "Klaim Pemakaian Diajukan",
+          `Pengajuan pemakaian ${qtyNum} ${bundle.unit} ${bundle.bundle_name} berhasil dikirim.`,
+        );
         onClose();
+        router.refresh();
       } else {
         toast.gagal("Gagal mengajukan", res.message ?? "Terjadi kesalahan sistem");
       }
@@ -151,40 +378,33 @@ function ClaimModal({
   }
 
   return (
-    <Modal open onClose={onClose} title={`Produksi / Klaim — ${bundle.bundle_name}`}>
+    <Modal open onClose={onClose} title={`Klaim Pemakaian — ${bundle.bundle_name}`}>
       <div className="flex flex-col gap-4">
-        {/* Info Hasil Jadi */}
-        <div className="rounded-2xl bg-brand-50 border border-brand-100 p-3.5 flex flex-col gap-1.5">
-          <div className="flex items-center justify-between">
-            <span className="font-caption text-caption text-brand-700">Estimasi Hasil Jadi:</span>
-            <span className="font-body-bold text-body-bold text-brand-900">
-              +{totalProduced.toLocaleString("id-ID")} {bundle.unit}
-            </span>
-          </div>
-          <div className="text-xs text-brand-600">
-            {batchCount}x racik @ {bundle.output_qty} {bundle.unit}
-          </div>
-        </div>
-
-        {/* Jumlah Kali Racik */}
-        <div className="flex flex-col gap-1">
-          <label className="font-label text-label text-text-secondary">
-            Berapa Kali Meracik (Batch)?
-          </label>
-          <input
-            type="number"
-            min="1"
-            step="1"
-            value={qty}
-            onChange={(e) => setQty(e.target.value)}
-            className="w-full rounded-2xl border border-outline-variant bg-surface-container-low px-4 py-3 text-text-primary font-body text-body outline-none focus:border-brand-500"
-          />
-          <span className="font-caption text-caption text-text-muted mt-0.5">
-            Contoh: Masukkan 1 untuk 1 botol/batch ({bundle.output_qty} {bundle.unit})
+        {/* Info Sisa Stok Fisik */}
+        <div className="rounded-2xl bg-surface-container-low p-3.5 flex items-center justify-between border border-outline-variant/40">
+          <span className="font-caption text-caption text-text-muted">Stok Fisik Tersedia:</span>
+          <span className="font-body-bold text-body-bold text-text-primary">
+            {formatAngka(bundle.current_stock)} {bundle.unit}
           </span>
         </div>
 
-        {/* Tautan ke Order Aktif (Opsional) */}
+        {/* Input Jumlah Diambil */}
+        <div className="flex flex-col gap-1">
+          <label className="font-label text-label text-text-secondary">
+            Jumlah yang Diambil / Dipakai ({bundle.unit})
+          </label>
+          <input
+            type="number"
+            min="0.1"
+            step="any"
+            value={qty}
+            onChange={(e) => setQty(e.target.value)}
+            placeholder="50"
+            className="w-full rounded-2xl border border-outline-variant bg-surface-container-low px-4 py-3 text-text-primary font-body text-body outline-none focus:border-brand-500"
+          />
+        </div>
+
+        {/* Tautan Order Aktif */}
         <div className="flex flex-col gap-1">
           <label className="font-label text-label text-text-secondary">
             Keperluan / Tautkan ke Order (Opsional)
@@ -194,7 +414,7 @@ function ClaimModal({
             onChange={(e) => setSelectedOrderId(e.target.value)}
             className="w-full rounded-2xl border border-outline-variant bg-surface-container-low px-3 py-3 text-text-primary font-body text-body outline-none focus:border-brand-500"
           >
-            <option value="">Lainnya / Operasional Stok Bengkel</option>
+            <option value="">Lainnya / Operasional Bengkel</option>
             {activeOrders.map((ord) => (
               <option key={ord.id} value={ord.id}>
                 {ord.order_number ? `#${ord.order_number} - ` : ""}
@@ -204,35 +424,20 @@ function ClaimModal({
             ))}
           </select>
           <span className="font-caption text-caption text-text-muted">
-            Pilih unit order jika racikan dibuat/ditambah khusus untuk pengerjaan mobil tersebut.
+            Tautkan ke order kendaraan jika racikan ini diambil untuk pengerjaan unit tersebut.
           </span>
         </div>
 
-        {/* Bahan Baku yang Akan Terpotong */}
-        <div className="rounded-2xl bg-surface-container-low p-3.5 flex flex-col gap-1.5 border border-outline-variant/40">
-          <span className="font-label text-label text-text-secondary">
-            Bahan Baku Gudang yang Akan Terpotong:
-          </span>
-          {bundle.components.map((c) => (
-            <div key={c.item_id} className="flex justify-between text-xs text-text-secondary">
-              <span>• {c.item_name}</span>
-              <span className="font-mono font-medium">
-                {(c.quantity * batchCount).toLocaleString("id-ID")} {c.unit}
-              </span>
-            </div>
-          ))}
-        </div>
-
-        {/* Catatan */}
+        {/* Catatan Tambahan */}
         <div className="flex flex-col gap-1">
           <label className="font-label text-label text-text-secondary">
-            Catatan Tambahan (opsional)
+            Catatan Keperluan (opsional)
           </label>
           <textarea
             rows={2}
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="mis: racikan semir ban cadangan untuk minggu ini"
+            placeholder="mis: Tambahan cairan untuk velg ekstra kotor"
             className="w-full rounded-2xl border border-outline-variant bg-surface-container-low px-4 py-2.5 text-text-primary font-body text-body outline-none focus:border-brand-500 resize-none"
           />
         </div>
@@ -241,21 +446,148 @@ function ClaimModal({
           type="button"
           disabled={pending}
           onClick={handleSubmit}
-          className="w-full rounded-2xl bg-brand-500 text-white font-label-bold text-label-bold py-3.5 active:scale-[0.98] transition-transform disabled:opacity-50"
+          className="w-full rounded-2xl bg-brand-500 text-white font-label-bold text-label-bold py-3.5 flex items-center justify-center gap-2 active:scale-[0.98] transition-transform disabled:opacity-50"
         >
-          {pending ? "Mengajukan…" : "Ajukan Produksi Racikan"}
+          <Icon name="shopping_cart_checkout" className="text-[20px]" />
+          {pending ? "Mengajukan Klaim…" : "Ajukan Klaim Pemakaian"}
         </button>
       </div>
     </Modal>
   );
 }
 
-// ─── Bundle Form Modal (Buat / Edit) ─────────────────────────────────────────
+// ─── Modal 3: Opname Fisik Racikan ───────────────────────────────────────────
+
+function OpnameModal({
+  bundle,
+  onClose,
+}: {
+  bundle: BundleItem;
+  onClose: () => void;
+}) {
+  const toast = useToast();
+  const router = useRouter();
+  const [physicalQty, setPhysicalQty] = useState(String(bundle.current_stock));
+  const [note, setNote] = useState("");
+  const [pending, startTransition] = useTransition();
+
+  const parsedQty = Number(physicalQty) || 0;
+  const difference = parsedQty - bundle.current_stock;
+
+  function handleSubmit() {
+    if (parsedQty < 0) {
+      toast.gagal("Nilai tidak valid", "Stok fisik tidak boleh kurang dari 0");
+      return;
+    }
+
+    startTransition(async () => {
+      const res = await opnameBundleAction({
+        p_bundle_id: bundle.id,
+        p_physical_qty: parsedQty,
+        p_note: note.trim() || undefined,
+      });
+
+      if (res.ok) {
+        toast.sukses(
+          "Opname Disimpan",
+          `Stok fisik ${bundle.bundle_name} disesuaikan menjadi ${formatAngka(parsedQty)} ${bundle.unit}.`,
+        );
+        onClose();
+        router.refresh();
+      } else {
+        toast.gagal("Gagal opname", res.message ?? "Terjadi kesalahan sistem");
+      }
+    });
+  }
+
+  return (
+    <Modal open onClose={onClose} title={`Opname Fisik — ${bundle.bundle_name}`}>
+      <div className="flex flex-col gap-4">
+        {/* Stok Sistem Saat Ini */}
+        <div className="rounded-2xl bg-surface-container-low p-3.5 flex items-center justify-between border border-outline-variant/40">
+          <span className="font-caption text-caption text-text-muted">Stok Tercatat di Sistem:</span>
+          <span className="font-body-bold text-body-bold text-text-primary">
+            {formatAngka(bundle.current_stock)} {bundle.unit}
+          </span>
+        </div>
+
+        {/* Input Stok Fisik Aktual */}
+        <div className="flex flex-col gap-1">
+          <label className="font-label text-label text-text-secondary">
+            Stok Fisik Aktual di Bengkel ({bundle.unit})
+          </label>
+          <input
+            type="number"
+            min="0"
+            step="any"
+            value={physicalQty}
+            onChange={(e) => setPhysicalQty(e.target.value)}
+            placeholder="0"
+            className="w-full rounded-2xl border border-outline-variant bg-surface-container-low px-4 py-3 text-text-primary font-body text-body outline-none focus:border-brand-500"
+          />
+          <span className="font-caption text-caption text-text-muted">
+            Hitung sisa fisik botol/jerigen racikan di rak pengerjaan.
+          </span>
+        </div>
+
+        {/* Live Selisih */}
+        <div
+          className={`rounded-2xl p-3 flex items-center justify-between text-xs font-medium border ${
+            difference === 0
+              ? "bg-surface-container-low text-text-muted border-outline-variant/40"
+              : difference > 0
+              ? "bg-success-surface text-success-text border-success-base/30"
+              : "bg-danger-surface text-danger-text border-danger-base/30"
+          }`}
+        >
+          <span>Selisih dengan Sistem:</span>
+          <span className="font-bold text-sm">
+            {difference > 0 ? `+${formatAngka(difference)}` : formatAngka(difference)}{" "}
+            {bundle.unit}
+          </span>
+        </div>
+
+        {/* Catatan Opname */}
+        <div className="flex flex-col gap-1">
+          <label className="font-label text-label text-text-secondary">
+            Catatan Penyesuaian (opsional)
+          </label>
+          <textarea
+            rows={2}
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="mis: Tumpah saat pengerjaan / penyesuaian takaran botol"
+            className="w-full rounded-2xl border border-outline-variant bg-surface-container-low px-4 py-2.5 text-text-primary font-body text-body outline-none focus:border-brand-500 resize-none"
+          />
+        </div>
+
+        <button
+          type="button"
+          disabled={pending}
+          onClick={handleSubmit}
+          className="w-full rounded-2xl bg-brand-500 text-white font-label-bold text-label-bold py-3.5 flex items-center justify-center gap-2 active:scale-[0.98] transition-transform disabled:opacity-50"
+        >
+          <Icon name="tune" className="text-[20px]" />
+          {pending ? "Menyimpan Penyesuaian…" : "Simpan Penyesuaian Opname"}
+        </button>
+      </div>
+    </Modal>
+  );
+}
+
+// ─── Modal 4: Buat / Edit Definisi Racikan ────────────────────────────────────
 
 type ComponentDraft = {
   item_id: string;
   quantity: string;
 };
+
+// Satuan output STRICT sesuai kebutuhan user: ML, GR, PCS
+const STRICT_UNITS = [
+  { value: "ml", label: "ML (Mililiter)" },
+  { value: "gr", label: "GR (Gram)" },
+  { value: "pcs", label: "PCS (Pieces)" },
+];
 
 function BundleFormModal({
   editing,
@@ -264,27 +596,31 @@ function BundleFormModal({
   onClose,
 }: {
   editing: BundleItem | null;
-  availableItems: { id: string; item_name: string; unit: string; unit_cost: number }[];
+  availableItems: AvailableItem[];
   branchId: string;
   onClose: () => void;
 }) {
   const toast = useToast();
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
 
   const [name, setName] = useState(editing?.bundle_name ?? "");
   const [unit, setUnit] = useState(editing?.unit ?? "ml");
-  const [outputQty, setOutputQty] = useState(String(editing?.output_qty ?? 1000));
+  const [outputQty, setOutputQty] = useState(String(editing?.output_qty ?? 100));
   const [desc, setDesc] = useState(editing?.description ?? "");
   const [components, setComponents] = useState<ComponentDraft[]>(
     editing
       ? editing.components.map((c) => ({ item_id: c.item_id, quantity: String(c.quantity) }))
-      : [{ item_id: "", quantity: "100" }],
+      : [{ item_id: "", quantity: "10" }],
   );
 
-  const itemById = Object.fromEntries(availableItems.map((i) => [i.id, i]));
+  const itemById = useMemo(
+    () => Object.fromEntries(availableItems.map((i) => [i.id, i])),
+    [availableItems],
+  );
 
   function addComponent() {
-    setComponents((prev) => [...prev, { item_id: "", quantity: "50" }]);
+    setComponents((prev) => [...prev, { item_id: "", quantity: "10" }]);
   }
 
   function removeComponent(idx: number) {
@@ -316,16 +652,8 @@ function BundleFormModal({
       toast.gagal("Data belum lengkap", "Nama racikan wajib diisi");
       return;
     }
-    if (!unit.trim()) {
-      toast.gagal("Data belum lengkap", "Satuan hasil output wajib diisi");
-      return;
-    }
-    if (!parsedOutputQty || parsedOutputQty <= 0) {
-      toast.gagal("Jumlah hasil tidak valid", "Hasil bersih per 1x racik harus lebih dari 0");
-      return;
-    }
     if (!validComponents.length) {
-      toast.gagal("Bahan kosong", "Tambahkan minimal satu bahan baku");
+      toast.gagal("Bahan kosong", "Pilih minimal 1 bahan baku gudang");
       return;
     }
 
@@ -333,9 +661,10 @@ function BundleFormModal({
       const res = await setBundleDefinitionAction({
         p_branch_id: branchId,
         p_bundle_name: name.trim(),
-        p_unit: unit.trim(),
+        p_unit: unit.trim().toLowerCase(),
         p_output_qty: parsedOutputQty,
         p_description: desc.trim() || undefined,
+        p_bundle_id: editing?.id,
         p_components: validComponents.map((c) => ({
           item_id: c.item_id,
           quantity: Number(c.quantity),
@@ -345,22 +674,21 @@ function BundleFormModal({
       if (res.ok) {
         toast.sukses(
           "Berhasil",
-          editing ? "Racikan berhasil diperbarui" : "Racikan berhasil dibuat",
+          editing ? "Racikan berhasil diperbarui" : "Racikan baru berhasil disimpan",
         );
         onClose();
+        router.refresh();
       } else {
         toast.gagal("Gagal", res.message ?? "Gagal menyimpan racikan");
       }
     });
   }
 
-  const UNIT_OPTIONS = ["ml", "gram", "botol", "pack", "sachet", "lainnya"];
-
   return (
     <Modal
       open
       onClose={onClose}
-      title={editing ? "Edit Racikan" : "Buat Racikan Baru"}
+      title={editing ? `Edit Racikan — ${editing.bundle_name}` : "Buat Racikan Baru"}
     >
       <div className="flex flex-col gap-4">
         {/* Nama Racikan */}
@@ -369,68 +697,61 @@ function BundleFormModal({
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="mis: Semir Ban Glossy Extra"
+            placeholder="mis: Semir Ban Premium"
             className="w-full rounded-2xl border border-outline-variant bg-surface-container-low px-4 py-3 text-text-primary font-body text-body outline-none focus:border-brand-500"
           />
         </div>
 
-        {/* Hasil Bersih 1x Racik & Satuan */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="flex flex-col gap-1">
-            <label className="font-label text-label text-text-secondary">
-              Hasil Jadi 1x Racik (Volume / Qty)
-            </label>
-            <input
-              type="number"
-              min="0.1"
-              step="any"
-              value={outputQty}
-              onChange={(e) => setOutputQty(e.target.value)}
-              placeholder="mis: 1000"
-              className="w-full rounded-2xl border border-outline-variant bg-surface-container-low px-4 py-2.5 text-text-primary font-body text-body outline-none focus:border-brand-500"
-            />
-            <span className="font-caption text-caption text-text-muted">
-              Total volume jadi setelah dicampur air/pelarut
-            </span>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <label className="font-label text-label text-text-secondary">Satuan Output</label>
-            <div className="flex gap-1.5 flex-wrap">
-              {UNIT_OPTIONS.map((opt) => (
-                <button
-                  key={opt}
-                  type="button"
-                  onClick={() => setUnit(opt === "lainnya" ? "" : opt)}
-                  className={`px-3 py-1.5 rounded-xl font-caption text-caption border transition-colors ${
-                    unit === opt || (opt === "lainnya" && !UNIT_OPTIONS.includes(unit) && unit !== "")
-                      ? "bg-brand-500 text-white border-brand-500 font-medium"
-                      : "bg-surface-container-low text-text-secondary border-outline-variant"
-                  }`}
-                >
-                  {opt}
-                </button>
-              ))}
-            </div>
-            {!UNIT_OPTIONS.slice(0, -1).includes(unit) && (
-              <input
-                value={unit}
-                onChange={(e) => setUnit(e.target.value)}
-                placeholder="Ketik satuan…"
-                className="mt-1 w-full rounded-xl border border-outline-variant bg-surface-container-low px-3 py-2 text-text-primary font-body text-body outline-none focus:border-brand-500"
-              />
-            )}
+        {/* Satuan Output (STRICT: ML, GR, PCS) */}
+        <div className="flex flex-col gap-1.5">
+          <label className="font-label text-label text-text-secondary">
+            Satuan Hasil Jadi (Output Unit)
+          </label>
+          <div className="grid grid-cols-3 gap-2">
+            {STRICT_UNITS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setUnit(opt.value)}
+                className={`py-2.5 px-3 rounded-xl font-label text-label border transition-all text-center ${
+                  unit === opt.value
+                    ? "bg-brand-500 text-white border-brand-500 font-bold shadow-sm"
+                    : "bg-surface-container-low text-text-secondary border-outline-variant hover:border-brand-300"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Daftar Bahan Baku */}
+        {/* Hasil Bersih 1x Racik */}
+        <div className="flex flex-col gap-1">
+          <label className="font-label text-label text-text-secondary">
+            Hasil Bersih 1x Racik ({unit.toUpperCase()})
+          </label>
+          <input
+            type="number"
+            min="0.1"
+            step="any"
+            value={outputQty}
+            onChange={(e) => setOutputQty(e.target.value)}
+            placeholder="mis: 100"
+            className="w-full rounded-2xl border border-outline-variant bg-surface-container-low px-4 py-3 text-text-primary font-body text-body outline-none focus:border-brand-500"
+          />
+          <span className="font-caption text-caption text-text-muted">
+            Total volume/bobot jadi per 1x racik (termasuk air/pelarut). Contoh: 100 ml.
+          </span>
+        </div>
+
+        {/* Daftar Komposisi Bahan Gudang */}
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
             <label className="font-label text-label text-text-secondary">
               Komposisi Bahan Baku Gudang
             </label>
             <span className="font-caption text-caption text-text-muted">
-              (Biaya dihitung otomatis)
+              (Biaya otomatis dari harga beli gudang)
             </span>
           </div>
 
@@ -464,7 +785,7 @@ function BundleFormModal({
                       step="any"
                       value={comp.quantity}
                       onChange={(e) => updateComponent(idx, "quantity", e.target.value)}
-                      placeholder="Qty"
+                      placeholder="Takaran"
                       className="w-20 rounded-xl border border-outline-variant bg-surface px-2.5 py-2 text-text-primary font-body text-body text-right outline-none focus:border-brand-500"
                     />
                     <span className="text-xs text-text-muted w-8 shrink-0">
@@ -488,9 +809,7 @@ function BundleFormModal({
                     <span>
                       {comp.quantity || 0} {item.unit} × {formatRupiah(item.unit_cost)}/{item.unit}
                     </span>
-                    <span className="font-semibold text-text-primary">
-                      = {formatRupiah(cost)}
-                    </span>
+                    <span className="font-semibold text-text-primary">= {formatRupiah(cost)}</span>
                   </div>
                 )}
               </div>
@@ -500,7 +819,7 @@ function BundleFormModal({
           <button
             type="button"
             onClick={addComponent}
-            className="flex items-center gap-2 text-brand-600 font-label text-label mt-1 w-fit active:scale-95"
+            className="flex items-center gap-1.5 text-brand-600 font-label text-label mt-1 w-fit active:scale-95"
           >
             <Icon name="add_circle" className="text-[18px]" />
             Tambah Bahan Lain
@@ -515,19 +834,19 @@ function BundleFormModal({
           <input
             value={desc}
             onChange={(e) => setDesc(e.target.value)}
-            placeholder="mis: Campuran semir ban + pengkilap untuk motor & mobil"
+            placeholder="mis: Campuran semir ban HF + HCl + air"
             className="w-full rounded-2xl border border-outline-variant bg-surface-container-low px-4 py-2.5 text-text-primary font-body text-body outline-none focus:border-brand-500"
           />
         </div>
 
-        {/* Breakdown Live Matematika HPP Otomatis */}
-        <div className="rounded-2xl bg-surface-container-high border border-brand-200/60 p-4 flex flex-col gap-2 shadow-sm">
-          <div className="flex items-center gap-2 text-brand-700 font-label text-label">
+        {/* Live Auto-HPP Breakdown */}
+        <div className="rounded-2xl bg-surface-container-high border border-brand-200/80 p-4 flex flex-col gap-2 shadow-sm">
+          <div className="flex items-center gap-2 text-brand-700 font-label text-label font-bold">
             <Icon name="calculate" className="text-[18px]" />
-            <span>Kalkulasi HPP Otomatis Sistem</span>
+            <span>Kalkulasi Otomatis HPP Sistem</span>
           </div>
 
-          <div className="flex flex-col gap-1 text-xs text-text-secondary pt-1 border-t border-outline-variant/40">
+          <div className="flex flex-col gap-1.5 text-xs text-text-secondary pt-1 border-t border-outline-variant/40">
             <div className="flex justify-between">
               <span>Total Modal Bahan per 1x Racik:</span>
               <span className="font-bold text-text-primary text-sm">
@@ -537,21 +856,18 @@ function BundleFormModal({
             <div className="flex justify-between">
               <span>Hasil Volume Jadi:</span>
               <span className="font-medium text-text-primary">
-                {parsedOutputQty.toLocaleString("id-ID")} {unit}
+                {formatAngka(parsedOutputQty)} {unit.toUpperCase()}
               </span>
             </div>
             <div className="flex justify-between items-center pt-1.5 border-t border-dashed border-outline-variant">
-              <span className="font-semibold text-brand-800">
-                HPP Bersih per {unit || "unit"}:
+              <span className="font-bold text-brand-900">
+                HPP Bersih per {unit.toUpperCase()}:
               </span>
               <span className="font-headline-2 text-headline-2 text-brand-600">
-                {formatRupiah(hppPerUnit)} / {unit || "unit"}
+                {formatRupiah(hppPerUnit)} / {unit.toUpperCase()}
               </span>
             </div>
           </div>
-          <span className="text-[11px] text-text-muted italic">
-            * Anda tidak perlu menghitung manual. Nilai ini otomatis dipecah ke resep jasa per ukuran kendaraan.
-          </span>
         </div>
 
         <button
@@ -560,16 +876,16 @@ function BundleFormModal({
           onClick={handleSave}
           className="w-full rounded-2xl bg-brand-500 text-white font-label-bold text-label-bold py-3.5 active:scale-[0.98] transition-transform disabled:opacity-50 mt-1"
         >
-          {pending ? "Menyimpan…" : editing ? "Simpan Perubahan" : "Buat Racikan Sekarang"}
+          {pending ? "Menyimpan…" : editing ? "Simpan Perubahan Racikan" : "Simpan Racikan Baru"}
         </button>
       </div>
     </Modal>
   );
 }
 
-// ─── Delete Confirm Modal ─────────────────────────────────────────────────────
+// ─── Modal 5: Hapus Racikan ───────────────────────────────────────────────────
 
-function DeleteConfirmModal({
+function DeleteModal({
   bundle,
   onClose,
 }: {
@@ -577,16 +893,18 @@ function DeleteConfirmModal({
   onClose: () => void;
 }) {
   const toast = useToast();
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
 
   function handleDelete() {
     startTransition(async () => {
       const res = await deleteBundleAction(bundle.id);
       if (res.ok) {
-        toast.sukses("Berhasil", "Racikan berhasil dinonaktifkan");
+        toast.sukses("Racikan Dinonaktifkan", `${bundle.bundle_name} berhasil dinonaktifkan.`);
         onClose();
+        router.refresh();
       } else {
-        toast.gagal("Gagal", res.message ?? "Gagal menghapus racikan");
+        toast.gagal("Gagal menghapus", res.message ?? "Terjadi kesalahan sistem");
       }
     });
   }
@@ -595,15 +913,15 @@ function DeleteConfirmModal({
     <Modal open onClose={onClose} title="Hapus Racikan">
       <div className="flex flex-col gap-4">
         <p className="font-body text-body text-text-secondary">
-          Yakin ingin menghapus racikan{" "}
-          <strong className="text-text-primary">{bundle.bundle_name}</strong>?
-          Tindakan ini akan menonaktifkan racikan dari resep jasa.
+          Yakin ingin menonaktifkan racikan{" "}
+          <strong className="text-text-primary">{bundle.bundle_name}</strong>? Racikan ini tidak
+          akan muncul lagi di daftar resep order.
         </p>
-        <div className="flex gap-3">
+        <div className="flex gap-2">
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 rounded-2xl border border-outline-variant bg-surface-container-low text-text-primary font-label text-label py-3 active:scale-[0.98] transition-transform"
+            className="flex-1 py-3 rounded-2xl bg-surface-container text-text-secondary font-body-bold text-body-bold active:scale-95 transition-transform"
           >
             Batal
           </button>
@@ -611,9 +929,9 @@ function DeleteConfirmModal({
             type="button"
             disabled={pending}
             onClick={handleDelete}
-            className="flex-1 rounded-2xl bg-danger text-white font-label-bold text-label-bold py-3 active:scale-[0.98] transition-transform disabled:opacity-50"
+            className="flex-1 py-3 rounded-2xl bg-danger text-white font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-50"
           >
-            {pending ? "Menghapus…" : "Hapus"}
+            {pending ? "Menghapus…" : "Hapus Racikan"}
           </button>
         </div>
       </div>
@@ -621,264 +939,7 @@ function DeleteConfirmModal({
   );
 }
 
-// ─── Bundle Card ──────────────────────────────────────────────────────────────
-
-function BundleCard({
-  bundle,
-  canManage,
-  onClaim,
-  onEdit,
-  onDelete,
-}: {
-  bundle: BundleItem;
-  canManage: boolean;
-  onClaim: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
-}) {
-  const hasStock = bundle.current_stock > 0;
-
-  return (
-    <div className="clay-card bg-surface rounded-[24px] p-4 sm:p-5 flex flex-col gap-3.5 shadow-sm border border-outline-variant/30">
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-headline-2 text-headline-2 text-text-primary">
-              {bundle.bundle_name}
-            </span>
-            <span
-              className={`rounded-full px-2.5 py-0.5 font-caption text-caption font-semibold ${
-                hasStock
-                  ? "bg-success-surface text-success-text"
-                  : "bg-danger-surface text-danger-text"
-              }`}
-            >
-              Stok: {bundle.current_stock.toLocaleString("id-ID")} {bundle.unit}
-            </span>
-          </div>
-          {bundle.description && (
-            <p className="font-caption text-caption text-text-muted mt-1">
-              {bundle.description}
-            </p>
-          )}
-        </div>
-
-        {canManage && (
-          <div className="flex gap-1 shrink-0">
-            <button
-              type="button"
-              onClick={onEdit}
-              className="w-9 h-9 rounded-xl bg-surface-container-low text-text-secondary flex items-center justify-center active:scale-95"
-              aria-label="Edit"
-            >
-              <Icon name="edit" className="text-[18px]" />
-            </button>
-            <button
-              type="button"
-              onClick={onDelete}
-              className="w-9 h-9 rounded-xl bg-danger-surface text-danger-text flex items-center justify-center active:scale-95"
-              aria-label="Hapus"
-            >
-              <Icon name="delete" className="text-[18px]" />
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Info Biaya HPP Otomatis */}
-      <div className="rounded-2xl bg-surface-container-low p-3 grid grid-cols-2 gap-2 border border-outline-variant/40">
-        <div>
-          <span className="font-caption text-caption text-text-muted block">
-            Modal 1x Racik ({bundle.output_qty} {bundle.unit}):
-          </span>
-          <span className="font-body-bold text-body-bold text-text-primary">
-            {formatRupiah(bundle.total_hpp_batch)}
-          </span>
-        </div>
-        <div>
-          <span className="font-caption text-caption text-text-muted block">
-            HPP per {bundle.unit}:
-          </span>
-          <span className="font-body-bold text-body-bold text-brand-600">
-            {formatRupiah(bundle.hpp_per_unit)} / {bundle.unit}
-          </span>
-        </div>
-      </div>
-
-      {/* Rincian Komposisi */}
-      {bundle.components.length > 0 && (
-        <div className="rounded-xl bg-surface-container-low/70 px-3 py-2 text-xs text-text-secondary">
-          <span className="font-medium text-text-primary block mb-0.5">Komposisi Bahan:</span>
-          {componentsPreview(bundle.components, bundle.output_qty, bundle.unit)}
-        </div>
-      )}
-
-      {/* Tombol Produksi Racikan */}
-      <button
-        type="button"
-        onClick={onClaim}
-        className="w-full rounded-2xl bg-brand-500 text-white font-label-bold text-label-bold py-3 flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
-      >
-        <Icon name="science" className="text-[18px]" />
-        Produksi / Tambah Stok Racikan
-      </button>
-    </div>
-  );
-}
-
-// ─── Claim Card ───────────────────────────────────────────────────────────────
-
-function ClaimCard({
-  claim,
-  canManage,
-}: {
-  claim: BundleClaim;
-  canManage: boolean;
-}) {
-  const toast = useToast();
-  const [expanded, setExpanded] = useState(false);
-  const [pending, startTransition] = useTransition();
-
-  const statusInfo = STATUS_MAP[claim.status] ?? {
-    label: claim.status,
-    cls: "bg-surface-container-low text-text-muted",
-    icon: "info",
-  };
-
-  function handleConfirm() {
-    startTransition(async () => {
-      const res = await confirmBundleClaimAction(claim.id);
-      if (res.ok) {
-        toast.sukses("Disetujui", "Klaim berhasil disetujui & stok racikan bertambah.");
-      } else {
-        toast.gagal("Gagal", res.message ?? "Gagal menyetujui klaim");
-      }
-    });
-  }
-
-  function handleReject() {
-    const reason = window.prompt("Alasan penolakan (opsional):");
-    if (reason === null) return;
-    startTransition(async () => {
-      const res = await rejectBundleClaimAction(claim.id, reason.trim());
-      if (res.ok) toast.sukses("Ditolak", "Klaim berhasil ditolak");
-      else toast.gagal("Gagal", res.message ?? "Gagal menolak klaim");
-    });
-  }
-
-  return (
-    <div className="clay-card bg-surface rounded-[20px] overflow-hidden border border-outline-variant/30">
-      <button
-        type="button"
-        className="w-full text-left px-4 py-3.5 flex items-center gap-3"
-        onClick={() => setExpanded((v) => !v)}
-      >
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-body-bold text-body-bold text-text-primary">
-              {claim.bundle_name}
-            </span>
-            <span className="font-caption text-caption text-text-muted">
-              •&nbsp;{claim.quantity} batch
-            </span>
-            {claim.order_label && (
-              <span className="rounded-full bg-brand-50 text-brand-700 font-caption text-caption px-2 py-0.5 border border-brand-200">
-                {claim.order_label}
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-2 mt-1 flex-wrap">
-            <span
-              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-caption text-caption ${statusInfo.cls}`}
-            >
-              <Icon name={statusInfo.icon} className="text-[14px]" />
-              {statusInfo.label}
-            </span>
-            <span className="font-caption text-caption text-text-muted">
-              {formatDateTimeWib(claim.created_at)}
-            </span>
-          </div>
-        </div>
-        <Icon
-          name={expanded ? "expand_less" : "expand_more"}
-          className="text-[20px] text-text-muted shrink-0"
-        />
-      </button>
-
-      {expanded && (
-        <div className="px-4 pb-4 flex flex-col gap-3 border-t border-outline-variant/30">
-          <div className="pt-3 grid grid-cols-1 gap-1.5 text-sm">
-            <Row label="Diajukan oleh" value={claim.claimed_by_name} />
-            {claim.order_label && (
-              <Row label="Tautan Order" value={claim.order_label} />
-            )}
-            {claim.confirmed_by_name && (
-              <Row
-                label={claim.status === "rejected" ? "Ditolak oleh" : "Disetujui oleh"}
-                value={`${claim.confirmed_by_name}${
-                  claim.confirmed_at ? ` pada ${formatDateTimeWib(claim.confirmed_at)}` : ""
-                }`}
-              />
-            )}
-            {claim.note && <Row label="Catatan" value={claim.note} />}
-          </div>
-
-          {/* Komponen yang terpotong dari gudang */}
-          {claim.components.length > 0 && (
-            <div className="rounded-xl bg-surface-container-low px-3 py-2 flex flex-col gap-1">
-              <span className="font-label text-label text-text-secondary mb-0.5">
-                Bahan baku yang dipotong dari gudang:
-              </span>
-              {claim.components.map((comp) => (
-                <span
-                  key={comp.item_id}
-                  className="font-caption text-caption text-text-secondary"
-                >
-                  • {comp.item_name} → -{(comp.quantity * claim.quantity).toLocaleString("id-ID")} {comp.unit}
-                </span>
-              ))}
-            </div>
-          )}
-
-          {/* Approve / Reject buttons for manager/owner/finance/kepala */}
-          {claim.status === "pending" && canManage && (
-            <div className="flex gap-2 pt-1">
-              <button
-                type="button"
-                disabled={pending}
-                onClick={handleConfirm}
-                className="flex-1 rounded-2xl bg-success text-white font-label-bold text-label-bold py-2.5 flex items-center justify-center gap-1.5 active:scale-[0.98] transition-transform disabled:opacity-50"
-              >
-                <Icon name="task_alt" className="text-[16px]" />
-                Setujui & Tambah Stok
-              </button>
-              <button
-                type="button"
-                disabled={pending}
-                onClick={handleReject}
-                className="flex-1 rounded-2xl bg-danger-surface text-danger-text font-label-bold text-label-bold py-2.5 flex items-center justify-center gap-1.5 active:scale-[0.98] transition-transform disabled:opacity-50"
-              >
-                <Icon name="block" className="text-[16px]" />
-                Tolak
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex gap-1.5">
-      <span className="font-caption text-caption text-text-muted shrink-0 w-32">{label}:</span>
-      <span className="font-caption text-caption text-text-secondary">{value}</span>
-    </div>
-  );
-}
-
-// ─── Main Component ───────────────────────────────────────────────────────────
+// ─── Main Component: BundleManager ────────────────────────────────────────────
 
 export function BundleManager({
   bundles,
@@ -890,125 +951,609 @@ export function BundleManager({
 }: {
   bundles: BundleItem[];
   claims: BundleClaim[];
-  availableItems: { id: string; item_name: string; unit: string; unit_cost: number }[];
+  availableItems: AvailableItem[];
   activeOrders: ActiveOrderOption[];
   canManage: boolean;
   branchId: string;
 }) {
-  const [tab, setTab] = useState<"bundles" | "claims">("bundles");
+  const router = useRouter();
+  const toast = useToast();
+  const [tab, setTab] = useState<"items" | "claims">("items");
+  const [search, setSearch] = useState("");
+  const [huruf, setHuruf] = useState<string>("all");
+  const [expandedClaimId, setExpandedClaimId] = useState<string | null>(null);
+  const [busyClaimId, setBusyClaimId] = useState<string | null>(null);
 
-  // Modals
-  const [claimTarget, setClaimTarget] = useState<BundleItem | null>(null);
-  const [editTarget, setEditTarget] = useState<BundleItem | null | "new">(null);
+  // Modals state
+  const [productionTarget, setProductionTarget] = useState<BundleItem | null>(null);
+  const [isProductionOpen, setIsProductionOpen] = useState(false);
+  const [claimUsageTarget, setClaimUsageTarget] = useState<BundleItem | null>(null);
+  const [opnameTarget, setOpnameTarget] = useState<BundleItem | null>(null);
+  const [editingBundle, setEditingBundle] = useState<BundleItem | null>(null);
+  const [isNewBundleOpen, setIsNewBundleOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<BundleItem | null>(null);
 
+  // Filter alfabet & pencarian untuk racikan
+  const filteredBundles = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return bundles
+      .filter((b) => {
+        if (huruf !== "all") {
+          const firstChar = b.bundle_name.trim().charAt(0).toUpperCase();
+          if (huruf === "#") {
+            if (/^[A-Z]/.test(firstChar)) return false;
+          } else if (firstChar !== huruf) {
+            return false;
+          }
+        }
+        if (!q) return true;
+        return b.bundle_name.toLowerCase().includes(q);
+      })
+      .sort((a, b) => a.bundle_name.localeCompare(b.bundle_name, "id"));
+  }, [bundles, search, huruf]);
+
+  const pendingClaimsCount = useMemo(
+    () => claims.filter((c) => c.status === "pending").length,
+    [claims],
+  );
+
+  async function handleConfirmClaim(claim: BundleClaim) {
+    setBusyClaimId(claim.id);
+    const res = await confirmBundleClaimAction(claim.id);
+    setBusyClaimId(null);
+    if (res.ok) {
+      toast.sukses(
+        "Pengajuan Disetujui",
+        claim.claim_type === "produce"
+          ? `Produksi ${claim.bundle_name} disetujui. Bahan baku dipotong dan stok racikan bertambah.`
+          : `Klaim pemakaian ${claim.bundle_name} disetujui. Stok fisik racikan dipotong.`,
+      );
+      router.refresh();
+    } else {
+      toast.gagal("Gagal menyetujui", res.message ?? "Terjadi kesalahan sistem");
+    }
+  }
+
+  async function handleRejectClaim(claim: BundleClaim) {
+    const reason =
+      typeof window !== "undefined"
+        ? window.prompt(`Alasan menolak pengajuan ${claim.bundle_name}:`, "Stok tidak sesuai")
+        : null;
+    if (reason === null) return;
+
+    setBusyClaimId(claim.id);
+    const res = await rejectBundleClaimAction(claim.id, reason);
+    setBusyClaimId(null);
+    if (res.ok) {
+      toast.sukses("Pengajuan Ditolak", `Pengajuan ${claim.bundle_name} telah ditolak.`);
+      router.refresh();
+    } else {
+      toast.gagal("Gagal menolak", res.message ?? "Terjadi kesalahan sistem");
+    }
+  }
+
+  const alphabetList = ["all", "#", ..."ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")];
+
   return (
-    <div className="flex flex-col flex-1">
-      {/* Tabs */}
-      <div className="px-4 pt-4 flex gap-2">
+    <div className="p-4 sm:p-6 max-w-6xl mx-auto flex flex-col gap-5 w-full">
+      {/* ─── Tabs Header: Paritas dengan Stok Utama ─── */}
+      <div className="flex gap-2 p-1 rounded-2xl bg-surface-container-low border border-outline-variant/30 w-full sm:w-fit">
         <button
           type="button"
-          onClick={() => setTab("bundles")}
-          className={`flex-1 rounded-2xl py-2.5 font-label-bold text-label-bold transition-colors ${
-            tab === "bundles"
-              ? "bg-brand-500 text-white"
-              : "bg-surface-container-low text-text-secondary"
+          onClick={() => setTab("items")}
+          className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-xl font-label text-label transition-all flex items-center justify-center gap-2 ${
+            tab === "items"
+              ? "bg-brand-500 text-white font-bold shadow-sm"
+              : "text-text-secondary hover:text-text-primary"
           }`}
         >
+          <Icon name="science" className="text-[18px]" />
           Daftar Racikan ({bundles.length})
         </button>
         <button
           type="button"
           onClick={() => setTab("claims")}
-          className={`flex-1 rounded-2xl py-2.5 font-label-bold text-label-bold transition-colors ${
+          className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-xl font-label text-label transition-all flex items-center justify-center gap-2 ${
             tab === "claims"
-              ? "bg-brand-500 text-white"
-              : "bg-surface-container-low text-text-secondary"
+              ? "bg-brand-500 text-white font-bold shadow-sm"
+              : "text-text-secondary hover:text-text-primary"
           }`}
         >
-          Riwayat Produksi ({claims.length})
+          <Icon name="history" className="text-[18px]" />
+          Riwayat Pengajuan
+          {pendingClaimsCount > 0 && (
+            <span
+              className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                tab === "claims" ? "bg-white text-brand-600" : "bg-warning-surface text-warning-text"
+              }`}
+            >
+              {pendingClaimsCount}
+            </span>
+          )}
         </button>
       </div>
 
-      <main className="flex-1 px-4 py-4 flex flex-col gap-3">
-        {/* ── Section 1 & 2: Daftar Bundle ── */}
-        {tab === "bundles" && (
-          <>
-            {canManage && (
+      {/* ─── TAB 1: DAFTAR RACIKAN ─── */}
+      {tab === "items" ? (
+        <div className="flex flex-col gap-4">
+          {/* Top Actions: Produksi Racikan & Buat Racikan Baru */}
+          <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+            <div className="flex-1 min-w-0">
+              <input
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Cari racikan obat/bahan…"
+                className="w-full h-11 px-4 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-text-primary font-body text-body outline-none focus:border-brand-500"
+              />
+            </div>
+
+            <div className="flex gap-2 shrink-0">
+              {/* Tombol Produksi Racikan: Analog dengan "Stok Masuk" di Stok Utama */}
               <button
                 type="button"
-                onClick={() => setEditTarget("new")}
-                className="flex items-center gap-2 justify-center w-full rounded-2xl border-2 border-dashed border-brand-300 text-brand-600 font-label-bold text-label-bold py-3.5 active:scale-[0.98] transition-transform bg-brand-50/40"
+                onClick={() => {
+                  setProductionTarget(null);
+                  setIsProductionOpen(true);
+                }}
+                className="flex-1 sm:flex-initial px-4 py-2.5 rounded-2xl bg-brand-500 text-white font-label-bold text-label-bold flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-sm"
               >
-                <Icon name="add_circle" className="text-[20px]" />
-                Buat Racikan Baru
+                <Icon name="science" className="text-[18px]" />
+                + Produksi Racikan
               </button>
-            )}
 
-            {bundles.length === 0 ? (
-              <div className="flex flex-col items-center gap-2 py-12 text-text-muted">
-                <Icon name="science" className="text-[40px]" />
-                <span className="font-body text-body">Belum ada racikan dibuat</span>
-                <span className="font-caption text-caption text-center max-w-xs">
-                  Klik tombol &ldquo;Buat Racikan Baru&rdquo; di atas untuk mencampur bahan baku gudang.
-                </span>
-              </div>
-            ) : (
-              bundles.map((bundle) => (
-                <BundleCard
-                  key={bundle.id}
-                  bundle={bundle}
-                  canManage={canManage}
-                  onClaim={() => setClaimTarget(bundle)}
-                  onEdit={() => setEditTarget(bundle)}
-                  onDelete={() => setDeleteTarget(bundle)}
-                />
-              ))
-            )}
-          </>
-        )}
+              {/* Tombol Buat Racikan Baru */}
+              {canManage && (
+                <button
+                  type="button"
+                  onClick={() => setIsNewBundleOpen(true)}
+                  className="flex-1 sm:flex-initial px-4 py-2.5 rounded-2xl bg-surface-container border border-outline-variant text-text-primary font-label-bold text-label-bold flex items-center justify-center gap-2 active:scale-95 transition-transform"
+                >
+                  <Icon name="add_circle" className="text-[18px]" />
+                  + Racikan Baru
+                </button>
+              )}
+            </div>
+          </div>
 
-        {/* ── Section 3: Riwayat Klaim ── */}
-        {tab === "claims" && (
-          <>
-            {claims.length === 0 ? (
-              <div className="flex flex-col items-center gap-2 py-12 text-text-muted">
-                <Icon name="history" className="text-[40px]" />
-                <span className="font-body text-body">Belum ada riwayat produksi</span>
-              </div>
-            ) : (
-              claims.map((claim) => (
-                <ClaimCard
+          {/* Filter Huruf Alfabet */}
+          <div className="flex gap-1 overflow-x-auto pb-1 scrollbar-none">
+            {alphabetList.map((h) => (
+              <button
+                key={h}
+                type="button"
+                onClick={() => setHuruf(h)}
+                className={`min-w-8 h-8 px-2 rounded-xl text-xs font-semibold flex items-center justify-center transition-colors shrink-0 ${
+                  huruf === h
+                    ? "bg-brand-500 text-white font-bold"
+                    : "bg-surface-container-low text-text-muted hover:text-text-primary"
+                }`}
+              >
+                {h === "all" ? "Semua" : h}
+              </button>
+            ))}
+          </div>
+
+          {/* Grid Racikan Cards */}
+          {filteredBundles.length === 0 ? (
+            <div className="clay-card p-12 text-center flex flex-col items-center justify-center gap-3">
+              <Icon name="science" className="text-[48px] text-text-muted" />
+              <p className="font-headline-3 text-headline-3 text-text-primary">
+                Belum ada racikan ditemukan
+              </p>
+              <p className="font-body text-body text-text-secondary max-w-sm">
+                {search
+                  ? `Tidak ada racikan yang sesuai dengan kata kunci "${search}".`
+                  : "Mulai buat racikan untuk menggabungkan bahan baku gudang dan menghitung HPP secara presisi."}
+              </p>
+              {canManage && (
+                <button
+                  type="button"
+                  onClick={() => setIsNewBundleOpen(true)}
+                  className="mt-2 px-5 py-2.5 rounded-2xl bg-brand-500 text-white font-label-bold text-label-bold active:scale-95 transition-transform"
+                >
+                  + Buat Racikan Baru
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+              {filteredBundles.map((bundle) => {
+                const stock = Number(bundle.current_stock);
+                const hasStock = stock > 0;
+                const partsPreview = bundle.components
+                  .map((c) => `${formatAngka(c.quantity)} ${c.unit} ${c.item_name}`)
+                  .join(" + ");
+
+                return (
+                  <div
+                    key={bundle.id}
+                    className="clay-card p-4 sm:p-5 flex flex-col justify-between gap-3 min-w-0"
+                  >
+                    <div className="flex flex-col gap-2.5">
+                      {/* Top Header Card */}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="w-9 h-9 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
+                            <Icon name="science" className="text-[20px]" />
+                          </div>
+                          <div className="flex flex-col min-w-0">
+                            <span className="font-body-bold text-body-bold text-text-primary leading-tight truncate">
+                              {bundle.bundle_name}
+                            </span>
+                            <span className="font-micro-badge text-micro-badge text-text-muted">
+                              Satuan Output: {bundle.unit.toUpperCase()}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Badge Stok Fisik */}
+                        <div className="flex flex-col items-end shrink-0">
+                          <span
+                            className={`font-headline-3 text-headline-3 ${
+                              hasStock ? "text-text-primary" : "text-danger-text"
+                            }`}
+                          >
+                            {formatAngka(stock)}
+                          </span>
+                          <span className="font-micro-badge text-micro-badge text-text-muted">
+                            {bundle.unit}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Formula Preview */}
+                      <div className="p-2.5 rounded-xl bg-surface-container-low text-xs text-text-secondary border border-outline-variant/30 flex flex-col gap-0.5">
+                        <span className="text-[11px] text-text-muted font-medium">
+                          1x Racik ({formatAngka(bundle.output_qty)} {bundle.unit}):
+                        </span>
+                        <span className="font-medium text-text-primary">
+                          {partsPreview || "Belum ada komposisi bahan"}
+                        </span>
+                      </div>
+
+                      {/* HPP Metrics Breakdown */}
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div className="p-2 rounded-xl bg-surface-container-low/70 flex flex-col">
+                          <span className="text-[11px] text-text-muted">Modal 1x Racik</span>
+                          <span className="font-bold text-text-primary text-xs mt-0.5">
+                            {formatRupiah(bundle.total_hpp_batch)}
+                          </span>
+                        </div>
+                        <div className="p-2 rounded-xl bg-surface-container-low/70 flex flex-col">
+                          <span className="text-[11px] text-text-muted">HPP per {bundle.unit}</span>
+                          <span className="font-bold text-brand-600 text-xs mt-0.5">
+                            {formatRupiah(bundle.hpp_per_unit)} / {bundle.unit}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Bottom Action Buttons: Paritas Lengkap (Produksi, Klaim, Opname, Edit, Hapus) */}
+                    <div className="flex flex-col gap-1.5 pt-2 border-t border-outline-variant/40">
+                      <div className="flex gap-1.5 w-full">
+                        {/* Tombol Produksi: SATU-SATUNYA trigger memotong bahan baku gudang & menambah stok racikan */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setProductionTarget(bundle);
+                            setIsProductionOpen(true);
+                          }}
+                          className="flex-1 min-h-10 rounded-xl bg-brand-500 text-white font-caption text-caption font-bold flex items-center justify-center gap-1 active:scale-95 transition-transform shadow-xs"
+                          title="Produksi Racikan (Potong Bahan Baku Gudang)"
+                        >
+                          <Icon name="science" className="text-[16px]" />
+                          Produksi
+                        </button>
+
+                        {/* Tombol Klaim Pemakaian: Mengambil dari stok fisik racikan di rak */}
+                        <button
+                          type="button"
+                          onClick={() => setClaimUsageTarget(bundle)}
+                          className="flex-1 min-h-10 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption font-semibold flex items-center justify-center gap-1 active:scale-95 transition-transform"
+                          title="Klaim Pemakaian Racikan untuk Order / Operasional"
+                        >
+                          <Icon name="shopping_cart_checkout" className="text-[16px]" />
+                          Klaim
+                        </button>
+                      </div>
+
+                      <div className="flex gap-1.5 w-full">
+                        {/* Tombol Opname: Penyesuaian stok fisik aktual */}
+                        <button
+                          type="button"
+                          onClick={() => setOpnameTarget(bundle)}
+                          className="flex-1 min-h-9 rounded-xl bg-surface-container text-text-secondary font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform"
+                          title="Opname Penyesuaian Stok Fisik"
+                        >
+                          <Icon name="tune" className="text-[15px]" />
+                          Opname
+                        </button>
+
+                        {/* Tombol Edit */}
+                        {canManage && (
+                          <button
+                            type="button"
+                            onClick={() => setEditingBundle(bundle)}
+                            className="px-3 min-h-9 rounded-xl bg-surface-container text-text-primary font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform"
+                            title="Edit Racikan & Formula"
+                          >
+                            <Icon name="edit" className="text-[15px]" />
+                          </button>
+                        )}
+
+                        {/* Tombol Hapus */}
+                        {canManage && (
+                          <button
+                            type="button"
+                            onClick={() => setDeleteTarget(bundle)}
+                            className="px-3 min-h-9 rounded-xl bg-danger-surface text-danger-text font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform"
+                            title="Hapus Racikan"
+                          >
+                            <Icon name="delete" className="text-[15px]" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      ) : (
+        /* ─── TAB 2: RIWAYAT PENGAJUAN (PRODUKSI & KLAIM PEMAKAIAN) ─── */
+        <div className="flex flex-col gap-3">
+          {claims.length === 0 ? (
+            <div className="clay-card p-12 text-center flex flex-col items-center justify-center gap-2">
+              <Icon name="history" className="text-[40px] text-text-muted" />
+              <p className="font-body text-body text-text-secondary">
+                Belum ada riwayat pengajuan racikan.
+              </p>
+            </div>
+          ) : (
+            claims.map((claim) => {
+              const meta = STATUS_MAP[claim.status] ?? STATUS_MAP.pending;
+              const isExpanded = expandedClaimId === claim.id;
+              const isBusy = busyClaimId === claim.id;
+              const isProduce = claim.claim_type === "produce";
+
+              return (
+                <div
                   key={claim.id}
-                  claim={claim}
-                  canManage={canManage}
-                />
-              ))
-            )}
-          </>
-        )}
-      </main>
+                  className="clay-card rounded-2xl overflow-hidden border border-border-subtle transition-all"
+                >
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setExpandedClaimId(isExpanded ? null : claim.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        setExpandedClaimId(isExpanded ? null : claim.id);
+                      }
+                    }}
+                    className="p-4 flex items-start justify-between gap-2 cursor-pointer hover:bg-surface-container-low/40 transition-colors"
+                  >
+                    <div className="flex items-start gap-3 min-w-0">
+                      <span
+                        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl mt-0.5 ${
+                          isProduce
+                            ? "bg-brand-50 text-brand-600"
+                            : "bg-surface-container text-text-secondary"
+                        }`}
+                      >
+                        <Icon
+                          name={isProduce ? "science" : "shopping_cart_checkout"}
+                          className="text-[20px]"
+                        />
+                      </span>
 
-      {/* ── Modals ── */}
-      {claimTarget && (
-        <ClaimModal
-          bundle={claimTarget}
-          activeOrders={activeOrders}
-          onClose={() => setClaimTarget(null)}
+                      <div className="flex flex-col min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-body-bold text-body-bold text-text-primary truncate">
+                            {claim.bundle_name}
+                          </span>
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                              isProduce
+                                ? "bg-brand-100 text-brand-800"
+                                : "bg-surface-container text-text-secondary"
+                            }`}
+                          >
+                            {isProduce ? "🧪 PRODUKSI" : "📦 KLAIM PAKAI"}
+                          </span>
+                        </div>
+
+                        <span className="font-caption text-caption text-text-muted mt-0.5">
+                          {isProduce ? (
+                            <>
+                              Jumlah:{" "}
+                              <strong className="text-text-primary">
+                                {claim.quantity} batch
+                              </strong>{" "}
+                              (menambah stok racikan)
+                            </>
+                          ) : (
+                            <>
+                              Jumlah:{" "}
+                              <strong className="text-text-primary">
+                                {formatAngka(claim.quantity)} {claim.unit}
+                              </strong>{" "}
+                              (memakai stok fisik)
+                            </>
+                          )}
+                          {" • "}Oleh {claim.claimed_by_name}
+                        </span>
+
+                        {claim.order_label && (
+                          <span className="inline-block w-fit text-[11px] font-medium text-brand-700 bg-brand-50 px-2 py-0.5 rounded-full border border-brand-200 mt-1">
+                            Tautan Order: {claim.order_label}
+                          </span>
+                        )}
+
+                        <span className="font-caption text-caption text-text-secondary mt-0.5">
+                          {formatDateTimeWib(claim.created_at)}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span
+                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-caption text-caption shrink-0 font-medium ${meta.cls}`}
+                      >
+                        <Icon name={meta.icon} className="text-[14px]" />
+                        {meta.label}
+                      </span>
+                      <Icon
+                        name={isExpanded ? "expand_less" : "expand_more"}
+                        className="text-text-muted text-[20px]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Dropdown Rincian Lengkap */}
+                  {isExpanded && (
+                    <div className="px-4 pb-4 pt-1 border-t border-border-subtle/80 bg-surface/70 flex flex-col gap-2.5">
+                      <div className="grid grid-cols-2 gap-2 pt-1 text-xs">
+                        <div className="p-2.5 rounded-xl bg-surface-container-low border border-border-subtle/50 flex flex-col">
+                          <span className="text-[11px] text-text-muted">Jenis Pengajuan</span>
+                          <span className="font-bold text-text-primary mt-0.5">
+                            {isProduce ? "Produksi Racikan Baru" : "Klaim Pemakaian Fisik"}
+                          </span>
+                        </div>
+                        <div className="p-2.5 rounded-xl bg-surface-container-low border border-border-subtle/50 flex flex-col">
+                          <span className="text-[11px] text-text-muted">Diajukan Oleh</span>
+                          <span className="font-bold text-text-primary mt-0.5">
+                            {claim.claimed_by_name}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Detail Bahan Baku Terpotong jika Produksi */}
+                      {isProduce && claim.components.length > 0 && (
+                        <div className="p-3 rounded-xl bg-surface-container-low border border-border-subtle/50 flex flex-col gap-1 text-xs">
+                          <span className="font-medium text-text-primary">
+                            Bahan Baku Gudang yang Terpotong ({claim.quantity} batch):
+                          </span>
+                          {claim.components.map((c) => (
+                            <div
+                              key={c.item_id}
+                              className="flex justify-between text-text-secondary"
+                            >
+                              <span>• {c.item_name}</span>
+                              <span className="font-mono font-medium">
+                                {formatAngka(c.quantity * claim.quantity)} {c.unit}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Info Verifikasi */}
+                      {claim.confirmed_at && (
+                        <div className="p-2.5 rounded-xl bg-surface-container-low border border-border-subtle/50 flex flex-col text-xs gap-0.5">
+                          <span className="text-[11px] text-text-muted">Diverifikasi Oleh:</span>
+                          <span className="font-semibold text-text-primary">
+                            {claim.confirmed_by_name ?? "Petugas"} pada{" "}
+                            {formatDateTimeWib(claim.confirmed_at)}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Catatan */}
+                      {claim.note && (
+                        <div className="p-2.5 rounded-xl bg-surface-container-low border border-border-subtle/50 flex flex-col text-xs gap-0.5">
+                          <span className="text-[11px] text-text-muted">Catatan:</span>
+                          <span className="italic text-text-primary font-medium">
+                            "{claim.note}"
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Approval Actions untuk Role Berhak (Manager, Maintainer, Owner, Finance) */}
+                      {canManage && claim.status === "pending" && (
+                        <div className="flex gap-2 pt-2 border-t border-border-subtle/60">
+                          <button
+                            type="button"
+                            disabled={isBusy}
+                            onClick={() => handleConfirmClaim(claim)}
+                            className="flex-1 py-2.5 rounded-xl bg-success-surface text-success-text font-caption text-caption font-bold flex items-center justify-center gap-1 active:scale-95 transition-transform disabled:opacity-60"
+                          >
+                            <Icon name="check" className="text-[18px]" />
+                            {isProduce ? "Setujui Produksi" : "Setujui Pemakaian"}
+                          </button>
+                          <button
+                            type="button"
+                            disabled={isBusy}
+                            onClick={() => handleRejectClaim(claim)}
+                            className="flex-1 py-2.5 rounded-xl bg-danger-surface text-danger-text font-caption text-caption font-bold flex items-center justify-center gap-1 active:scale-95 transition-transform disabled:opacity-60"
+                          >
+                            <Icon name="close" className="text-[18px]" />
+                            Tolak
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
+      )}
+
+      {/* ─── MODALS ─── */}
+
+      {/* Modal Produksi */}
+      {isProductionOpen && (
+        <ProductionModal
+          bundles={bundles}
+          initialBundle={productionTarget}
+          availableItems={availableItems}
+          onClose={() => {
+            setIsProductionOpen(false);
+            setProductionTarget(null);
+          }}
         />
       )}
 
-      {editTarget !== null && (
+      {/* Modal Klaim Pemakaian */}
+      {claimUsageTarget && (
+        <ClaimUsageModal
+          bundle={claimUsageTarget}
+          activeOrders={activeOrders}
+          onClose={() => setClaimUsageTarget(null)}
+        />
+      )}
+
+      {/* Modal Opname Fisik */}
+      {opnameTarget && (
+        <OpnameModal bundle={opnameTarget} onClose={() => setOpnameTarget(null)} />
+      )}
+
+      {/* Modal Buat Racikan Baru */}
+      {isNewBundleOpen && (
         <BundleFormModal
-          editing={editTarget === "new" ? null : editTarget}
+          editing={null}
           availableItems={availableItems}
           branchId={branchId}
-          onClose={() => setEditTarget(null)}
+          onClose={() => setIsNewBundleOpen(false)}
         />
       )}
 
+      {/* Modal Edit Racikan */}
+      {editingBundle && (
+        <BundleFormModal
+          editing={editingBundle}
+          availableItems={availableItems}
+          branchId={branchId}
+          onClose={() => setEditingBundle(null)}
+        />
+      )}
+
+      {/* Modal Hapus Racikan */}
       {deleteTarget && (
-        <DeleteConfirmModal bundle={deleteTarget} onClose={() => setDeleteTarget(null)} />
+        <DeleteModal bundle={deleteTarget} onClose={() => setDeleteTarget(null)} />
       )}
     </div>
   );

@@ -142,6 +142,7 @@ export async function createStockClaimAction(params: {
 export async function createBundleClaimAction(params: {
   p_bundle_id: string;
   p_quantity: number;
+  p_claim_type?: "produce" | "use";
   p_note?: string;
   p_order_id?: string;
 }): Promise<ActionResult> {
@@ -150,8 +151,29 @@ export async function createBundleClaimAction(params: {
   const { error: rpcErr } = await (supabase as any).rpc("create_bundle_claim", {
     p_bundle_id: params.p_bundle_id,
     p_quantity: params.p_quantity,
+    p_claim_type: params.p_claim_type ?? "produce",
     p_note: params.p_note ?? null,
     p_order_id: params.p_order_id ?? null,
+  });
+  if (rpcErr) return { ok: false, message: rpcErr.message };
+
+  revalidatePath("/stok");
+  revalidatePath("/stok/racikan");
+
+  return { ok: true };
+}
+
+export async function opnameBundleAction(params: {
+  p_bundle_id: string;
+  p_physical_qty: number;
+  p_note?: string;
+}): Promise<ActionResult> {
+  const supabase = await createClient();
+
+  const { error: rpcErr } = await (supabase as any).rpc("opname_bundle", {
+    p_bundle_id: params.p_bundle_id,
+    p_physical_qty: params.p_physical_qty,
+    p_note: params.p_note ?? null,
   });
   if (rpcErr) return { ok: false, message: rpcErr.message };
 
@@ -202,6 +224,7 @@ export async function setBundleDefinitionAction(params: {
   p_description?: string;
   p_components: { item_id: string; quantity: number }[];
   p_output_qty?: number;
+  p_bundle_id?: string;
 }): Promise<ActionResult> {
   const supabase = await createClient();
 
@@ -217,6 +240,7 @@ export async function setBundleDefinitionAction(params: {
     p_description: params.p_description ?? null,
     p_components: params.p_components,
     p_output_qty: params.p_output_qty ?? 1,
+    p_bundle_id: params.p_bundle_id ?? null,
   });
   if (rpcErr) return { ok: false, message: rpcErr.message };
 

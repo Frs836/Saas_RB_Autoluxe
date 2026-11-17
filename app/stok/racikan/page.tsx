@@ -79,7 +79,7 @@ export default async function RacikanPage() {
   // --- Fetch available inventory items (for dropdowns in bundle form) ---
   let availableItemsQuery = supabase
     .from("inventory_items")
-    .select("id, item_name, unit, unit_cost");
+    .select("id, item_name, unit, unit_cost, current_stock");
 
   if (rawBranchId) {
     availableItemsQuery = availableItemsQuery.eq("branch_id", rawBranchId);
@@ -90,17 +90,18 @@ export default async function RacikanPage() {
     item_name: i.item_name as string,
     unit: i.unit as string,
     unit_cost: Number(i.unit_cost ?? 0),
+    current_stock: Number(i.current_stock ?? 0),
   }));
 
   // --- Fetch stock_claims where bundle_id IS NOT NULL ---
   let claimsQuery = supabase
     .from("stock_claims")
     .select(
-      "id, bundle_id, quantity, unit, note, order_id, status, claimed_by, confirmed_by, created_at, confirmed_at",
+      "id, bundle_id, quantity, unit, note, order_id, status, claimed_by, confirmed_by, created_at, confirmed_at, claim_type",
     )
     .not("bundle_id", "is", null)
     .order("created_at", { ascending: false })
-    .limit(30);
+    .limit(40);
 
   if (rawBranchId) {
     claimsQuery = claimsQuery.eq("branch_id", rawBranchId);
@@ -189,6 +190,9 @@ export default async function RacikanPage() {
   const claims: BundleClaim[] = (rawClaims ?? []).map((c) => {
     const bundleId = c.bundle_id as string;
     const orderText = c.order_id ? orderLookup[c.order_id] ?? `Order #${c.order_id.slice(0, 8)}` : null;
+    const claimType: "produce" | "use" =
+      (c.claim_type as "produce" | "use" | null) ??
+      (c.unit === "batch" ? "produce" : "use");
 
     return {
       id: c.id as string,
@@ -196,6 +200,7 @@ export default async function RacikanPage() {
       bundle_name: bundleNameById[bundleId] ?? "Racikan",
       quantity: Number(c.quantity),
       unit: (c.unit as string) ?? "",
+      claim_type: claimType,
       note: (c.note as string | null) ?? null,
       order_id: (c.order_id as string | null) ?? null,
       order_label: orderText,

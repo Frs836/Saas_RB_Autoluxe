@@ -13,6 +13,7 @@ import {
   setBundleDefinitionAction,
   deleteBundleAction,
   opnameBundleAction,
+  opnameBundleBatchAction,
 } from "@/app/actions/stok";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -575,6 +576,183 @@ function OpnameModal({
   );
 }
 
+// ─── Modal 3B: Opname Global Seluruh Racikan Sekaligus ─────────────────────────
+
+function BatchOpnameModal({
+  bundles,
+  onClose,
+}: {
+  bundles: BundleItem[];
+  onClose: () => void;
+}) {
+  const toast = useToast();
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+
+  const [counts, setCounts] = useState<Record<string, string>>(() =>
+    Object.fromEntries(bundles.map((b) => [b.id, String(b.current_stock)])),
+  );
+  const [notes, setNotes] = useState<Record<string, string>>({});
+  const [generalNote, setGeneralNote] = useState("");
+
+  const changedItems = useMemo(() => {
+    return bundles.filter((b) => {
+      const inputVal = counts[b.id];
+      if (inputVal === undefined || inputVal.trim() === "") return false;
+      const num = Number(inputVal);
+      return !isNaN(num) && num !== b.current_stock;
+    });
+  }, [bundles, counts]);
+
+  function handleSave() {
+    startTransition(async () => {
+      const itemsToSubmit = bundles.map((b) => ({
+        bundle_id: b.id,
+        physical_qty: Number(counts[b.id] ?? b.current_stock) || 0,
+        note: notes[b.id]?.trim() || undefined,
+      }));
+
+      const res = await opnameBundleBatchAction({
+        p_items: itemsToSubmit,
+        p_general_note: generalNote.trim() || undefined,
+      });
+
+      if (res.ok) {
+        toast.sukses(
+          "Opname Global Berhasil",
+          `Stok fisik ${bundles.length} racikan berhasil diselaraskan dengan hasil hitung fisik bengkel.`,
+        );
+        onClose();
+        router.refresh();
+      } else {
+        toast.gagal("Gagal opname", res.message ?? "Terjadi kesalahan sistem");
+      }
+    });
+  }
+
+  return (
+    <Modal open onClose={onClose} title="Opname Stok Racikan (Global)">
+      <div className="flex flex-col gap-4 max-h-[75vh] overflow-y-auto pr-1">
+        <div className="p-3.5 rounded-2xl bg-surface-container-low border border-outline-variant/40 text-xs text-text-secondary flex flex-col gap-1">
+          <span className="font-bold text-text-primary text-sm">
+            Rekonsiliasi Stok Fisik Seluruh Racikan
+          </span>
+          <span>
+            Hitung sisa fisik botol/jerigen racikan di rak pengerjaan. Masukkan angka riil pada kolom Stok Fisik.
+            Sistem otomatis menghitung selisih dan mencatatnya ke jejak audit.
+          </span>
+        </div>
+
+        <div className="flex flex-col gap-3">
+          {bundles.map((bundle) => {
+            const currentStr = counts[bundle.id] ?? String(bundle.current_stock);
+            const physicalNum = Number(currentStr) || 0;
+            const diff = physicalNum - bundle.current_stock;
+
+            return (
+              <div
+                key={bundle.id}
+                className="p-3.5 rounded-2xl border border-outline-variant/60 bg-surface flex flex-col gap-2.5 shadow-2xs"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex flex-col">
+                    <span className="font-body-bold text-body-bold text-text-primary">
+                      {bundle.bundle_name}
+                    </span>
+                    <span className="text-xs text-text-muted">
+                      Stok Sistem: <strong className="text-text-primary">{formatAngka(bundle.current_stock)} {bundle.unit}</strong>
+                    </span>
+                  </div>
+
+                  <span
+                    className={`px-2.5 py-1 rounded-xl text-xs font-bold ${
+                      diff === 0
+                        ? "bg-surface-container-low text-text-muted"
+                        : diff > 0
+                        ? "bg-success-surface text-success-text"
+                        : "bg-danger-surface text-danger-text"
+                    }`}
+                  >
+                    Selisih: {diff > 0 ? `+${formatAngka(diff)}` : formatAngka(diff)} {bundle.unit}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[11px] font-medium text-text-muted">
+                      Stok Fisik Aktual ({bundle.unit})
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="any"
+                      value={currentStr}
+                      onChange={(e) =>
+                        setCounts((prev) => ({ ...prev, [bundle.id]: e.target.value }))
+                      }
+                      className="h-10 px-3 rounded-xl border border-outline-variant bg-surface-container-low text-text-primary font-body text-body outline-none focus:border-brand-500 font-bold"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[11px] font-medium text-text-muted">
+                      Catatan Penyesuaian (opsional)
+                    </label>
+                    <input
+                      type="text"
+                      value={notes[bundle.id] ?? ""}
+                      onChange={(e) =>
+                        setNotes((prev) => ({ ...prev, [bundle.id]: e.target.value }))
+                      }
+                      placeholder="mis: tumpah / takaran kurang"
+                      className="h-10 px-3 rounded-xl border border-outline-variant bg-surface-container-low text-text-primary font-body text-body outline-none focus:border-brand-500 text-xs"
+                    />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="flex flex-col gap-1 pt-2 border-t border-outline-variant/40">
+          <label className="font-label text-label text-text-secondary">
+            Catatan Opname Global (opsional)
+          </label>
+          <input
+            type="text"
+            value={generalNote}
+            onChange={(e) => setGeneralNote(e.target.value)}
+            placeholder="mis: Opname stok racikan berkala"
+            className="w-full rounded-2xl border border-outline-variant bg-surface-container-low px-4 py-2.5 text-text-primary font-body text-body outline-none focus:border-brand-500 text-sm"
+          />
+        </div>
+
+        <div className="flex items-center justify-between text-xs text-text-muted pt-1">
+          <span>
+            {changedItems.length > 0 ? (
+              <strong className="text-brand-600 font-bold">
+                {changedItems.length} dari {bundles.length} racikan mengalami penyesuaian
+              </strong>
+            ) : (
+              "Semua stok fisik sama dengan catatan sistem"
+            )}
+          </span>
+        </div>
+
+        <button
+          type="button"
+          disabled={pending}
+          onClick={handleSave}
+          className="w-full rounded-2xl bg-brand-500 text-white font-label-bold text-label-bold py-3.5 flex items-center justify-center gap-2 active:scale-[0.98] transition-transform disabled:opacity-50"
+        >
+          <Icon name="tune" className="text-[20px]" />
+          {pending ? "Menyimpan Opname…" : "Simpan Semua Penyesuaian Opname"}
+        </button>
+      </div>
+    </Modal>
+  );
+}
+
 // ─── Modal 4: Buat / Edit Definisi Racikan ────────────────────────────────────
 
 type ComponentDraft = {
@@ -607,6 +785,9 @@ function BundleFormModal({
   const [name, setName] = useState(editing?.bundle_name ?? "");
   const [unit, setUnit] = useState(editing?.unit ?? "ml");
   const [outputQty, setOutputQty] = useState(String(editing?.output_qty ?? 100));
+  const [currentStock, setCurrentStock] = useState(
+    editing ? String(editing.current_stock) : "0",
+  );
   const [desc, setDesc] = useState(editing?.description ?? "");
   const [components, setComponents] = useState<ComponentDraft[]>(
     editing
@@ -663,6 +844,7 @@ function BundleFormModal({
         p_bundle_name: name.trim(),
         p_unit: unit.trim().toLowerCase(),
         p_output_qty: parsedOutputQty,
+        p_current_stock: currentStock.trim() !== "" ? Number(currentStock) : undefined,
         p_description: desc.trim() || undefined,
         p_bundle_id: editing?.id,
         p_components: validComponents.map((c) => ({
@@ -740,7 +922,26 @@ function BundleFormModal({
             className="w-full rounded-2xl border border-outline-variant bg-surface-container-low px-4 py-3 text-text-primary font-body text-body outline-none focus:border-brand-500"
           />
           <span className="font-caption text-caption text-text-muted">
-            Total volume/bobot jadi per 1x racik (termasuk air/pelarut). Contoh: 100 ml.
+            Total volume/bobot jadi per 1x racik (termasuk air/pelarut). Contoh: 1000 ml.
+          </span>
+        </div>
+
+        {/* Stok Fisik Saat Ini */}
+        <div className="flex flex-col gap-1">
+          <label className="font-label text-label text-text-secondary">
+            Stok Fisik Tersedia di Bengkel ({unit.toUpperCase()})
+          </label>
+          <input
+            type="number"
+            min="0"
+            step="any"
+            value={currentStock}
+            onChange={(e) => setCurrentStock(e.target.value)}
+            placeholder="0"
+            className="w-full rounded-2xl border border-outline-variant bg-surface-container-low px-4 py-3 text-text-primary font-body text-body outline-none focus:border-brand-500 font-bold"
+          />
+          <span className="font-caption text-caption text-text-muted">
+            Jumlah riil fisik racikan siap pakai yang saat ini tersedia di bengkel (misal: 1000 ml).
           </span>
         </div>
 
@@ -969,6 +1170,7 @@ export function BundleManager({
   const [isProductionOpen, setIsProductionOpen] = useState(false);
   const [claimUsageTarget, setClaimUsageTarget] = useState<BundleItem | null>(null);
   const [opnameTarget, setOpnameTarget] = useState<BundleItem | null>(null);
+  const [isGlobalOpnameOpen, setIsGlobalOpnameOpen] = useState(false);
   const [editingBundle, setEditingBundle] = useState<BundleItem | null>(null);
   const [isNewBundleOpen, setIsNewBundleOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<BundleItem | null>(null);
@@ -1089,17 +1291,15 @@ export function BundleManager({
             </div>
 
             <div className="flex gap-2 shrink-0">
-              {/* Tombol Produksi Racikan: Analog dengan "Stok Masuk" di Stok Utama */}
+              {/* Tombol Opname Global (Seluruh Racikan Sekaligus) */}
               <button
                 type="button"
-                onClick={() => {
-                  setProductionTarget(null);
-                  setIsProductionOpen(true);
-                }}
-                className="flex-1 sm:flex-initial px-4 py-2.5 rounded-2xl bg-brand-500 text-white font-label-bold text-label-bold flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-sm"
+                onClick={() => setIsGlobalOpnameOpen(true)}
+                className="flex-1 sm:flex-initial px-4 py-2.5 rounded-2xl bg-surface-container border border-outline-variant text-text-primary font-label-bold text-label-bold flex items-center justify-center gap-2 active:scale-95 transition-transform"
+                title="Opname Fisik Seluruh Racikan Sekaligus"
               >
-                <Icon name="science" className="text-[18px]" />
-                + Produksi Racikan
+                <Icon name="tune" className="text-[18px]" />
+                Opname Racikan
               </button>
 
               {/* Tombol Buat Racikan Baru */}
@@ -1107,7 +1307,7 @@ export function BundleManager({
                 <button
                   type="button"
                   onClick={() => setIsNewBundleOpen(true)}
-                  className="flex-1 sm:flex-initial px-4 py-2.5 rounded-2xl bg-surface-container border border-outline-variant text-text-primary font-label-bold text-label-bold flex items-center justify-center gap-2 active:scale-95 transition-transform"
+                  className="flex-1 sm:flex-initial px-4 py-2.5 rounded-2xl bg-brand-500 text-white font-label-bold text-label-bold flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-sm"
                 >
                   <Icon name="add_circle" className="text-[18px]" />
                   + Racikan Baru
@@ -1187,18 +1387,23 @@ export function BundleManager({
                           </div>
                         </div>
 
-                        {/* Badge Stok Fisik */}
+                        {/* Badge Stok Fisik di Rak */}
                         <div className="flex flex-col items-end shrink-0">
-                          <span
-                            className={`font-headline-3 text-headline-3 ${
-                              hasStock ? "text-text-primary" : "text-danger-text"
-                            }`}
-                          >
-                            {formatAngka(stock)}
+                          <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider">
+                            Stok Fisik di Rak
                           </span>
-                          <span className="font-micro-badge text-micro-badge text-text-muted">
-                            {bundle.unit}
-                          </span>
+                          <div className="flex items-baseline gap-1">
+                            <span
+                              className={`font-headline-2 text-headline-2 ${
+                                hasStock ? "text-text-primary" : "text-danger-text"
+                              }`}
+                            >
+                              {formatAngka(stock)}
+                            </span>
+                            <span className="font-caption text-caption font-bold text-text-secondary">
+                              {bundle.unit.toUpperCase()}
+                            </span>
+                          </div>
                         </div>
                       </div>
 
@@ -1526,9 +1731,17 @@ export function BundleManager({
         />
       )}
 
-      {/* Modal Opname Fisik */}
+      {/* Modal Opname Fisik Satuan */}
       {opnameTarget && (
         <OpnameModal bundle={opnameTarget} onClose={() => setOpnameTarget(null)} />
+      )}
+
+      {/* Modal Opname Global (Semua Racikan Sekaligus) */}
+      {isGlobalOpnameOpen && (
+        <BatchOpnameModal
+          bundles={bundles}
+          onClose={() => setIsGlobalOpnameOpen(false)}
+        />
       )}
 
       {/* Modal Buat Racikan Baru */}

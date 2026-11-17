@@ -225,6 +225,7 @@ export async function setBundleDefinitionAction(params: {
   p_components: { item_id: string; quantity: number }[];
   p_output_qty?: number;
   p_bundle_id?: string;
+  p_current_stock?: number;
 }): Promise<ActionResult> {
   const supabase = await createClient();
 
@@ -241,11 +242,30 @@ export async function setBundleDefinitionAction(params: {
     p_components: params.p_components,
     p_output_qty: params.p_output_qty ?? 1,
     p_bundle_id: params.p_bundle_id ?? null,
+    p_current_stock: params.p_current_stock !== undefined ? params.p_current_stock : null,
   });
   if (rpcErr) return { ok: false, message: rpcErr.message };
 
   revalidatePath("/stok/racikan");
   revalidatePath("/pengaturan/resep");
+
+  return { ok: true };
+}
+
+export async function opnameBundleBatchAction(params: {
+  p_items: { bundle_id: string; physical_qty: number; note?: string }[];
+  p_general_note?: string;
+}): Promise<ActionResult> {
+  const supabase = await createClient();
+
+  const { error: rpcErr } = await (supabase as any).rpc("opname_bundle_batch", {
+    p_items: params.p_items,
+    p_general_note: params.p_general_note ?? null,
+  });
+  if (rpcErr) return { ok: false, message: rpcErr.message };
+
+  revalidatePath("/stok");
+  revalidatePath("/stok/racikan");
 
   return { ok: true };
 }

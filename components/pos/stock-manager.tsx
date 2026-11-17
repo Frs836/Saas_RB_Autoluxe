@@ -36,6 +36,8 @@ export type StockClaim = {
   quantity: number;
   unit: string;
   note: string | null;
+  order_id?: string | null;
+  order_label?: string | null;
   status: string;
   claimed_by_name: string;
   confirmed_by_name: string | null;
@@ -65,10 +67,18 @@ const CLAIM_STATUS: Record<string, { label: string; cls: string; icon: string }>
 export function StockManager({
   items: initialItems,
   claims: initialClaims,
+  activeOrders = [],
   canManage,
 }: {
   items: InventoryItem[];
   claims: StockClaim[];
+  activeOrders?: {
+    id: string;
+    order_number: string | null;
+    license_plate: string;
+    customer_name: string;
+    vehicle_size: string | null;
+  }[];
   canManage: boolean;
 }) {
   const router = useRouter();
@@ -79,6 +89,7 @@ const [tab, setTab] = useState<"items" | "claims">("items");
   const toast = useToast();
   const [selected, setSelected] = useState<InventoryItem | null>(null);
   const [qty, setQty] = useState("1");
+  const [claimOrderId, setClaimOrderId] = useState("");
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -257,6 +268,7 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
         p_item_id: selected.id,
         p_quantity: quantity,
         p_note: note.trim() === "" ? undefined : note.trim(),
+        p_order_id: claimOrderId || undefined,
       });
       setSubmitting(false);
       if (!result.ok) {
@@ -264,6 +276,7 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
         return;
       }
       setSelected(null);
+      setClaimOrderId("");
       router.refresh();
     } finally {
       klaimSedangJalan.current = false;
@@ -729,6 +742,11 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
                       <span className="font-caption text-caption text-text-muted">
                         Jumlah: <span className="font-semibold text-text-primary">{formatAngka(claim.quantity)} {claim.unit}</span> • Oleh {claim.claimed_by_name}
                       </span>
+                      {claim.order_label && (
+                        <span className="inline-block w-fit text-[11px] font-medium text-brand-700 bg-brand-50 px-2 py-0.5 rounded-full border border-brand-200 mt-0.5">
+                          Tautan: {claim.order_label}
+                        </span>
+                      )}
                       <span className="font-caption text-caption text-text-secondary mt-0.5">
                         {formatDateWib(claim.created_at)} pukul {formatTimeWib(claim.created_at)} WIB
                       </span>
@@ -798,6 +816,12 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
                           </span>
                         </div>
                       )}
+                      <div className="pt-1 border-t border-border-subtle/40 flex flex-col gap-0.5">
+                        <span className="text-text-muted">Tautan Order / Keperluan:</span>
+                        <span className="text-text-primary font-medium">
+                          {claim.order_label ?? "Operasional Bengkel / Umum"}
+                        </span>
+                      </div>
                       <div className="pt-1 border-t border-border-subtle/40 flex flex-col gap-0.5">
                         <span className="text-text-muted">Catatan Keperluan:</span>
                         <span className="text-text-primary italic">
@@ -871,6 +895,27 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
                 className="h-12 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
               />
             </label>
+            {activeOrders && activeOrders.length > 0 && (
+              <label className="flex flex-col gap-1">
+                <span className="font-caption text-caption text-text-muted">
+                  Keperluan / Tautkan ke Order (opsional)
+                </span>
+                <select
+                  value={claimOrderId}
+                  onChange={(e) => setClaimOrderId(e.target.value)}
+                  className="h-12 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+                >
+                  <option value="">Lainnya / Operasional Bengkel</option>
+                  {activeOrders.map((ord) => (
+                    <option key={ord.id} value={ord.id}>
+                      {ord.order_number ? `#${ord.order_number} - ` : ""}
+                      {ord.license_plate} ({ord.customer_name}
+                      {ord.vehicle_size ? ` - ${ord.vehicle_size}` : ""})
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
             <label className="flex flex-col gap-1">
               <span className="font-caption text-caption text-text-muted">
                 Catatan (opsional)

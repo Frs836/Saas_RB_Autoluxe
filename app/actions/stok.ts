@@ -122,10 +122,16 @@ export async function createStockClaimAction(params: {
   p_item_id: string;
   p_quantity: number;
   p_note?: string;
+  p_order_id?: string;
 }): Promise<ActionResult> {
   const supabase = await createClient();
 
-  const { error: rpcErr } = await supabase.rpc("create_stock_claim", params);
+  const { error: rpcErr } = await (supabase as any).rpc("create_stock_claim", {
+    p_item_id: params.p_item_id,
+    p_quantity: params.p_quantity,
+    p_note: params.p_note ?? null,
+    p_order_id: params.p_order_id ?? null,
+  });
   if (rpcErr) return { ok: false, message: rpcErr.message };
 
   revalidatePath("/stok");
@@ -137,10 +143,16 @@ export async function createBundleClaimAction(params: {
   p_bundle_id: string;
   p_quantity: number;
   p_note?: string;
+  p_order_id?: string;
 }): Promise<ActionResult> {
   const supabase = await createClient();
 
-  const { error: rpcErr } = await (supabase as any).rpc("create_bundle_claim", params);
+  const { error: rpcErr } = await (supabase as any).rpc("create_bundle_claim", {
+    p_bundle_id: params.p_bundle_id,
+    p_quantity: params.p_quantity,
+    p_note: params.p_note ?? null,
+    p_order_id: params.p_order_id ?? null,
+  });
   if (rpcErr) return { ok: false, message: rpcErr.message };
 
   revalidatePath("/stok");
@@ -189,15 +201,22 @@ export async function setBundleDefinitionAction(params: {
   p_unit: string;
   p_description?: string;
   p_components: { item_id: string; quantity: number }[];
+  p_output_qty?: number;
 }): Promise<ActionResult> {
   const supabase = await createClient();
 
+  let branchId = params.p_branch_id;
+  if (!branchId) {
+    branchId = (await getActorBranchId()) ?? "";
+  }
+
   const { error: rpcErr } = await (supabase as any).rpc("set_bundle_definition", {
-    p_branch_id: params.p_branch_id,
+    p_branch_id: branchId || null,
     p_bundle_name: params.p_bundle_name,
     p_unit: params.p_unit,
     p_description: params.p_description ?? null,
     p_components: params.p_components,
+    p_output_qty: params.p_output_qty ?? 1,
   });
   if (rpcErr) return { ok: false, message: rpcErr.message };
 

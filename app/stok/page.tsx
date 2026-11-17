@@ -25,7 +25,7 @@ export default async function StockPage() {
   const supabase = await createClient();
   const branchId = scopedBranchId(session);
 
-  const [branchRes, itemsRes, claimsRes, allBranchesRes] = await Promise.all([
+  const [branchRes, itemsRes, claimsRes, allBranchesRes, activeOrdersRes] = await Promise.all([
     branchId
       ? supabase
           .from("branches")
@@ -44,7 +44,7 @@ export default async function StockPage() {
       supabase
         .from("stock_claims")
         .select(
-          "id, item_id, quantity, unit, note, status, claimed_by, confirmed_by, created_at, confirmed_at",
+          "id, item_id, quantity, unit, note, order_id, status, claimed_by, confirmed_by, created_at, confirmed_at",
         )
         .not("item_id", "is", null),
       branchId,
@@ -54,10 +54,37 @@ export default async function StockPage() {
       .limit(60),
     // Daftar cabang diambil sekali saja untuk badge cakupan.
     supabase.from("branches").select("id, branch_name, is_active").order("branch_name"),
+    // Order aktif untuk dropdown klaim
+    scopeBranchQuery(
+      supabase
+        .from("orders")
+        .select("id, order_number, license_plate, customer_name, vehicle_size, status")
+        .in("status", ["queued", "in_progress"]),
+      branchId,
+      "orders",
+    )
+      .order("created_at", { ascending: false })
+      .limit(30),
   ]);
 
   const items = itemsRes.data ?? [];
   const rawClaims = claimsRes.data ?? [];
+  const rawActiveOrders = activeOrdersRes.data ?? [];
+
+  const activeOrders = rawActiveOrders.map((o) => ({
+    id: o.id as string,
+    order_number: (o.order_number as string | null) ?? null,
+    license_plate: (o.license_plate as string) ?? "-",
+    customer_name: (o.customer_name as string) ?? "Pelanggan",
+    vehicle_size: (o.vehicle_size as string | null) ?? null,
+  }));
+
+  const orderLookup = Object.fromEntries(
+    rawActiveOrders.map((o) => [
+      o.id as string,
+      `#${o.order_number ?? o.id.slice(0, 6)} - ${o.license_plate} (${o.customer_name})`,
+    ]),
+  );
 
   const itemNameById = Object.fromEntries(
     items.map((i) => [i.id, i.item_name as string]),
@@ -90,6 +117,8 @@ export default async function StockPage() {
       quantity: Number(c.quantity),
       unit: c.unit,
       note: c.note,
+      order_id: c.order_id ?? null,
+      order_label: c.order_id ? orderLookup[c.order_id] ?? `Order #${c.order_id.slice(0, 8)}` : null,
       status: c.status,
       claimed_by_name: nameById[c.claimed_by] ?? "Staf",
       confirmed_by_name: c.confirmed_by ? nameById[c.confirmed_by] ?? "Staf" : null,
@@ -149,6 +178,7 @@ export default async function StockPage() {
       <StockManager
         items={items as InventoryItem[]}
         claims={claims}
+        activeOrders={activeOrders}
         canManage={canManage}
       />
       <BottomNav role={session.role} />

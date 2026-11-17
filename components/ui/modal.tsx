@@ -24,10 +24,10 @@ export function Modal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/50 backdrop-blur-sm"
+      className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="w-full max-w-lg bg-surface rounded-[28px] p-5 flex flex-col gap-4 shadow-[0_8px_40px_rgba(0,0,0,0.2)] max-h-[90vh] overflow-y-auto">
+      <div className="w-full max-w-lg bg-surface rounded-[28px] p-5 sm:p-6 flex flex-col gap-4 shadow-[0_12px_48px_rgba(0,0,0,0.25)] max-h-[85vh] overflow-y-auto my-auto">
         <div className="flex items-center justify-between shrink-0">
           <h2 className="font-headline-2 text-headline-2 text-text-primary">{title}</h2>
           <button

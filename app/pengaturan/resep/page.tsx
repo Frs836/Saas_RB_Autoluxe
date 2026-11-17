@@ -59,11 +59,30 @@ export default async function ServiceRecipePage({
       .eq("branch_id", branchId),
     supabase
       .from("bundle_items")
-      .select("id, bundle_name, unit")
+      .select("id, bundle_name, unit, output_qty, current_stock")
       .eq("branch_id", branchId)
       .eq("is_active", true)
       .order("bundle_name", { ascending: true }),
   ]);
+
+  // Hitung HPP per satuan untuk setiap racikan dari komponennya
+  const rawBundlesData = bundlesRes.data ?? [];
+  const bundleIds = rawBundlesData.map((b) => b.id as string);
+  let bundleUnitCostMap: Record<string, number> = {};
+
+  if (bundleIds.length > 0) {
+    const { data: bComps } = await supabase
+      .from("bundle_components")
+      .select("bundle_id, item_id, quantity, inventory_items(unit_cost)")
+      .in("bundle_id", bundleIds);
+
+    for (const comp of bComps ?? []) {
+      const bId = comp.bundle_id as string;
+      const invCost = Number((comp.inventory_items as { unit_cost: number | null } | null)?.unit_cost ?? 0);
+      const q = Number(comp.quantity ?? 0);
+      bundleUnitCostMap[bId] = (bundleUnitCostMap[bId] ?? 0) + q * invCost;
+    }
+  }
 
   const services: RecipeService[] = (servicesRes.data ?? []).map((row) => ({
     id: row.id as string,
@@ -78,11 +97,19 @@ export default async function ServiceRecipePage({
     unit_cost: row.unit_cost !== null && row.unit_cost !== undefined ? Number(row.unit_cost) : null,
   }));
 
-  const bundles = (bundlesRes.data ?? []).map((b) => ({
-    id: b.id as string,
-    bundle_name: (b.bundle_name as string) ?? "",
-    unit: (b.unit as string) ?? "",
-  }));
+  const bundles = rawBundlesData.map((b) => {
+    const totalBatchHpp = bundleUnitCostMap[b.id as string] ?? 0;
+    const outputQty = Math.max(0.01, Number(b.output_qty ?? 1));
+    const hppPerUnit = totalBatchHpp / outputQty;
+
+    return {
+      id: b.id as string,
+      bundle_name: (b.bundle_name as string) ?? "",
+      unit: (b.unit as string) ?? "",
+      current_stock: Number(b.current_stock ?? 0),
+      unit_cost: hppPerUnit,
+    };
+  });
 
   const rawRecipes = recipesRes.data ?? [];
 

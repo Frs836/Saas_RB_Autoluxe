@@ -41,6 +41,8 @@ export type BundleRecipeItem = {
   id: string;        // bundle_items.id
   bundle_name: string;
   unit: string;
+  current_stock?: number;
+  unit_cost?: number | null;
 };
 
 export type BundleRecipeRow = {
@@ -180,6 +182,7 @@ export function RecipeManager({
       qty_motor_l: 0,
       qty_motor_xl: 0,
     };
+    // Akumulasi bahan gudang reguler
     for (const r of rows) {
       const uCost = Number(r.item.unit_cost ?? 0);
       for (const k of ALL_SIZE_KEYS) {
@@ -189,8 +192,18 @@ export function RecipeManager({
         }
       }
     }
+    // Akumulasi bahan racikan
+    for (const br of bundleRows) {
+      const uCost = Number(br.bundle.unit_cost ?? 0);
+      for (const k of ALL_SIZE_KEYS) {
+        const q = Number(br[k] ?? 0);
+        if (q > 0 && uCost > 0) {
+          totals[k] += q * uCost;
+        }
+      }
+    }
     return totals;
-  }, [rows]);
+  }, [rows, bundleRows]);
 
   const selectedItem = itemById[itemId] ?? null;
   const selectedBundle = bundleById[bundleId] ?? null;
@@ -709,7 +722,10 @@ export function RecipeManager({
               >
                 {bundles.map((b) => (
                   <option key={b.id} value={b.id}>
-                    {b.bundle_name} ({b.unit})
+                    {b.bundle_name} — stok {b.current_stock ?? 0} {b.unit}
+                    {b.unit_cost && b.unit_cost > 0
+                      ? ` (@${formatAngka(Math.round(b.unit_cost))}/${b.unit})`
+                      : ""}
                   </option>
                 ))}
               </select>

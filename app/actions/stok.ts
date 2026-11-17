@@ -221,3 +221,25 @@ export async function deleteBundleAction(bundleId: string): Promise<ActionResult
   return { ok: true };
 }
 
+export async function updateInventoryItemAction(params: {
+  p_item_id: string;
+  p_item_name: string;
+  p_unit: string;
+  p_min_stock_alert: number;
+  p_purchase_unit: string;
+  p_purchase_price: number;
+  p_purchase_content_qty: number;
+  p_current_stock?: number;
+}): Promise<ActionResult> {
+  const supabase = await createClient();
+
+  const { error: rpcErr } = await (supabase as any).rpc("update_inventory_item", params);
+  if (rpcErr) return { ok: false, message: rpcErr.message };
+
+  revalidatePath("/stok");
+  revalidatePath("/pengaturan/resep");
+
+  return { ok: true };
+}
+
+

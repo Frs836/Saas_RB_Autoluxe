@@ -35,12 +35,12 @@ const TEMPLATES: Record<ImportType, {
     label: "Stok & Inventaris",
     icon: "inventory_2",
     color: "bg-orange-50 text-orange-700",
-    description: "Import stok dengan matematika kemasan belanja (purchase_unit, purchase_price, purchase_content_qty) dan satuan pakai workshop (unit). unit_cost otomatis dihitung (harga beli / isi).",
-    headers: ["item_name", "purchase_unit", "purchase_price", "purchase_content_qty", "unit", "current_stock", "min_stock_alert", "unit_cost"],
+    description: "Import stok dengan matematika kemasan belanja (purchase_unit, purchase_price, purchase_content_qty) dan satuan pakai workshop (unit). HPP modal (unit_cost) otomatis dihitung oleh sistem.",
+    headers: ["item_name", "purchase_unit", "purchase_price", "purchase_content_qty", "unit", "current_stock", "min_stock_alert"],
     example: [
-      ["Nano Ceramic 10H", "botol", 500000, 50, "ml", 150, 20, 10000],
-      ["Microfiber Towel", "pack", 120000, 10, "pcs", 50, 10, 12000],
-      ["Shampoo Carwash",  "jerigen", 250000, 5000, "ml", 10000, 2000, 50],
+      ["Nano Ceramic 10H", "botol", 500000, 50, "ml", 150, 20],
+      ["Microfiber Towel", "pack", 120000, 10, "pcs", 50, 10],
+      ["Shampoo Carwash",  "jerigen", 250000, 5000, "ml", 10000, 2000],
     ],
   },
   cash_flow: {

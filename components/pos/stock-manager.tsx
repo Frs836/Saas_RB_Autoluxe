@@ -14,6 +14,7 @@ import {
   rejectStockClaimAction,
   recordStockInAction,
   createStockClaimAction,
+  updateInventoryItemAction,
 } from "@/app/actions/stok";
 
 export type InventoryItem = {
@@ -112,6 +113,75 @@ const [tab, setTab] = useState<"items" | "claims">("items");
   const [deleteTarget, setDeleteTarget] = useState<InventoryItem | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  // Modal edit item
+  const [editItemTarget, setEditItemTarget] = useState<InventoryItem | null>(null);
+  const [editItemName, setEditItemName] = useState("");
+  const [editItemUnit, setEditItemUnit] = useState("ml");
+  const [editItemPurchaseUnit, setEditItemPurchaseUnit] = useState("Botol");
+  const [editItemPurchasePrice, setEditItemPurchasePrice] = useState("");
+  const [editItemPurchaseContentQty, setEditItemPurchaseContentQty] = useState("1000");
+  const [editItemMin, setEditItemMin] = useState("200");
+  const [editItemStock, setEditItemStock] = useState("");
+  const [editItemLoading, setEditItemLoading] = useState(false);
+  const [editItemError, setEditItemError] = useState<string | null>(null);
+
+  const editPreviewUnitCost = useMemo(() => {
+    const price = Number(editItemPurchasePrice);
+    const content = Number(editItemPurchaseContentQty);
+    if (price > 0 && content > 0) {
+      return Math.round((price / content) * 100) / 100;
+    }
+    return 0;
+  }, [editItemPurchasePrice, editItemPurchaseContentQty]);
+
+  function openEditItem(item: InventoryItem) {
+    setEditItemTarget(item);
+    setEditItemName(item.item_name);
+    setEditItemUnit(item.unit || "ml");
+    setEditItemPurchaseUnit(item.purchase_unit || "Botol");
+    setEditItemPurchasePrice(item.purchase_price ? String(item.purchase_price) : "");
+    setEditItemPurchaseContentQty(item.purchase_content_qty ? String(item.purchase_content_qty) : "1000");
+    setEditItemMin(item.min_stock_alert !== undefined ? String(item.min_stock_alert) : "200");
+    setEditItemStock(item.current_stock !== undefined ? String(item.current_stock) : "");
+    setEditItemError(null);
+  }
+
+  async function submitEditItem() {
+    if (!editItemTarget) return;
+    if (!editItemName.trim()) { setEditItemError("Nama item wajib diisi."); return; }
+    setEditItemLoading(true);
+    setEditItemError(null);
+    try {
+      const pPrice = Number(editItemPurchasePrice) || 0;
+      const pQty = Number(editItemPurchaseContentQty) || 1;
+      const pStock = editItemStock.trim() !== "" ? Number(editItemStock) : undefined;
+
+      const result = await updateInventoryItemAction({
+        p_item_id: editItemTarget.id,
+        p_item_name: editItemName.trim(),
+        p_unit: editItemUnit.trim() || "pcs",
+        p_min_stock_alert: Number(editItemMin) || 0,
+        p_purchase_unit: editItemPurchaseUnit.trim() || "Pcs",
+        p_purchase_price: pPrice,
+        p_purchase_content_qty: pQty,
+        p_current_stock: pStock,
+      });
+
+      if (!result.ok) {
+        setEditItemError(result.message);
+        return;
+      }
+
+      toast.sukses("Item diperbarui", `${editItemName.trim()} berhasil disimpan.`);
+      setEditItemTarget(null);
+      router.refresh();
+    } catch (e) {
+      setEditItemError(e instanceof Error ? e.message : "Gagal memperbarui item.");
+    } finally {
+      setEditItemLoading(false);
+    }
+  }
   // Penahan sinkron untuk menahan double-klik. State submitting baru berlaku
   // setelah React selesai merender, jadi dua klik cepat bisa sama-sama lolos
   // sebelum tombol terlihat mati.
@@ -580,24 +650,36 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
                     Min. {formatAngka(min)} {item.unit}
                     {low ? " • Perlu restock" : ""}
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => openClaim(item)}
-                    className="w-full min-h-11 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform"
-                  >
-                    <Icon name="shopping_cart_checkout" className="text-[16px]" />
-                    Klaim
-                  </button>
-                  {canManage ? (
+                  <div className="flex gap-1.5 w-full mt-0.5">
                     <button
                       type="button"
-                      onClick={() => { setDeleteTarget(item); setDeleteError(null); }}
-                      className="w-full min-h-11 rounded-xl bg-danger-surface text-danger-text font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform mt-1"
+                      onClick={() => openClaim(item)}
+                      className="flex-1 min-h-10 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform"
                     >
-                      <Icon name="delete" className="text-[16px]" />
-                      Hapus
+                      <Icon name="shopping_cart_checkout" className="text-[15px]" />
+                      Klaim
                     </button>
-                  ) : null}
+                    {canManage ? (
+                      <button
+                        type="button"
+                        onClick={() => openEditItem(item)}
+                        className="px-2.5 min-h-10 rounded-xl bg-surface-container text-text-primary font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform"
+                        title="Edit Item"
+                      >
+                        <Icon name="edit" className="text-[15px]" />
+                      </button>
+                    ) : null}
+                    {canManage ? (
+                      <button
+                        type="button"
+                        onClick={() => { setDeleteTarget(item); setDeleteError(null); }}
+                        className="px-2.5 min-h-10 rounded-xl bg-danger-surface text-danger-text font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform"
+                        title="Hapus Item"
+                      >
+                        <Icon name="delete" className="text-[15px]" />
+                      </button>
+                    ) : null}
+                  </div>
                 </div>
               );
             })}
@@ -1075,6 +1157,108 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
                 className="flex-1 py-3 rounded-xl bg-primary text-white font-body-bold text-body-bold active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2">
                 {newItemLoading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Icon name="add_circle" className="text-[20px]" />}
                 {newItemLoading ? "Menyimpan..." : "Tambah Item"}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Modal Edit Item */}
+      {editItemTarget && (
+        <>
+          <div className="fixed inset-0 z-modal-backdrop bg-scrim/40 backdrop-blur-sm" onClick={() => setEditItemTarget(null)} />
+          <div className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-modal max-w-lg mx-auto bg-surface rounded-2xl p-6 shadow-2xl border border-white/80 flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="p-2 rounded-xl bg-brand-50 text-brand-600">
+                  <Icon name="edit" className="text-[20px]" />
+                </span>
+                <span className="font-headline-3 text-headline-3 text-text-primary">Edit Item Stok</span>
+              </div>
+              <button type="button" onClick={() => setEditItemTarget(null)} className="p-1.5 rounded-lg text-text-muted hover:bg-surface-container">
+                <Icon name="close" className="text-[20px]" />
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <label className="flex flex-col gap-1">
+                <span className="font-caption text-caption text-text-secondary">Nama Item *</span>
+                <input value={editItemName} onChange={(e) => setEditItemName(e.target.value)}
+                  placeholder="Contoh: Shampoo Carwash"
+                  className="h-11 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400" />
+              </label>
+
+              <div className="grid grid-cols-2 gap-3">
+                <label className="flex flex-col gap-1">
+                  <span className="font-caption text-caption text-text-secondary">Satuan Pakai Workshop *</span>
+                  <input value={editItemUnit} onChange={(e) => setEditItemUnit(e.target.value)}
+                    placeholder="ml, pcs, gram..."
+                    className="h-11 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400" />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="font-caption text-caption text-text-secondary">Batas Min. Alert</span>
+                  <input value={editItemMin} onChange={(e) => setEditItemMin(e.target.value.replace(/\D/g,""))}
+                    inputMode="numeric"
+                    className="h-11 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400" />
+                </label>
+              </div>
+
+              {/* Kemasan Belanja & Matematika HPP */}
+              <div className="p-3.5 rounded-xl bg-brand-50/60 border border-brand-100 flex flex-col gap-2.5">
+                <span className="text-xs font-bold text-brand-900 flex items-center gap-1.5">
+                  <Icon name="shopping_bag" className="text-[16px] text-brand-600" />
+                  Kemasan Saat Belanja (Update HPP Modal)
+                </span>
+                <div className="grid grid-cols-3 gap-2">
+                  <label className="flex flex-col gap-0.5">
+                    <span className="text-[10px] text-text-secondary">Satuan Beli</span>
+                    <input value={editItemPurchaseUnit} onChange={(e) => setEditItemPurchaseUnit(e.target.value)}
+                      placeholder="Jerigen, Dus..."
+                      className="h-10 px-2.5 rounded-lg bg-surface text-xs text-text-primary outline-none focus:ring-2 focus:ring-brand-400" />
+                  </label>
+                  <label className="flex flex-col gap-0.5">
+                    <span className="text-[10px] text-text-secondary">Harga per Kemasan</span>
+                    <input value={editItemPurchasePrice} onChange={(e) => setEditItemPurchasePrice(e.target.value.replace(/\D/g,""))}
+                      inputMode="numeric" placeholder="250000"
+                      className="h-10 px-2.5 rounded-lg bg-surface text-xs text-text-primary outline-none focus:ring-2 focus:ring-brand-400" />
+                  </label>
+                  <label className="flex flex-col gap-0.5">
+                    <span className="text-[10px] text-text-secondary">Isi ({editItemUnit || "satuan"})</span>
+                    <input value={editItemPurchaseContentQty} onChange={(e) => setEditItemPurchaseContentQty(e.target.value.replace(/\D/g,""))}
+                      inputMode="numeric" placeholder="5000"
+                      className="h-10 px-2.5 rounded-lg bg-surface text-xs text-text-primary outline-none focus:ring-2 focus:ring-brand-400" />
+                  </label>
+                </div>
+                {editPreviewUnitCost > 0 ? (
+                  <div className="flex items-center justify-between text-xs pt-1 border-t border-brand-100">
+                    <span className="text-text-muted">Biaya Modal Terhitung:</span>
+                    <span className="font-bold text-brand-900">Rp {editPreviewUnitCost.toLocaleString("id-ID")} / {editItemUnit || "unit"}</span>
+                  </div>
+                ) : null}
+              </div>
+
+              {/* Koreksi Stok Saat Ini */}
+              <label className="flex flex-col gap-1">
+                <span className="font-caption text-caption text-text-secondary">Stok Fisik Saat Ini ({editItemUnit})</span>
+                <input value={editItemStock} onChange={(e) => setEditItemStock(e.target.value.replace(/\D/g,""))}
+                  inputMode="numeric"
+                  placeholder="Saldo stok saat ini"
+                  className="h-11 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400" />
+                <span className="text-[10px] text-text-muted">Bisa dikosongkan jika tidak ingin mengubah saldo stok.</span>
+              </label>
+            </div>
+
+            {editItemError && <p className="font-caption text-caption text-danger-text">{editItemError}</p>}
+
+            <div className="flex gap-3">
+              <button type="button" onClick={() => setEditItemTarget(null)}
+                className="flex-1 py-3 rounded-xl bg-surface-container-low text-text-secondary font-body-bold text-body-bold active:scale-95">
+                Batal
+              </button>
+              <button type="button" onClick={submitEditItem} disabled={editItemLoading}
+                className="flex-1 py-3 rounded-xl bg-primary text-white font-body-bold text-body-bold active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2">
+                {editItemLoading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Icon name="check_circle" className="text-[20px]" />}
+                {editItemLoading ? "Menyimpan..." : "Simpan Perubahan"}
               </button>
             </div>
           </div>

@@ -72,19 +72,28 @@ export default async function StockOpnamePage() {
   }>;
 
   const itemIds = Array.from(new Set(lines.map((line) => line.item_id)));
-  let itemNameById: Record<string, { name: string; unit: string }> = {};
+  let itemInfoById: Record<string, {
+    name: string;
+    unit: string;
+    unit_cost: number | null;
+    purchase_unit: string | null;
+    purchase_content_qty: number | null;
+  }> = {};
   if (itemIds.length > 0) {
     const { data: items } = await scopeBranchQuery(
-      supabase.from("inventory_items").select("id, item_name, unit"),
+      supabase.from("inventory_items").select("id, item_name, unit, unit_cost, purchase_unit, purchase_content_qty"),
       branchId,
       "inventory_items",
     ).in("id", itemIds);
-    itemNameById = Object.fromEntries(
+    itemInfoById = Object.fromEntries(
       (items ?? []).map((item) => [
         item.id as string,
         {
           name: (item.item_name as string) ?? "Item",
           unit: (item.unit as string) ?? "",
+          unit_cost: item.unit_cost !== null && item.unit_cost !== undefined ? Number(item.unit_cost) : null,
+          purchase_unit: (item.purchase_unit as string) ?? null,
+          purchase_content_qty: item.purchase_content_qty !== null && item.purchase_content_qty !== undefined ? Number(item.purchase_content_qty) : null,
         },
       ]),
     );
@@ -93,11 +102,15 @@ export default async function StockOpnamePage() {
   const linesByOpname: Record<string, OpnameLine[]> = {};
   for (const line of lines) {
     const bucket = (linesByOpname[line.opname_id] ??= []);
+    const info = itemInfoById[line.item_id];
     bucket.push({
       id: line.id,
       item_id: line.item_id,
-      item_name: itemNameById[line.item_id]?.name ?? "Item",
-      unit: itemNameById[line.item_id]?.unit ?? "",
+      item_name: info?.name ?? "Item",
+      unit: info?.unit ?? "",
+      unit_cost: info?.unit_cost ?? null,
+      purchase_unit: info?.purchase_unit ?? null,
+      purchase_content_qty: info?.purchase_content_qty ?? null,
       system_qty: Number(line.system_qty),
       physical_qty: line.physical_qty === null ? null : Number(line.physical_qty),
       difference: line.difference === null ? null : Number(line.difference),

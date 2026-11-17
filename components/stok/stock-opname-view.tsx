@@ -11,6 +11,9 @@ export type OpnameLine = {
   item_id: string;
   item_name: string;
   unit: string;
+  unit_cost?: number | null;
+  purchase_unit?: string | null;
+  purchase_content_qty?: number | null;
   system_qty: number;
   physical_qty: number | null;
   difference: number | null;
@@ -323,42 +326,76 @@ export function StockOpnameView({
                   ? null
                   : Math.round((physical - line.system_qty) * 100) / 100;
 
+              const cost = Number(line.unit_cost || 0);
+              const costDiff = delta !== null && cost > 0 ? Math.round(delta * cost) : null;
+
               return (
                 <div
                   key={line.id}
-                  className="rounded-xl bg-surface-container-low p-3 flex flex-col gap-2"
+                  className="rounded-2xl border border-border-subtle bg-surface-container-low/70 p-3.5 flex flex-col gap-2.5 shadow-sm"
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-body text-body text-text-primary">
-                      {line.item_name}
-                    </span>
-                    <span className="font-micro-badge text-micro-badge text-text-muted">
-                      sistem {formatAngka(line.system_qty)} {line.unit}
-                    </span>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex flex-col min-w-0">
+                      <span className="font-body-bold text-body-bold text-text-primary truncate">
+                        {line.item_name}
+                      </span>
+                      {line.purchase_unit && line.purchase_content_qty ? (
+                        <span className="text-[11px] text-text-muted">
+                          Kemasan: 1 {line.purchase_unit} = {formatAngka(line.purchase_content_qty)} {line.unit}
+                          {cost > 0 ? ` (Rp ${formatAngka(cost)}/${line.unit})` : ""}
+                        </span>
+                      ) : cost > 0 ? (
+                        <span className="text-[11px] text-text-muted">
+                          Harga Modal: Rp {formatAngka(cost)} / {line.unit}
+                        </span>
+                      ) : null}
+                    </div>
+
+                    <div className="flex flex-col items-end shrink-0">
+                      <span className="font-caption text-caption text-text-muted">Stok Sistem</span>
+                      <span className="font-body-bold text-body-bold text-text-primary">
+                        {formatAngka(line.system_qty)} {line.unit}
+                      </span>
+                    </div>
                   </div>
 
                   <div className="flex gap-2 items-center">
-                    <input
-                      value={shown}
-                      onChange={(e) =>
-                        setCounts((prev) => ({ ...prev, [line.item_id]: e.target.value }))
-                      }
-                      disabled={readOnly}
-                      inputMode="decimal"
-                      placeholder="jumlah fisik"
-                      className="flex-1 h-11 px-3 rounded-lg bg-surface font-body-mono text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400 disabled:opacity-60"
-                    />
-                    {delta !== null && delta !== 0 ? (
-                      <span
-                        className={`px-2 py-1 rounded-lg font-micro-badge text-micro-badge ${
-                          delta < 0
-                            ? "bg-danger-surface text-danger-text"
-                            : "bg-success-surface text-success-text"
-                        }`}
-                      >
-                        {delta > 0 ? "+" : ""}
-                        {delta}
-                      </span>
+                    <div className="flex-1 relative">
+                      <input
+                        value={shown}
+                        onChange={(e) =>
+                          setCounts((prev) => ({ ...prev, [line.item_id]: e.target.value }))
+                        }
+                        disabled={readOnly}
+                        inputMode="decimal"
+                        placeholder={`Fisik riil (${line.unit})`}
+                        className="w-full h-11 px-3 rounded-xl bg-surface font-body-mono text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400 disabled:opacity-60 border border-border-subtle"
+                      />
+                    </div>
+                    {delta !== null ? (
+                      <div className="flex flex-col items-end shrink-0">
+                        <span
+                          className={`px-2.5 py-1 rounded-xl font-caption text-caption font-semibold flex items-center gap-1 ${
+                            delta === 0
+                              ? "bg-success-surface text-success-text"
+                              : delta < 0
+                                ? "bg-danger-surface text-danger-text"
+                                : "bg-warning-surface text-warning-text"
+                          }`}
+                        >
+                          <Icon
+                            name={delta === 0 ? "check" : delta < 0 ? "trending_down" : "trending_up"}
+                            className="text-[14px]"
+                          />
+                          {delta > 0 ? "+" : ""}
+                          {formatAngka(delta)} {line.unit}
+                        </span>
+                        {costDiff !== null && costDiff !== 0 ? (
+                          <span className={`text-[10px] font-bold mt-0.5 ${costDiff < 0 ? "text-danger-text" : "text-warning-text"}`}>
+                            {costDiff > 0 ? "+" : ""}Rp {Math.abs(costDiff).toLocaleString("id-ID")}
+                          </span>
+                        ) : null}
+                      </div>
                     ) : null}
                   </div>
 
@@ -368,9 +405,13 @@ export function StockOpnameView({
                       onChange={(e) =>
                         setNotes((prev) => ({ ...prev, [line.item_id]: e.target.value }))
                       }
-                      placeholder="Catatan (opsional)"
-                      className="h-10 px-3 rounded-lg bg-surface font-caption text-caption text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+                      placeholder="Alasan selisih (contoh: tumpah, botol bocor, salah hitung...)"
+                      className="h-10 px-3 rounded-xl bg-surface font-caption text-caption text-text-primary outline-none focus:ring-2 focus:ring-brand-400 border border-border-subtle/80 placeholder:text-text-muted"
                     />
+                  ) : line.note ? (
+                    <div className="p-2 rounded-xl bg-surface/80 text-[11px] text-text-secondary italic border border-border-subtle/50">
+                      Catatan: {line.note}
+                    </div>
                   ) : null}
                 </div>
               );

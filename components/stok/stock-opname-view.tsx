@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { formatAngka } from "@/lib/pos";
 import { Icon } from "@/components/ui/icon";
+import { exportInventoryOpnameToExcel } from "@/lib/export-opname";
 
 export type OpnameLine = {
   id: string;
@@ -53,12 +54,14 @@ export function StockOpnameView({
   opnames,
   linesByOpname,
   branchId,
+  branchName,
   defaultPeriod,
 }: {
   opnames: OpnameRow[];
   /** Baris hitungan dikelompokkan per id opname, bukan digabung datar. */
   linesByOpname: Record<string, OpnameLine[]>;
   branchId: string | null;
+  branchName?: string;
   defaultPeriod: string;
 }) {
   const router = useRouter();
@@ -73,6 +76,38 @@ export function StockOpnameView({
   const selected = opnames.find((row) => row.id === selectedId) ?? null;
   const selectedLines = selected ? (linesByOpname[selected.id] ?? []) : [];
   const readOnly = selected ? selected.status !== "draft" : true;
+
+  const handleExportExcel = useCallback(() => {
+    if (!selected) return;
+    const exportItems = selectedLines.map((line) => {
+      const draftVal = counts[line.item_id];
+      const physical =
+        draftVal !== undefined && draftVal !== ""
+          ? Number(draftVal)
+          : line.physical_qty;
+      const note = notes[line.item_id] !== undefined ? notes[line.item_id] : line.note;
+      const diff =
+        physical !== null ? physical - line.system_qty : line.difference;
+      return {
+        item_name: line.item_name,
+        unit: line.unit,
+        purchase_unit: line.purchase_unit,
+        purchase_content_qty: line.purchase_content_qty,
+        system_qty: line.system_qty,
+        physical_qty: physical,
+        difference: diff,
+        unit_cost: line.unit_cost,
+        note: note,
+      };
+    });
+
+    exportInventoryOpnameToExcel({
+      branchName: branchName || "Cabang",
+      periodMonth: selected.period_month,
+      status: selected.status,
+      items: exportItems,
+    });
+  }, [selected, selectedLines, counts, notes, branchName]);
 
   const openOpname = useCallback(async () => {
     if (!branchId) return;
@@ -298,13 +333,24 @@ export function StockOpnameView({
       <div className="lg:col-span-2 flex flex-col gap-4">
       {selected ? (
         <section className="clay-card p-4 flex flex-col gap-3">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
             <span className="font-body-bold text-body-bold text-text-primary">
               Hitung fisik {periodLabel(selected.period_month)}
             </span>
-            <span className="px-2 py-0.5 rounded-full bg-surface-container text-text-secondary font-micro-badge text-micro-badge">
-              {readOnly ? "Sudah dikirim" : "Draf"}
-            </span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleExportExcel}
+                className="h-8 px-2.5 rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-700 font-caption text-caption font-semibold flex items-center gap-1.5 transition-colors border border-brand-200/60 active:scale-95 shadow-sm"
+                title="Download Laporan Stok Opname (.xlsx)"
+              >
+                <Icon name="download" className="text-[16px]" />
+                Export Excel
+              </button>
+              <span className="px-2.5 py-0.5 rounded-full bg-surface-container text-text-secondary font-micro-badge text-micro-badge">
+                {readOnly ? "Sudah dikirim" : "Draf"}
+              </span>
+            </div>
           </div>
 
           {selectedLines.length === 0 ? (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/toast";
 import { Icon } from "@/components/ui/icon";
@@ -1291,16 +1292,15 @@ export function BundleManager({
             </div>
 
             <div className="flex gap-2 shrink-0">
-              {/* Tombol Opname Global (Seluruh Racikan Sekaligus) */}
-              <button
-                type="button"
-                onClick={() => setIsGlobalOpnameOpen(true)}
-                className="flex-1 sm:flex-initial px-4 py-2.5 rounded-2xl bg-surface-container border border-outline-variant text-text-primary font-label-bold text-label-bold flex items-center justify-center gap-2 active:scale-95 transition-transform"
-                title="Opname Fisik Seluruh Racikan Sekaligus"
+              {/* Tombol Halaman Opname Bulanan Racikan & Export */}
+              <Link
+                href="/stok/racikan/opname"
+                className="flex-1 sm:flex-initial px-4 py-2.5 rounded-2xl bg-surface-container border border-outline-variant text-text-primary font-label-bold text-label-bold flex items-center justify-center gap-2 active:scale-95 transition-transform hover:bg-surface-container-high"
+                title="Buka Halaman Opname Fisik Bulanan Racikan & Export Excel"
               >
-                <Icon name="tune" className="text-[18px]" />
+                <Icon name="fact_check" className="text-[18px]" />
                 Opname Racikan
-              </button>
+              </Link>
 
               {/* Tombol Buat Racikan Baru */}
               {canManage && (

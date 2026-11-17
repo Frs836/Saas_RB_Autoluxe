@@ -284,6 +284,64 @@ export async function deleteBundleAction(bundleId: string): Promise<ActionResult
   return { ok: true };
 }
 
+export async function openBundleStockOpnameAction(
+  branchId: string,
+  periodMonth: string,
+  notes?: string,
+): Promise<{ ok: true; id: string } | { ok: false; message: string }> {
+  const supabase = await createClient();
+
+  const periodeTanggal = /^\d{4}-\d{2}$/.test(periodMonth.trim())
+    ? `${periodMonth.trim()}-01`
+    : periodMonth.trim();
+
+  const { data, error: rpcErr } = await (supabase as any).rpc("open_bundle_stock_opname", {
+    p_branch_id: branchId,
+    p_period_month: periodeTanggal,
+    p_notes: notes ?? null,
+  });
+
+  if (rpcErr) return { ok: false, message: rpcErr.message };
+
+  revalidatePath("/stok/racikan/opname");
+  return { ok: true, id: (data as { id: string })?.id ?? (data as string) };
+}
+
+export async function saveBundleOpnameLinesAction(
+  opnameId: string,
+  lines: Array<{ bundle_id: string; physical_qty: number | null; note?: string | null }>,
+): Promise<ActionResult> {
+  const supabase = await createClient();
+
+  const { error: rpcErr } = await (supabase as any).rpc("save_bundle_opname_lines", {
+    p_opname_id: opnameId,
+    p_lines: lines,
+  });
+
+  if (rpcErr) return { ok: false, message: rpcErr.message };
+
+  revalidatePath("/stok/racikan/opname");
+  return { ok: true };
+}
+
+export async function submitBundleStockOpnameAction(
+  opnameId: string,
+  applyAdjustment: boolean = true,
+): Promise<ActionResult> {
+  const supabase = await createClient();
+
+  const { error: rpcErr } = await (supabase as any).rpc("submit_bundle_stock_opname", {
+    p_opname_id: opnameId,
+    p_apply_adjustment: applyAdjustment,
+  });
+
+  if (rpcErr) return { ok: false, message: rpcErr.message };
+
+  revalidatePath("/stok/racikan");
+  revalidatePath("/stok/racikan/opname");
+  return { ok: true };
+}
+
 export async function updateInventoryItemAction(params: {
   p_item_id: string;
   p_item_name: string;

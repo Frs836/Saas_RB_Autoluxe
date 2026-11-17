@@ -35,7 +35,8 @@ export default async function StockOpnamePage() {
     scopeBranchQuery(
       supabase
         .from("stock_opnames")
-        .select("id, period_month, status, notes, submitted_at, created_at"),
+        .select("id, period_month, status, notes, submitted_at, created_at")
+        .or("opname_type.eq.inventory,opname_type.is.null"),
       branchId,
       "stock_opnames",
     )
@@ -147,6 +148,10 @@ export default async function StockOpnamePage() {
           opnames={opnames}
           linesByOpname={linesByOpname}
           branchId={branchId}
+          branchName={
+            branchRes.data?.branch_name ??
+            (session.branchScope === "all" ? "Seluruh Cabang" : "Cabang Utama")
+          }
           defaultPeriod={defaultPeriod}
         />
       </main>

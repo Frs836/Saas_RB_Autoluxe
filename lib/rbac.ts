@@ -94,6 +94,7 @@ export const PERMISSIONS = [
   "services.manage",
   "branch.switch",
   "branch.manage",
+  "system.maintenance",
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];
@@ -229,6 +230,7 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "reports.audit",
     "reports.cashflow",
     "data.import",
+    "system.maintenance",
   ],
   owner: [
     "attendance.self",
@@ -261,6 +263,7 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "reports.audit",
     "reports.cashflow",
     "data.import",
+    "system.maintenance",
   ],
 };
 
@@ -458,6 +461,7 @@ export const PROFILE_MENU: readonly ProfileMenuItem[] = [
   { label: "Log Aktivitas", caption: "Audit trail — siapa melakukan apa dan kapan", icon: "history", href: "/laporan/aktivitas", permission: "reports.audit", category: "keuangan" },
   { label: "Laporan Arus Kas", caption: "Cash flow statement + export Excel", icon: "account_balance", href: "/laporan/cashflow", permission: "reports.cashflow", category: "keuangan" },
   { label: "Import Data Excel", caption: "Bulk import stok, kas historis", icon: "upload", href: "/import", permission: "data.import", category: "staf_cabang" },
+  { label: "Pusat Maintenance & Speed Test", caption: "Wipe data testing per fitur & uji kecepatan sistem", icon: "build", href: "/pengaturan/maintenance", permission: "system.maintenance", category: "staf_cabang" },
   // Statistik Saya: HANYA untuk karyawan yang kerja di lapangan
   { label: "Statistik Saya", caption: "Unit yang saya kerjakan & data komisi saya", icon: "bar_chart", href: "/komisi/saya", permission: "reports.self", category: "kehadiran" },
   // Operasional

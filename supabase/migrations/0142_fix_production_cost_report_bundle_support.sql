@@ -1,0 +1,116 @@
+-- ============================================================
+-- 0142_fix_production_cost_report_bundle_support.sql
+-- Memperbaiki RPC get_production_cost_report agar:
+-- 1. Mendukung pemakaian bahan racikan (bundle_items) selain bahan gudang reguler (inventory_items).
+-- 2. Mengambil semua stock_logs 'out' yang merujuk ke order (reference_id = orders.id).
+-- 3. Menghitung summary, order breakdown, dan material breakdown dengan tepat.
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION public.get_production_cost_report(
+  p_branch_id uuid DEFAULT NULL,
+  p_from      timestamptz DEFAULT NULL,
+  p_to        timestamptz DEFAULT NULL
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_profile_id uuid;
+  v_role       text;
+  v_from       timestamptz;
+  v_to         timestamptz;
+  v_result     jsonb;
+BEGIN
+  -- Validasi role pengakses jika ada session login
+  v_profile_id := (SELECT public.current_profile_id());
+  IF v_profile_id IS NOT NULL THEN
+    SELECT role::text INTO v_role FROM public.profiles WHERE id = v_profile_id;
+    IF v_role NOT IN ('owner','maintainer','manager','finance') THEN
+      RAISE EXCEPTION 'Hanya owner, maintainer, manager, atau finance yang bisa melihat laporan biaya produksi.';
+    END IF;
+  END IF;
+
+  -- Default rentang waktu: awal bulan ini s.d sekarang
+  v_from := COALESCE(p_from, date_trunc('month', now()));
+  v_to   := COALESCE(p_to, now());
+
+  WITH order_materials AS (
+    SELECT
+      l.reference_id AS order_id,
+      l.branch_id,
+      l.created_at AS log_time,
+      jsonb_build_object(
+        'item_id', COALESCE(l.item_id, l.bundle_id),
+        'item_name', COALESCE(i.item_name, b.bundle_name, 'Bahan Produksi'),
+        'unit', COALESCE(i.unit, b.unit, 'satuan'),
+        'quantity', l.quantity,
+        'unit_cost', COALESCE(l.unit_cost, i.unit_cost, 0),
+        'cost_amount', COALESCE(l.cost_amount, l.quantity * COALESCE(l.unit_cost, i.unit_cost, 0), 0)
+      ) AS material_item,
+      COALESCE(l.cost_amount, l.quantity * COALESCE(l.unit_cost, i.unit_cost, 0), 0) AS item_cost,
+      l.quantity AS item_qty,
+      COALESCE(i.item_name, b.bundle_name, 'Bahan Produksi') AS item_name,
+      COALESCE(i.unit, b.unit, 'satuan') AS unit
+    FROM public.stock_logs l
+    LEFT JOIN public.inventory_items i ON i.id = l.item_id
+    LEFT JOIN public.bundle_items b ON b.id = l.bundle_id
+    WHERE l.log_type = 'out'::public.stock_log_type
+      AND l.reference_id IS NOT NULL
+      AND (p_branch_id IS NULL OR l.branch_id = p_branch_id)
+      AND l.created_at >= v_from
+      AND l.created_at <= v_to
+  ),
+  aggregated_orders AS (
+    SELECT
+      om.order_id,
+      o.order_number,
+      o.license_plate,
+      o.vehicle_model,
+      o.vehicle_size::text AS vehicle_size,
+      o.service_package,
+      COALESCE(o.total_price, 0) AS total_price,
+      o.status::text AS order_status,
+      o.completed_at,
+      o.created_at AS order_created_at,
+      COALESCE(b.branch_name, 'Cabang Utama') AS branch_name,
+      ROUND(SUM(om.item_cost), 2) AS total_production_cost,
+      jsonb_agg(om.material_item) AS materials
+    FROM order_materials om
+    JOIN public.orders o ON o.id = om.order_id
+    LEFT JOIN public.branches b ON b.id = o.branch_id
+    GROUP BY
+      om.order_id, o.order_number, o.license_plate, o.vehicle_model,
+      o.vehicle_size, o.service_package, o.total_price, o.status,
+      o.completed_at, o.created_at, b.branch_name
+    ORDER BY o.created_at DESC
+  ),
+  material_totals AS (
+    SELECT
+      om.item_name,
+      om.unit,
+      ROUND(SUM(om.item_qty), 2) AS total_qty,
+      ROUND(SUM(om.item_cost), 2) AS total_cost
+    FROM order_materials om
+    JOIN public.orders o ON o.id = om.order_id
+    GROUP BY om.item_name, om.unit
+    ORDER BY total_cost DESC
+  )
+  SELECT jsonb_build_object(
+    'summary', jsonb_build_object(
+      'total_production_cost', COALESCE((SELECT ROUND(SUM(total_production_cost), 2) FROM aggregated_orders), 0),
+      'total_revenue', COALESCE((SELECT ROUND(SUM(total_price), 2) FROM aggregated_orders), 0),
+      'total_orders', COALESCE((SELECT COUNT(*) FROM aggregated_orders), 0),
+      'total_gross_profit', COALESCE((SELECT ROUND(SUM(total_price - total_production_cost), 2) FROM aggregated_orders), 0)
+    ),
+    'orders', COALESCE((SELECT jsonb_agg(row_to_json(ao)) FROM aggregated_orders ao), '[]'::jsonb),
+    'material_breakdown', COALESCE((SELECT jsonb_agg(row_to_json(mt)) FROM material_totals mt), '[]'::jsonb)
+  ) INTO v_result;
+
+  RETURN v_result;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.get_production_cost_report(uuid,timestamptz,timestamptz) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.get_production_cost_report(uuid,timestamptz,timestamptz) TO authenticated;

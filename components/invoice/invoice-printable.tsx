@@ -62,19 +62,31 @@ export function InvoicePrintable({ data }: { data: PrintableInvoiceData }) {
   };
 
   const invoiceDate = data.paidAt || data.completedAt || data.createdAt;
-  const isCoatingOrPolish =
-    data.servicePackage.toLowerCase().includes("coating") ||
-    data.servicePackage.toLowerCase().includes("polish") ||
-    data.servicePackage.toLowerCase().includes("ceramic") ||
-    Boolean(data.warranty);
+  const isWash =
+    data.servicePackage.toLowerCase().includes("wash") &&
+    !data.servicePackage.toLowerCase().includes("coating") &&
+    !data.servicePackage.toLowerCase().includes("polish");
 
-  const m6 = data.maintenanceSchedules.find((s) => s.scheduleType === "6_month");
-  const m12 = data.maintenanceSchedules.find((s) => s.scheduleType === "12_month");
+  const isCoatingOrPolish =
+    !isWash &&
+    (data.servicePackage.toLowerCase().includes("coating") ||
+      data.servicePackage.toLowerCase().includes("polish") ||
+      data.servicePackage.toLowerCase().includes("poles") ||
+      data.servicePackage.toLowerCase().includes("ceramic") ||
+      data.servicePackage.toLowerCase().includes("detailing") ||
+      Boolean(data.warranty));
+
+  const m6 = isCoatingOrPolish
+    ? data.maintenanceSchedules.find((s) => s.scheduleType === "6_month")
+    : undefined;
+  const m12 = isCoatingOrPolish
+    ? data.maintenanceSchedules.find((s) => s.scheduleType === "12_month")
+    : undefined;
 
   // Format link WhatsApp draft invoice
   const shareUrl = typeof window !== "undefined" ? window.location.href : "";
   const waDraftMessage =
-    `*INVOICE & KARTU GARANSI RB AUTOLUXE*\n\n` +
+    `*${isCoatingOrPolish ? "INVOICE & KARTU GARANSI RB AUTOLUXE" : "INVOICE PEMBAYARAN RB AUTOLUXE"}*\n\n` +
     `Halo Kak *${data.customerName || "Pelanggan"}*,\n` +
     `Terima kasih telah mempercayakan perawatan kendaraan Anda di RB AUTOLUXE.\n\n` +
     `📄 *No. Invoice:* ${data.invoiceNumber}\n` +
@@ -90,7 +102,7 @@ export function InvoicePrintable({ data }: { data: PrintableInvoiceData }) {
         `• *Bulan ke-6:* ${formatDateWib(m6.dueDate)}\n` +
         (m12 ? `• *Bulan ke-12 (1 Thn):* ${formatDateWib(m12.dueDate)}\n` : "")
       : "") +
-    `\nBuka invoice resmi & e-garansi: ${shareUrl}\n\n` +
+    `\nBuka invoice resmi: ${shareUrl}\n\n` +
     `RB AUTOLUXE — Premium Detailing & Paint Protection`;
 
   return (

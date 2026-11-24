@@ -895,13 +895,17 @@ export function OrderDetailView({
           </div>
 
           <div className="flex gap-2 flex-wrap">
-            <Link
-              href={`/invoice/${order.id}`}
-              className="px-3 py-2 rounded-xl bg-brand-600 text-white font-caption text-caption flex items-center gap-1 shadow-sm active:scale-95 transition-transform"
-            >
-              <Icon name="description" className="text-[16px]" />
-              Invoice &amp; Garansi PDF
-            </Link>
+            {/* Invoice & Garansi PDF HANYA untuk layanan Coating / Detailing / Polish (BUKAN cuci biasa / wash), dan setelah pengerjaan dimulai atau lunas */}
+            {!serviceCategory.startsWith("wash") &&
+            (order.status !== "queued" || order.paymentState === "paid") && (
+              <Link
+                href={`/invoice/${order.id}`}
+                className="px-3 py-2 rounded-xl bg-brand-600 text-white font-caption text-caption flex items-center gap-1 shadow-sm active:scale-95 transition-transform"
+              >
+                <Icon name="description" className="text-[16px]" />
+                {hasWarranty || warranty ? "Invoice & Garansi PDF" : "Invoice PDF"}
+              </Link>
+            )}
             <a
               href={trackUrl}
               target="_blank"

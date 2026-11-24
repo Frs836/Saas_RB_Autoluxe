@@ -1,11 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { ThermalPrintButton } from "@/components/pos/thermal-print-button";
 import { Icon } from "@/components/ui/icon";
 import { formatDateWib, formatRupiah, formatTimeWib } from "@/lib/format";
 import { sizeLabel, whatsappLink, type VehicleSize } from "@/lib/pos";
 import type { ThermalReceipt } from "@/lib/thermal";
+import { MaintenanceReminderPanel } from "@/components/invoice/maintenance-reminder-panel";
+import type { MaintenanceScheduleItem } from "@/app/actions/maintenance-schedule";
 
 export type InvoiceRow = {
   id: string;
@@ -70,7 +73,14 @@ function toReceipt(row: InvoiceRow): ThermalReceipt {
  * pelanggan sekaligus, karena kasir hanya mengingat satu dari keempatnya
  * ketika pelanggan datang minta salinan nota.
  */
-export function InvoiceHistory({ invoices }: { invoices: InvoiceRow[] }) {
+export function InvoiceHistory({
+  invoices,
+  schedules = [],
+}: {
+  invoices: InvoiceRow[];
+  schedules?: MaintenanceScheduleItem[];
+}) {
+  const [activeTab, setActiveTab] = useState<"invoice" | "maintenance">("invoice");
   const [cari, setCari] = useState("");
   const [terbuka, setTerbuka] = useState<string | null>(null);
 
@@ -93,21 +103,49 @@ export function InvoiceHistory({ invoices }: { invoices: InvoiceRow[] }) {
   const totalNilai = tersaring.reduce((sum, row) => sum + row.totalPrice, 0);
   const belumLunas = tersaring.filter((r) => r.paymentState === "unpaid").length;
 
-  if (invoices.length === 0) {
-    return (
-      <main className="flex-1 px-gutter pt-4 pb-nav-plain lg:pb-8">
-        <div className="clay-card p-8 flex flex-col items-center text-center gap-2">
-          <Icon name="receipt_long" className="text-[40px] text-text-muted" />
-          <p className="font-body text-body text-text-secondary">
-            Belum ada invoice yang tercatat.
-          </p>
-        </div>
-      </main>
-    );
-  }
-
   return (
     <main className="flex-1 px-gutter pt-4 pb-nav-plain lg:pb-8 flex flex-col gap-3 lg:max-w-4xl lg:mx-auto lg:px-6">
+      {/* Tab Switcher */}
+      <div className="flex bg-surface p-1 rounded-2xl shadow-sm border border-outline-variant/60 gap-1">
+        <button
+          type="button"
+          onClick={() => setActiveTab("invoice")}
+          className={`flex-1 py-2.5 rounded-xl font-body-bold text-caption flex items-center justify-center gap-2 transition-all ${
+            activeTab === "invoice"
+              ? "bg-brand-600 text-white shadow-sm"
+              : "text-text-secondary hover:bg-surface-container"
+          }`}
+        >
+          <Icon name="receipt_long" className="text-[18px]" />
+          <span>Riwayat Invoice ({invoices.length})</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("maintenance")}
+          className={`flex-1 py-2.5 rounded-xl font-body-bold text-caption flex items-center justify-center gap-2 transition-all ${
+            activeTab === "maintenance"
+              ? "bg-brand-600 text-white shadow-sm"
+              : "text-text-secondary hover:bg-surface-container"
+          }`}
+        >
+          <Icon name="event_repeat" className="text-[18px]" />
+          <span>Pengingat Perawatan ({schedules.length})</span>
+        </button>
+      </div>
+
+      {activeTab === "maintenance" ? (
+        <MaintenanceReminderPanel schedules={schedules} />
+      ) : (
+        <>
+          {invoices.length === 0 ? (
+            <div className="clay-card p-8 flex flex-col items-center text-center gap-2">
+              <Icon name="receipt_long" className="text-[40px] text-text-muted" />
+              <p className="font-body text-body text-text-secondary">
+                Belum ada invoice yang tercatat.
+              </p>
+            </div>
+          ) : (
+            <>
       <div className="grid grid-cols-3 gap-2">
         <div className="clay-card p-3 flex flex-col items-center gap-0.5">
           <span className="font-headline-2 text-headline-2 text-text-primary">
@@ -214,6 +252,13 @@ export function InvoiceHistory({ invoices }: { invoices: InvoiceRow[] }) {
                 <Icon name="expand_more" className={`text-[18px] ${terbukaBaris ? "rotate-180" : ""}`} />
                 {terbukaBaris ? "Tutup" : "Rincian"}
               </button>
+              <Link
+                href={`/invoice/${row.orderId}`}
+                className="flex-1 min-h-11 rounded-xl bg-brand-600 text-white font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform shadow-sm"
+              >
+                <Icon name="description" className="text-[18px]" />
+                PDF &amp; Garansi
+              </Link>
               <a
                 href={`/pos/orders/${row.orderId}`}
                 className="flex-1 min-h-11 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
@@ -221,15 +266,6 @@ export function InvoiceHistory({ invoices }: { invoices: InvoiceRow[] }) {
                 <Icon name="receipt_long" className="text-[18px]" />
                 Order
               </a>
-              {row.trackingToken ? (
-                <a
-                  href={`/track/${row.trackingToken}`}
-                  className="flex-1 min-h-11 rounded-xl bg-surface-container text-text-secondary font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
-                >
-                  <Icon name="link" className="text-[18px]" />
-                  Lacak
-                </a>
-              ) : null}
               {row.customerPhone ? (
                 <a
                   href={whatsappLink(
@@ -242,7 +278,7 @@ export function InvoiceHistory({ invoices }: { invoices: InvoiceRow[] }) {
                   )}
                   target="_blank"
                   rel="noreferrer"
-                  className="min-h-11 w-11 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center justify-center active:scale-95 transition-transform"
+                  className="min-h-11 w-11 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center justify-center active:scale-95 transition-transform shrink-0"
                   aria-label="Kirim ke WhatsApp"
                 >
                   <Icon name="chat" className="text-[18px]" />
@@ -298,11 +334,18 @@ export function InvoiceHistory({ invoices }: { invoices: InvoiceRow[] }) {
 
                 <div className="flex flex-col gap-2">
                   <p className="font-body-bold text-caption text-text-secondary">
-                    Cetak ulang
+                    Cetak &amp; Bagikan
                   </p>
+                  <Link
+                    href={`/invoice/${row.orderId}`}
+                    className="min-h-11 rounded-xl bg-brand-600 text-white font-body-bold text-caption flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-sm"
+                  >
+                    <Icon name="description" className="text-[18px]" />
+                    Buka &amp; Cetak Invoice PDF A4 (Garansi + Jadwal Perawatan)
+                  </Link>
                   <ThermalPrintButton
                     receipt={toReceipt(row)}
-                    label="Cetak struk"
+                    label="Cetak struk kasir"
                   />
                   {row.customerPhone ? (
                     <a
@@ -328,6 +371,10 @@ export function InvoiceHistory({ invoices }: { invoices: InvoiceRow[] }) {
           </article>
         );
       })}
+            </>
+          )}
+        </>
+      )}
     </main>
   );
 }

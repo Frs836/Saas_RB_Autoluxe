@@ -162,6 +162,7 @@ const BRANCH_SCOPED_TABLES = new Set([
   "stock_claims",
   "stock_logs",
   "stock_opnames",
+  "maintenance_schedules",
 ]);
 
 /**

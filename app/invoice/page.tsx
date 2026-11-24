@@ -21,7 +21,7 @@ export default async function InvoicePage() {
   const supabase = await createClient();
   const branchId = scopedBranchId(session);
 
-  const [branchRes, invoicesRes, itemsRes, ordersRes] = await Promise.all([
+  const [branchRes, invoicesRes, itemsRes, ordersRes, schedulesRes] = await Promise.all([
     branchId
       ? supabase
           .from("branches")
@@ -45,6 +45,17 @@ export default async function InvoicePage() {
       .from("orders")
       .select("id, tracking_token")
       .limit(200),
+    scopeBranchQuery(
+      supabase
+        .from("maintenance_schedules" as any)
+        .select(
+          "id, order_id, branch_id, warranty_id, customer_name, customer_phone, license_plate, vehicle_model, service_package, schedule_type, due_date, status, reminded_at, notes, created_at",
+        ),
+      branchId,
+      "maintenance_schedules",
+    )
+      .order("due_date", { ascending: true })
+      .limit(100),
   ]);
 
   queryError(branchRes, "invoice.branches");
@@ -100,14 +111,32 @@ export default async function InvoicePage() {
     items: itemsByOrder.get(row.order_id as string) ?? [],
   }));
 
+  const schedules = (schedulesRes.data ?? []).map((s: any) => ({
+    id: s.id,
+    orderId: s.order_id,
+    branchId: s.branch_id,
+    warrantyId: s.warranty_id,
+    customerName: s.customer_name ?? "Pelanggan",
+    customerPhone: s.customer_phone,
+    licensePlate: s.license_plate,
+    vehicleModel: s.vehicle_model,
+    servicePackage: s.service_package,
+    scheduleType: s.schedule_type,
+    dueDate: s.due_date,
+    status: s.status,
+    remindedAt: s.reminded_at,
+    notes: s.notes,
+    createdAt: s.created_at,
+  }));
+
   return (
     <div className="flex flex-col w-full min-h-screen pb-nav-plain lg:pb-8">
       <SubPageHeader
-        title="Riwayat Invoice"
+        title="Riwayat Invoice & Perawatan"
         branchName={branchName}
         backHref="/profil"
       />
-      <InvoiceHistory invoices={invoices} />
+      <InvoiceHistory invoices={invoices} schedules={schedules} />
       <BottomNav role={session.role} />
     </div>
   );

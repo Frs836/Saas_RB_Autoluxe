@@ -311,7 +311,7 @@ export function PosConsole({
         p_customer_phone: customerPhone.trim(),
         p_service_package: servicePackage,
         p_items: items,
-        p_payment_method: paymentMethod as "cash" | "qris" | "bank_transfer",
+        p_payment_method: paymentState === "unpaid" ? null : (paymentMethod as "cash" | "qris" | "bank_transfer"),
         p_payment_state: effectivePaymentState,
         p_start_work: startWork,
         p_team_ids: selectedTeam,
@@ -353,7 +353,7 @@ export function PosConsole({
           price: l.price,
         })),
         total: Number(order.total_price ?? total),
-        paymentMethod,
+        paymentMethod: paymentState === "unpaid" ? "Bayar Nanti" : (PAYMENT_LABELS[paymentMethod] ?? paymentMethod),
         trackingToken: order.tracking_token as string,
       });
 
@@ -376,7 +376,7 @@ export function PosConsole({
             total: l.price * l.qty,
           })),
           total: Number(order.total_price ?? total),
-          paymentMethod,
+          paymentMethod: paymentState === "unpaid" ? "Bayar Nanti" : (PAYMENT_LABELS[paymentMethod] ?? paymentMethod),
           paid: recordedState === "paid",
           trackingUrl: `${window.location.origin}/track/${order.tracking_token as string}`,
           complaintWa: complaintWa ?? null,
@@ -1029,129 +1029,136 @@ export function PosConsole({
             </section>
 
             <section className="clay-card p-4 flex flex-col gap-3">
+              {/* Status Pembayaran — tersedia untuk semua role (karyawan, admin_kasir, maintainer, owner) */}
               <h2 className="font-body-bold text-body-bold text-text-primary flex items-center gap-2">
-                <Icon name="payments" className="text-[20px] text-brand-600" />
-                Metode Pembayaran
+                <Icon name="paid" className="text-[20px] text-brand-600" />
+                Status Pembayaran
               </h2>
+              <p className="font-caption text-caption text-text-muted">
+                {isEmployee
+                  ? <>Uang yang diterima dicatat sebagai <b className="text-text-primary">kas titipan</b> atas nama Anda.</>
+                  : <>Pilih status pembayaran untuk order ini.</>
+                }
+              </p>
               <div className="grid grid-cols-3 gap-2">
-                {Object.keys(PAYMENT_LABELS).map((method) => {
-                  const active = paymentMethod === method;
-                  return (
-                    <button
-                      key={method}
-                      type="button"
-                      onClick={() => setPaymentMethod(method)}
-                      className={`py-3 rounded-xl flex flex-col items-center gap-1 active:scale-95 transition-transform ${
-                        active
-                          ? "bg-primary text-white"
-                          : "bg-surface-container-low text-text-secondary"
-                      }`}
-                    >
-                      <Icon name={PAYMENT_ICONS[method]} className="text-[20px]" />
-                      <span className="font-caption text-caption">
-                        {PAYMENT_LABELS[method]}
-                      </span>
-                    </button>
-                  );
-                })}
+                <button
+                  type="button"
+                  onClick={() => setPaymentState("paid")}
+                  aria-pressed={paymentState === "paid"}
+                  className={`px-2 py-3 rounded-xl flex flex-col items-center gap-1 active:scale-95 transition-transform ${
+                    paymentState === "paid"
+                      ? "bg-primary text-white"
+                      : "bg-surface-container-low text-text-secondary"
+                  }`}
+                >
+                  <Icon name="paid" className="text-[20px]" />
+                  <span className="font-caption text-caption text-center leading-tight">Lunas</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPaymentState("dp")}
+                  aria-pressed={paymentState === "dp"}
+                  className={`px-2 py-3 rounded-xl flex flex-col items-center gap-1 active:scale-95 transition-transform ${
+                    paymentState === "dp"
+                      ? "bg-brand-100 text-brand-700 ring-2 ring-brand-400"
+                      : "bg-surface-container-low text-text-secondary"
+                  }`}
+                >
+                  <Icon name="account_balance_wallet" className="text-[20px]" />
+                  <span className="font-caption text-caption text-center leading-tight">DP Dulu</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPaymentState("unpaid")}
+                  aria-pressed={paymentState === "unpaid"}
+                  className={`px-2 py-3 rounded-xl flex flex-col items-center gap-1 active:scale-95 transition-transform ${
+                    paymentState === "unpaid"
+                      ? "bg-warning-surface text-warning-text ring-2 ring-warning-border"
+                      : "bg-surface-container-low text-text-secondary"
+                  }`}
+                >
+                  <Icon name="schedule" className="text-[20px]" />
+                  <span className="font-caption text-caption text-center leading-tight">Bayar Nanti</span>
+                </button>
               </div>
 
-              {/* Status Pembayaran — tersedia untuk semua role (karyawan, admin_kasir, maintainer, owner) */}
-              <>
-                <div className="h-px bg-outline-variant" />
-                <p className="font-caption text-caption text-text-muted">
-                  {isEmployee
-                    ? <>Uang yang diterima dicatat sebagai <b className="text-text-primary">kas titipan</b> atas nama Anda.</>
-                    : <>Pilih status pembayaran untuk order ini.</>
-                  }
-                </p>
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setPaymentState("paid")}
-                    aria-pressed={paymentState === "paid"}
-                    className={`px-2 py-3 rounded-xl flex flex-col items-center gap-1 active:scale-95 transition-transform ${
-                      paymentState === "paid"
-                        ? "bg-primary text-white"
-                        : "bg-surface-container-low text-text-secondary"
-                    }`}
-                  >
-                    <Icon name="paid" className="text-[20px]" />
-                    <span className="font-caption text-caption text-center leading-tight">Lunas</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPaymentState("dp")}
-                    aria-pressed={paymentState === "dp"}
-                    className={`px-2 py-3 rounded-xl flex flex-col items-center gap-1 active:scale-95 transition-transform ${
-                      paymentState === "dp"
-                        ? "bg-brand-100 text-brand-700 ring-2 ring-brand-400"
-                        : "bg-surface-container-low text-text-secondary"
-                    }`}
-                  >
-                    <Icon name="account_balance_wallet" className="text-[20px]" />
-                    <span className="font-caption text-caption text-center leading-tight">DP Dulu</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPaymentState("unpaid")}
-                    aria-pressed={paymentState === "unpaid"}
-                    className={`px-2 py-3 rounded-xl flex flex-col items-center gap-1 active:scale-95 transition-transform ${
-                      paymentState === "unpaid"
-                        ? "bg-warning-surface text-warning-text"
-                        : "bg-surface-container-low text-text-secondary"
-                    }`}
-                  >
-                    <Icon name="schedule" className="text-[20px]" />
-                    <span className="font-caption text-caption text-center leading-tight">Bayar Nanti</span>
-                  </button>
-                </div>
-
-                {/* Input nominal DP */}
-                {paymentState === "dp" && (
-                  <div className="flex flex-col gap-1">
-                    <label className="font-caption text-caption text-text-secondary">
-                      Nominal DP <span className="text-danger-text">*</span>
-                    </label>
-                    <div className="relative flex items-center h-12 rounded-xl bg-surface shadow-[inset_0px_2px_4px_rgba(15,23,42,0.06)] px-3">
-                      <span className="font-body-bold text-brand-600 pr-2">Rp</span>
-                      <input
-                        value={dpAmount}
-                        onChange={(e) => setDpAmount(e.target.value.replace(/\D/g, ""))}
-                        placeholder="0"
-                        inputMode="numeric"
-                        className="w-full h-full bg-transparent font-headline-2 text-headline-2 font-semibold text-text-primary focus:outline-none"
-                      />
-                    </div>
-                    {dpAmountNum > 0 && (
-                      <p className="font-caption text-caption text-text-muted">
-                        Sisa tagihan: <b className="text-warning-text">{formatRupiah(total - dpAmountNum)}</b>
-                      </p>
-                    )}
+              {/* Input nominal DP */}
+              {paymentState === "dp" && (
+                <div className="flex flex-col gap-1">
+                  <label className="font-caption text-caption text-text-secondary">
+                    Nominal DP <span className="text-danger-text">*</span>
+                  </label>
+                  <div className="relative flex items-center h-12 rounded-xl bg-surface shadow-[inset_0px_2px_4px_rgba(15,23,42,0.06)] px-3">
+                    <span className="font-body-bold text-brand-600 pr-2">Rp</span>
+                    <input
+                      value={dpAmount}
+                      onChange={(e) => setDpAmount(e.target.value.replace(/\D/g, ""))}
+                      placeholder="0"
+                      inputMode="numeric"
+                      className="w-full h-full bg-transparent font-headline-2 text-headline-2 font-semibold text-text-primary focus:outline-none"
+                    />
                   </div>
-                )}
-
-                <div className="flex items-start gap-2 p-3 rounded-xl bg-surface-container-low">
-                  <Icon name={
-                    paymentState === "paid" ? "check_circle"
-                    : paymentState === "dp" ? "account_balance_wallet"
-                    : "hourglass_empty"
-                  } className="text-[18px] text-brand-600 mt-0.5" />
-                  <p className="font-caption text-caption text-text-secondary">
-                    {paymentState === "paid" ? (
-                      isEmployee
-                        ? <>Kas titipan <b className="text-text-primary">{formatRupiah(total)}</b> atas nama Anda.</>
-                        : <>Pembayaran <b className="text-text-primary">{formatRupiah(total)}</b> masuk kas cabang.</>
-                    ) : paymentState === "dp" ? (
-                      dpAmountNum > 0
-                        ? <>DP <b className="text-text-primary">{formatRupiah(dpAmountNum)}</b> dicatat. Sisa <b className="text-warning-text">{formatRupiah(total - dpAmountNum)}</b> diselesaikan via Kas.</>
-                        : <>Masukkan jumlah DP di atas.</>
-                    ) : (
-                      <>Tagihan <b>{formatRupiah(total)}</b> tercatat. Pelunasan via menu <b>Kas › Bayar Nanti</b>.</>
-                    )}
-                  </p>
+                  {dpAmountNum > 0 && (
+                    <p className="font-caption text-caption text-text-muted">
+                      Sisa tagihan: <b className="text-warning-text">{formatRupiah(total - dpAmountNum)}</b>
+                    </p>
+                  )}
                 </div>
-              </>
+              )}
+
+              {/* Metode Pembayaran: HANYA jika Lunas atau DP (disembunyikan saat Bayar Nanti) */}
+              {paymentState !== "unpaid" ? (
+                <>
+                  <div className="h-px bg-outline-variant" />
+                  <h3 className="font-body-bold text-body-bold text-text-primary flex items-center gap-2">
+                    <Icon name="payments" className="text-[20px] text-brand-600" />
+                    Metode Pembayaran {paymentState === "dp" ? "(Untuk DP)" : ""}
+                  </h3>
+                  <div className="grid grid-cols-3 gap-2">
+                    {Object.keys(PAYMENT_LABELS).map((method) => {
+                      const active = paymentMethod === method;
+                      return (
+                        <button
+                          key={method}
+                          type="button"
+                          onClick={() => setPaymentMethod(method)}
+                          className={`py-3 rounded-xl flex flex-col items-center gap-1 active:scale-95 transition-transform ${
+                            active
+                              ? "bg-primary text-white"
+                              : "bg-surface-container-low text-text-secondary"
+                          }`}
+                        >
+                          <Icon name={PAYMENT_ICONS[method]} className="text-[20px]" />
+                          <span className="font-caption text-caption">
+                            {PAYMENT_LABELS[method]}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              ) : null}
+
+              <div className="flex items-start gap-2 p-3 rounded-xl bg-surface-container-low">
+                <Icon name={
+                  paymentState === "paid" ? "check_circle"
+                  : paymentState === "dp" ? "account_balance_wallet"
+                  : "hourglass_empty"
+                } className="text-[18px] text-brand-600 mt-0.5" />
+                <p className="font-caption text-caption text-text-secondary">
+                  {paymentState === "paid" ? (
+                    isEmployee
+                      ? <>Kas titipan <b className="text-text-primary">{formatRupiah(total)}</b> atas nama Anda.</>
+                      : <>Pembayaran <b className="text-text-primary">{formatRupiah(total)}</b> masuk kas cabang.</>
+                  ) : paymentState === "dp" ? (
+                    dpAmountNum > 0
+                      ? <>DP <b className="text-text-primary">{formatRupiah(dpAmountNum)}</b> dicatat. Sisa <b className="text-warning-text">{formatRupiah(total - dpAmountNum)}</b> diselesaikan via Kas.</>
+                      : <>Masukkan jumlah DP di atas.</>
+                  ) : (
+                    <>Tagihan <b>{formatRupiah(total)}</b> dicatat sebagai Bayar Nanti. Metode pembayaran akan dipilih saat pelunasan di menu <b>Kas › Bayar Nanti</b>.</>
+                  )}
+                </p>
+              </div>
 
               <div className="h-px bg-outline-variant" />
               <button

@@ -16,7 +16,7 @@ export type CreateOrderParams = {
   p_customer_phone: string;
   p_service_package: string;
   p_items: Array<{ service_id: string; name: string; price: number; qty: number }>;
-  p_payment_method: PaymentMethod;
+  p_payment_method: PaymentMethod | null;
   p_payment_state: string;
   p_start_work: boolean;
   p_team_ids: string[];
@@ -40,9 +40,12 @@ export async function createPosOrder(
 ): Promise<CreateOrderResult> {
   const supabase = await createClient();
 
-  const { data: orderRow, error: createError } = await supabase.rpc(
+  const { data: orderRow, error: createError } = await (supabase.rpc as any)(
     "create_pos_order_with_hold",
-    params,
+    {
+      ...params,
+      p_payment_method: params.p_payment_method ?? undefined,
+    },
   );
 
   if (createError) {

@@ -138,12 +138,12 @@ export function StaffManagementPage({ session, branches, branchId }: Props) {
             <TabsContent value="kelola" className="px-gutter py-4 flex flex-col gap-3">
               {/* Search */}
               <div className="relative">
-                <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[20px]" />
+                <Icon name="search" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted text-[20px]" />
                 <input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Cari nama staf atau cabang..."
-                  className="w-full h-11 pl-10 pr-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+                  className="w-full h-11 pl-11 pr-3.5 rounded-[8px] border border-border bg-surface font-body text-body text-text-primary outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
                 />
               </div>
 
@@ -153,7 +153,7 @@ export function StaffManagementPage({ session, branches, branchId }: Props) {
                   <select
                     value={filterBranch}
                     onChange={(e) => setFilterBranch(e.target.value)}
-                    className="shrink-0 h-9 px-3 rounded-full bg-surface-container-low font-caption text-caption text-text-secondary outline-none focus:ring-2 focus:ring-brand-400"
+                    className="shrink-0 h-10 px-3 rounded-[8px] border border-border bg-surface font-caption text-caption text-text-secondary outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
                   >
                     <option value="all">Semua Cabang</option>
                     {branches.map((b) => (
@@ -164,7 +164,7 @@ export function StaffManagementPage({ session, branches, branchId }: Props) {
                 <select
                   value={filterRole}
                   onChange={(e) => setFilterRole(e.target.value)}
-                  className="shrink-0 h-9 px-3 rounded-full bg-surface-container-low font-caption text-caption text-text-secondary outline-none focus:ring-2 focus:ring-brand-400"
+                  className="shrink-0 h-10 px-3 rounded-[8px] border border-border bg-surface font-caption text-caption text-text-secondary outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
                 >
                   <option value="all">Semua Jabatan</option>
                   <option value="karyawan">Karyawan</option>
@@ -175,10 +175,10 @@ export function StaffManagementPage({ session, branches, branchId }: Props) {
                 <button
                   type="button"
                   onClick={() => setShowInactive((v) => !v)}
-                  className={`shrink-0 h-9 px-3 rounded-full font-caption text-caption transition-colors ${
+                  className={`shrink-0 h-10 px-3.5 rounded-[8px] border font-caption text-caption transition-colors ${
                     showInactive
-                      ? "bg-warning-surface text-warning-text"
-                      : "bg-surface-container-low text-text-secondary"
+                      ? "bg-amber-50 text-amber-700 border-amber-200"
+                      : "border-border bg-surface text-text-secondary hover:bg-surface-container"
                   }`}
                 >
                   {showInactive ? "Sembunyikan Nonaktif" : "Tampilkan Nonaktif"}
@@ -207,9 +207,9 @@ export function StaffManagementPage({ session, branches, branchId }: Props) {
 
             {bisaKelolaStaf && (
               <TabsContent value="tambah" className="px-gutter py-4 flex flex-col gap-4">
-                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-brand-50 border border-brand-200 text-brand-800">
+                <div className="flex items-center justify-between p-3.5 rounded-[8px] bg-brand-50 border border-brand-200 text-brand-800">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-brand-500/10 flex items-center justify-center text-brand-600 shrink-0">
+                    <div className="w-9 h-9 rounded-[6px] bg-brand-500/10 flex items-center justify-center text-brand-600 shrink-0">
                       <Icon name="table_view" className="text-[20px]" />
                     </div>
                     <div className="text-left min-w-0">
@@ -219,7 +219,7 @@ export function StaffManagementPage({ session, branches, branchId }: Props) {
                   </div>
                   <Link
                     href="/import?type=staff"
-                    className="px-3 py-2 rounded-xl bg-brand-600 text-white font-caption text-caption flex items-center gap-1 active:scale-95 shrink-0 transition-transform shadow-sm"
+                    className="px-3.5 py-2 rounded-[8px] bg-brand-600 text-white font-caption text-caption flex items-center gap-1 shrink-0 hover:bg-brand-700 transition-colors shadow-sm"
                   >
                     <Icon name="upload" className="text-[16px]" />
                     Import Excel
@@ -239,12 +239,12 @@ export function StaffManagementPage({ session, branches, branchId }: Props) {
 
             {/* Search */}
             <div className="relative">
-              <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[20px]" />
+              <Icon name="search" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted text-[20px]" />
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Cari nama staf atau cabang..."
-                className="w-full h-11 pl-10 pr-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+                className="w-full h-11 pl-11 pr-3.5 rounded-[8px] border border-border bg-surface font-body text-body text-text-primary outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
               />
             </div>
 
@@ -254,7 +254,7 @@ export function StaffManagementPage({ session, branches, branchId }: Props) {
                 <select
                   value={filterBranch}
                   onChange={(e) => setFilterBranch(e.target.value)}
-                  className="h-9 px-3 rounded-full bg-surface-container-low font-caption text-caption text-text-secondary outline-none focus:ring-2 focus:ring-brand-400"
+                  className="h-10 px-3 rounded-[8px] border border-border bg-surface font-caption text-caption text-text-secondary outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
                 >
                   <option value="all">Semua Cabang</option>
                   {branches.map((b) => (
@@ -265,7 +265,7 @@ export function StaffManagementPage({ session, branches, branchId }: Props) {
               <select
                 value={filterRole}
                 onChange={(e) => setFilterRole(e.target.value)}
-                className="h-9 px-3 rounded-full bg-surface-container-low font-caption text-caption text-text-secondary outline-none focus:ring-2 focus:ring-brand-400"
+                className="h-10 px-3 rounded-[8px] border border-border bg-surface font-caption text-caption text-text-secondary outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
               >
                 <option value="all">Semua Jabatan</option>
                 <option value="karyawan">Karyawan</option>
@@ -276,10 +276,10 @@ export function StaffManagementPage({ session, branches, branchId }: Props) {
               <button
                 type="button"
                 onClick={() => setShowInactive((v) => !v)}
-                className={`h-9 px-3 rounded-full font-caption text-caption transition-colors text-left ${
+                className={`h-10 px-3.5 rounded-[8px] border font-caption text-caption transition-colors text-left ${
                   showInactive
-                    ? "bg-warning-surface text-warning-text"
-                    : "bg-surface-container-low text-text-secondary"
+                    ? "bg-amber-50 text-amber-700 border-amber-200"
+                    : "border-border bg-surface text-text-secondary hover:bg-surface-container"
                 }`}
               >
                 {showInactive ? "Sembunyikan Nonaktif" : "Tampilkan Nonaktif"}
@@ -307,15 +307,15 @@ export function StaffManagementPage({ session, branches, branchId }: Props) {
           {/* RIGHT — form tambah staf atau placeholder */}
           <div className="lg:col-span-2">
             {bisaKelolaStaf ? (
-              <div className="bg-surface rounded-[20px] clay-card border border-white/80 p-6 flex flex-col gap-4">
-                <div className="flex items-center justify-between pb-2 border-b border-outline-variant/30">
+              <div className="bg-surface rounded-[10px] clay-card p-6 flex flex-col gap-4">
+                <div className="flex items-center justify-between pb-2 border-b border-border">
                   <div>
                     <h2 className="font-headline-3 text-headline-3 text-text-primary">Tambah Staf Baru</h2>
                     <p className="font-caption text-caption text-text-muted mt-0.5">Input perorangan atau import data sekaligus</p>
                   </div>
                   <Link
                     href="/import?type=staff"
-                    className="px-3.5 py-2 rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200 font-caption text-caption font-semibold flex items-center gap-1.5 active:scale-95 transition-transform"
+                    className="px-3.5 py-2 rounded-[8px] bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200 font-caption text-caption font-semibold flex items-center gap-1.5 transition-colors"
                   >
                     <Icon name="upload_file" className="text-[18px]" />
                     Import Data Excel
@@ -324,7 +324,7 @@ export function StaffManagementPage({ session, branches, branchId }: Props) {
                 <StaffCreateForm branches={branches} />
               </div>
             ) : (
-              <div className="bg-surface rounded-[20px] clay-card border border-white/80 p-8 flex flex-col items-center justify-center gap-3 text-center min-h-[300px]">
+              <div className="bg-surface rounded-[10px] clay-card p-8 flex flex-col items-center justify-center gap-3 text-center min-h-[300px]">
                 <Icon name="manage_accounts" className="text-[48px] text-text-tertiary" />
                 <p className="font-body-bold text-body-bold text-text-primary">
                   Panel Manajemen Staf

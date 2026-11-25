@@ -48,8 +48,8 @@ export function PublicWarrantyClaim({ token }: { token: string }) {
 
   if (sukses) {
     return (
-      <div className="mt-4 flex items-start gap-2.5 p-3.5 rounded-xl bg-success-surface text-success-text">
-        <Icon name="check_circle" className="text-[20px] shrink-0 mt-0.5" />
+      <div className="mt-4 flex items-start gap-2.5 p-3.5 rounded-[8px] border border-emerald-200 bg-emerald-50 text-emerald-800">
+        <Icon name="check_circle" className="text-[20px] shrink-0 mt-0.5 text-emerald-600" />
         <p className="font-caption text-caption leading-relaxed">{sukses}</p>
       </div>
     );
@@ -60,7 +60,7 @@ export function PublicWarrantyClaim({ token }: { token: string }) {
       <button
         type="button"
         onClick={() => setTerbuka(true)}
-        className="mt-4 w-full h-12 rounded-2xl primary-gradient text-white font-body-bold text-body-bold flex items-center justify-center gap-2 clay-glow active:scale-[0.98] transition-transform"
+        className="mt-4 w-full h-11 rounded-[8px] primary-gradient text-white font-body-bold text-body-bold flex items-center justify-center gap-2 clay-glow hover:opacity-90 transition-opacity"
       >
         <Icon name="verified_user" className="text-[20px]" />
         Ajukan Klaim Garansi
@@ -79,11 +79,11 @@ export function PublicWarrantyClaim({ token }: { token: string }) {
         onChange={(e) => setDeskripsi(e.target.value)}
         rows={4}
         placeholder="Contoh: Coating peel off di bagian kap depan setelah 2 minggu..."
-        className="p-3 rounded-2xl bg-surface-container text-body-regular text-text-primary outline-none focus:ring-2 focus:ring-brand-400 resize-none"
+        className="p-3 rounded-[8px] border border-border bg-surface text-body-regular text-text-primary outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 resize-none"
       />
       {error ? (
-        <div className="flex items-start gap-2.5 p-3 rounded-xl bg-danger-surface text-danger-text">
-          <Icon name="error" className="text-[18px] shrink-0" />
+        <div className="flex items-start gap-2.5 p-3 rounded-[8px] border border-red-200 bg-red-50 text-red-800">
+          <Icon name="error" className="text-[18px] shrink-0 text-red-600" />
           <p className="font-caption text-caption leading-relaxed">{error}</p>
         </div>
       ) : null}
@@ -91,7 +91,7 @@ export function PublicWarrantyClaim({ token }: { token: string }) {
         <button
           type="submit"
           disabled={mengirim}
-          className="flex-1 h-12 rounded-2xl primary-gradient text-white font-body-bold text-body-bold flex items-center justify-center gap-2 clay-glow active:scale-[0.98] transition-transform disabled:opacity-60"
+          className="flex-1 h-11 rounded-[8px] primary-gradient text-white font-body-bold text-body-bold flex items-center justify-center gap-2 clay-glow hover:opacity-90 transition-opacity disabled:opacity-60"
         >
           <Icon name={mengirim ? "hourglass_top" : "send"} className="text-[20px]" />
           {mengirim ? "Mengirim..." : "Kirim Klaim"}
@@ -99,7 +99,7 @@ export function PublicWarrantyClaim({ token }: { token: string }) {
         <button
           type="button"
           onClick={() => setTerbuka(false)}
-          className="h-12 px-5 rounded-2xl bg-surface-container text-text-secondary font-body-bold text-body-bold flex items-center justify-center active:scale-[0.98] transition-transform"
+          className="h-11 px-5 rounded-[8px] border border-border bg-surface text-text-secondary font-body-bold text-body-bold flex items-center justify-center hover:bg-surface-container transition-colors"
         >
           Batal
         </button>

@@ -74,7 +74,7 @@ export function LoginForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-surface rounded-3xl p-6 sm:p-7 flex flex-col gap-5 clay-card"
+      className="bg-surface rounded-[10px] p-6 sm:p-7 flex flex-col gap-5 clay-card border border-border"
     >
       <div className="flex flex-col gap-1.5">
         <label
@@ -93,7 +93,7 @@ export function LoginForm() {
             autoComplete="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            className="w-full h-12 pl-11 pr-4 rounded-xl bg-slate-50 text-text-primary font-body-regular text-body-regular placeholder:text-text-muted focus:outline-none focus:bg-white focus:shadow-md transition-all duration-200"
+            className="w-full h-11 pl-11 pr-4 rounded-[8px] bg-surface-container-low border border-border text-text-primary font-body text-body placeholder:text-text-muted focus:outline-none focus:bg-surface focus:border-brand-500 transition-colors"
             placeholder="Masukkan Email"
           />
         </div>
@@ -116,7 +116,7 @@ export function LoginForm() {
             autoComplete="current-password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            className="w-full h-12 pl-11 pr-12 rounded-xl bg-slate-50 text-text-primary font-body-regular text-body-regular placeholder:text-text-muted focus:outline-none focus:bg-white focus:shadow-md transition-all duration-200"
+            className="w-full h-11 pl-11 pr-12 rounded-[8px] bg-surface-container-low border border-border text-text-primary font-body text-body placeholder:text-text-muted focus:outline-none focus:bg-surface focus:border-brand-500 transition-colors"
             placeholder="Masukkan Kata Sandi"
           />
           <button
@@ -141,14 +141,14 @@ export function LoginForm() {
       </div>
 
       {error && (
-        <div className="flex items-start gap-2.5 p-3 rounded-xl bg-danger-surface text-danger-text">
+        <div className="flex items-start gap-2.5 p-3 rounded-[8px] bg-danger-surface text-danger-text border border-danger-base/30">
           <Icon name="error" className="text-[18px] shrink-0" />
           <p className="font-caption text-caption leading-relaxed">{error}</p>
         </div>
       )}
 
       {info && (
-        <div className="flex items-start gap-2.5 p-3 rounded-xl bg-success-surface text-success-text">
+        <div className="flex items-start gap-2.5 p-3 rounded-[8px] bg-success-surface text-success-text border border-success-base/30">
           <Icon name="mark_email_read" className="text-[18px] shrink-0" />
           <p className="font-caption text-caption leading-relaxed">{info}</p>
         </div>
@@ -157,7 +157,7 @@ export function LoginForm() {
       <button
         type="submit"
         disabled={loading}
-        className="w-full h-[50px] rounded-full text-on-primary font-headline-2 text-headline-2 flex items-center justify-center gap-2 active:scale-[0.98] transition-all duration-200 cursor-pointer primary-gradient clay-glow disabled:opacity-70 disabled:cursor-not-allowed"
+        className="w-full h-11 rounded-[8px] text-white font-body-bold text-body-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity cursor-pointer primary-gradient clay-glow disabled:opacity-70 disabled:cursor-not-allowed shadow-sm"
       >
         <span>{loading ? "MEMPROSES..." : "MASUK KE SISTEM"}</span>
         {!loading && (
@@ -166,7 +166,7 @@ export function LoginForm() {
       </button>
 
       <div className="relative flex items-center justify-center my-1">
-        <div className="w-full h-[1px] bg-slate-200" />
+        <div className="w-full h-[1px] bg-border" />
         <span className="absolute px-3 bg-surface font-caption text-caption text-text-muted uppercase tracking-wider">
           atau
         </span>
@@ -174,13 +174,13 @@ export function LoginForm() {
 
       <Link
         href="/register"
-        className="w-full h-[46px] rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-600 font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-[0.99] transition-all duration-200"
+        className="w-full h-11 rounded-[8px] bg-brand-50 hover:bg-brand-100 text-brand-700 font-body-bold text-body-bold flex items-center justify-center gap-2 transition-colors border border-brand-200"
       >
-        <Icon name="person_add" className="text-[22px] text-brand-600" />
+        <Icon name="person_add" className="text-[20px] text-brand-600" />
         <span>Daftar Akun Staf Baru</span>
       </Link>
 
-      <div className="flex items-start gap-2.5 p-3 rounded-xl bg-surface-overlay text-text-secondary mt-1">
+      <div className="flex items-start gap-2.5 p-3 rounded-[8px] bg-surface-container-low border border-border text-text-secondary mt-1">
         <div className="flex-shrink-0 text-brand-600 pt-0.5">
           <Icon name="verified_user" className="text-[18px]" />
         </div>

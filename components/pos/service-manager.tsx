@@ -311,20 +311,20 @@ export function ServiceManager({
   return (
     <main className="flex-1 px-gutter pt-4 pb-nav-plain lg:pb-8 flex flex-col gap-3">
       <div className="grid grid-cols-3 gap-2">
-        <div className="clay-card p-3 flex flex-col items-center gap-0.5">
-          <span className="font-headline-2 text-headline-2 text-text-primary">
+        <div className="clay-card rounded-[10px] p-3 flex flex-col items-center gap-0.5">
+          <span className="font-headline-2 text-headline-2 text-text-primary tabular-nums">
             {tersaring.length}
           </span>
           <span className="font-caption text-caption text-text-muted">Jasa</span>
         </div>
-        <div className="clay-card p-3 flex flex-col items-center gap-0.5">
-          <span className="font-headline-2 text-headline-2 text-success-text">
+        <div className="clay-card rounded-[10px] p-3 flex flex-col items-center gap-0.5">
+          <span className="font-headline-2 text-headline-2 text-emerald-600 tabular-nums">
             {tersaring.filter((s) => s.isActive).length}
           </span>
           <span className="font-caption text-caption text-text-muted">Aktif</span>
         </div>
-        <div className="clay-card p-3 flex flex-col items-center gap-0.5">
-          <span className="font-headline-2 text-headline-2 text-brand-600">
+        <div className="clay-card rounded-[10px] p-3 flex flex-col items-center gap-0.5">
+          <span className="font-headline-2 text-headline-2 text-brand-600 tabular-nums">
             {formatRupiah(jumlahHarga)}
           </span>
           <span className="font-caption text-caption text-text-muted">
@@ -336,14 +336,14 @@ export function ServiceManager({
       <div className="relative">
         <Icon
           name="search"
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[20px]"
+          className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted text-[20px]"
         />
         <input
           value={cari}
           onChange={(e) => setCari(e.target.value)}
           type="search"
           placeholder="Cari nama jasa..."
-          className="w-full h-12 pl-11 pr-4 rounded-2xl bg-surface text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+          className="w-full h-11 pl-11 pr-3.5 rounded-[8px] border border-border bg-surface text-body text-text-primary outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
         />
       </div>
 
@@ -351,10 +351,10 @@ export function ServiceManager({
         <button
           type="button"
           onClick={() => setKategori("all")}
-          className={`shrink-0 min-h-10 px-3.5 rounded-full font-body-bold text-body-bold active:scale-95 transition-transform ${
+          className={`shrink-0 min-h-10 px-3.5 rounded-[8px] font-body-bold text-caption transition-colors ${
             kategori === "all"
-              ? "bg-brand-600 text-white"
-              : "bg-surface text-text-secondary"
+              ? "primary-gradient clay-glow text-white"
+              : "border border-border bg-surface text-text-secondary hover:bg-surface-container"
           }`}
         >
           Semua
@@ -364,10 +364,10 @@ export function ServiceManager({
             key={key}
             type="button"
             onClick={() => setKategori(key)}
-            className={`shrink-0 min-h-10 px-3.5 rounded-full font-body-bold text-body-bold active:scale-95 transition-transform ${
+            className={`shrink-0 min-h-10 px-3.5 rounded-[8px] font-body-bold text-caption transition-colors ${
               kategori === key
-                ? "bg-brand-600 text-white"
-                : "bg-surface text-text-secondary"
+                ? "primary-gradient clay-glow text-white"
+                : "border border-border bg-surface text-text-secondary hover:bg-surface-container"
             }`}
           >
             {CATEGORY_LABELS[key]}
@@ -387,10 +387,10 @@ export function ServiceManager({
             key={s.key}
             type="button"
             onClick={() => setSaringAktif(s.key)}
-            className={`flex-1 min-h-10 rounded-xl font-caption text-caption active:scale-95 transition-transform ${
+            className={`flex-1 min-h-10 rounded-[8px] font-caption text-caption border transition-colors ${
               saringAktif === s.key
-                ? "bg-brand-50 text-brand-700"
-                : "bg-surface-container text-text-secondary"
+                ? "border-brand-200 bg-brand-50 text-brand-700 font-bold"
+                : "border-border bg-surface text-text-secondary hover:bg-surface-container"
             }`}
           >
             {s.label}
@@ -399,21 +399,21 @@ export function ServiceManager({
       </div>
 
       {error ? (
-        <div className="p-3 rounded-xl bg-danger-surface text-danger-text font-caption text-caption flex items-start gap-2">
-          <Icon name="error" className="text-[18px] shrink-0" />
+        <div className="p-3 rounded-[8px] border border-red-200 bg-red-50 text-red-800 font-caption text-caption flex items-start gap-2">
+          <Icon name="error" className="text-[18px] shrink-0 text-red-600" />
           <span className="flex-1">{error}</span>
         </div>
       ) : null}
 
       {sukses ? (
-        <div className="p-3 rounded-xl bg-success-surface text-success-text font-caption text-caption flex items-center gap-2">
-          <Icon name="check_circle" className="text-[18px] shrink-0" />
+        <div className="p-3 rounded-[8px] border border-emerald-200 bg-emerald-50 text-emerald-800 font-caption text-caption flex items-center gap-2">
+          <Icon name="check_circle" className="text-[18px] shrink-0 text-emerald-600" />
           <span className="flex-1">{sukses}</span>
         </div>
       ) : null}
 
       {tersaring.length === 0 ? (
-        <div className="clay-card p-6 flex flex-col items-center text-center gap-2">
+        <div className="clay-card rounded-[10px] p-6 flex flex-col items-center text-center gap-2">
           <Icon name="inventory_2" className="text-[32px] text-text-muted" />
           <p className="font-body text-body text-text-secondary">
             Tidak ada jasa yang cocok dengan filter ini.
@@ -422,7 +422,7 @@ export function ServiceManager({
       ) : null}
 
       {tersaring.map((row) => (
-        <article key={row.id} className="clay-card p-4 flex flex-col gap-2">
+        <article key={row.id} className="clay-card rounded-[10px] p-4 flex flex-col gap-2.5">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
               <p className="font-body-bold text-body-bold text-text-primary">
@@ -433,16 +433,16 @@ export function ServiceManager({
                 {row.isAddon ? " • Tambahan" : ""}
               </p>
             </div>
-            <div className="flex items-center gap-1 shrink-0">
+            <div className="flex items-center gap-1.5 shrink-0">
               <Icon
                 name={CATEGORY_ICONS[row.category] ?? "build"}
                 className="text-brand-600 text-[20px]"
               />
               <span
-                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-micro-badge text-micro-badge ${
+                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-[6px] border font-micro-badge text-micro-badge ${
                   row.isActive
-                    ? "bg-success-surface text-success-text"
-                    : "bg-surface-container text-text-muted"
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                    : "bg-surface-container text-text-muted border-border"
                 }`}
               >
                 {row.isActive ? "Aktif" : "Nonaktif"}
@@ -458,14 +458,14 @@ export function ServiceManager({
               return (
                 <span
                   key={String(h.key)}
-                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg font-micro-badge text-micro-badge ${
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-[6px] border font-micro-badge text-micro-badge ${
                     nilai > 0
-                      ? "bg-surface-container text-text-secondary"
-                      : "bg-surface-container/50 text-text-muted line-through"
+                      ? "border-border bg-surface-container text-text-secondary"
+                      : "border-border/50 bg-surface-container/50 text-text-muted line-through"
                   }`}
                 >
                   {h.label}
-                  <span className="font-body-mono">
+                  <span className="font-body-mono tabular-nums">
                     {nilai > 0 ? formatRupiah(nilai) : "0"}
                   </span>
                 </span>
@@ -477,7 +477,7 @@ export function ServiceManager({
             <button
               type="button"
               onClick={() => bukaSunting(row)}
-              className="flex-1 min-h-11 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+              className="flex-1 min-h-11 rounded-[8px] border border-brand-200 bg-brand-50 text-brand-700 font-caption text-caption flex items-center justify-center gap-1.5 hover:bg-brand-100 transition-colors"
             >
               <Icon name="edit_note" className="text-[18px]" />
               Ubah
@@ -486,10 +486,10 @@ export function ServiceManager({
               type="button"
               disabled={sibuk}
               onClick={() => void ubahAktif(row)}
-              className={`flex-1 min-h-11 rounded-xl font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform disabled:opacity-60 ${
+              className={`flex-1 min-h-11 rounded-[8px] border font-caption text-caption flex items-center justify-center gap-1.5 transition-colors disabled:opacity-60 ${
                 row.isActive
-                  ? "bg-surface-container text-text-secondary"
-                  : "bg-success-surface text-success-text"
+                  ? "border-border bg-surface text-text-secondary hover:bg-surface-container"
+                  : "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
               }`}
             >
               <Icon
@@ -502,7 +502,7 @@ export function ServiceManager({
               type="button"
               disabled={sibuk}
               onClick={() => void hapus(row)}
-              className="min-w-11 px-3 min-h-11 rounded-xl bg-danger-surface text-danger-text font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform disabled:opacity-60"
+              className="min-w-11 px-3 min-h-11 rounded-[8px] border border-red-200 bg-red-50 text-red-700 font-caption text-caption flex items-center justify-center gap-1.5 hover:bg-red-100 transition-colors disabled:opacity-60"
             >
               <Icon name="delete" className="text-[18px]" />
             </button>
@@ -516,7 +516,7 @@ export function ServiceManager({
       <button
         type="button"
         onClick={bukaBaru}
-        className="w-full h-12 rounded-2xl primary-gradient text-white font-body-bold text-body-bold flex items-center justify-center gap-2 clay-glow active:scale-[0.98] transition-transform"
+        className="w-full h-11 rounded-[8px] primary-gradient text-white font-body-bold text-body-bold flex items-center justify-center gap-2 clay-glow hover:opacity-90 transition-opacity"
       >
         <Icon name="add" className="text-[20px]" />
         Tambah Jasa Baru
@@ -536,7 +536,7 @@ export function ServiceManager({
             value={draft.name}
             onChange={(e) => setDraft({ ...draft, name: e.target.value })}
             placeholder="Contoh: Coating Paket C - 5 Layers"
-            className="h-12 px-3 rounded-xl bg-surface-container font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+            className="h-11 px-3.5 rounded-[8px] border border-border bg-surface font-body text-body text-text-primary outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
           />
         </label>
 
@@ -547,7 +547,7 @@ export function ServiceManager({
           <select
             value={draft.category}
             onChange={(e) => setDraft({ ...draft, category: e.target.value })}
-            className="h-12 px-3 rounded-xl bg-surface-container font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+            className="h-11 px-3.5 rounded-[8px] border border-border bg-surface font-body text-body text-text-primary outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
           >
             {Object.keys(CATEGORY_LABELS).map((key) => (
               <option key={key} value={key}>
@@ -584,7 +584,7 @@ export function ServiceManager({
                   }}
                   inputMode="numeric"
                   placeholder="0"
-                  className="h-11 px-3 rounded-xl bg-surface-container font-body-mono text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+                  className="h-11 px-3.5 rounded-[8px] border border-border bg-surface font-body-mono text-body text-text-primary outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
                 />
               </label>
             ))}
@@ -595,27 +595,27 @@ export function ServiceManager({
         </div>
 
         <div className="flex gap-2">
-          <label className="flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-surface-container">
+          <label className="flex-1 flex items-center gap-2 px-3 py-2.5 rounded-[8px] border border-border bg-surface-container-low cursor-pointer">
             <input
               type="checkbox"
               checked={draft.isAddon}
               onChange={(e) =>
                 setDraft({ ...draft, isAddon: e.target.checked })
               }
-              className="w-5 h-5 accent-[#1D4ED8]"
+              className="w-4 h-4 rounded text-brand-600 focus:ring-brand-500"
             />
             <span className="font-caption text-caption text-text-secondary">
               Layanan tambahan
             </span>
           </label>
-          <label className="flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-surface-container">
+          <label className="flex-1 flex items-center gap-2 px-3 py-2.5 rounded-[8px] border border-border bg-surface-container-low cursor-pointer">
             <input
               type="checkbox"
               checked={draft.isActive}
               onChange={(e) =>
                 setDraft({ ...draft, isActive: e.target.checked })
               }
-              className="w-5 h-5 accent-[#1D4ED8]"
+              className="w-4 h-4 rounded text-brand-600 focus:ring-brand-500"
             />
             <span className="font-caption text-caption text-text-secondary">
               Aktif di POS
@@ -624,8 +624,8 @@ export function ServiceManager({
         </div>
 
         {error ? (
-          <div className="p-3 rounded-xl bg-danger-surface text-danger-text font-caption text-caption flex items-start gap-2">
-            <Icon name="error" className="text-[18px] shrink-0" />
+          <div className="p-3 rounded-[8px] border border-red-200 bg-red-50 text-red-800 font-caption text-caption flex items-start gap-2">
+            <Icon name="error" className="text-[18px] shrink-0 text-red-600" />
             <span className="flex-1">{error}</span>
           </div>
         ) : null}
@@ -634,7 +634,7 @@ export function ServiceManager({
           type="button"
           disabled={sibuk}
           onClick={() => void simpan()}
-          className="w-full h-12 rounded-2xl primary-gradient text-white font-body-bold text-body-bold flex items-center justify-center gap-2 clay-glow active:scale-[0.98] transition-transform disabled:opacity-60"
+          className="w-full h-11 rounded-[8px] primary-gradient text-white font-body-bold text-body-bold flex items-center justify-center gap-2 clay-glow hover:opacity-90 transition-opacity disabled:opacity-60"
         >
           <Icon name={sibuk ? "hourglass_top" : "task_alt"} className="text-[20px]" />
           {sibuk ? "Menyimpan..." : sunting ? "Simpan Perubahan" : "Simpan Jasa"}

@@ -290,17 +290,17 @@ export function BulkImportConsole({
   return (
     <div className="px-gutter py-4 flex flex-col gap-4 lg:max-w-xl lg:mx-auto lg:px-6 lg:py-6">
       {/* Jenis import */}
-      <div className="clay-card p-4 flex flex-col gap-3">
+      <div className="clay-card p-4 flex flex-col gap-3 rounded-[10px]">
         <h2 className="font-headline-2 text-headline-2 text-text-primary">Jenis Data</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           {(Object.keys(TEMPLATES) as ImportType[]).map((t) => {
             const tmplItem = TEMPLATES[t];
             return (
               <button key={t} type="button" onClick={() => { setActiveType(t); setRows([]); setFileName(null); setResult(null); setError(null); }}
-                className={`p-3 rounded-xl flex flex-col items-center gap-2 active:scale-95 transition-transform border-2 ${
-                  activeType === t ? "border-brand-400 bg-brand-50" : "border-transparent bg-surface-container-low"
+                className={`p-3 rounded-[8px] flex flex-col items-center gap-2 hover:bg-surface-container-high transition-colors border-2 ${
+                  activeType === t ? "border-brand-500 bg-brand-50/60" : "border-transparent bg-surface-container-low"
                 }`}>
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${tmplItem.color}`}>
+                <div className={`w-10 h-10 rounded-[8px] flex items-center justify-center ${tmplItem.color}`}>
                   <Icon name={tmplItem.icon} className="text-[20px]" />
                 </div>
                 <span className="font-caption text-caption text-text-primary text-center leading-tight">{tmplItem.label}</span>
@@ -313,10 +313,10 @@ export function BulkImportConsole({
 
       {/* Pilih cabang */}
       {branches.length > 1 && (
-        <div className="clay-card p-4 flex flex-col gap-2">
+        <div className="clay-card p-4 flex flex-col gap-2 rounded-[10px]">
           <label className="font-caption text-caption text-text-secondary">Cabang Tujuan</label>
           <select value={selectedBranch} onChange={(e) => setSelectedBranch(e.target.value)}
-            className="h-11 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400">
+            className="h-11 px-3 rounded-[8px] bg-surface-container-low border border-border font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400">
             {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
           </select>
         </div>
@@ -324,19 +324,19 @@ export function BulkImportConsole({
 
       {/* Download template */}
       <button type="button" onClick={downloadTemplate}
-        className="flex items-center justify-center gap-2 py-3 rounded-xl bg-surface-container-low text-text-secondary font-caption text-caption active:scale-95 transition-transform">
+        className="flex items-center justify-center gap-2 py-3 rounded-[8px] bg-surface-container-low hover:bg-surface-container text-text-secondary font-caption text-caption transition-colors border border-border">
         <Icon name="download" className="text-[18px]" />
         Download Template Excel ({activeType === "inventory" ? "Stok" : activeType === "cash_flow" ? "Kas" : "Karyawan"})
       </button>
 
       {/* Upload file */}
-      <div className="clay-card p-4 flex flex-col gap-3">
+      <div className="clay-card p-4 flex flex-col gap-3 rounded-[10px]">
         <h3 className="font-body-bold text-body-bold text-text-primary">Upload File Excel</h3>
         <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv"
           onChange={handleFile}
-          className="block w-full text-sm text-text-secondary file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-brand-50 file:text-brand-700 file:font-caption file:cursor-pointer" />
+          className="block w-full text-sm text-text-secondary file:mr-3 file:py-2 file:px-4 file:rounded-[8px] file:border-0 file:bg-brand-50 file:text-brand-700 file:font-caption file:cursor-pointer" />
         {fileName && (
-          <div className="flex items-center gap-2 p-3 rounded-xl bg-success-surface text-success-text">
+          <div className="flex items-center gap-2 p-3 rounded-[8px] bg-success-surface text-success-text border border-success-base/30">
             <Icon name="check_circle" className="text-[18px] shrink-0" />
             <div className="min-w-0">
               <p className="font-caption text-caption font-semibold truncate">{fileName}</p>
@@ -348,7 +348,7 @@ export function BulkImportConsole({
 
       {/* Preview */}
       {rows.length > 0 && (
-        <div className="clay-card p-4 flex flex-col gap-2">
+        <div className="clay-card p-4 flex flex-col gap-2 rounded-[10px]">
           <p className="font-body-bold text-body-bold text-text-primary">Preview (5 baris pertama)</p>
           <div className="overflow-x-auto -mx-1">
             <table className="w-full text-left">
@@ -361,7 +361,7 @@ export function BulkImportConsole({
               </thead>
               <tbody>
                 {rows.slice(0, 5).map((row, i) => (
-                  <tr key={i} className="border-t border-outline-variant/40">
+                  <tr key={i} className="border-t border-border">
                     {Object.values(row).slice(0, 6).map((v, j) => (
                       <td key={j} className="px-2 py-1.5 font-caption text-caption text-text-primary whitespace-nowrap max-w-[120px] truncate">
                         {String(v)}
@@ -376,14 +376,14 @@ export function BulkImportConsole({
       )}
 
       {error && (
-        <div className="p-3 rounded-xl bg-danger-surface text-danger-text font-caption text-caption flex items-center gap-2">
+        <div className="p-3 rounded-[8px] bg-danger-surface text-danger-text font-caption text-caption flex items-center gap-2 border border-danger-base/30">
           <Icon name="error" className="text-[18px] shrink-0" />{error}
         </div>
       )}
 
       {/* Result */}
       {result && (
-        <div className={`p-4 rounded-xl ${result.errors.length > 0 ? "bg-warning-surface" : "bg-success-surface"}`}>
+        <div className={`p-4 rounded-[8px] border ${result.errors.length > 0 ? "bg-warning-surface border-warning-base/30" : "bg-success-surface border-success-base/30"}`}>
           <p className={`font-body-bold text-body-bold ${result.errors.length > 0 ? "text-warning-text" : "text-success-text"}`}>
             ✓ {result.imported} baris berhasil diimport
             {result.skipped > 0 ? `, ${result.skipped} dilewati` : ""}
@@ -398,7 +398,7 @@ export function BulkImportConsole({
 
       {/* Import button */}
       <button type="button" onClick={handleImport} disabled={loading || !rows.length}
-        className="w-full py-4 lg:py-2.5 rounded-2xl lg:rounded-xl bg-primary text-white font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-60">
+        className="w-full py-3.5 rounded-[8px] primary-gradient clay-glow text-white font-body-bold text-body-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-60 shadow-sm">
         {loading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Icon name="upload" className="text-[22px]" />}
         {loading ? "Mengimport..." : `Import ${tmpl.label}`}
       </button>

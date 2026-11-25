@@ -72,14 +72,8 @@ export function BranchSwitcher({ branches, activeBranchId, scope, variant, onErr
       aria-haspopup="listbox"
       className={
         variant === "wide"
-          ? "w-full flex items-center justify-between gap-2 h-12 px-3 rounded-xl bg-surface-container-low shadow-[inset_0px_2px_4px_rgba(15,23,42,0.06)]"
-          : /*
-             * Varian header memakai min-h-11 dan padding yang lebih longgar.
-             * Sebelumnya tinggi sebenarnya hanya 28px karena padding vertikal
-             * tipis, padahal ini tombol yang dipakai untuk berpindah cabang
-             * dan harus memenuhi luas sentuh minimum 44px.
-             */
-            "flex items-center gap-1.5 px-2.5 min-h-11 py-1.5 mt-0.5 rounded-full bg-brand-50 max-w-[190px]"
+          ? "w-full flex items-center justify-between gap-2 h-11 px-3.5 rounded-[8px] border border-border bg-surface hover:bg-surface-container transition-colors"
+          : "flex items-center gap-1.5 px-2.5 min-h-11 py-1.5 mt-0.5 rounded-[8px] border border-brand-200 bg-brand-50 hover:bg-brand-100 transition-colors max-w-[190px]"
       }
     >
       <span className="flex items-center gap-1 min-w-0">
@@ -118,17 +112,17 @@ export function BranchSwitcher({ branches, activeBranchId, scope, variant, onErr
           />
           <div
             role="listbox"
-            className="absolute z-40 mt-2 min-w-[220px] max-w-[85vw] right-0 rounded-2xl bg-surface p-1.5 clay-card flex flex-col gap-0.5"
+            className="absolute z-40 mt-2 min-w-[220px] max-w-[85vw] right-0 rounded-[10px] bg-surface p-1.5 border border-border shadow-xl flex flex-col gap-0.5"
           >
             <button
               type="button"
               role="option"
               aria-selected={scope === "all"}
               onClick={() => pick(ALL_BRANCHES)}
-              className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-left font-caption text-caption ${
+              className={`flex items-center gap-2 px-3 py-2.5 rounded-[8px] text-left font-caption text-caption transition-colors ${
                 scope === "all"
-                  ? "bg-brand-50 text-brand-700"
-                  : "text-text-secondary hover:bg-surface-container-low"
+                  ? "bg-brand-50 text-brand-700 font-bold"
+                  : "text-text-secondary hover:bg-surface-container"
               }`}
             >
               <Icon name="public" className="text-[16px]" />
@@ -138,7 +132,7 @@ export function BranchSwitcher({ branches, activeBranchId, scope, variant, onErr
               ) : null}
             </button>
 
-            <div className="h-px bg-outline-variant my-0.5" />
+            <div className="h-px bg-border my-0.5" />
 
             {options.length === 0 ? (
               <p className="px-3 py-2.5 font-caption text-caption text-text-muted">
@@ -155,10 +149,10 @@ export function BranchSwitcher({ branches, activeBranchId, scope, variant, onErr
                   role="option"
                   aria-selected={active}
                   onClick={() => pick(branch.id)}
-                  className={`flex items-center gap-2 px-3 py-2.5 min-h-10 rounded-xl text-left font-caption text-caption ${
+                  className={`flex items-center gap-2 px-3 py-2.5 min-h-10 rounded-[8px] text-left font-caption text-caption transition-colors ${
                     active
-                      ? "bg-brand-50 text-brand-700"
-                      : "text-text-secondary hover:bg-surface-container-low"
+                      ? "bg-brand-50 text-brand-700 font-bold"
+                      : "text-text-secondary hover:bg-surface-container"
                   }`}
                 >
                   <Icon name="storefront" className="text-[16px]" />
@@ -170,11 +164,11 @@ export function BranchSwitcher({ branches, activeBranchId, scope, variant, onErr
               );
             })}
 
-            <div className="h-px bg-outline-variant my-0.5" />
+            <div className="h-px bg-border my-0.5" />
 
             <a
               href="/pengaturan/cabang"
-              className="flex items-center gap-2 px-3 py-2.5 min-h-10 rounded-xl text-left font-caption text-caption text-text-secondary hover:bg-surface-container-low"
+              className="flex items-center gap-2 px-3 py-2.5 min-h-10 rounded-[8px] text-left font-caption text-caption text-text-secondary hover:bg-surface-container transition-colors"
             >
               <Icon name="tune" className="text-[16px]" />
               Pengaturan Cabang

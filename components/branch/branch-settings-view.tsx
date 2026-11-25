@@ -317,12 +317,12 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
 
   return (
     <div className="px-gutter py-4 pb-48 lg:pb-40 flex flex-col gap-4 lg:grid lg:grid-cols-3 lg:gap-6 lg:items-start lg:px-6 lg:py-6">
-      <section className="clay-card p-4 flex flex-col gap-3 lg:col-span-3">
+      <section className="clay-card rounded-[10px] p-4 flex flex-col gap-3 lg:col-span-3">
         <div className="flex items-center justify-between">
           <h1 className="font-headline-2 text-headline-2 text-text-primary">
             Pengaturan Cabang
           </h1>
-          <span className="px-2 py-0.5 rounded-full bg-brand-50 text-brand-600 font-micro-badge text-micro-badge">
+          <span className="px-2.5 py-0.5 rounded-[6px] border border-brand-200 bg-brand-50 text-brand-600 font-micro-badge text-micro-badge">
             {branches.length} cabang
           </span>
         </div>
@@ -333,10 +333,10 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
               key={branch.id}
               type="button"
               onClick={() => pickBranch(branch.id)}
-              className={`px-3 py-2 min-h-10 rounded-xl font-caption text-caption whitespace-nowrap flex items-center gap-1 ${
+              className={`px-3 py-2 min-h-10 rounded-[8px] font-caption text-caption whitespace-nowrap flex items-center gap-1 transition-colors ${
                 branch.id === selectedId
-                  ? "bg-brand-50 text-brand-700"
-                  : "bg-surface-container-low text-text-secondary"
+                  ? "primary-gradient clay-glow text-white"
+                  : "border border-border bg-surface text-text-secondary hover:bg-surface-container"
               }`}
             >
               <Icon name="storefront" className="text-[15px]" />
@@ -347,22 +347,22 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
 
         {selected ? (
           <div className="flex flex-wrap gap-2">
-            <span className="px-2 py-1 rounded-full bg-surface-container text-text-secondary font-micro-badge text-micro-badge">
+            <span className="px-2.5 py-1 rounded-[6px] border border-border bg-surface-container text-text-secondary font-micro-badge text-micro-badge">
               {selected.staffCount} staf terdaftar
             </span>
             {selected.isActive ? (
-              <span className="px-2 py-1 rounded-full bg-success-surface text-success-text font-micro-badge text-micro-badge flex items-center gap-1">
+              <span className="px-2.5 py-1 rounded-[6px] border border-emerald-200 bg-emerald-50 text-emerald-700 font-micro-badge text-micro-badge flex items-center gap-1">
                 <Icon name="check_circle" className="text-[12px]" />
                 Aktif
               </span>
             ) : (
-              <span className="px-2 py-1 rounded-full bg-danger-surface text-danger-text font-micro-badge text-micro-badge flex items-center gap-1">
+              <span className="px-2.5 py-1 rounded-[6px] border border-red-200 bg-red-50 text-red-700 font-micro-badge text-micro-badge flex items-center gap-1">
                 <Icon name="block" className="text-[12px]" />
                 Tutup Permanen
               </span>
             )}
             {selected.latitude === null ? (
-              <span className="px-2 py-1 rounded-full bg-warning-surface text-warning-text font-micro-badge text-micro-badge">
+              <span className="px-2.5 py-1 rounded-[6px] border border-amber-200 bg-amber-50 text-amber-700 font-micro-badge text-micro-badge">
                 Geofence belum dipasang
               </span>
             ) : null}
@@ -372,7 +372,7 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
 
       {/* Left column: identity + GPS + hours */}
       <div className="flex flex-col gap-4 lg:col-span-2">
-      <section className="clay-card p-4 flex flex-col gap-3">
+      <section className="clay-card rounded-[10px] p-4 flex flex-col gap-3">
         <h2 className="font-body-bold text-body-bold text-text-primary flex items-center gap-2">
           <Icon name="info" className="text-[20px] text-brand-600" />
           Identitas Cabang
@@ -384,7 +384,7 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
             value={form.branchName}
             onChange={(e) => setForm((f) => ({ ...f, branchName: e.target.value }))}
             placeholder="Contoh: RB Autoluxe Depok"
-            className="h-12 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+            className="h-11 px-3.5 rounded-[8px] border border-border bg-surface font-body text-body text-text-primary outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
           />
         </label>
 
@@ -395,12 +395,12 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
             onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
             rows={2}
             placeholder="Alamat lengkap workshop"
-            className="rounded-xl bg-surface-container-low px-3 py-2 font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+            className="rounded-[8px] border border-border bg-surface px-3.5 py-2 font-body text-body text-text-primary outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
           />
         </label>
       </section>
 
-      <section className="clay-card p-4 flex flex-col gap-3">
+      <section className="clay-card rounded-[10px] p-4 flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <h2 className="font-body-bold text-body-bold text-text-primary flex items-center gap-2">
             <Icon name="my_location" className="text-[20px] text-brand-600" />
@@ -411,10 +411,10 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
             role="switch"
             aria-checked={form.setCoordinates}
             onClick={() => setForm((f) => ({ ...f, setCoordinates: !f.setCoordinates }))}
-            className={`h-10 px-3 rounded-full font-caption text-caption flex items-center gap-1 ${
+            className={`h-9 px-3 rounded-[6px] border font-caption text-caption flex items-center gap-1 transition-colors ${
               form.setCoordinates
-                ? "bg-success-surface text-success-text"
-                : "bg-surface-container text-text-secondary"
+                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                : "border-border bg-surface-container text-text-secondary"
             }`}
           >
             <Icon name={form.setCoordinates ? "check_circle" : "cancel"} className="text-[15px]" />
@@ -430,7 +430,7 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
 
         {form.setCoordinates ? (
           <>
-            <div className="rounded-xl bg-brand-50 p-3 flex flex-col gap-2">
+            <div className="rounded-[8px] bg-brand-50 border border-brand-200 p-3 flex flex-col gap-2">
               <span className="font-caption text-caption text-brand-700 font-semibold">
                 Tempel koordinat dari Google Maps
               </span>
@@ -438,13 +438,13 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
                 value={coordinateInput}
                 onChange={(e) => setCoordinateInput(e.target.value)}
                 placeholder="-6.175392, 106.827153 atau tautan Google Maps"
-                className="h-11 px-3 rounded-lg bg-surface font-body text-body text-text-primary outline-none"
+                className="h-10 px-3 rounded-[6px] border border-brand-200 bg-surface font-body text-body text-text-primary outline-none focus:border-brand-500"
               />
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={applyCoordinateInput}
-                  className="h-10 px-3 rounded-lg bg-brand-500 text-white font-caption text-caption flex items-center gap-1 active:scale-95 transition-transform"
+                  className="h-9 px-3 rounded-[6px] bg-brand-600 text-white font-caption text-caption flex items-center gap-1 hover:bg-brand-700 transition-colors"
                 >
                   <Icon name="content_paste" className="text-[15px]" />
                   Terapkan
@@ -452,7 +452,7 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
                 <button
                   type="button"
                   onClick={useDeviceLocation}
-                  className="h-10 px-3 rounded-lg bg-surface text-text-secondary font-caption text-caption flex items-center gap-1 active:scale-95 transition-transform"
+                  className="h-9 px-3 rounded-[6px] border border-border bg-surface text-text-secondary font-caption text-caption flex items-center gap-1 hover:bg-surface-container transition-colors"
                 >
                   <Icon name="gps_fixed" className="text-[15px]" />
                   Baca GPS Perangkat
@@ -467,7 +467,7 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
             {coordinateMessage ? (
               <p
                 className={`font-caption text-caption ${
-                  coordinateMessage.tone === "ok" ? "text-success-text" : "text-danger-text"
+                  coordinateMessage.tone === "ok" ? "text-emerald-700" : "text-red-700"
                 }`}
               >
                 {coordinateMessage.text}
@@ -482,7 +482,7 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
                   onChange={(e) => setForm((f) => ({ ...f, latitude: e.target.value }))}
                   inputMode="decimal"
                   placeholder="-6.175392"
-                  className="h-12 px-3 rounded-xl bg-surface-container-low font-body-mono text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+                  className="h-11 px-3.5 rounded-[8px] border border-border bg-surface font-body-mono text-body text-text-primary outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
                 />
               </label>
               <label className="flex flex-col gap-1">
@@ -492,7 +492,7 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
                   onChange={(e) => setForm((f) => ({ ...f, longitude: e.target.value }))}
                   inputMode="decimal"
                   placeholder="106.827153"
-                  className="h-12 px-3 rounded-xl bg-surface-container-low font-body-mono text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+                  className="h-11 px-3.5 rounded-[8px] border border-border bg-surface font-body-mono text-body text-text-primary outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
                 />
               </label>
             </div>
@@ -505,14 +505,14 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
                 value={form.radius}
                 onChange={(e) => setForm((f) => ({ ...f, radius: e.target.value }))}
                 inputMode="numeric"
-                className="h-12 px-3 rounded-xl bg-surface-container-low font-body-mono text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+                className="h-11 px-3.5 rounded-[8px] border border-border bg-surface font-body-mono text-body text-text-primary outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
               />
               <span className="font-micro-badge text-micro-badge text-text-muted">
                 Rentang yang diperbolehkan 5 sampai 5000 meter
               </span>
             </label>
 
-            <div className="rounded-xl bg-surface-container-low px-3 py-2.5 flex flex-col gap-1">
+            <div className="rounded-[8px] bg-surface-container-low border border-border px-3.5 py-2.5 flex flex-col gap-1">
               <div className="flex items-center justify-between gap-2">
                 <span className="font-caption text-caption text-text-secondary">
                   Koordinat tersimpan
@@ -536,7 +536,7 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
                   href={mapLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="self-start mt-1 min-h-10 font-caption text-caption text-brand-600 flex items-center gap-1"
+                  className="self-start mt-1 min-h-10 font-caption text-caption text-brand-600 flex items-center gap-1 hover:underline"
                 >
                   <Icon name="map" className="text-[15px]" />
                   Buka di Google Maps
@@ -552,7 +552,7 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
         )}
       </section>
 
-      <section className="clay-card p-4 flex flex-col gap-3">
+      <section className="clay-card rounded-[10px] p-4 flex flex-col gap-3">
         <h2 className="font-body-bold text-body-bold text-text-primary flex items-center gap-2">
           <Icon name="schedule" className="text-[20px] text-brand-600" />
           Jam Operasional
@@ -565,7 +565,7 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
               type="time"
               value={form.openTime}
               onChange={(e) => setForm((f) => ({ ...f, openTime: e.target.value }))}
-              className="h-12 px-3 rounded-xl bg-surface-container-low font-body-mono text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+              className="h-11 px-3.5 rounded-[8px] border border-border bg-surface font-body-mono text-body text-text-primary outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
             />
           </label>
           <label className="flex flex-col gap-1">
@@ -574,7 +574,7 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
               type="time"
               value={form.closeTime}
               onChange={(e) => setForm((f) => ({ ...f, closeTime: e.target.value }))}
-              className="h-12 px-3 rounded-xl bg-surface-container-low font-body-mono text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+              className="h-11 px-3.5 rounded-[8px] border border-border bg-surface font-body-mono text-body text-text-primary outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
             />
           </label>
         </div>
@@ -588,7 +588,7 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
       {/* Right column: status + meta */}
       <div className="flex flex-col gap-4 lg:col-span-1">
       {!form.isActive && (
-        <div className="flex items-center gap-2.5 px-4 py-3 rounded-2xl bg-danger-surface text-danger-text border border-danger-base/20">
+        <div className="flex items-center gap-2.5 px-4 py-3 rounded-[8px] bg-red-50 text-red-700 border border-red-200">
           <Icon name="block" className="text-[22px] shrink-0" />
           <div>
             <p className="font-body-bold text-body-bold">Tutup Permanen</p>
@@ -599,16 +599,16 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
         </div>
       )}
 
-      <section className="clay-card p-4 flex flex-col gap-2">
+      <section className="clay-card rounded-[10px] p-4 flex flex-col gap-2">
         <button
           type="button"
           role="switch"
           aria-checked={form.isActive}
           onClick={() => setForm((f) => ({ ...f, isActive: !f.isActive }))}
-          className={`h-12 px-3 rounded-xl flex items-center justify-between gap-3 ${
+          className={`h-11 px-3.5 rounded-[8px] border flex items-center justify-between gap-3 transition-colors ${
             form.isActive
-              ? "bg-success-surface text-success-text"
-              : "bg-surface-container text-text-secondary"
+              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+              : "border-border bg-surface-container text-text-secondary"
           }`}
         >
           <span className="flex items-center gap-2 font-body text-body">
@@ -626,8 +626,8 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
       </section>
 
       {/* Zona Berbahaya — Hapus Cabang */}
-      <section className="clay-card p-4 flex flex-col gap-2">
-        <h3 className="font-body-bold text-body-bold text-danger-text flex items-center gap-1.5">
+      <section className="clay-card rounded-[10px] p-4 flex flex-col gap-2 border border-red-200">
+        <h3 className="font-body-bold text-body-bold text-red-700 flex items-center gap-1.5">
           <Icon name="delete_forever" className="text-[18px]" />
           Zona Berbahaya
         </h3>
@@ -639,7 +639,7 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
           type="button"
           onClick={() => setDeleteConfirmOpen(true)}
           disabled={busy || deleting}
-          className="w-full h-11 rounded-xl bg-danger-surface text-danger-text font-body-bold text-body flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-50"
+          className="w-full h-11 rounded-[8px] border border-red-300 bg-red-50 text-red-700 font-body-bold text-body flex items-center justify-center gap-2 hover:bg-red-100 transition-colors disabled:opacity-50"
         >
           <Icon name="delete_forever" className="text-[18px]" />
           Hapus Cabang Permanen
@@ -647,20 +647,13 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
       </section>
       </div>{/* end lg:col-span-1 */}
 
-      {/*
-       * Bilah ini pernah memakai bottom-0 dengan z-40, sementara navigasi
-       * bawah memakai z-50. Tombol simpannya berada di dalam area yang
-       * sama dengan navigasi sehingga tertutup dan tidak bisa diklik.
-       * Sekarang posisinya di atas navigasi dengan z yang lebih rendah
-       * supaya navigasi tetap di atas dan tidak pernah menutupinya.
-       */}
-      <div className="fixed bottom-nav-offset left-0 right-0 z-action-bar px-gutter pb-3 pt-3 bg-surface/95 backdrop-blur-md border-t border-outline-variant lg:left-[72px] lg:px-6">
+      <div className="fixed bottom-nav-offset left-0 right-0 z-action-bar px-gutter pb-3 pt-3 bg-surface/95 backdrop-blur-md border-t border-border lg:left-[72px] lg:px-6">
         {feedback ? (
           <p
-            className={`mb-2 p-2 rounded-xl font-caption text-caption ${
+            className={`mb-2 p-2.5 rounded-[8px] font-caption text-caption border ${
               feedback.tone === "ok"
-                ? "bg-success-surface text-success-text"
-                : "bg-danger-surface text-danger-text"
+                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                : "bg-red-50 text-red-700 border-red-200"
             }`}
           >
             {feedback.text}
@@ -672,19 +665,14 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
             type="button"
             onClick={submit}
             disabled={busy || Boolean(validation)}
-            className="flex-1 h-11 px-4 rounded-xl primary-gradient text-on-primary font-body-bold text-body flex items-center justify-center gap-2 clay-fab active:scale-95 transition-transform disabled:opacity-50"
+            className="flex-1 h-11 px-4 rounded-[8px] primary-gradient clay-glow text-white font-body-bold text-body flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50"
           >
             <Icon name="save" className="text-[20px]" />
             {busy ? "Menyimpan..." : "Simpan Konfigurasi"}
           </button>
 
-          {/*
-            Pembuatan cabang punya formularnya sendiri karena butuh nilai yang
-            tidak ada di cabang mana pun: nama, alamat, titik, dan jam. Ditaruh
-            berdampingan agar tidak memakan ruang vertikal.
-          */}
           <CreateBranchPanel
-            triggerClassName="flex-1 h-11 px-4 rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200 font-body-bold text-body flex items-center justify-center gap-2 active:scale-95 transition-transform"
+            triggerClassName="flex-1 h-11 px-4 rounded-[8px] border border-brand-200 bg-brand-50 hover:bg-brand-100 text-brand-700 font-body-bold text-body flex items-center justify-center gap-2 transition-colors"
           />
         </div>
       </div>
@@ -698,8 +686,8 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
           title="Hapus Cabang Permanen"
         >
           <div className="flex flex-col gap-4">
-            <div className="flex items-start gap-3 p-3 rounded-2xl bg-danger-surface text-danger-text">
-              <Icon name="warning" className="text-[28px] shrink-0 text-danger-base mt-0.5" />
+            <div className="flex items-start gap-3 p-3 rounded-[8px] border border-red-200 bg-red-50 text-red-800">
+              <Icon name="warning" className="text-[28px] shrink-0 text-red-600 mt-0.5" />
               <div className="flex flex-col gap-1">
                 <p className="font-body-bold text-body-bold">
                   Yakin ingin menghapus cabang &quot;{selected?.name}&quot;?
@@ -715,7 +703,7 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
                 type="button"
                 onClick={() => setDeleteConfirmOpen(false)}
                 disabled={deleting}
-                className="flex-1 h-11 rounded-xl bg-surface-container-low text-text-secondary font-body-bold text-body active:scale-95 transition-transform disabled:opacity-50"
+                className="flex-1 h-11 rounded-[8px] border border-border bg-surface text-text-secondary font-body-bold text-body hover:bg-surface-container transition-colors disabled:opacity-50"
               >
                 Batal
               </button>
@@ -723,7 +711,7 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
                 type="button"
                 onClick={() => void hapusCabang()}
                 disabled={deleting}
-                className="flex-1 h-11 rounded-xl bg-danger-base hover:bg-danger-base/90 text-white font-body-bold text-body flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-50"
+                className="flex-1 h-11 rounded-[8px] bg-red-600 hover:bg-red-700 text-white font-body-bold text-body flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
               >
                 <Icon
                   name={deleting ? "hourglass_top" : "delete_forever"}

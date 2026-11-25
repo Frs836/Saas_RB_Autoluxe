@@ -286,8 +286,8 @@ export default async function TrackPage({
     : order.total_price ? Number(order.total_price) : null;
 
   return (
-    <div className="min-h-screen bg-surface pb-16">
-      <header className="sticky top-0 z-20 bg-surface/95 backdrop-blur border-b border-white/70">
+    <div className="min-h-screen bg-canvas pb-16">
+      <header className="sticky top-0 z-20 clay-nav">
         <div className="px-gutter pt-safe">
           <div className="h-14 flex items-center gap-2.5">
             <Image
@@ -295,7 +295,7 @@ export default async function TrackPage({
               alt="RB AUTOLUXE"
               width={36}
               height={36}
-              className="w-9 h-9 rounded-2xl object-contain"
+              className="w-9 h-9 rounded-[8px] object-contain"
             />
             <div className="flex flex-col leading-tight">
               <span className="font-headline-2 text-headline-2 text-text-primary">
@@ -310,7 +310,7 @@ export default async function TrackPage({
       </header>
 
       <main className="px-gutter pt-4 flex flex-col gap-4">
-        <section className="bg-surface rounded-[20px] p-5 clay-card border border-white/80">
+        <section className="bg-surface rounded-[10px] p-5 clay-card">
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="font-caption text-caption text-text-muted uppercase tracking-wide">
@@ -321,16 +321,16 @@ export default async function TrackPage({
               </p>
             </div>
             <span
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-body-bold text-caption ${
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] border font-body-bold text-caption ${
                 isCancelled
-                  ? "bg-danger-surface text-danger-text"
+                  ? "bg-red-50 text-red-700 border-red-200"
                   : order.status === "diserahkan"
-                    ? "bg-success-surface text-success-text"
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                     : siapDiambil
-                      ? "bg-success-surface text-success-text"
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                       : menungguPembayaran
-                        ? "bg-warning-surface text-warning-text"
-                        : "bg-brand-50 text-brand-600"
+                        ? "bg-amber-50 text-amber-700 border-amber-200"
+                        : "bg-brand-50 text-brand-700 border-brand-200"
               }`}
             >
               <Icon
@@ -352,7 +352,7 @@ export default async function TrackPage({
           </div>
 
           <div className="grid grid-cols-2 gap-3 mt-4">
-            <div className="rounded-2xl bg-surface-container/60 p-3">
+            <div className="rounded-[8px] bg-surface-container-low border border-border p-3">
               <p className="font-caption text-caption text-text-muted">
                 Pemilik
               </p>
@@ -360,7 +360,7 @@ export default async function TrackPage({
                 {order.customer_name ?? "-"}
               </p>
             </div>
-            <div className="rounded-2xl bg-surface-container/60 p-3">
+            <div className="rounded-[8px] bg-surface-container-low border border-border p-3">
               <p className="font-caption text-caption text-text-muted">
                 Kendaraan
               </p>
@@ -373,7 +373,7 @@ export default async function TrackPage({
                 </p>
               ) : null}
             </div>
-            <div className="rounded-2xl bg-surface-container/60 p-3">
+            <div className="rounded-[8px] bg-surface-container-low border border-border p-3">
               <p className="font-caption text-caption text-text-muted">
                 Paket Layanan
               </p>
@@ -381,28 +381,28 @@ export default async function TrackPage({
                 {order.service_package ?? "-"}
               </p>
             </div>
-            <div className="rounded-2xl bg-surface-container/60 p-3">
+            <div className="rounded-[8px] bg-surface-container-low border border-border p-3">
               <p className="font-caption text-caption text-text-muted">
                 Kategori
               </p>
-              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-micro-badge text-micro-badge mt-0.5 ${catInfo.color}`}>
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-[6px] border border-border font-micro-badge text-micro-badge mt-0.5 ${catInfo.color}`}>
                 <Icon name={catInfo.icon} className="text-[13px]" />
                 {catInfo.label}
               </span>
             </div>
-            <div className="rounded-2xl bg-surface-container/60 p-3">
+            <div className="rounded-[8px] bg-surface-container-low border border-border p-3">
               <p className="font-caption text-caption text-text-muted">
                 Total Biaya
               </p>
-              <p className="font-body-bold text-body-bold text-brand-600 mt-0.5">
+              <p className="font-body-bold text-body-bold text-brand-600 mt-0.5 tabular-nums">
                 {formatRupiah(order.total_price)}
               </p>
             </div>
           </div>
 
           {isCancelled && order.cancellation_reason ? (
-            <div className="mt-4 flex items-start gap-2.5 p-3 rounded-xl bg-danger-surface text-danger-text">
-              <Icon name="info" className="text-[18px] shrink-0" />
+            <div className="mt-4 flex items-start gap-2.5 p-3 rounded-[8px] border border-red-200 bg-red-50 text-red-800">
+              <Icon name="info" className="text-[18px] shrink-0 text-red-600" />
               <p className="font-caption text-caption leading-relaxed">
                 Alasan pembatalan: {order.cancellation_reason}
               </p>
@@ -416,8 +416,8 @@ export default async function TrackPage({
            * sehingga yang terbaca hanya "Diproses".
            */}
           {siapDiambil ? (
-            <div className="mt-4 flex items-start gap-2.5 p-3.5 rounded-xl bg-success-surface text-success-text">
-              <Icon name="local_shipping" className="text-[20px] shrink-0 mt-0.5" />
+            <div className="mt-4 flex items-start gap-2.5 p-3.5 rounded-[8px] border border-emerald-200 bg-emerald-50 text-emerald-800">
+              <Icon name="local_shipping" className="text-[20px] shrink-0 mt-0.5 text-emerald-600" />
               <div>
                 <p className="font-body-bold text-body-bold">
                   Pengerjaan selesai, kendaraan siap diambil
@@ -431,8 +431,8 @@ export default async function TrackPage({
           ) : null}
 
           {menungguPembayaran ? (
-            <div className="mt-4 flex items-start gap-2.5 p-3.5 rounded-xl bg-warning-surface text-warning-text">
-              <Icon name="payments" className="text-[20px] shrink-0 mt-0.5" />
+            <div className="mt-4 flex items-start gap-2.5 p-3.5 rounded-[8px] border border-amber-200 bg-amber-50 text-amber-800">
+              <Icon name="payments" className="text-[20px] shrink-0 mt-0.5 text-amber-600" />
               <div>
                 <p className="font-body-bold text-body-bold">Menunggu Pembayaran</p>
                 <p className="font-caption text-caption leading-relaxed mt-0.5">
@@ -443,8 +443,8 @@ export default async function TrackPage({
           ) : null}
 
           {selesaiDiserahkan ? (
-            <div className="mt-4 flex items-start gap-2.5 p-3.5 rounded-xl bg-success-surface text-success-text">
-              <Icon name="verified" className="text-[20px] shrink-0 mt-0.5" />
+            <div className="mt-4 flex items-start gap-2.5 p-3.5 rounded-[8px] border border-emerald-200 bg-emerald-50 text-emerald-800">
+              <Icon name="verified" className="text-[20px] shrink-0 mt-0.5 text-emerald-600" />
               <div>
                 <p className="font-body-bold text-body-bold">
                   Kendaraan sudah diserahkan
@@ -461,24 +461,24 @@ export default async function TrackPage({
         </section>
 
         {showPaymentInfo ? (
-          <section className="bg-surface rounded-[20px] p-5 clay-card border border-white/80">
+          <section className="bg-surface rounded-[10px] p-5 clay-card">
             <div className="flex items-center gap-2 mb-4">
               <Icon name="payments" className="text-brand-600 text-[20px]" />
               <span className="font-headline-2 text-headline-2 text-text-primary">Informasi Pembayaran</span>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-2xl bg-surface-container/60 p-3">
+              <div className="rounded-[8px] bg-surface-container-low border border-border p-3">
                 <p className="font-caption text-caption text-text-muted">Total Biaya</p>
-                <p className="font-body-bold text-body-bold text-text-primary mt-0.5">{formatRupiah(order.total_price)}</p>
+                <p className="font-body-bold text-body-bold text-text-primary mt-0.5 tabular-nums">{formatRupiah(order.total_price)}</p>
               </div>
-              <div className="rounded-2xl bg-surface-container/60 p-3">
+              <div className="rounded-[8px] bg-surface-container-low border border-border p-3">
                 <p className="font-caption text-caption text-text-muted">Sudah Dibayar</p>
-                <p className="font-body-bold text-body-bold text-success-text mt-0.5">{formatRupiah(order.paid_amount ?? 0)}</p>
+                <p className="font-body-bold text-body-bold text-emerald-600 mt-0.5 tabular-nums">{formatRupiah(order.paid_amount ?? 0)}</p>
               </div>
               {sisaPembayaran !== null ? (
-                <div className="col-span-2 rounded-2xl bg-warning-surface p-3">
-                  <p className="font-caption text-caption text-warning-text">Sisa Pembayaran</p>
-                  <p className="font-body-bold text-body-bold text-warning-text mt-0.5">{formatRupiah(sisaPembayaran)}</p>
+                <div className="col-span-2 rounded-[8px] bg-amber-50 border border-amber-200 p-3">
+                  <p className="font-caption text-caption text-amber-700">Sisa Pembayaran</p>
+                  <p className="font-body-bold text-body-bold text-amber-800 mt-0.5 tabular-nums">{formatRupiah(sisaPembayaran)}</p>
                 </div>
               ) : null}
             </div>
@@ -488,7 +488,7 @@ export default async function TrackPage({
           </section>
         ) : null}
 
-        <section className="bg-surface rounded-[20px] p-5 clay-card border border-white/80">
+        <section className="bg-surface rounded-[10px] p-5 clay-card">
           <div className="flex items-center gap-2 mb-4">
             <Icon name="timeline" className="text-brand-600 text-[20px]" />
             <span className="font-headline-2 text-headline-2 text-text-primary">
@@ -513,7 +513,7 @@ export default async function TrackPage({
                       <span
                         className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${
                           reached
-                            ? "primary-gradient text-on-primary"
+                            ? "primary-gradient clay-glow text-white"
                             : "bg-surface-container text-text-muted"
                         }`}
                       >
@@ -553,7 +553,7 @@ export default async function TrackPage({
         </section>
 
         {inspections.length > 0 ? (
-          <section className="bg-surface rounded-[20px] p-5 clay-card border border-white/80">
+          <section className="bg-surface rounded-[10px] p-5 clay-card">
             <div className="flex items-center gap-2 mb-4">
               <Icon name="photo_library" className="text-brand-600 text-[20px]" />
               <span className="font-headline-2 text-headline-2 text-text-primary">
@@ -573,7 +573,7 @@ export default async function TrackPage({
                       {items.map((item, idx) => (
                         <figure
                           key={`${phase}-${idx}`}
-                          className="rounded-2xl overflow-hidden bg-surface-container/60"
+                          className="rounded-[8px] overflow-hidden border border-border bg-surface-container/60"
                         >
                           {item.photo_url ? (
                             <InspectionPhoto
@@ -601,14 +601,14 @@ export default async function TrackPage({
         ) : null}
 
         {warranty ? (
-          <section className="bg-surface rounded-[20px] p-5 clay-card border border-white/80">
+          <section className="bg-surface rounded-[10px] p-5 clay-card">
             <div className="flex items-center gap-2 mb-4">
               <Icon name="verified_user" className="text-brand-600 text-[20px]" />
               <span className="font-headline-2 text-headline-2 text-text-primary">
                 Sertifikat Garansi
               </span>
             </div>
-            <div className="rounded-2xl bg-surface-container/60 p-4">
+            <div className="rounded-[8px] bg-surface-container-low border border-border p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-caption text-caption text-text-muted">
@@ -619,12 +619,12 @@ export default async function TrackPage({
                   </p>
                 </div>
                 <span
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-body-bold text-caption ${
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] border font-body-bold text-caption ${
                     warranty.status === "active"
-                      ? "bg-success-surface text-success-text"
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                       : warranty.status === "claimed"
-                        ? "bg-warning-surface text-warning-text"
-                        : "bg-surface-container text-text-secondary"
+                        ? "bg-amber-50 text-amber-700 border-amber-200"
+                        : "bg-surface-container text-text-secondary border-border"
                   }`}
                 >
                   {warranty.status === "active"
@@ -663,19 +663,19 @@ export default async function TrackPage({
                   {claims.map((claim, idx) => (
                     <div
                       key={idx}
-                      className="rounded-2xl bg-surface-container/60 p-3"
+                      className="rounded-[8px] bg-surface-container-low border border-border p-3"
                     >
                       <div className="flex items-center justify-between">
                         <span className="font-caption text-caption text-text-muted">
                           {formatDate(claim.claim_date)}
                         </span>
                         <span
-                          className={`inline-flex items-center px-2.5 py-1 rounded-full font-caption text-caption ${
+                          className={`inline-flex items-center px-2.5 py-1 rounded-[6px] border font-caption text-caption ${
                             claim.status === "approved"
-                              ? "bg-success-surface text-success-text"
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                               : claim.status === "rejected"
-                                ? "bg-danger-surface text-danger-text"
-                                : "bg-warning-surface text-warning-text"
+                                ? "bg-red-50 text-red-700 border-red-200"
+                                : "bg-amber-50 text-amber-700 border-amber-200"
                           }`}
                         >
                           {claim.status === "approved"
@@ -713,7 +713,7 @@ export default async function TrackPage({
           </section>
         ) : null}
 
-        <section className="bg-surface-overlay rounded-[20px] p-4">
+        <section className="bg-surface-overlay rounded-[10px] border border-border p-4">
           <div className="flex items-start gap-2.5">
             <Icon name="info" className="text-brand-600 text-[18px] shrink-0" />
             <p className="font-caption text-caption text-text-secondary leading-relaxed">

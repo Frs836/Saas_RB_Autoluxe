@@ -168,7 +168,7 @@ export function NotificationList({
             type="button"
             onClick={tandaiSemua}
             disabled={sibuk}
-            className="h-11 px-3 rounded-xl bg-surface-container-low text-text-secondary font-caption text-caption active:scale-95 transition-transform disabled:opacity-60"
+            className="h-11 px-3.5 rounded-[8px] border border-border bg-surface text-text-secondary font-caption text-caption hover:bg-surface-container transition-colors disabled:opacity-60"
           >
             {sibuk ? "Menyimpan..." : "Tandai semua"}
           </button>
@@ -180,7 +180,7 @@ export function NotificationList({
         value={cari}
         onChange={(e) => setCari(e.target.value)}
         placeholder="Cari notifikasi..."
-        className="h-11 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+        className="h-11 px-3.5 rounded-[8px] border border-border bg-surface font-body text-body text-text-primary outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
       />
 
       <div className="flex gap-2">
@@ -195,10 +195,10 @@ export function NotificationList({
             key={nilai}
             type="button"
             onClick={() => setSaring(nilai)}
-            className={`px-3 h-10 rounded-full font-caption text-caption ${
+            className={`px-3.5 h-10 rounded-[8px] font-caption text-caption transition-colors ${
               saring === nilai
-                ? "bg-primary text-white"
-                : "bg-surface-container-low text-text-secondary"
+                ? "primary-gradient clay-glow text-white"
+                : "border border-border bg-surface text-text-secondary hover:bg-surface-container"
             }`}
           >
             {label}
@@ -207,7 +207,7 @@ export function NotificationList({
       </div>
 
       {terlihat.length === 0 ? (
-        <p className="rounded-2xl bg-surface-container-low p-6 text-center font-caption text-caption text-text-secondary">
+        <p className="rounded-[10px] clay-card p-6 text-center font-caption text-caption text-text-secondary">
           {cari.trim() !== ""
             ? `Tidak ada notifikasi yang cocok dengan ${cari.trim()}.`
             : "Belum ada notifikasi pada filter ini."}
@@ -222,14 +222,14 @@ export function NotificationList({
                   setTerbuka(b.id);
                   if (!b.is_read) void tandaiDibaca(b.id);
                 }}
-                className={`w-full text-left rounded-2xl p-3 flex items-start gap-3 active:scale-[0.99] transition-transform ${
-                  b.is_read ? "bg-surface-container-low" : "bg-surface-container-high"
+                className={`w-full text-left rounded-[10px] clay-card p-3.5 flex items-start gap-3 hover:bg-surface-container transition-colors ${
+                  b.is_read ? "opacity-75" : ""
                 }`}
               >
                 {!b.is_read ? (
                   <span
                     aria-label="Belum dibaca"
-                    className="mt-1 w-2.5 h-2.5 rounded-full bg-primary shrink-0"
+                    className="mt-1 w-2.5 h-2.5 rounded-full bg-brand-500 shrink-0 shadow-sm"
                   />
                 ) : (
                   <span className="mt-1 w-2.5 h-2.5 shrink-0" />
@@ -322,7 +322,7 @@ function DetailNotifikasi({
       role="dialog"
       aria-modal="true"
       aria-label={baris.title}
-      className="fixed inset-0 z-[90] bg-black/50 flex items-end sm:items-center justify-center"
+      className="fixed inset-0 z-[90] bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
       onClick={onTutup}
     >
       <div
@@ -330,7 +330,7 @@ function DetailNotifikasi({
         onKeyDown={(e) => {
           if (e.key === "Escape") onTutup();
         }}
-        className="w-full sm:max-w-lg bg-surface rounded-t-2xl sm:rounded-2xl p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] flex flex-col gap-3 max-h-[85vh] overflow-y-auto"
+        className="w-full sm:max-w-lg bg-surface rounded-t-[10px] sm:rounded-[10px] border border-border shadow-2xl p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] flex flex-col gap-3 max-h-[85vh] overflow-y-auto"
       >
         <div className="flex items-start justify-between gap-2">
           <div className="flex flex-col gap-1">
@@ -343,7 +343,7 @@ function DetailNotifikasi({
             type="button"
             onClick={onTutup}
             aria-label="Tutup"
-            className="grid place-items-center w-11 h-11 rounded-full bg-surface-container-low"
+            className="grid place-items-center w-10 h-10 rounded-[8px] border border-border bg-surface text-text-secondary hover:bg-surface-container transition-colors"
           >
             <Icon name="close" className="text-[20px]" />
           </button>
@@ -358,7 +358,7 @@ function DetailNotifikasi({
             <Link
               href={`/pos/orders/${orderId}`}
               onClick={onTutup}
-              className="h-11 rounded-xl bg-surface-container-low text-text-primary font-caption text-caption flex items-center justify-center gap-2"
+              className="h-11 rounded-[8px] border border-border bg-surface text-text-primary font-caption text-caption flex items-center justify-center gap-2 hover:bg-surface-container transition-colors"
             >
               <Icon name="receipt_long" className="text-[18px]" />
               Buka detail order
@@ -370,7 +370,7 @@ function DetailNotifikasi({
               type="button"
               onClick={mulaiPengerjaan}
               disabled={sibuk}
-              className="h-11 rounded-xl bg-primary text-white font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-60"
+              className="h-11 rounded-[8px] primary-gradient clay-glow text-white font-body-bold text-body-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-60"
             >
               <Icon name={sibuk ? "hourglass_top" : "play_arrow"} className="text-[18px]" />
               {sibuk ? "Mengirim..." : "Kerjakan sekarang"}

@@ -430,7 +430,7 @@ export function RecipeManager({
               value={qty[key]}
               onChange={(e) => setQty({ ...qty, [key]: e.target.value })}
               disabled={disabled || sibuk}
-              className="h-11 rounded-2xl bg-surface px-3 font-body text-body text-text-primary text-center outline-none focus:ring-2 focus:ring-brand-400"
+              className="h-11 rounded-[8px] border border-border bg-surface px-3 font-body text-body text-text-primary text-center outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
               placeholder="—"
               aria-label={SIZE_LABELS[key].label}
             />
@@ -445,10 +445,10 @@ export function RecipeManager({
   return (
     <main className="flex-1 px-gutter pt-4 pb-nav-plain lg:pb-8 flex flex-col gap-3 lg:grid lg:grid-cols-3 lg:gap-6 lg:px-6 lg:py-6 lg:items-start">
       {error ? (
-        <p className="clay-card p-3 font-body text-body text-danger-text lg:col-span-3">{error}</p>
+        <p className="clay-card rounded-[10px] p-3 font-body text-body text-danger-text lg:col-span-3 border border-red-200 bg-red-50">{error}</p>
       ) : null}
       {sukses ? (
-        <p className="clay-card p-3 font-body text-body text-success-text lg:col-span-3">{sukses}</p>
+        <p className="clay-card rounded-[10px] p-3 font-body text-body text-success-text lg:col-span-3 border border-emerald-200 bg-emerald-50">{sukses}</p>
       ) : null}
 
       {/* Left column */}
@@ -464,7 +464,7 @@ export function RecipeManager({
               resetForm();
               resetBundleForm();
             }}
-            className="h-12 rounded-2xl bg-surface px-3 font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+            className="h-11 px-3.5 rounded-[8px] border border-border bg-surface font-body text-body text-text-primary outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
           >
             {services.map((row) => (
               <option key={row.id} value={row.id}>
@@ -474,7 +474,7 @@ export function RecipeManager({
           </select>
         </label>
 
-        <section className="clay-card p-4 flex flex-col gap-3">
+        <section className="clay-card rounded-[10px] p-4 flex flex-col gap-3">
           <div className="flex items-start justify-between gap-2">
             <div>
               <h2 className="font-headline-3 text-headline-3 text-text-primary">
@@ -484,7 +484,7 @@ export function RecipeManager({
                 {service ? service.name : "Belum ada jasa dipilih"}
               </p>
             </div>
-            <span className="shrink-0 rounded-full bg-brand-50 px-3 py-1 font-caption text-caption text-brand-700">
+            <span className="shrink-0 rounded-[6px] border border-brand-200 bg-brand-50 px-2.5 py-0.5 font-micro-badge text-micro-badge text-brand-700">
               {totalBahan} bahan
             </span>
           </div>
@@ -500,9 +500,9 @@ export function RecipeManager({
               {rows.map((row) => (
                 <li
                   key={`item-${row.item_id}`}
-                  className="flex items-center gap-3 rounded-2xl bg-surface p-3"
+                  className="flex items-center gap-3 rounded-[8px] border border-border bg-surface p-3"
                 >
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-[8px] border border-brand-200 bg-brand-50 text-brand-600">
                     <Icon name="inventory_2" className="text-[20px]" />
                   </span>
                   <div className="min-w-0 flex-1">
@@ -527,7 +527,7 @@ export function RecipeManager({
                     type="button"
                     disabled={sibuk}
                     onClick={() => isiFormDariRow(row)}
-                    className="min-h-10 rounded-xl px-2 font-caption text-caption text-brand-600 disabled:opacity-50"
+                    className="min-h-10 rounded-[8px] px-2.5 font-caption text-caption text-brand-600 hover:bg-brand-50 transition-colors disabled:opacity-50"
                   >
                     Ubah
                   </button>
@@ -538,7 +538,7 @@ export function RecipeManager({
                       setItemId(row.item_id);
                       void kirim(true);
                     }}
-                    className="flex h-10 w-10 items-center justify-center rounded-xl text-danger-text disabled:opacity-50"
+                    className="flex h-10 w-10 items-center justify-center rounded-[8px] text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
                     aria-label={`Hapus ${row.item.item_name} dari resep`}
                   >
                     <Icon name="delete" className="text-[20px]" />
@@ -550,9 +550,9 @@ export function RecipeManager({
               {bundleRows.map((row) => (
                 <li
                   key={`bundle-${row.bundle_item_id}`}
-                  className="flex items-center gap-3 rounded-2xl bg-surface p-3"
+                  className="flex items-center gap-3 rounded-[8px] border border-border bg-surface p-3"
                 >
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-50 text-purple-600">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-[8px] border border-purple-200 bg-purple-50 text-purple-600">
                     <Icon name="science" className="text-[20px]" />
                   </span>
                   <div className="min-w-0 flex-1">
@@ -560,7 +560,7 @@ export function RecipeManager({
                       <p className="truncate font-body-bold text-body-bold text-text-primary">
                         {row.bundle.bundle_name}
                       </p>
-                      <span className="shrink-0 rounded-full bg-purple-100 px-2 py-0.5 font-caption text-caption text-purple-700 text-[10px]">
+                      <span className="shrink-0 rounded-[6px] border border-purple-200 bg-purple-100 px-2 py-0.5 font-micro-badge text-micro-badge text-purple-700">
                         Racikan
                       </span>
                     </div>
@@ -581,7 +581,7 @@ export function RecipeManager({
                     type="button"
                     disabled={sibuk}
                     onClick={() => isiFormBundleDariRow(row)}
-                    className="min-h-10 rounded-xl px-2 font-caption text-caption text-brand-600 disabled:opacity-50"
+                    className="min-h-10 rounded-[8px] px-2.5 font-caption text-caption text-brand-600 hover:bg-brand-50 transition-colors disabled:opacity-50"
                   >
                     Ubah
                   </button>
@@ -592,7 +592,7 @@ export function RecipeManager({
                       setBundleId(row.bundle_item_id);
                       void kirimBundle(true);
                     }}
-                    className="flex h-10 w-10 items-center justify-center rounded-xl text-danger-text disabled:opacity-50"
+                    className="flex h-10 w-10 items-center justify-center rounded-[8px] text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
                     aria-label={`Hapus ${row.bundle.bundle_name} dari resep`}
                   >
                     <Icon name="delete" className="text-[20px]" />
@@ -603,16 +603,16 @@ export function RecipeManager({
           )}
 
           {rows.length > 0 ? (
-            <div className="p-3.5 rounded-2xl bg-brand-50/70 border border-brand-100 flex flex-col gap-2 mt-2">
+            <div className="p-3.5 rounded-[8px] bg-brand-50 border border-brand-200 flex flex-col gap-2 mt-2">
               <div className="flex items-center gap-1.5 text-brand-900 font-headline-3 text-caption font-bold">
                 <Icon name="paid" className="text-[18px] text-brand-600" />
                 <span>Estimasi Modal Bahan (HPP) per Ukuran</span>
               </div>
               <div className="grid grid-cols-4 gap-1.5 text-center">
                 {SIZE_KEYS_MOBIL.map((k) => (
-                  <div key={k} className="p-2 rounded-xl bg-surface border border-brand-100 shadow-sm">
+                  <div key={k} className="p-2 rounded-[6px] bg-surface border border-brand-200 shadow-sm">
                     <div className="text-[10px] text-text-muted font-medium">{SIZE_LABELS[k].label}</div>
-                    <div className="font-bold text-xs text-brand-700 mt-0.5">
+                    <div className="font-bold text-xs text-brand-700 mt-0.5 tabular-nums">
                       Rp {costPerSize[k].toLocaleString("id-ID")}
                     </div>
                   </div>
@@ -627,7 +627,7 @@ export function RecipeManager({
       <div className="lg:col-span-2 flex flex-col gap-3">
         {/* Section stok biasa */}
         {items.length > 0 && (
-          <section className="clay-card p-4 flex flex-col gap-3">
+          <section className="clay-card rounded-[10px] p-4 flex flex-col gap-3">
             <h2 className="font-headline-3 text-headline-3 text-text-primary">
               Tambah / ubah bahan
             </h2>
@@ -640,7 +640,7 @@ export function RecipeManager({
                   setItemId(e.target.value);
                   resetForm();
                 }}
-                className="h-12 rounded-2xl bg-surface px-3 font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+                className="h-11 px-3.5 rounded-[8px] border border-border bg-surface font-body text-body text-text-primary outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
               >
                 {items.map((item) => (
                   <option key={item.id} value={item.id}>
@@ -651,14 +651,14 @@ export function RecipeManager({
             </label>
 
             {/* Tabs Mobil / Motor */}
-            <div className="flex gap-1 bg-surface rounded-xl p-1">
+            <div className="flex gap-1 bg-surface-container-low border border-border rounded-[8px] p-1">
               <button
                 type="button"
                 onClick={() => setActiveTab("mobil")}
-                className={`flex-1 h-10 rounded-lg font-body-bold text-body-bold transition-colors ${
+                className={`flex-1 h-9 rounded-[6px] font-body-bold text-caption transition-colors ${
                   activeTab === "mobil"
-                    ? "bg-brand-600 text-white"
-                    : "text-text-secondary hover:bg-brand-50"
+                    ? "primary-gradient clay-glow text-white"
+                    : "text-text-secondary hover:bg-surface-container"
                 }`}
               >
                 Mobil (S, M, L, XL)
@@ -666,10 +666,10 @@ export function RecipeManager({
               <button
                 type="button"
                 onClick={() => setActiveTab("motor")}
-                className={`flex-1 h-10 rounded-lg font-body-bold text-body-bold transition-colors ${
+                className={`flex-1 h-9 rounded-[6px] font-body-bold text-caption transition-colors ${
                   activeTab === "motor"
-                    ? "bg-brand-600 text-white"
-                    : "text-text-secondary hover:bg-brand-50"
+                    ? "primary-gradient clay-glow text-white"
+                    : "text-text-secondary hover:bg-surface-container"
                 }`}
               >
                 Motor (S, M, L, XL)
@@ -689,7 +689,7 @@ export function RecipeManager({
                 type="button"
                 disabled={sibuk || !serviceId || !itemId}
                 onClick={() => void kirim(false)}
-                className="flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-brand-600 px-4 font-body-bold text-body-bold text-white active:scale-[0.99] disabled:opacity-50"
+                className="flex h-11 items-center justify-center gap-2 rounded-[8px] primary-gradient clay-glow px-4 font-body-bold text-body-bold text-white hover:opacity-90 transition-opacity disabled:opacity-50"
               >
                 <Icon name="add" className="text-[20px]" />
                 {sibuk ? "Menyimpan..." : "Simpan bahan"}
@@ -700,9 +700,9 @@ export function RecipeManager({
 
         {/* Section bahan racikan */}
         {bundles.length > 0 && (
-          <section className="clay-card p-4 flex flex-col gap-3">
+          <section className="clay-card rounded-[10px] p-4 flex flex-col gap-3">
             <div className="flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-purple-50 text-purple-600">
+              <span className="flex h-8 w-8 items-center justify-center rounded-[8px] border border-purple-200 bg-purple-50 text-purple-600">
                 <Icon name="science" className="text-[18px]" />
               </span>
               <h2 className="font-headline-3 text-headline-3 text-text-primary">
@@ -718,7 +718,7 @@ export function RecipeManager({
                   setBundleId(e.target.value);
                   resetBundleForm();
                 }}
-                className="h-12 rounded-2xl bg-surface px-3 font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+                className="h-11 px-3.5 rounded-[8px] border border-border bg-surface font-body text-body text-text-primary outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
               >
                 {bundles.map((b) => (
                   <option key={b.id} value={b.id}>
@@ -732,14 +732,14 @@ export function RecipeManager({
             </label>
 
             {/* Tabs Mobil / Motor untuk racikan */}
-            <div className="flex gap-1 bg-surface rounded-xl p-1">
+            <div className="flex gap-1 bg-surface-container-low border border-border rounded-[8px] p-1">
               <button
                 type="button"
                 onClick={() => setBundleActiveTab("mobil")}
-                className={`flex-1 h-10 rounded-lg font-body-bold text-body-bold transition-colors ${
+                className={`flex-1 h-9 rounded-[6px] font-body-bold text-caption transition-colors ${
                   bundleActiveTab === "mobil"
-                    ? "bg-purple-600 text-white"
-                    : "text-text-secondary hover:bg-purple-50"
+                    ? "bg-purple-600 text-white shadow-sm"
+                    : "text-text-secondary hover:bg-surface-container"
                 }`}
               >
                 Mobil (S, M, L, XL)
@@ -747,10 +747,10 @@ export function RecipeManager({
               <button
                 type="button"
                 onClick={() => setBundleActiveTab("motor")}
-                className={`flex-1 h-10 rounded-lg font-body-bold text-body-bold transition-colors ${
+                className={`flex-1 h-9 rounded-[6px] font-body-bold text-caption transition-colors ${
                   bundleActiveTab === "motor"
-                    ? "bg-purple-600 text-white"
-                    : "text-text-secondary hover:bg-purple-50"
+                    ? "bg-purple-600 text-white shadow-sm"
+                    : "text-text-secondary hover:bg-surface-container"
                 }`}
               >
                 Motor (S, M, L, XL)
@@ -770,7 +770,7 @@ export function RecipeManager({
                 type="button"
                 disabled={sibuk || !serviceId || !bundleId}
                 onClick={() => void kirimBundle(false)}
-                className="flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-purple-600 px-4 font-body-bold text-body-bold text-white active:scale-[0.99] disabled:opacity-50"
+                className="flex h-11 items-center justify-center gap-2 rounded-[8px] bg-purple-600 hover:bg-purple-700 px-4 font-body-bold text-body-bold text-white transition-colors disabled:opacity-50 shadow-sm"
               >
                 <Icon name="science" className="text-[20px]" />
                 {sibuk ? "Menyimpan..." : "Simpan bahan racikan"}

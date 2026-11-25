@@ -266,7 +266,7 @@ export function WhatsappConsole({
   return (
     <div className="min-h-screen bg-canvas">
       <div className="pb-nav-plain lg:pb-8 px-gutter pt-4 space-y-space-lg lg:grid lg:grid-cols-2 lg:gap-6 lg:px-6 lg:py-6 lg:items-start">
-        <section className="clay-card flex flex-col gap-space-md p-space-lg lg:col-span-1">
+        <section className="clay-card rounded-[10px] flex flex-col gap-space-md p-space-lg lg:col-span-1">
           <div className="flex items-center justify-between gap-3">
             <div>
               <h2 className="font-headline-2 text-headline-2 text-text-primary">
@@ -276,7 +276,7 @@ export function WhatsappConsole({
                 Draf otomatis dari data order {branchName}
               </p>
             </div>
-            <span className="px-2 py-0.5 rounded-full bg-brand-50 text-brand-600 font-micro-badge text-micro-badge whitespace-nowrap">
+            <span className="px-2.5 py-0.5 rounded-[6px] border border-brand-200 bg-brand-50 text-brand-600 font-micro-badge text-micro-badge whitespace-nowrap">
               {orders.length} order
             </span>
           </div>
@@ -287,10 +287,10 @@ export function WhatsappConsole({
                 key={tpl.key}
                 type="button"
                 onClick={() => setTemplate(tpl.key)}
-                className={`px-3 py-2 min-h-10 rounded-xl font-caption text-caption whitespace-nowrap flex items-center gap-1 ${
+                className={`px-3 py-2 min-h-10 rounded-[8px] font-caption text-caption whitespace-nowrap flex items-center gap-1 transition-colors ${
                   template === tpl.key
-                    ? "bg-brand-50 text-brand-600"
-                    : "bg-surface-container-low text-text-secondary"
+                    ? "primary-gradient clay-glow text-white"
+                    : "border border-border bg-surface text-text-secondary hover:bg-surface-container"
                 }`}
               >
                 <Icon name={tpl.icon} className="text-[15px]" />
@@ -309,7 +309,7 @@ export function WhatsappConsole({
                 onChange={(event) => setFreeText(event.target.value)}
                 rows={5}
                 placeholder="Tulis pesan bebas untuk pelanggan..."
-                className="rounded-xl bg-surface px-3 py-2 font-body-regular text-body-regular text-text-primary shadow-[inset_0px_2px_4px_rgba(15,23,42,0.06)]"
+                className="rounded-[8px] border border-border bg-surface px-3.5 py-2.5 font-body text-body text-text-primary outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
               />
             </label>
           ) : (
@@ -320,7 +320,7 @@ export function WhatsappConsole({
               <select
                 value={selectedId}
                 onChange={(event) => setSelectedId(event.target.value)}
-                className="h-12 rounded-xl bg-surface px-3 font-body-regular text-body-regular text-text-primary shadow-[inset_0px_2px_4px_rgba(15,23,42,0.06)]"
+                className="h-11 rounded-[8px] border border-border bg-surface px-3 font-body text-body text-text-primary outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
               >
                 <option value="">Pilih order...</option>
                 {orders.map((order) => (
@@ -333,7 +333,7 @@ export function WhatsappConsole({
           )}
 
           {selected && template !== "custom" ? (
-            <div className="rounded-xl bg-surface-container-low px-3 py-2.5 flex flex-col gap-1">
+            <div className="rounded-[8px] bg-surface-container-low border border-border px-3.5 py-2.5 flex flex-col gap-1">
               <div className="flex items-center justify-between gap-2">
                 <span className="font-caption text-caption text-text-secondary">
                   Pelanggan
@@ -371,7 +371,7 @@ export function WhatsappConsole({
             </div>
           ) : null}
 
-          <div className="clay-card p-space-md flex flex-col gap-space-xs bg-surface">
+          <div className="clay-card rounded-[8px] p-space-md flex flex-col gap-space-xs bg-surface border border-border">
             <div className="flex items-center justify-between">
               <p className="font-body-bold text-body-bold text-text-primary">
                 Pratinjau Pesan
@@ -391,7 +391,7 @@ export function WhatsappConsole({
                 href={waHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="h-[50px] rounded-full bg-gradient-to-r from-emerald-600 to-whatsapp flex items-center justify-center gap-2 text-on-primary font-body-bold text-body-bold shadow-[0px_10px_22px_rgba(34,197,94,0.32)]"
+                className="h-11 rounded-[8px] bg-whatsapp text-white flex items-center justify-center gap-2 font-body-bold text-body-bold hover:opacity-90 transition-opacity shadow-sm"
               >
                 <Icon name="chat" />
                 {phone
@@ -404,7 +404,7 @@ export function WhatsappConsole({
               <button
                 type="button"
                 onClick={copyMessage}
-                className="h-12 rounded-2xl bg-surface-container-low text-text-secondary font-caption text-caption flex items-center justify-center gap-2"
+                className="h-11 rounded-[8px] border border-border bg-surface text-text-secondary font-caption text-caption flex items-center justify-center gap-2 hover:bg-surface-container transition-colors"
               >
                 <Icon name={copied ? "check" : "content_copy"} className="text-[18px]" />
                 {copied ? "Tersalin" : "Salin pesan"}
@@ -412,7 +412,7 @@ export function WhatsappConsole({
               <button
                 type="button"
                 onClick={() => setTemplate("custom")}
-                className="h-12 rounded-2xl bg-surface-container-low text-text-secondary font-caption text-caption flex items-center justify-center gap-2"
+                className="h-11 rounded-[8px] border border-border bg-surface text-text-secondary font-caption text-caption flex items-center justify-center gap-2 hover:bg-surface-container transition-colors"
               >
                 <Icon name="edit_note" className="text-[18px]" />
                 Tulis sendiri
@@ -421,7 +421,7 @@ export function WhatsappConsole({
           </div>
         </section>
 
-        <section className="clay-card flex flex-col gap-space-md p-space-lg lg:col-span-1">
+        <section className="clay-card rounded-[10px] flex flex-col gap-space-md p-space-lg lg:col-span-1">
           <div className="flex items-center justify-between">
             <h2 className="font-headline-2 text-headline-2 text-text-primary">
               Order dengan Nomor WhatsApp

@@ -85,7 +85,7 @@ function FaceReferencePhoto({
 
   if (!path || gagal) {
     return (
-      <div className="rounded-xl bg-surface-container-low p-4 flex flex-col items-center gap-1.5 text-center">
+      <div className="rounded-[8px] bg-surface-container-low border border-border p-4 flex flex-col items-center gap-1.5 text-center">
         <Icon name="no_photography" className="text-[22px] text-text-muted" />
         <p className="font-caption text-caption text-text-secondary">
           {path
@@ -98,7 +98,7 @@ function FaceReferencePhoto({
 
   return (
     <figure className="flex flex-col gap-1.5">
-      <div className="rounded-xl overflow-hidden bg-[#0F172A] aspect-[4/3] lg:aspect-[3/4]">
+      <div className="rounded-[8px] overflow-hidden bg-[#0F172A] aspect-[4/3] lg:aspect-[3/4]">
         {url ? (
           <img
             src={url}
@@ -187,8 +187,8 @@ export function FaceVerificationList({
   // Padding bawah memperhitungkan bilah navigasi dan safe area, supaya tombol
   // Setujui dan Tolak pada kartu terakhir tidak tertutup.
   return (
-      <div className="px-gutter pt-4 pb-nav-plain lg:pb-8 flex flex-col gap-3">
-      <section className="clay-card p-4 flex items-center justify-between gap-3">
+    <div className="px-gutter pt-4 pb-nav-plain lg:pb-8 flex flex-col gap-3">
+      <section className="clay-card rounded-[10px] p-4 flex items-center justify-between gap-3">
         <div>
           <h1 className="font-headline-2 text-headline-2 text-text-primary">
             Verifikasi Wajah Master
@@ -203,7 +203,7 @@ export function FaceVerificationList({
       </section>
 
       {pendingCount > 0 ? (
-        <p className="rounded-xl bg-warning-surface text-warning-text p-3 font-caption text-caption leading-relaxed">
+        <p className="rounded-[8px] bg-amber-50 text-amber-800 border border-amber-200 p-3 font-caption text-caption leading-relaxed">
           Staf dengan sampel berstatus menunggu tidak dapat melakukan absensi
           sampai Anda meninjaunya. Mendaftarkan ulang wajah akan mengembalikan
           status ke menunggu.
@@ -211,12 +211,12 @@ export function FaceVerificationList({
       ) : null}
 
       {error ? (
-        <p className="rounded-xl bg-danger-surface text-danger-text p-3 font-caption text-caption">
+        <p className="rounded-[8px] bg-red-50 text-red-800 border border-red-200 p-3 font-caption text-caption">
           {error}
         </p>
       ) : null}
       {success ? (
-        <p className="rounded-xl bg-success-surface text-success-text p-3 font-caption text-caption">
+        <p className="rounded-[8px] bg-emerald-50 text-emerald-800 border border-emerald-200 p-3 font-caption text-caption">
           {success}
         </p>
       ) : null}
@@ -227,7 +227,7 @@ export function FaceVerificationList({
         const busy = busyId === row.profile_id;
 
         return (
-          <section key={row.profile_id} className="clay-card p-4 flex flex-col gap-2.5">
+          <section key={row.profile_id} className="clay-card rounded-[10px] p-4 flex flex-col gap-2.5">
             <div className="flex items-start justify-between gap-2">
               <div className="flex flex-col gap-0.5">
                 <span className="font-body-bold text-body-bold text-text-primary">
@@ -238,14 +238,14 @@ export function FaceVerificationList({
                 </span>
               </div>
               <span
-                className={`px-2 py-0.5 rounded-full font-micro-badge text-micro-badge ${meta.cls}`}
+                className={`px-2 py-0.5 rounded-[6px] border font-micro-badge text-micro-badge ${meta.cls}`}
               >
                 {meta.label}
               </span>
             </div>
 
             {row.face_review_note ? (
-              <p className="font-caption text-caption text-text-secondary bg-surface-container-low rounded-lg px-2.5 py-2">
+              <p className="font-caption text-caption text-text-secondary bg-surface-container-low border border-border rounded-[8px] px-2.5 py-2">
                 Catatan: {row.face_review_note}
               </p>
             ) : null}
@@ -262,7 +262,7 @@ export function FaceVerificationList({
                   setNote((prev) => ({ ...prev, [row.profile_id]: e.target.value }))
                 }
                 placeholder="Wajib bila menolak, contoh: wajah kurang terang"
-                className="h-11 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+                className="h-11 px-3.5 rounded-[8px] border border-border bg-surface font-body text-body text-text-primary outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
               />
             </label>
 
@@ -271,7 +271,7 @@ export function FaceVerificationList({
                 type="button"
                 disabled={busy}
                 onClick={() => review(row.profile_id, true)}
-                className="flex-1 h-11 rounded-xl bg-success-base text-white font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform disabled:opacity-60"
+                className="flex-1 h-11 rounded-[8px] bg-emerald-600 hover:bg-emerald-700 text-white font-caption text-caption flex items-center justify-center gap-1.5 transition-colors disabled:opacity-60 shadow-sm"
               >
                 <Icon name={busy ? "hourglass_top" : "check"} className="text-[18px]" />
                 Setujui
@@ -280,7 +280,7 @@ export function FaceVerificationList({
                 type="button"
                 disabled={busy}
                 onClick={() => review(row.profile_id, false)}
-                className="flex-1 h-11 rounded-xl bg-danger-base text-white font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform disabled:opacity-60"
+                className="flex-1 h-11 rounded-[8px] bg-red-600 hover:bg-red-700 text-white font-caption text-caption flex items-center justify-center gap-1.5 transition-colors disabled:opacity-60 shadow-sm"
               >
                 <Icon name="close" className="text-[18px]" />
                 Tolak

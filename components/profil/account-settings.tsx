@@ -181,10 +181,10 @@ export function AccountSettings({
         <div
           role="status"
           aria-live="polite"
-          className={`rounded-2xl px-3.5 py-2.5 text-caption ${
+          className={`rounded-[8px] px-3.5 py-2.5 text-caption border ${
             pesan.ok
-              ? "bg-success-surface text-success-text"
-              : "bg-danger-surface text-danger-text"
+              ? "bg-success-surface text-success-text border-success-base/30"
+              : "bg-danger-surface text-danger-text border-red-200"
           }`}
         >
           {pesan.message}
@@ -192,7 +192,7 @@ export function AccountSettings({
       ) : null}
 
       {/* Foto profil */}
-      <section className="bg-surface rounded-[20px] p-4 clay-card border border-white/80">
+      <section className="bg-surface rounded-[10px] p-4 clay-card border border-white/80">
         <div className="flex items-center gap-2 mb-3">
           <Icon name="account_circle" className="text-brand-600 text-[18px]" />
           <span className="font-body-bold text-body-bold text-text-primary">Foto Profil</span>
@@ -203,15 +203,15 @@ export function AccountSettings({
               <img
                 src={tampilFoto}
                 alt="Foto profil Anda"
-                className="w-20 h-20 rounded-[20px] object-cover border border-white/80"
+                className="w-20 h-20 rounded-full object-cover border border-white/80"
               />
             ) : (
-              <div className="w-20 h-20 rounded-[20px] bg-brand-50 text-brand-600 flex items-center justify-center font-headline-2 text-headline-2">
+              <div className="w-20 h-20 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center font-headline-2 text-headline-2">
                 {initials(form.nama)}
               </div>
             )}
             {sibuk === "foto" ? (
-              <div className="absolute inset-0 rounded-[20px] bg-black/50 flex items-center justify-center">
+              <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center">
                 <Icon name="progress_activity" className="text-white text-[20px] animate-spin" />
               </div>
             ) : null}
@@ -231,7 +231,7 @@ export function AccountSettings({
               type="button"
               onClick={() => fileRef.current?.click()}
               disabled={sibuk !== null}
-              className="h-10 rounded-full bg-brand-50 text-brand-700 font-body-bold text-body-bold flex items-center justify-center gap-2 disabled:opacity-60"
+              className="h-10 rounded-[8px] bg-brand-50 hover:bg-brand-100 text-brand-700 font-body-bold text-body-bold flex items-center justify-center gap-2 transition-colors disabled:opacity-60"
             >
               <Icon name="photo_camera" className="text-[18px]" />
               {avatar ? "Ganti Foto" : "Unggah Foto"}
@@ -241,7 +241,7 @@ export function AccountSettings({
                 type="button"
                 onClick={buangFoto}
                 disabled={sibuk !== null}
-                className="h-10 rounded-full bg-danger-surface text-danger-text font-body-bold text-body-bold flex items-center justify-center gap-2 disabled:opacity-60"
+                className="h-10 rounded-[8px] bg-danger-surface hover:bg-danger-surface/80 text-danger-text font-body-bold text-body-bold flex items-center justify-center gap-2 transition-colors disabled:opacity-60"
               >
                 <Icon name="delete" className="text-[18px]" />
                 Hapus Foto
@@ -255,7 +255,7 @@ export function AccountSettings({
       </section>
 
       {/* Data diri — tombol pembuka modal */}
-      <section className="bg-surface rounded-[20px] p-4 clay-card border border-white/80">
+      <section className="bg-surface rounded-[10px] p-4 clay-card border border-white/80">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <Icon name="badge" className="text-brand-600 text-[18px]" />
@@ -267,7 +267,7 @@ export function AccountSettings({
           <button
             type="button"
             onClick={() => setModalDataDiri(true)}
-            className="h-9 px-4 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center gap-1.5 active:scale-95 transition-transform"
+            className="h-9 px-4 rounded-[8px] bg-brand-50 hover:bg-brand-100 text-brand-700 font-caption text-caption flex items-center gap-1.5 transition-colors"
           >
             <Icon name="edit" className="text-[16px]" />
             Ubah
@@ -276,7 +276,7 @@ export function AccountSettings({
       </section>
 
       {/* Email — tombol pembuka modal */}
-      <section className="bg-surface rounded-[20px] p-4 clay-card border border-white/80">
+      <section className="bg-surface rounded-[10px] p-4 clay-card border border-white/80">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <Icon name="mail" className="text-brand-600 text-[18px]" />
@@ -288,7 +288,7 @@ export function AccountSettings({
           <button
             type="button"
             onClick={() => setModalEmail(true)}
-            className="h-9 px-4 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center gap-1.5 active:scale-95 transition-transform shrink-0"
+            className="h-9 px-4 rounded-[8px] bg-brand-50 hover:bg-brand-100 text-brand-700 font-caption text-caption flex items-center gap-1.5 transition-colors shrink-0"
           >
             <Icon name="edit" className="text-[16px]" />
             Ganti
@@ -297,7 +297,7 @@ export function AccountSettings({
       </section>
 
       {/* Kata sandi — tombol pembuka modal */}
-      <section className="bg-surface rounded-[20px] p-4 clay-card border border-white/80">
+      <section className="bg-surface rounded-[10px] p-4 clay-card border border-white/80">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <Icon name="lock" className="text-brand-600 text-[18px]" />
@@ -309,7 +309,7 @@ export function AccountSettings({
           <button
             type="button"
             onClick={() => setModalSandi(true)}
-            className="h-9 px-4 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center gap-1.5 active:scale-95 transition-transform shrink-0"
+            className="h-9 px-4 rounded-[8px] bg-brand-50 hover:bg-brand-100 text-brand-700 font-caption text-caption flex items-center gap-1.5 transition-colors shrink-0"
           >
             <Icon name="lock_reset" className="text-[16px]" />
             Ganti
@@ -329,7 +329,7 @@ export function AccountSettings({
             value={form.nama}
             onChange={(e) => setForm({ ...form, nama: e.target.value })}
             maxLength={120}
-            className="h-11 rounded-2xl bg-surface-container-low px-3.5 font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-500/40"
+            className="h-11 rounded-[8px] bg-surface-container-low px-3.5 font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-500/40"
           />
         </label>
         <label className="flex flex-col gap-1">
@@ -340,7 +340,7 @@ export function AccountSettings({
             inputMode="tel"
             maxLength={25}
             placeholder="08xxxxxxxxxx"
-            className="h-11 rounded-2xl bg-surface-container-low px-3.5 font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-500/40"
+            className="h-11 rounded-[8px] bg-surface-container-low px-3.5 font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-500/40"
           />
         </label>
         <label className="flex flex-col gap-1">
@@ -349,14 +349,14 @@ export function AccountSettings({
             type="date"
             value={form.tanggalLahir}
             onChange={(e) => setForm({ ...form, tanggalLahir: e.target.value })}
-            className="h-11 rounded-2xl bg-surface-container-low px-3.5 font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-500/40"
+            className="h-11 rounded-[8px] bg-surface-container-low px-3.5 font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-500/40"
           />
         </label>
         <button
           type="button"
           onClick={kirimData}
           disabled={sibuk !== null}
-          className="mt-1 h-11 rounded-full bg-brand-600 text-white font-body-bold text-body-bold flex items-center justify-center gap-2 disabled:opacity-60"
+          className="mt-1 h-11 rounded-[8px] primary-gradient clay-glow text-white font-body-bold text-body-bold flex items-center justify-center gap-2 hover:opacity-95 transition-opacity disabled:opacity-60"
         >
           {sibuk === "data" ? (
             <Icon name="progress_activity" className="text-[18px] animate-spin" />
@@ -381,7 +381,7 @@ export function AccountSettings({
           onChange={(e) => setEmailBaru(e.target.value)}
           type="email"
           placeholder="Email baru (@gmail.com, @yahoo.com, dll)"
-          className="h-11 rounded-2xl bg-surface-container-low px-3.5 font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-500/40"
+          className="h-11 rounded-[8px] bg-surface-container-low px-3.5 font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-500/40"
         />
         <input
           value={sandiLama}
@@ -389,13 +389,13 @@ export function AccountSettings({
           type="password"
           placeholder="Password lama untuk konfirmasi"
           autoComplete="current-password"
-          className="h-11 rounded-2xl bg-surface-container-low px-3.5 font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-500/40"
+          className="h-11 rounded-[8px] bg-surface-container-low px-3.5 font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-500/40"
         />
         <button
           type="button"
           onClick={kirimEmail}
           disabled={sibuk !== null || emailBaru.length === 0 || sandiLama.length === 0}
-          className="h-11 rounded-full bg-brand-600 text-white font-body-bold text-body-bold flex items-center justify-center gap-2 disabled:opacity-60"
+          className="h-11 rounded-[8px] primary-gradient clay-glow text-white font-body-bold text-body-bold flex items-center justify-center gap-2 hover:opacity-95 transition-opacity disabled:opacity-60"
         >
           {sibuk === "email" ? (
             <Icon name="progress_activity" className="text-[18px] animate-spin" />
@@ -421,7 +421,7 @@ export function AccountSettings({
           type="password"
           placeholder="Password lama"
           autoComplete="current-password"
-          className="h-11 rounded-2xl bg-surface-container-low px-3.5 font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-500/40"
+          className="h-11 rounded-[8px] bg-surface-container-low px-3.5 font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-500/40"
         />
         <input
           value={sandi.passwordBaru}
@@ -429,7 +429,7 @@ export function AccountSettings({
           type={sandiTerlihat ? "text" : "password"}
           placeholder="Password baru, minimal 8 karakter"
           autoComplete="new-password"
-          className="h-11 rounded-2xl bg-surface-container-low px-3.5 font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-500/40"
+          className="h-11 rounded-[8px] bg-surface-container-low px-3.5 font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-500/40"
         />
         <input
           value={sandi.ulangiSandi}
@@ -437,7 +437,7 @@ export function AccountSettings({
           type={sandiTerlihat ? "text" : "password"}
           placeholder="Ulangi password baru"
           autoComplete="new-password"
-          className="h-11 rounded-2xl bg-surface-container-low px-3.5 font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-500/40"
+          className="h-11 rounded-[8px] bg-surface-container-low px-3.5 font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-500/40"
         />
         <div className="flex items-center gap-3">
           <button
@@ -463,7 +463,7 @@ export function AccountSettings({
             sandi.passwordLama.length === 0 ||
             sandi.passwordBaru.length === 0
           }
-          className="h-11 rounded-full bg-brand-600 text-white font-body-bold text-body-bold flex items-center justify-center gap-2 disabled:opacity-60"
+          className="h-11 rounded-[8px] primary-gradient clay-glow text-white font-body-bold text-body-bold flex items-center justify-center gap-2 hover:opacity-95 transition-opacity disabled:opacity-60"
         >
           {sibuk === "sandi" ? (
             <Icon name="progress_activity" className="text-[18px] animate-spin" />

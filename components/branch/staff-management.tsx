@@ -195,7 +195,7 @@ export function StaffManagement({
         const buka = terbuka === s.id;
         const sibukBaris = sibuk === s.id;
         return (
-          <article key={s.id} className="clay-card p-4 flex flex-col gap-2">
+          <article key={s.id} className="clay-card rounded-[10px] p-4 flex flex-col gap-2.5">
             <div className="flex items-start gap-3">
               {s.facePhotoUrl && !photoError.has(s.id) ? (
                 <img
@@ -203,10 +203,10 @@ export function StaffManagement({
                   alt={s.fullName}
                   loading="lazy"
                   onError={() => handlePhotoError(s.id)}
-                  className="w-12 h-12 lg:w-20 lg:h-20 rounded-xl object-cover shrink-0"
+                  className="w-12 h-12 lg:w-16 lg:h-16 rounded-full object-cover shrink-0 border border-border"
                 />
               ) : (
-                <span className="w-12 h-12 lg:w-20 lg:h-20 rounded-xl bg-brand-50 text-brand-700 font-headline-2 text-headline-2 flex items-center justify-center shrink-0 select-none">
+                <span className="w-12 h-12 lg:w-16 lg:h-16 rounded-full border border-brand-200 bg-brand-50 text-brand-700 font-headline-2 text-headline-2 flex items-center justify-center shrink-0 select-none">
                   {initials(s.fullName)}
                 </span>
               )}
@@ -219,10 +219,10 @@ export function StaffManagement({
                 </p>
                 <div className="flex flex-wrap gap-1.5 mt-1">
                   <span
-                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-micro-badge text-micro-badge ${
+                    className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-[6px] border font-micro-badge text-micro-badge ${
                       s.isActive
-                        ? "bg-success-surface text-success-text"
-                        : "bg-surface-container text-text-muted"
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        : "bg-surface-container text-text-muted border-border"
                     }`}
                   >
                     <Icon
@@ -231,15 +231,15 @@ export function StaffManagement({
                     />
                     {s.isActive ? "Aktif" : "Nonaktif"}
                   </span>
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container font-micro-badge text-micro-badge text-text-secondary">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[6px] border border-border bg-surface-container font-micro-badge text-micro-badge text-text-secondary">
                     {s.workSchedule === "office" ? "Kantor" : "Lapangan"}
                   </span>
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container font-micro-badge text-micro-badge text-text-secondary">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[6px] border border-border bg-surface-container font-micro-badge text-micro-badge text-text-secondary">
                     <Icon name="face_retouching_natural" className="text-[13px]" />
                     {s.faceStatus}
                   </span>
                   {(s.offInLieuBalance ?? 0) > 0 ? (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-600 font-micro-badge text-micro-badge font-semibold">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[6px] border border-brand-200 bg-brand-50 text-brand-700 font-micro-badge text-micro-badge font-semibold">
                       <Icon name="event_repeat" className="text-[13px]" />
                       Libur: {s.offInLieuBalance} hr
                     </span>
@@ -252,7 +252,7 @@ export function StaffManagement({
               <button
                 type="button"
                 onClick={() => setTerbuka(buka ? null : s.id)}
-                className="flex-1 min-h-11 rounded-xl bg-surface-container text-text-secondary font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+                className="flex-1 min-h-11 rounded-[8px] border border-border bg-surface text-text-secondary font-caption text-caption flex items-center justify-center gap-1.5 hover:bg-surface-container transition-colors"
               >
                 <Icon name="tune" className="text-[18px]" />
                 {buka ? "Tutup" : "Atur"}
@@ -267,10 +267,10 @@ export function StaffManagement({
                     s.isActive ? "Penonaktifan staf" : "Pengaktifan staf",
                   )
                 }
-                className={`flex-1 min-h-11 rounded-xl font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform disabled:opacity-60 ${
+                className={`flex-1 min-h-11 rounded-[8px] border font-caption text-caption flex items-center justify-center gap-1.5 transition-colors disabled:opacity-60 ${
                   s.isActive
-                    ? "bg-warning-surface text-warning-text"
-                    : "bg-success-surface text-success-text"
+                    ? "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100"
+                    : "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
                 }`}
               >
                 <Icon
@@ -285,7 +285,7 @@ export function StaffManagement({
                   disabled={sibukBaris}
                   onClick={() => hapus(s.id, s.fullName)}
                   title="Hapus permanen akun staf ini"
-                  className="w-11 min-h-11 rounded-xl bg-danger-surface text-danger-text flex items-center justify-center shrink-0 active:scale-95 transition-transform disabled:opacity-60"
+                  className="w-11 min-h-11 rounded-[8px] border border-red-200 bg-red-50 text-red-700 flex items-center justify-center shrink-0 hover:bg-red-100 transition-colors disabled:opacity-60"
                   aria-label="Hapus akun staf"
                 >
                   <Icon name="delete" className="text-[18px]" />
@@ -294,7 +294,7 @@ export function StaffManagement({
             </div>
 
             {buka ? (
-              <div className="pt-3 mt-1 border-t border-outline-variant/40 flex flex-col gap-3">
+              <div className="pt-3 mt-1 border-t border-border flex flex-col gap-3">
                 <label className="flex flex-col gap-1">
                   <span className="font-micro-badge text-micro-badge text-text-muted">
                     Jabatan
@@ -309,7 +309,7 @@ export function StaffManagement({
                         "Perubahan jabatan",
                       )
                     }
-                    className="h-11 px-3 rounded-xl bg-surface-container font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400 disabled:opacity-60"
+                    className="h-11 px-3.5 rounded-[8px] border border-border bg-surface font-body text-body text-text-primary outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 disabled:opacity-60"
                   >
                     {JABATAN.map((j) => (
                       <option key={j.value} value={j.value}>
@@ -338,7 +338,7 @@ export function StaffManagement({
                         "Perubahan jadwal kerja",
                       )
                     }
-                    className="h-11 px-3 rounded-xl bg-surface-container font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400 disabled:opacity-60"
+                    className="h-11 px-3.5 rounded-[8px] border border-border bg-surface font-body text-body text-text-primary outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 disabled:opacity-60"
                   >
                     <option value="field">Lapangan</option>
                     <option value="office">Kantor</option>
@@ -359,7 +359,7 @@ export function StaffManagement({
                         "Pemindahan cabang",
                       )
                     }
-                    className="h-11 px-3 rounded-xl bg-surface-container font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400 disabled:opacity-60"
+                    className="h-11 px-3.5 rounded-[8px] border border-border bg-surface font-body text-body text-text-primary outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 disabled:opacity-60"
                   >
                     {branches.map((b) => (
                       <option key={b.id} value={b.id}>
@@ -373,13 +373,6 @@ export function StaffManagement({
                   <span className="font-micro-badge text-micro-badge text-text-muted">
                     Hari Libur Rutin
                   </span>
-                  {/*
-                    Select ini menampilkan hari yang sedang berlaku, bukan
-                    selalu "Pilih hari". Kalau selalu kosong, pengelola tidak
-                    pernah bisa memastikan hari libur yang lalu benar-benar
-                    tersimpan, dan select yang kembali kosong membuat perubahan
-                    terasa tidak terjadi sama sekali.
-                  */}
                   <select
                     value={hariLiburAktif(s)}
                     disabled={sibukBaris}
@@ -394,7 +387,7 @@ export function StaffManagement({
                         `Setelan hari libur ${terpilih?.label ?? ""}`.trim(),
                       );
                     }}
-                    className="h-11 px-3 rounded-xl bg-surface-container font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400 disabled:opacity-60"
+                    className="h-11 px-3.5 rounded-[8px] border border-border bg-surface font-body text-body text-text-primary outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 disabled:opacity-60"
                   >
                     <option value="">Pilih hari...</option>
                     {HARI.map((h) => (
@@ -411,7 +404,7 @@ export function StaffManagement({
                 </label>
 
                 {/* Tabungan Libur Pengganti */}
-                <div className="p-3 rounded-xl bg-surface-container/60 border border-outline-variant/30 flex flex-col gap-2">
+                <div className="p-3 rounded-[8px] bg-surface-container-low border border-border flex flex-col gap-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
                       <Icon name="event_repeat" className="text-[18px] text-brand-600" />
@@ -419,7 +412,7 @@ export function StaffManagement({
                         Tabungan Libur Pengganti
                       </span>
                     </div>
-                    <span className="px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-600 font-micro-badge text-micro-badge font-bold">
+                    <span className="px-2 py-0.5 rounded-[6px] border border-brand-200 bg-brand-50 text-brand-700 font-micro-badge text-micro-badge font-bold">
                       {s.offInLieuBalance ?? 0} hari
                     </span>
                   </div>
@@ -429,7 +422,7 @@ export function StaffManagement({
 
                   {bisaUbahJabatan ? (
                     adjustState?.profileId === s.id ? (
-                      <div className="pt-2 border-t border-outline-variant/20 flex flex-col gap-2">
+                      <div className="pt-2 border-t border-border flex flex-col gap-2">
                         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                           <label className="flex flex-col gap-0.5">
                             <span className="font-micro-badge text-micro-badge text-text-muted">Perubahan (hari)</span>
@@ -437,7 +430,7 @@ export function StaffManagement({
                               <button
                                 type="button"
                                 onClick={() => setAdjustState((prev) => (prev ? { ...prev, amount: prev.amount - 1 } : null))}
-                                className="w-8 h-8 rounded-lg bg-surface-container text-text-primary flex items-center justify-center font-bold text-sm active:scale-95 border border-outline-variant/40"
+                                className="w-8 h-8 rounded-[6px] border border-border bg-surface text-text-primary flex items-center justify-center font-bold text-sm hover:bg-surface-container"
                               >
                                 -
                               </button>
@@ -448,12 +441,12 @@ export function StaffManagement({
                                   const val = parseInt(e.target.value, 10);
                                   setAdjustState((prev) => (prev ? { ...prev, amount: isNaN(val) ? 0 : val } : null));
                                 }}
-                                className="w-16 h-8 text-center rounded-lg bg-surface-container font-body text-body text-text-primary outline-none focus:ring-1 focus:ring-brand-400 border border-outline-variant/40"
+                                className="w-16 h-8 text-center rounded-[6px] border border-border bg-surface font-body text-body text-text-primary outline-none focus:border-brand-500"
                               />
                               <button
                                 type="button"
                                 onClick={() => setAdjustState((prev) => (prev ? { ...prev, amount: prev.amount + 1 } : null))}
-                                className="w-8 h-8 rounded-lg bg-surface-container text-text-primary flex items-center justify-center font-bold text-sm active:scale-95 border border-outline-variant/40"
+                                className="w-8 h-8 rounded-[6px] border border-border bg-surface text-text-primary flex items-center justify-center font-bold text-sm hover:bg-surface-container"
                               >
                                 +
                               </button>
@@ -466,7 +459,7 @@ export function StaffManagement({
                               placeholder="Misal: Lembur kejar deadline"
                               value={adjustState.reason}
                               onChange={(e) => setAdjustState((prev) => (prev ? { ...prev, reason: e.target.value } : null))}
-                              className="h-8 px-2 rounded-lg bg-surface-container font-body text-caption text-text-primary outline-none focus:ring-1 focus:ring-brand-400 border border-outline-variant/40"
+                              className="h-8 px-2.5 rounded-[6px] border border-border bg-surface font-body text-caption text-text-primary outline-none focus:border-brand-500"
                             />
                           </label>
                         </div>
@@ -474,7 +467,7 @@ export function StaffManagement({
                           <button
                             type="button"
                             onClick={() => setAdjustState(null)}
-                            className="px-2.5 py-1 text-xs rounded-lg text-text-muted hover:bg-surface-container"
+                            className="px-2.5 py-1 text-xs rounded-[6px] border border-border bg-surface text-text-muted hover:bg-surface-container"
                           >
                             Batal
                           </button>
@@ -482,7 +475,7 @@ export function StaffManagement({
                             type="button"
                             disabled={sibukBaris || adjustState.amount === 0 || !adjustState.reason.trim()}
                             onClick={() => handleAdjustOffInLieu(s.id, adjustState.amount, adjustState.reason)}
-                            className="px-3 py-1 text-xs font-semibold rounded-lg bg-brand-500 text-white active:scale-95 transition-transform disabled:opacity-50"
+                            className="px-3 py-1 text-xs font-semibold rounded-[6px] bg-brand-600 text-white hover:bg-brand-700 transition-colors disabled:opacity-50"
                           >
                             Simpan Saldo
                           </button>
@@ -493,7 +486,7 @@ export function StaffManagement({
                         <button
                           type="button"
                           onClick={() => setAdjustState({ profileId: s.id, amount: 1, reason: "" })}
-                          className="text-xs font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1 active:scale-95"
+                          className="text-xs font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1"
                         >
                           <Icon name="tune" className="text-[14px]" />
                           Sesuaikan Saldo Manual

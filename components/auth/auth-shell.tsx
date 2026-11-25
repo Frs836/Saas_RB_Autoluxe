@@ -9,13 +9,13 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
 
       <div className="w-full max-w-[420px] relative z-10 flex flex-col gap-6">
         <div className="flex items-center justify-between w-full px-2">
-          <div className="flex items-center gap-1.5 py-1 px-3 rounded-full bg-surface/80 backdrop-blur shadow-sm">
+          <div className="flex items-center gap-1.5 py-1 px-3 rounded-[6px] bg-surface/90 border border-border shadow-xs">
             <span className="w-2 h-2 rounded-full bg-success-base animate-pulse" />
             <span className="font-caption text-caption text-text-secondary">
               Cabang: Auto-Detect
             </span>
           </div>
-          <div className="flex items-center gap-1.5 py-1 px-3 rounded-full bg-surface/90 backdrop-blur shadow-sm">
+          <div className="flex items-center gap-1.5 py-1 px-3 rounded-[6px] bg-surface/90 border border-border shadow-xs">
             <span className="w-2 h-2 rounded-full bg-success-base" />
             <span className="font-micro-badge text-micro-badge uppercase tracking-wider text-success-text font-bold">
               System Online • v2.0

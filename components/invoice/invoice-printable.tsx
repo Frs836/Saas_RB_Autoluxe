@@ -108,11 +108,11 @@ export function InvoicePrintable({ data }: { data: PrintableInvoiceData }) {
   return (
     <div className="min-h-screen bg-surface-container-low pb-12 print:bg-white print:p-0 print:pb-0">
       {/* Top Action Bar — hidden when printing */}
-      <header className="sticky top-0 z-40 bg-surface/95 backdrop-blur-md border-b border-outline-variant px-4 py-3 flex items-center justify-between gap-3 print:hidden">
+      <header className="sticky top-0 z-40 clay-nav px-4 py-3 flex items-center justify-between gap-3 print:hidden">
         <div className="flex items-center gap-2">
           <Link
             href="/invoice"
-            className="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center text-text-secondary active:scale-95 transition-transform"
+            className="w-10 h-10 rounded-[8px] border border-border bg-surface flex items-center justify-center text-text-secondary hover:bg-surface-container transition-colors"
             aria-label="Kembali ke riwayat invoice"
           >
             <Icon name="arrow_back" className="text-[20px]" />
@@ -131,7 +131,7 @@ export function InvoicePrintable({ data }: { data: PrintableInvoiceData }) {
           <button
             type="button"
             onClick={() => setWaModalOpen(true)}
-            className="h-10 px-3.5 rounded-xl bg-whatsapp text-white font-body-bold text-caption flex items-center gap-1.5 active:scale-95 transition-transform shadow-sm"
+            className="h-10 px-3.5 rounded-[8px] bg-whatsapp text-white font-body-bold text-caption flex items-center gap-1.5 hover:opacity-90 transition-opacity shadow-sm"
           >
             <Icon name="chat" className="text-[18px]" />
             <span className="hidden sm:inline">Kirim ke WA</span>
@@ -139,7 +139,7 @@ export function InvoicePrintable({ data }: { data: PrintableInvoiceData }) {
           <button
             type="button"
             onClick={handlePrint}
-            className="h-10 px-4 rounded-xl bg-brand-600 text-white font-body-bold text-caption flex items-center gap-1.5 active:scale-95 transition-transform shadow-sm"
+            className="h-10 px-4 rounded-[8px] primary-gradient clay-glow text-white font-body-bold text-caption flex items-center gap-1.5 hover:opacity-90 transition-opacity shadow-sm"
           >
             <Icon name="print" className="text-[18px]" />
             <span>Cetak / Simpan PDF</span>
@@ -149,7 +149,7 @@ export function InvoicePrintable({ data }: { data: PrintableInvoiceData }) {
 
       {/* Main Printable A4 Document Sheet */}
       <main className="max-w-4xl mx-auto my-6 px-4 print:max-w-none print:m-0 print:p-0">
-        <div className="bg-white rounded-3xl shadow-lg border border-outline-variant/60 p-6 sm:p-10 flex flex-col gap-6 print:rounded-none print:shadow-none print:border-none print:p-6 text-slate-800">
+        <div className="bg-white rounded-[10px] shadow-lg border border-border p-6 sm:p-10 flex flex-col gap-6 print:rounded-none print:shadow-none print:border-none print:p-6 text-slate-800">
           {/* Header Workshop & Invoice Info */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-200 pb-6">
             <div className="flex items-center gap-3.5">
@@ -399,8 +399,8 @@ export function InvoicePrintable({ data }: { data: PrintableInvoiceData }) {
 
       {/* Modal Kirim WhatsApp Draft */}
       {waModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 print:hidden">
-          <div className="bg-surface rounded-2xl max-w-md w-full p-5 shadow-2xl flex flex-col gap-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm print:hidden">
+          <div className="bg-surface rounded-[10px] max-w-md w-full p-5 border border-border shadow-2xl flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Icon name="chat" className="text-[20px] text-whatsapp" />
@@ -411,7 +411,7 @@ export function InvoicePrintable({ data }: { data: PrintableInvoiceData }) {
               <button
                 type="button"
                 onClick={() => setWaModalOpen(false)}
-                className="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-text-secondary active:scale-95"
+                className="w-8 h-8 rounded-[8px] border border-border bg-surface flex items-center justify-center text-text-secondary hover:bg-surface-container transition-colors"
               >
                 <Icon name="close" className="text-[18px]" />
               </button>
@@ -426,14 +426,14 @@ export function InvoicePrintable({ data }: { data: PrintableInvoiceData }) {
                 value={phoneInput}
                 onChange={(e) => setPhoneInput(e.target.value)}
                 placeholder="08123456789"
-                className="h-11 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+                className="h-11 px-3.5 rounded-[8px] border border-border bg-surface font-body text-body text-text-primary outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
               />
               <span className="text-[11px] text-text-muted">
                 Dapat berupa nomor pelanggan atau nomor kasir/admin.
               </span>
             </label>
 
-            <div className="p-3 rounded-xl bg-surface-container text-xs text-text-secondary whitespace-pre-wrap max-h-48 overflow-y-auto border border-outline-variant/60">
+            <div className="p-3 rounded-[8px] bg-surface-container-low text-xs text-text-secondary whitespace-pre-wrap max-h-48 overflow-y-auto border border-border">
               {waDraftMessage}
             </div>
 
@@ -441,7 +441,7 @@ export function InvoicePrintable({ data }: { data: PrintableInvoiceData }) {
               <button
                 type="button"
                 onClick={() => setWaModalOpen(false)}
-                className="h-11 px-4 rounded-xl bg-surface-container text-text-secondary font-body-bold text-caption active:scale-95"
+                className="h-11 px-4 rounded-[8px] border border-border bg-surface text-text-secondary font-body-bold text-caption hover:bg-surface-container transition-colors"
               >
                 Batal
               </button>
@@ -450,7 +450,7 @@ export function InvoicePrintable({ data }: { data: PrintableInvoiceData }) {
                 target="_blank"
                 rel="noreferrer"
                 onClick={() => setWaModalOpen(false)}
-                className={`h-11 px-5 rounded-xl font-body-bold text-caption text-white flex items-center gap-2 active:scale-95 shadow-md ${
+                className={`h-11 px-5 rounded-[8px] font-body-bold text-caption text-white flex items-center gap-2 hover:opacity-90 transition-opacity shadow-sm ${
                   phoneInput.trim() ? "bg-whatsapp" : "bg-surface-container text-text-muted pointer-events-none opacity-50"
                 }`}
               >

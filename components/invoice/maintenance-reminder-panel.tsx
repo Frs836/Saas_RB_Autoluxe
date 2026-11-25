@@ -81,10 +81,10 @@ export function MaintenanceReminderPanel({
   return (
     <div className="flex flex-col gap-4">
       {/* Header reminder & Attention Badge */}
-      <div className="p-4 rounded-3xl bg-gradient-to-r from-brand-900 via-indigo-950 to-slate-900 text-white shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="p-4 rounded-[10px] primary-gradient clay-glow text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-amber-400 shrink-0">
-            <Icon name="notification_important" className="text-[28px]" />
+          <div className="w-11 h-11 rounded-[8px] bg-white/10 flex items-center justify-center text-amber-400 shrink-0">
+            <Icon name="notification_important" className="text-[26px]" />
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -92,23 +92,23 @@ export function MaintenanceReminderPanel({
                 Auto Attention: Perawatan Berkala
               </h2>
               {dueSoonCount > 0 ? (
-                <span className="px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 font-bold text-xs">
+                <span className="px-2.5 py-0.5 rounded-[6px] bg-amber-400 text-slate-950 font-bold text-xs">
                   {dueSoonCount} Perlu Diingatkan
                 </span>
               ) : null}
             </div>
-            <p className="text-xs text-white/70 mt-0.5">
+            <p className="text-xs text-white/80 mt-0.5">
               Jadwal otomatis perawatan 6 bulan &amp; 1 tahun kendaraan coating/detailing pelanggan.
             </p>
           </div>
         </div>
 
         {/* Tab filters */}
-        <div className="flex bg-white/10 p-1 rounded-xl gap-1 shrink-0">
+        <div className="flex bg-white/10 p-1 rounded-[8px] gap-1 shrink-0">
           <button
             type="button"
             onClick={() => setFilter("due_soon")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+            className={`px-3 py-1.5 rounded-[6px] text-xs font-bold transition-colors ${
               filter === "due_soon"
                 ? "bg-white text-slate-900 shadow-sm"
                 : "text-white/80 hover:bg-white/5"
@@ -119,7 +119,7 @@ export function MaintenanceReminderPanel({
           <button
             type="button"
             onClick={() => setFilter("reminded")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+            className={`px-3 py-1.5 rounded-[6px] text-xs font-bold transition-colors ${
               filter === "reminded"
                 ? "bg-white text-slate-900 shadow-sm"
                 : "text-white/80 hover:bg-white/5"
@@ -130,7 +130,7 @@ export function MaintenanceReminderPanel({
           <button
             type="button"
             onClick={() => setFilter("all")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+            className={`px-3 py-1.5 rounded-[6px] text-xs font-bold transition-colors ${
               filter === "all"
                 ? "bg-white text-slate-900 shadow-sm"
                 : "text-white/80 hover:bg-white/5"
@@ -143,7 +143,7 @@ export function MaintenanceReminderPanel({
 
       {/* Schedules List */}
       {filtered.length === 0 ? (
-        <div className="clay-card p-8 flex flex-col items-center justify-center text-center gap-2 text-text-secondary">
+        <div className="clay-card rounded-[10px] p-8 flex flex-col items-center justify-center text-center gap-2 text-text-secondary">
           <Icon name="event_available" className="text-[36px] text-text-muted" />
           <p className="font-body-bold text-body-bold">
             Tidak ada jadwal perawatan pada kategori ini
@@ -167,16 +167,16 @@ export function MaintenanceReminderPanel({
             return (
               <article
                 key={item.id}
-                className="clay-card p-4 flex flex-col justify-between gap-3 relative overflow-hidden"
+                className="clay-card rounded-[10px] p-4 flex flex-col justify-between gap-3 relative overflow-hidden"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="px-2.5 py-0.5 rounded-lg bg-surface-container font-mono font-bold text-xs text-text-primary">
+                      <span className="px-2.5 py-0.5 rounded-[6px] border border-border bg-surface-container font-mono font-bold text-xs text-text-primary">
                         {item.licensePlate}
                       </span>
                       <span
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
+                        className={`px-2 py-0.5 rounded-[6px] text-[10px] font-bold uppercase tracking-wider border ${
                           is6M
                             ? "bg-indigo-50 text-indigo-700 border-indigo-200"
                             : "bg-purple-50 text-purple-700 border-purple-200"
@@ -195,24 +195,24 @@ export function MaintenanceReminderPanel({
                   </div>
 
                   <span
-                    className={`px-2.5 py-1 rounded-xl text-xs font-bold border shrink-0 ${diff.color}`}
+                    className={`px-2.5 py-1 rounded-[6px] text-xs font-bold border shrink-0 ${diff.color}`}
                   >
                     {diff.text}
                   </span>
                 </div>
 
-                <div className="p-2.5 rounded-xl bg-surface-container-low text-xs flex items-center justify-between gap-2">
+                <div className="p-2.5 rounded-[8px] bg-surface-container-low border border-border text-xs flex items-center justify-between gap-2">
                   <div className="flex items-center gap-1.5 text-text-secondary">
                     <Icon name="event" className="text-[16px] text-brand-600" />
                     <span>Jatuh Tempo: <strong>{formatDateWib(item.dueDate)}</strong></span>
                   </div>
                   <span
-                    className={`font-micro-badge text-micro-badge px-2 py-0.5 rounded-full ${
+                    className={`font-micro-badge text-micro-badge px-2 py-0.5 rounded-[6px] border ${
                       item.status === "completed"
-                        ? "bg-success-surface text-success-text"
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                         : item.status === "reminded"
-                        ? "bg-brand-50 text-brand-700"
-                        : "bg-surface-container text-text-muted"
+                        ? "bg-brand-50 text-brand-700 border-brand-200"
+                        : "bg-surface-container text-text-muted border-border"
                     }`}
                   >
                     {item.status === "completed"
@@ -224,14 +224,14 @@ export function MaintenanceReminderPanel({
                 </div>
 
                 {/* Action buttons */}
-                <div className="flex items-center gap-2 pt-1 border-t border-outline-variant/40">
+                <div className="flex items-center gap-2 pt-1 border-t border-border">
                   {item.customerPhone ? (
                     <a
                       href={whatsappLink(item.customerPhone, waMsg)}
                       target="_blank"
                       rel="noreferrer"
                       onClick={() => handleUpdateStatus(item.id, "reminded")}
-                      className="flex-1 h-10 rounded-xl bg-whatsapp text-white font-body-bold text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform shadow-sm"
+                      className="flex-1 h-10 rounded-[8px] bg-whatsapp text-white font-body-bold text-caption flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity shadow-sm"
                     >
                       <Icon name="chat" className="text-[18px]" />
                       <span>Ingatkan via WA</span>
@@ -240,7 +240,7 @@ export function MaintenanceReminderPanel({
 
                   <Link
                     href={`/invoice/${item.orderId}`}
-                    className="h-10 px-3 rounded-xl bg-surface-container text-text-secondary font-body-bold text-caption flex items-center gap-1 active:scale-95 transition-transform"
+                    className="h-10 px-3.5 rounded-[8px] border border-border bg-surface text-text-secondary font-body-bold text-caption flex items-center gap-1 hover:bg-surface-container transition-colors"
                     title="Buka Invoice & Garansi A4"
                   >
                     <Icon name="receipt" className="text-[16px]" />
@@ -252,7 +252,7 @@ export function MaintenanceReminderPanel({
                       type="button"
                       disabled={isPending}
                       onClick={() => handleUpdateStatus(item.id, "completed")}
-                      className="h-10 px-3 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 font-body-bold text-caption flex items-center gap-1 active:scale-95 transition-transform"
+                      className="h-10 px-3.5 rounded-[8px] bg-emerald-50 text-emerald-700 border border-emerald-200 font-body-bold text-caption flex items-center gap-1 hover:bg-emerald-100 transition-colors"
                       title="Tandai Sudah Datang / Selesai Perawatan"
                     >
                       <Icon name="check" className="text-[16px]" />

@@ -671,11 +671,11 @@ export function RekapConsole({
                   aria-selected={mode === tab.key}
                   onClick={() => setMode(tab.key)}
                   className={
-                    "flex-1 min-h-11 rounded-lg font-caption text-caption flex items-center " +
+                    "flex-1 min-h-11 rounded-[8px] font-caption text-caption flex items-center " +
                     "justify-center gap-1.5 transition-colors " +
                     (mode === tab.key
                       ? "bg-white text-text-primary shadow-sm font-body-bold"
-                      : "text-text-secondary active:scale-95 transition-transform")
+                      : "text-text-secondary hover:bg-surface-container-low")
                   }
                 >
                   <Icon name={tab.icon} className="text-[15px]" />
@@ -688,13 +688,13 @@ export function RekapConsole({
           {/* Navigasi tanggal — hanya di mode harian */}
           {mode === "harian" && (
             <section className="px-gutter pt-4 lg:px-0">
-              <div className="bg-surface rounded-2xl p-3 clay-card border border-white/80 flex items-center gap-3">
+              <div className="bg-surface rounded-[10px] p-3 clay-card border border-white/80 flex items-center gap-3">
                 <button
                   type="button"
                   onClick={() => setDate(shiftDate(-1))}
                   disabled={loading}
                   aria-label="Hari sebelumnya"
-                  className="w-11 h-11 rounded-xl bg-surface-container-low text-text-secondary flex items-center justify-center active:scale-95 transition-transform disabled:opacity-50"
+                  className="w-11 h-11 rounded-[8px] bg-surface-container-low text-text-secondary flex items-center justify-center hover:bg-surface-container transition-colors disabled:opacity-50"
                 >
                   <Icon name="chevron_left" className="text-[20px]" />
                 </button>
@@ -719,7 +719,7 @@ export function RekapConsole({
                   onClick={() => setDate(shiftDate(1))}
                   disabled={loading || isToday}
                   aria-label="Hari berikutnya"
-                  className="w-11 h-11 rounded-xl bg-surface-container-low text-text-secondary flex items-center justify-center active:scale-95 transition-transform disabled:opacity-50"
+                  className="w-11 h-11 rounded-[8px] bg-surface-container-low text-text-secondary flex items-center justify-center hover:bg-surface-container transition-colors disabled:opacity-50"
                 >
                   <Icon name="chevron_right" className="text-[20px]" />
                 </button>
@@ -736,10 +736,10 @@ export function RekapConsole({
                     key={pill.key}
                     type="button"
                     onClick={() => setFilter(pill.key)}
-                    className={`min-h-11 px-3.5 rounded-full font-caption text-caption shrink-0 flex items-center gap-1.5 active:scale-95 transition-transform lg:w-full lg:justify-start ${
+                    className={`min-h-11 px-3.5 rounded-[8px] font-caption text-caption shrink-0 flex items-center gap-1.5 transition-colors lg:w-full lg:justify-start ${
                       filter === pill.key
-                        ? "primary-gradient text-white"
-                        : "bg-surface text-text-secondary clay-card"
+                        ? "primary-gradient clay-glow text-white"
+                        : "bg-surface text-text-secondary clay-card hover:bg-surface-variant"
                     }`}
                   >
                     {pill.label} ({pill.count})
@@ -751,7 +751,7 @@ export function RekapConsole({
 
           {/* Micro-bar: status geofence + export */}
           <section className="px-gutter pt-3 lg:px-0">
-            <div className="bg-clay-overlay rounded-xl px-3 py-2.5 flex items-center justify-between lg:flex-col lg:items-stretch lg:gap-2 border border-border-subtle">
+            <div className="bg-clay-overlay rounded-[10px] px-3 py-2.5 flex items-center justify-between lg:flex-col lg:items-stretch lg:gap-2 border border-border-subtle">
               <span className="font-caption text-caption text-success-text flex items-center gap-1.5">
                 <Icon name="radar" className="text-[15px]" />
                 {crossBranch
@@ -762,7 +762,7 @@ export function RekapConsole({
                 type="button"
                 onClick={() => void exportExcel()}
                 disabled={exporting}
-                className="min-h-11 px-3 rounded-lg bg-brand-50 text-brand-700 font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform disabled:opacity-60"
+                className="min-h-11 px-3 rounded-[8px] bg-brand-50 hover:bg-brand-100 text-brand-700 font-caption text-caption flex items-center justify-center gap-1.5 transition-colors disabled:opacity-60"
               >
                 <Icon name={exporting ? "hourglass_top" : "download"} className="text-[15px]" />
                 {exporting ? "Menyusun" : mode === "tiga_bulan" ? "Excel 3 Bulan" : "Laporan"}
@@ -796,7 +796,7 @@ export function RekapConsole({
 
       {/* Hero ringkasan */}
       <section className="px-gutter pt-4 lg:px-0 lg:pt-0">
-        <div className="relative overflow-hidden rounded-[24px] p-5 primary-gradient text-on-primary clay-glow">
+        <div className="relative overflow-hidden rounded-[10px] p-5 primary-gradient text-on-primary clay-glow">
           <div className="absolute -right-6 -bottom-6 opacity-10 pointer-events-none text-white">
             <Icon name="groups" className="text-[130px]" />
           </div>
@@ -806,7 +806,7 @@ export function RekapConsole({
                 <Icon name="calendar_today" className="text-[16px]" />
                 Kehadiran ({dateLabel})
               </span>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-md font-micro-badge text-micro-badge text-white uppercase tracking-wider">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-[6px] bg-white/20 backdrop-blur-md font-micro-badge text-micro-badge text-white uppercase tracking-wider border border-white/20">
                 {kasStatus
                   ? kasStatus.status === "closed"
                     ? "Shift Tutup"
@@ -831,13 +831,13 @@ export function RekapConsole({
               />
             </div>
             <div className="flex flex-wrap gap-2 pt-1">
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/15 backdrop-blur-md font-caption text-caption text-white">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-[6px] bg-white/15 backdrop-blur-md font-caption text-caption text-white border border-white/20">
                 On-Time {summary.onTime}
               </span>
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/15 backdrop-blur-md font-caption text-caption text-white">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-[6px] bg-white/15 backdrop-blur-md font-caption text-caption text-white border border-white/20">
                 Terlambat {summary.late}
               </span>
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/15 backdrop-blur-md font-caption text-caption text-white">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-[6px] bg-white/15 backdrop-blur-md font-caption text-caption text-white border border-white/20">
                 Izin/Cuti {summary.off}
               </span>
               {/*
@@ -845,7 +845,7 @@ export function RekapConsole({
                 Tanpa angka ini, jumlah yang terlihat selalu lebih kecil dari
                 jumlah staf sehingga data terasa ada tapi tidak utuh.
               */}
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/15 backdrop-blur-md font-caption text-caption text-white">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-[6px] bg-white/15 backdrop-blur-md font-caption text-caption text-white border border-white/20">
                 Belum Absen {summary.belumAbsen}
               </span>
             </div>
@@ -855,13 +855,13 @@ export function RekapConsole({
 
       {/* Navigasi tanggal — mobile only (desktop ada di sidebar) */}
       <section className="px-gutter pt-4 lg:hidden">
-        <div className="bg-surface rounded-2xl p-3 clay-card border border-white/80 flex items-center gap-3">
+        <div className="bg-surface rounded-[10px] p-3 clay-card border border-white/80 flex items-center gap-3">
           <button
             type="button"
             onClick={() => setDate(shiftDate(-1))}
             disabled={loading}
             aria-label="Hari sebelumnya"
-            className="w-11 h-11 rounded-xl bg-surface-container-low text-text-secondary flex items-center justify-center active:scale-95 transition-transform disabled:opacity-50"
+            className="w-11 h-11 rounded-[8px] bg-surface-container-low text-text-secondary flex items-center justify-center hover:bg-surface-container transition-colors disabled:opacity-50"
           >
             <Icon name="chevron_left" className="text-[20px]" />
           </button>
@@ -886,7 +886,7 @@ export function RekapConsole({
             onClick={() => setDate(shiftDate(1))}
             disabled={loading || isToday}
             aria-label="Hari berikutnya"
-            className="w-11 h-11 rounded-xl bg-surface-container-low text-text-secondary flex items-center justify-center active:scale-95 transition-transform disabled:opacity-50"
+            className="w-11 h-11 rounded-[8px] bg-surface-container-low text-text-secondary flex items-center justify-center hover:bg-surface-container transition-colors disabled:opacity-50"
           >
             <Icon name="chevron_right" className="text-[20px]" />
           </button>
@@ -901,10 +901,10 @@ export function RekapConsole({
               key={pill.key}
               type="button"
               onClick={() => setFilter(pill.key)}
-              className={`min-h-11 px-3.5 rounded-full font-caption text-caption shrink-0 flex items-center gap-1.5 active:scale-95 transition-transform ${
+              className={`min-h-11 px-3.5 rounded-[8px] font-caption text-caption shrink-0 flex items-center gap-1.5 transition-colors ${
                 filter === pill.key
-                  ? "primary-gradient text-white"
-                  : "bg-surface text-text-secondary clay-card"
+                  ? "primary-gradient clay-glow text-white"
+                  : "bg-surface text-text-secondary clay-card hover:bg-surface-variant"
               }`}
             >
               {pill.label} ({pill.count})
@@ -915,7 +915,7 @@ export function RekapConsole({
 
       {error ? (
         <section className="px-gutter pt-3 lg:px-0">
-          <div className="p-3 rounded-xl bg-danger-surface text-danger-text font-body text-body flex items-center gap-2">
+          <div className="p-3 rounded-[8px] bg-danger-surface text-danger-text font-body text-body flex items-center gap-2 border border-red-200">
             <Icon name="error" className="text-[18px]" />
             <span className="flex-1">{error}</span>
           </div>
@@ -925,7 +925,7 @@ export function RekapConsole({
       {/* Kartu staf */}
       <section className="px-gutter pt-3 lg:px-0 space-y-2.5">
         {visibleStaff.length === 0 ? (
-          <div className="bg-surface rounded-2xl p-5 clay-card text-center">
+          <div className="bg-surface rounded-[10px] p-5 clay-card text-center">
             <span className="font-caption text-caption text-text-muted">
               Tidak ada staf pada kategori ini.
             </span>
@@ -983,7 +983,7 @@ export function RekapConsole({
             return (
               <div
                 key={person.id}
-                className={`relative bg-surface overflow-hidden rounded-[20px] clay-card border border-white/80 ${
+                className={`relative bg-surface overflow-hidden rounded-[10px] clay-card border border-white/80 ${
                   isLate ? "l" : ""
                 }`}
               >
@@ -993,7 +993,7 @@ export function RekapConsole({
                 <div className="p-4 flex items-start gap-3">
                   <div className="relative shrink-0">
                     <div
-                      className={`w-12 h-12 rounded-2xl flex items-center justify-center font-body-bold text-body-bold ${
+                      className={`w-12 h-12 rounded-[8px] flex items-center justify-center font-body-bold text-body-bold ${
                         !log
                           ? "bg-surface-container text-text-secondary"
                           : isLate
@@ -1019,7 +1019,7 @@ export function RekapConsole({
                       <span className="font-body-bold text-body-bold text-text-primary truncate">
                         {person.fullName}
                       </span>
-                      <span className="font-micro-badge text-micro-badge px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 shrink-0">
+                      <span className="font-micro-badge text-micro-badge px-2 py-0.5 rounded-[6px] bg-brand-50 border border-brand-200 text-brand-700 shrink-0">
                         {person.roleLabel}
                       </span>
                     </div>
@@ -1035,7 +1035,7 @@ export function RekapConsole({
                             {clockInLine ?? "Belum ada jam masuk"}
                           </span>
                           <span
-                            className={`font-micro-badge text-micro-badge px-2 py-0.5 rounded-full shrink-0 ${
+                            className={`font-micro-badge text-micro-badge px-2 py-0.5 rounded-[6px] border border-border-subtle shrink-0 ${
                               ATTENDANCE_STATUS_STYLE(log)
                             }`}
                           >
@@ -1044,7 +1044,7 @@ export function RekapConsole({
                         </div>
 
                         {isLate && log.lateMinutes ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-warning-surface text-warning-text font-micro-badge text-micro-badge mt-1.5">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[6px] bg-warning-surface border border-amber-200 text-warning-text font-micro-badge text-micro-badge mt-1.5">
                             <Icon name="running_with_errors" className="text-[13px]" />
                             Terlambat {log.lateMinutes} menit
                             {config ? ` (Batas Shift ${config.openTime.slice(0, 5)} WIB)` : ""}

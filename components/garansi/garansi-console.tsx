@@ -157,10 +157,10 @@ export function GaransiConsole({
   return (
     <div className="min-h-screen bg-canvas">
       <div className="pb-nav-plain lg:pb-8 px-gutter pt-4 space-y-space-lg lg:grid lg:grid-cols-3 lg:gap-6 lg:px-6 lg:py-6 lg:items-start">
-        <section className="clay-card flex flex-col gap-space-md p-space-lg lg:col-span-1 lg:sticky lg:top-20">
+        <section className="clay-card rounded-[10px] flex flex-col gap-space-md p-space-lg lg:col-span-1 lg:sticky lg:top-20">
           <div className="flex items-center justify-between">
             <h2 className="font-headline-2 text-headline-2 text-text-primary">Klaim Garansi</h2>
-            <span className="px-2 py-0.5 rounded-full bg-brand-50 text-brand-600 font-micro-badge text-micro-badge">
+            <span className="px-2.5 py-0.5 rounded-[6px] border border-brand-200 bg-brand-50 text-brand-600 font-micro-badge text-micro-badge">
               Berdasarkan Order Completed
             </span>
           </div>
@@ -185,11 +185,11 @@ export function GaransiConsole({
                 name="q"
                 defaultValue={search ?? ""}
                 placeholder="B 1234 XYZ atau RBA-2026..."
-                className="flex-1 h-11 px-3 rounded-xl bg-surface-container-low font-body-regular text-body-regular text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+                className="flex-1 h-11 px-3.5 rounded-[8px] border border-border bg-surface font-body text-body text-text-primary outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
               />
               <button
                 type="submit"
-                className="h-11 px-4 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center gap-1 active:scale-95 transition-transform"
+                className="h-11 px-4 rounded-[8px] border border-brand-200 bg-brand-50 text-brand-700 font-caption text-caption flex items-center gap-1 hover:bg-brand-100 transition-colors"
               >
                 <Icon name="search" className="text-[16px]" />
                 Cari
@@ -199,7 +199,7 @@ export function GaransiConsole({
               <button
                 type="button"
                 onClick={() => router.push("/garansi")}
-                className="self-start font-micro-badge text-micro-badge text-brand-700"
+                className="self-start font-micro-badge text-micro-badge text-brand-700 hover:underline"
               >
                 Bersihkan pencarian
               </button>
@@ -218,7 +218,7 @@ export function GaransiConsole({
                   setError(null);
                   setSuccess(null);
                 }}
-                className="h-12 rounded-xl bg-surface px-3 font-body-regular text-body-regular text-text-primary shadow-[inset_0px_2px_4px_rgba(15,23,42,0.06)]"
+                className="h-11 rounded-[8px] border border-border bg-surface px-3 font-body text-body text-text-primary outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
               >
                 <option value="">Pilih order...</option>
                 {orders.map((order) => (
@@ -237,7 +237,7 @@ export function GaransiConsole({
             </div>
 
             {selectedOrder && selectedWarranty ? (
-              <div className="rounded-xl bg-surface-container-low px-3 py-2.5 flex flex-col gap-1">
+              <div className="rounded-[8px] bg-surface-container-low border border-border px-3.5 py-2.5 flex flex-col gap-1">
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-caption text-caption text-text-secondary">
                     Sertifikat
@@ -266,7 +266,7 @@ export function GaransiConsole({
                 onChange={(e) => setProblem(e.target.value)}
                 placeholder="Deskripsikan kerusakan/keluhan pelanggan (minimal 10 karakter)"
                 rows={3}
-                className="rounded-xl bg-surface px-3 py-2 font-body-regular text-body-regular text-text-primary shadow-[inset_0px_2px_4px_rgba(15,23,42,0.06)]"
+                className="rounded-[8px] border border-border bg-surface px-3.5 py-2.5 font-body text-body text-text-primary outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
               />
               {problem.length > 0 && problem.trim().length < 10 ? (
                 <p className="font-caption text-caption text-warning-text">
@@ -290,7 +290,7 @@ export function GaransiConsole({
             <button
               type="submit"
               disabled={!canSubmit || (eligibility ? !eligibility.ok : true)}
-              className="h-[50px] rounded-full primary-gradient text-on-primary font-body-bold text-body-bold shadow-[0px_10px_22px_rgba(37,99,235,0.24)] disabled:opacity-60"
+              className="h-11 rounded-[8px] primary-gradient clay-glow text-white font-body-bold text-body-bold hover:opacity-90 transition-opacity disabled:opacity-60"
             >
               {loading ? "Mengirim..." : "Ajukan Klaim Garansi"}
             </button>
@@ -298,7 +298,7 @@ export function GaransiConsole({
         </section>
 
         <div className="lg:col-span-2 flex flex-col gap-space-lg">
-        <section className="clay-card flex flex-col gap-space-md p-space-lg">
+        <section className="clay-card rounded-[10px] flex flex-col gap-space-md p-space-lg">
           <div className="flex items-center justify-between">
             <h2 className="font-headline-2 text-headline-2 text-text-primary">
               Riwayat Klaim
@@ -316,7 +316,7 @@ export function GaransiConsole({
               claims.map((claim) => (
                 <div
                   key={`${claim.orderId}-${claim.claimDate}`}
-                  className="flex flex-col gap-space-xs py-3 border-b border-border-subtle last:border-b-0"
+                  className="flex flex-col gap-space-xs py-3 border-b border-border last:border-b-0"
                 >
                   <div className="flex items-center justify-between gap-2">
                     <span className="font-body-bold text-body-bold text-text-primary">
@@ -324,7 +324,7 @@ export function GaransiConsole({
                         claim.orderId.slice(0, 8)}
                     </span>
                     <span
-                      className={`self-start px-2 py-0.5 rounded-full font-micro-badge text-micro-badge uppercase ${CLAIM_STATUS_STYLE[claim.status] ?? "bg-surface-container text-text-secondary"}`}
+                      className={`self-start px-2 py-0.5 rounded-[6px] border font-micro-badge text-micro-badge uppercase ${CLAIM_STATUS_STYLE[claim.status] ?? "bg-surface-container text-text-secondary border-border"}`}
                     >
                       {CLAIM_STATUS_LABEL[claim.status] ?? claim.status}
                     </span>
@@ -341,7 +341,7 @@ export function GaransiConsole({
           </div>
         </section>
 
-        <section className="clay-card flex flex-col gap-space-md p-space-lg">
+        <section className="clay-card rounded-[10px] flex flex-col gap-space-md p-space-lg">
           <div className="flex items-center justify-between">
             <h2 className="font-headline-2 text-headline-2 text-text-primary">
               Sertifikat Garansi Aktif
@@ -361,7 +361,7 @@ export function GaransiConsole({
                 return (
                   <div
                     key={w.id}
-                    className="flex flex-col gap-space-xs py-3 border-b border-border-subtle last:border-b-0"
+                    className="flex flex-col gap-space-xs py-3 border-b border-border last:border-b-0"
                   >
                     <p className="font-body-bold text-body-bold text-text-primary">
                       {w.warrantyCode}
@@ -371,10 +371,10 @@ export function GaransiConsole({
                       <span>Berakhir: {formatDateWib(w.endDate)}</span>
                     </div>
                     <span
-                      className={`self-start px-2 py-0.5 rounded-full font-micro-badge text-micro-badge uppercase ${
+                      className={`self-start px-2 py-0.5 rounded-[6px] border font-micro-badge text-micro-badge uppercase ${
                         expired
-                          ? "bg-danger-surface text-danger-text"
-                          : "bg-success-surface text-success-text"
+                          ? "bg-red-50 text-red-700 border-red-200"
+                          : "bg-emerald-50 text-emerald-700 border-emerald-200"
                       }`}
                     >
                       {expired ? "expired" : w.status}

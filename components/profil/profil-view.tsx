@@ -79,13 +79,13 @@ export function ProfilView({
         <div className="lg:col-span-1 lg:sticky lg:top-20 flex flex-col">
           {/* Kartu identitas */}
           <section className="px-gutter pt-4 lg:px-0 lg:pt-0">
-            <div className="relative overflow-hidden rounded-[24px] p-5 primary-gradient text-on-primary clay-glow">
+            <div className="relative overflow-hidden rounded-[10px] p-5 primary-gradient text-on-primary clay-glow">
               <div className="absolute -right-6 -bottom-6 opacity-10 pointer-events-none text-white">
                 <Icon name="account_circle" className="text-[130px]" />
               </div>
               <div className="relative z-10">
                 <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-[22px] bg-white/20 backdrop-blur-md flex items-center justify-center font-headline-1 text-headline-1 text-white shrink-0 overflow-hidden">
+                  <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center font-headline-1 text-headline-1 text-white shrink-0 overflow-hidden">
                     {avatarUrl ? (
                       <img
                         src={avatarUrl}
@@ -110,7 +110,7 @@ export function ProfilView({
                 </div>
                 <Link
                   href="/profil/edit"
-                  className="mt-3 h-9 px-4 rounded-xl bg-white/20 text-white font-caption text-caption inline-flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+                  className="mt-3 h-9 px-4 rounded-[8px] bg-white/20 text-white font-caption text-caption inline-flex items-center justify-center gap-1.5 hover:bg-white/30 transition-colors"
                 >
                   <Icon name="edit" className="text-[16px]" />
                   Edit Profil
@@ -121,8 +121,8 @@ export function ProfilView({
 
           {/* Kartu cabang */}
           <section className="px-gutter pt-2.5 lg:px-0">
-            <div className="bg-surface rounded-[20px] p-4 clay-card border border-white/80 flex items-center gap-3">
-              <div className="w-11 h-11 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
+            <div className="bg-surface rounded-[10px] p-4 clay-card border border-white/80 flex items-center gap-3">
+              <div className="w-11 h-11 rounded-[8px] bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
                 <Icon name="garage" className="text-[22px]" />
               </div>
               <div className="flex-1 min-w-0">
@@ -138,10 +138,10 @@ export function ProfilView({
                 </span>
               </div>
               <span
-                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-micro-badge text-micro-badge shrink-0 ${
+                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-[6px] font-micro-badge text-micro-badge shrink-0 border ${
                   branchConfigured
-                    ? "bg-success-surface text-success-text"
-                    : "bg-warning-surface text-warning-text"
+                    ? "bg-success-surface text-success-text border-success-base/30"
+                    : "bg-warning-surface text-warning-text border-amber-200"
                 }`}
               >
                 <Icon name={branchConfigured ? "verified" : "wrong_location"} className="text-[13px]" />
@@ -155,7 +155,7 @@ export function ProfilView({
             <form action="/auth/signout" method="post">
               <button
                 type="submit"
-                className="w-full h-[50px] rounded-full bg-danger-surface text-danger-text font-body-bold text-body-bold flex items-center justify-center gap-2.5 active:scale-[0.98] transition-transform"
+                className="w-full h-11 rounded-[8px] bg-danger-surface text-danger-text font-body-bold text-body-bold flex items-center justify-center gap-2.5 hover:bg-danger-surface/80 transition-colors"
               >
                 <Icon name="logout" className="text-[20px]" />
                 Keluar dari Aplikasi
@@ -171,7 +171,7 @@ export function ProfilView({
         <div className="lg:col-span-2 flex flex-col">
           {/* Menu modul - Tabs dengan Dropdown per kategori */}
           <section className="px-gutter pt-2.5 lg:px-0 lg:pt-0">
-            <div className="bg-surface rounded-[20px] p-2 clay-card border border-white/80">
+            <div className="bg-surface rounded-[10px] p-2 clay-card border border-white/80">
               <div className="flex items-center gap-2 px-3 pt-2.5 pb-1.5">
                 <Icon name="apps" className="text-brand-600 text-[18px]" />
                 <span className="font-body-bold text-body-bold text-text-primary">
@@ -190,7 +190,7 @@ export function ProfilView({
                       role="tab"
                       aria-selected={openCategory === cat}
                       onClick={() => setOpenCategory(openCategory === cat ? null : cat)}
-                      className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                      className={`shrink-0 px-3 py-1.5 rounded-[8px] text-sm font-medium transition-colors ${
                         openCategory === cat
                           ? "bg-primary text-white"
                           : "bg-surface-container text-text-secondary hover:bg-surface-container-high"
@@ -206,14 +206,14 @@ export function ProfilView({
               {/* Dropdown content */}
               {openCategory && menuByCategory[openCategory] && (
                 <div className="mt-2 animate-in slide-in-from-top-2 duration-200">
-                  <div className="bg-surface-container rounded-[16px] p-2 border border-border-subtle">
+                  <div className="bg-surface-container rounded-[10px] p-2 border border-border-subtle">
                     {menuByCategory[openCategory].map((item) => (
                       <Link
                         key={item.label}
                         href={item.href}
-                        className="flex items-center gap-3 px-3 py-3 rounded-xl active:bg-surface-container-low active:scale-[0.99] transition-all"
+                        className="flex items-center gap-3 px-3 py-3 rounded-[8px] hover:bg-surface-container-low transition-colors"
                       >
-                        <div className="w-10 h-10 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
+                        <div className="w-10 h-10 rounded-[8px] bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
                           <Icon name={item.icon} className="text-[20px]" />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -238,7 +238,7 @@ export function ProfilView({
             <section className="px-gutter pt-2.5 lg:px-0">
               <Link
                 href="/absensi"
-                className="block bg-warning-surface rounded-[16px] p-3.5 flex items-start gap-2.5 active:scale-[0.99] transition-transform"
+                className="block bg-warning-surface rounded-[10px] border border-amber-200 p-3.5 flex items-start gap-2.5 hover:opacity-95 transition-opacity"
               >
                 <Icon name="wrong_location" className="text-warning-text text-[20px] mt-0.5" />
                 <div className="flex-1 min-w-0">
@@ -262,7 +262,7 @@ export function ProfilView({
         <form action="/auth/signout" method="post">
           <button
             type="submit"
-            className="w-full h-[50px] rounded-full bg-danger-surface text-danger-text font-body-bold text-body-bold flex items-center justify-center gap-2.5 active:scale-[0.98] transition-transform"
+            className="w-full h-11 rounded-[8px] bg-danger-surface text-danger-text font-body-bold text-body-bold flex items-center justify-center gap-2.5 hover:bg-danger-surface/80 transition-colors"
           >
             <Icon name="logout" className="text-[20px]" />
             Keluar dari Aplikasi

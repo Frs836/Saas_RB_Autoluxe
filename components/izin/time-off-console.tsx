@@ -287,16 +287,16 @@ export function TimeOffConsole({
             <h1 className="font-headline-2 text-headline-2 text-text-primary">
               Pengajuan Izin & Cuti
             </h1>
-            <span className="px-2 py-0.5 rounded-full bg-brand-50 text-brand-600 font-micro-badge text-micro-badge">
+            <span className="px-2 py-0.5 rounded-[6px] bg-brand-50 border border-brand-200 text-brand-600 font-micro-badge text-micro-badge">
               {TYPES.find((t) => t.value === type)?.label}
             </span>
           </div>
 
           {/* Card Info Tabungan Libur Pengganti */}
-          <div className="p-3.5 rounded-2xl bg-gradient-to-br from-blue-500/10 via-brand-50 to-indigo-500/10 border border-blue-200/70 flex flex-col gap-2">
+          <div className="p-3.5 rounded-[10px] bg-gradient-to-br from-blue-500/10 via-brand-50 to-indigo-500/10 border border-blue-200/70 flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                <div className="w-10 h-10 rounded-[8px] bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-sm">
                   <Icon name="event_repeat" className="text-[22px]" />
                 </div>
                 <div>
@@ -317,7 +317,7 @@ export function TimeOffConsole({
                 <button
                   type="button"
                   onClick={() => setShowHistory((v) => !v)}
-                  className="px-2.5 py-1.5 rounded-xl bg-surface border border-border-subtle font-micro-badge text-micro-badge text-text-secondary flex items-center gap-1 active:scale-95 transition-transform"
+                  className="px-2.5 py-1.5 rounded-[8px] bg-surface border border-border-subtle font-micro-badge text-micro-badge text-text-secondary flex items-center gap-1 hover:bg-surface-variant transition-colors"
                 >
                   <Icon name="history" className="text-[14px]" />
                   {showHistory ? "Tutup" : "Riwayat"}
@@ -327,7 +327,7 @@ export function TimeOffConsole({
 
             {/* Riwayat mutasi saldo jika diklik */}
             {showHistory && offInLieuLogs.length > 0 && (
-              <div className="mt-1 p-2.5 rounded-xl bg-surface/95 border border-border-subtle flex flex-col gap-2 max-h-48 overflow-y-auto">
+              <div className="mt-1 p-2.5 rounded-[8px] bg-surface/95 border border-border-subtle flex flex-col gap-2 max-h-48 overflow-y-auto">
                 <span className="font-micro-badge text-micro-badge font-semibold text-text-secondary">
                   Riwayat Mutasi Saldo
                 </span>
@@ -346,7 +346,7 @@ export function TimeOffConsole({
             )}
 
             {type === "libur_pengganti" ? (
-              <div className="mt-1 p-2.5 rounded-xl bg-surface/90 border border-blue-100 flex flex-col gap-1 text-xs">
+              <div className="mt-1 p-2.5 rounded-[8px] bg-surface/90 border border-blue-100 flex flex-col gap-1 text-xs">
                 <div className="flex justify-between">
                   <span className="text-text-secondary">Saldo saat ini:</span>
                   <span className="font-semibold text-text-primary">{offInLieuBalance} hari</span>
@@ -378,10 +378,10 @@ export function TimeOffConsole({
                   type="button"
                   onClick={() => setType(item.value)}
                   aria-pressed={active}
-                  className={`py-2.5 px-2 rounded-xl flex flex-col items-center gap-1 active:scale-95 transition-transform ${
+                  className={`py-2.5 px-2 rounded-[8px] flex flex-col items-center gap-1 transition-colors ${
                     active
                       ? "bg-primary text-white shadow-[0px_8px_16px_rgba(37,99,235,0.22)]"
-                      : "bg-surface-container-low text-text-secondary"
+                      : "bg-surface-container-low text-text-secondary hover:bg-surface-container"
                   }`}
                 >
                   <Icon name={item.icon} className="text-[20px]" />
@@ -503,7 +503,7 @@ export function TimeOffConsole({
             type="button"
             onClick={submit}
             disabled={busy || Boolean(validationError)}
-            className="py-3.5 rounded-2xl primary-gradient text-on-primary font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-50"
+            className="py-3.5 rounded-[8px] primary-gradient clay-glow text-white font-body-bold text-body-bold flex items-center justify-center gap-2 hover:opacity-95 transition-opacity disabled:opacity-50"
           >
             <Icon name="send" className="text-[20px]" />
             {busy ? "Mengirim..." : "Kirim Pengajuan"}
@@ -516,7 +516,7 @@ export function TimeOffConsole({
               Daftar Pengajuan
             </h2>
             {pendingCount > 0 ? (
-              <span className="px-2 py-0.5 rounded-full bg-warning-surface text-warning-text font-micro-badge text-micro-badge">
+              <span className="px-2 py-0.5 rounded-[6px] bg-warning-surface border border-amber-200 text-warning-text font-micro-badge text-micro-badge">
                 {pendingCount} perlu ditinjau
               </span>
             ) : null}
@@ -528,12 +528,10 @@ export function TimeOffConsole({
                 key={f.key}
                 type="button"
                 onClick={() => setFilter(f.key)}
-                // min-h-11 agar tinggi target sentuh mencapai 44px. Versi sebelumnya
-                // py-1.5 hanya menghasilkan 28px, terlalu kecil untuk ibu jari.
-                className={`px-3 min-h-11 rounded-xl font-caption text-caption flex items-center ${
+                className={`px-3 min-h-11 rounded-[8px] font-caption text-caption flex items-center transition-colors ${
                   filter === f.key
-                    ? "bg-brand-50 text-brand-700"
-                    : "bg-surface-container-low text-text-secondary"
+                    ? "bg-brand-50 border border-brand-200 text-brand-700 font-body-bold"
+                    : "bg-surface-container-low text-text-secondary hover:bg-surface-container"
                 }`}
               >
                 {f.label}
@@ -555,7 +553,7 @@ export function TimeOffConsole({
                 return (
                   <div
                     key={row.id}
-                    className="rounded-2xl bg-surface-container-low p-3 flex flex-col gap-2"
+                    className="rounded-[10px] bg-surface-container-low border border-border-subtle p-3 flex flex-col gap-2"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="flex items-center gap-1.5 font-body-bold text-body-bold text-text-primary">
@@ -563,7 +561,7 @@ export function TimeOffConsole({
                         {row.requesterName}
                       </span>
                       <span
-                        className={`px-2 py-0.5 rounded-full font-micro-badge text-micro-badge uppercase flex items-center gap-1 ${meta.cls}`}
+                        className={`px-2 py-0.5 rounded-[6px] border border-border-subtle font-micro-badge text-micro-badge uppercase flex items-center gap-1 ${meta.cls}`}
                       >
                         <Icon name={meta.icon} className="text-[13px]" />
                         {meta.label}
@@ -593,12 +591,6 @@ export function TimeOffConsole({
                       </p>
                     ) : null}
 
-                    {/*
-                      Pemohon sendiri yang menarik pengajuannya. Tombol ini
-                      berlaku untuk semua peran, bukan hanya yang punya hak
-                      memutuskan; sebelumnya pesan yang muncul justru hanya
-                      untuk yang punya hak memutuskan, dan tanpa tombol.
-                    */}
                     {row.isOwn && row.status === "pending" ? (
                       <button
                         type="button"
@@ -609,7 +601,7 @@ export function TimeOffConsole({
                             `${row.type === "izin" ? "izin" : row.type} ${formatDateWib(row.startDate)}`,
                           )
                         }
-                        className="w-full py-2.5 rounded-xl bg-surface-container text-text-secondary font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform disabled:opacity-60"
+                        className="w-full py-2.5 rounded-[8px] bg-surface-container hover:bg-surface-container-high text-text-secondary font-caption text-caption flex items-center justify-center gap-1.5 transition-colors disabled:opacity-60"
                       >
                         <Icon name="undo" className="text-[16px]" />
                         Tarik Pengajuan
@@ -622,7 +614,7 @@ export function TimeOffConsole({
                           type="button"
                           disabled={busy}
                           onClick={() => decide(row.id, "approved")}
-                          className="flex-1 py-2.5 rounded-xl bg-success-base text-white font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform disabled:opacity-60"
+                          className="flex-1 py-2.5 rounded-[8px] bg-success-base hover:bg-success-base/90 text-white font-caption text-caption flex items-center justify-center gap-1 transition-colors disabled:opacity-60"
                         >
                           <Icon name="task_alt" className="text-[16px]" />
                           Setujui
@@ -631,7 +623,7 @@ export function TimeOffConsole({
                           type="button"
                           disabled={busy}
                           onClick={() => decide(row.id, "rejected")}
-                          className="flex-1 py-2.5 rounded-xl bg-danger-surface text-danger-text font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform disabled:opacity-60"
+                          className="flex-1 py-2.5 rounded-[8px] bg-danger-surface hover:bg-danger-surface/80 text-danger-text font-caption text-caption flex items-center justify-center gap-1 transition-colors disabled:opacity-60"
                         >
                           <Icon name="cancel" className="text-[16px]" />
                           Tolak
@@ -652,21 +644,21 @@ export function TimeOffConsole({
             <img
               src={proofPreview}
               alt="Pratinjau surat dokter"
-              className="w-full max-w-[420px] aspect-square object-cover rounded-3xl"
+              className="w-full max-w-[420px] aspect-square object-cover rounded-[10px]"
             />
           ) : (
             <video
               ref={videoRef}
               playsInline
               muted
-              className="w-full max-w-[420px] aspect-square object-cover rounded-3xl"
+              className="w-full max-w-[420px] aspect-square object-cover rounded-[10px]"
             />
           )}
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={closeCamera}
-              className="h-12 px-5 rounded-full bg-white/15 text-white font-body-bold text-body-bold"
+              className="h-12 px-5 rounded-[8px] bg-white/15 hover:bg-white/20 text-white font-body-bold text-body-bold transition-colors"
             >
               Batal
             </button>
@@ -675,7 +667,7 @@ export function TimeOffConsole({
                 type="button"
                 onClick={submit}
                 disabled={busy}
-                className="h-12 px-6 rounded-full bg-success-base text-white font-body-bold text-body-bold disabled:opacity-60"
+                className="h-12 px-6 rounded-[8px] bg-success-base hover:bg-success-base/90 text-white font-body-bold text-body-bold transition-colors disabled:opacity-60"
               >
                 {busy ? "Mengirim..." : "Kirim Pengajuan"}
               </button>
@@ -685,7 +677,7 @@ export function TimeOffConsole({
                 onClick={captureProof}
                 disabled={busy}
                 aria-label="Ambil foto"
-                className="h-14 w-14 rounded-full bg-brand-500 text-white flex items-center justify-center clay-glow disabled:opacity-60"
+                className="h-14 w-14 rounded-[8px] bg-brand-500 hover:bg-brand-600 text-white flex items-center justify-center clay-glow transition-colors disabled:opacity-60"
               >
                 <Icon name="photo_camera" className="text-[28px]" />
               </button>

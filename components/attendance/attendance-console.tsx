@@ -726,10 +726,10 @@ export function AttendanceConsole({
       {/* Ringkasan shift hari ini (owner / admin_kasir / maintainer) */}
       {canAudit ? (
         <section className="px-gutter pt-4 lg:px-0 lg:pt-0">
-          <div className="bg-surface rounded-[20px] p-4 clay-card border border-white/80">
+          <div className="bg-surface rounded-[10px] p-4 clay-card border border-white/80">
             <div className="flex items-center justify-between gap-2 mb-2.5">
               <div className="flex items-center gap-2.5">
-                <span className="w-9 h-9 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
+                <span className="w-9 h-9 rounded-[8px] bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
                   <Icon name="payments" className="text-[20px]" />
                 </span>
                 <div className="min-w-0">
@@ -742,12 +742,12 @@ export function AttendanceConsole({
                 </div>
               </div>
               <span
-                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-micro-badge text-micro-badge shrink-0 ${
+                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-[6px] font-micro-badge text-micro-badge shrink-0 border ${
                   handoff
                     ? handoff.status === "closed"
-                      ? "bg-success-surface text-success-text"
-                      : "bg-brand-50 text-brand-700"
-                    : "bg-surface-container-low text-text-secondary"
+                      ? "bg-success-surface text-success-text border-success-base/30"
+                      : "bg-brand-50 text-brand-700 border-brand-200"
+                    : "bg-surface-container-low text-text-secondary border-border-subtle"
                 }`}
               >
                 <Icon name={handoff
@@ -762,7 +762,7 @@ export function AttendanceConsole({
                   : "Belum Buka"}
               </span>
             </div>
-            <div className="bg-surface-container-low rounded-2xl px-3 py-2.5 flex items-center justify-between mb-2.5">
+            <div className="bg-surface-container-low rounded-[8px] px-3 py-2.5 flex items-center justify-between mb-2.5">
               <span className="font-caption text-caption text-text-secondary">
                 Modal Kas Titipan
               </span>
@@ -773,7 +773,7 @@ export function AttendanceConsole({
             <div className="flex gap-2">
               <Link
                 href="/shift"
-                className="flex-1 h-11 rounded-xl primary-gradient text-white font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+                className="flex-1 h-11 rounded-[8px] primary-gradient clay-glow text-white font-caption text-caption flex items-center justify-center gap-1.5 hover:opacity-95 transition-opacity"
               >
                 <Icon name={handoff && handoff.status === "open" ? "fact_check" : "login"} className="text-[16px]" />
                 {handoff && handoff.status === "open"
@@ -782,7 +782,7 @@ export function AttendanceConsole({
               </Link>
               <Link
                 href="/rekap"
-                className="flex-1 h-11 rounded-xl bg-surface-container-low text-text-secondary font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+                className="flex-1 h-11 rounded-[8px] bg-surface-container-low text-text-secondary font-caption text-caption flex items-center justify-center gap-1.5 hover:bg-surface-container transition-colors"
               >
                 <Icon name="groups" className="text-[16px]" />
                 Rekap
@@ -795,9 +795,9 @@ export function AttendanceConsole({
       {/* Kartu status hari ini */}
       {mode !== "checkin" ? (
         <section className="px-gutter pt-4 lg:px-0 lg:pt-0">
-          <div className="bg-surface rounded-[24px] p-5 clay-card border border-white/80 flex items-start gap-3">
+          <div className="bg-surface rounded-[10px] p-5 clay-card border border-white/80 flex items-start gap-3">
             <div
-              className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${
+              className={`w-11 h-11 rounded-[8px] flex items-center justify-center shrink-0 ${
                 mode === "done"
                   ? "bg-success-surface text-success-text"
                   : "bg-warning-surface text-warning-text"
@@ -833,7 +833,7 @@ export function AttendanceConsole({
                 </div>
               )}
               {today?.lateMinutes ? (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-warning-surface text-warning-text font-caption text-caption w-fit">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[6px] bg-warning-surface border border-amber-200 text-warning-text font-caption text-caption w-fit">
                   <Icon name="running_with_errors" className="text-[13px]" />
                   Terlambat {formatDuration(today.lateMinutes)}
                 </span>
@@ -846,7 +846,7 @@ export function AttendanceConsole({
       {/* Peringatan pendaftaran Face ID */}
       {!hasFace ? (
         <section className="px-gutter pt-4 lg:px-0 lg:pt-0">
-          <div className="bg-brand-50 border border-brand-100 rounded-[16px] p-3.5 flex items-start gap-2.5">
+          <div className="bg-brand-50 border border-brand-100 rounded-[10px] p-3.5 flex items-start gap-2.5">
             <Icon name="badge" className="text-brand-600 text-[20px] mt-0.5" />
             <div className="flex flex-col gap-0.5">
               <span className="font-body-bold text-body-bold text-text-primary">
@@ -880,7 +880,7 @@ export function AttendanceConsole({
               <button
                 type="button"
                 onClick={() => setShowLocationSetup((v) => !v)}
-                className="self-start h-9 px-3 rounded-xl bg-warning-base text-white font-caption text-caption flex items-center gap-1.5 active:scale-95 transition-transform"
+                className="self-start h-9 px-3 rounded-[8px] bg-warning-base text-white font-caption text-caption flex items-center gap-1.5 hover:opacity-90 transition-opacity"
               >
                 <Icon name="my_location" className="text-[16px]" />
                 Atur Lokasi Cabang
@@ -893,7 +893,7 @@ export function AttendanceConsole({
           <button
             type="button"
             onClick={() => setShowLocationSetup(true)}
-            className="w-full h-11 rounded-2xl bg-surface-container-low text-text-secondary font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+            className="w-full h-11 rounded-[8px] bg-surface-container-low text-text-secondary font-caption text-caption flex items-center justify-center gap-1.5 hover:bg-surface-container transition-colors"
           >
             <Icon name="edit_location_alt" className="text-[16px]" />
             Perbarui Lokasi Cabang
@@ -903,11 +903,11 @@ export function AttendanceConsole({
 
       {canManageLocation && showLocationSetup ? (
         <section className="px-gutter pt-4 lg:px-0 lg:pt-0">
-          <div className="bg-surface rounded-[16px] p-3.5 clay-card flex flex-col gap-3">
+          <div className="bg-surface rounded-[10px] p-3.5 clay-card flex flex-col gap-3">
             <span className="font-body-bold text-body-bold text-text-primary">
               Atur titik koordinat cabang
             </span>
-            <div className="bg-surface-container-low rounded-xl p-2.5 font-mono text-[12px] text-text-secondary">
+            <div className="bg-surface-container-low rounded-[8px] p-2.5 font-mono text-[12px] text-text-secondary">
               {gps.status === "success"
                 ? `${gps.lat?.toFixed(5)}, ${gps.lng?.toFixed(5)} (akurasi ${formatDistance(
                     gps.accuracy,
@@ -918,7 +918,7 @@ export function AttendanceConsole({
               <button
                 type="button"
                 onClick={requestGps}
-                className="flex-1 h-11 rounded-xl bg-surface-container-low text-text-secondary font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+                className="flex-1 h-11 rounded-[8px] bg-surface-container-low text-text-secondary font-caption text-caption flex items-center justify-center gap-1.5 hover:bg-surface-container transition-colors"
               >
                 <Icon name="refresh" className="text-[16px]" />
                 Perbarui GPS
@@ -927,7 +927,7 @@ export function AttendanceConsole({
                 type="button"
                 onClick={handleSaveLocation}
                 disabled={busy !== null || gps.status !== "success"}
-                className="flex-1 h-11 rounded-xl primary-gradient text-white font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform disabled:opacity-60"
+                className="flex-1 h-11 rounded-[8px] primary-gradient clay-glow text-white font-caption text-caption flex items-center justify-center gap-1.5 hover:opacity-95 transition-opacity disabled:opacity-60"
               >
                 <Icon name="save" className="text-[16px]" />
                 Simpan Titik Ini
@@ -941,10 +941,10 @@ export function AttendanceConsole({
       <div className="lg:col-span-1 lg:max-w-[420px] lg:w-full">
       {/* Kartu kamera */}
       <section className="px-gutter pt-4 lg:px-0 lg:pt-4">
-        <div className="bg-surface rounded-[24px] p-4 sm:p-5 clay-card border border-white/80 inner-clay-highlight space-y-4">
+        <div className="bg-surface rounded-[10px] p-4 sm:p-5 clay-card border border-white/80 inner-clay-highlight space-y-4">
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-2">
-              <span className="p-1.5 rounded-lg bg-brand-50 text-brand-600">
+              <span className="p-1.5 rounded-[8px] bg-brand-50 text-brand-600">
                 <Icon name="photo_camera" className="text-[18px]" />
               </span>
               <span className="font-body-bold text-body-bold text-text-primary">
@@ -956,7 +956,7 @@ export function AttendanceConsole({
             </span>
           </div>
 
-          <div className="w-full max-w-[360px] mx-auto aspect-square rounded-[20px] bg-[#0F172A] relative overflow-hidden shadow-inner border border-slate-800">
+          <div className="w-full max-w-[360px] mx-auto aspect-square rounded-[10px] bg-[#0F172A] relative overflow-hidden shadow-inner border border-slate-800">
             {capturedDataUrl ? (
               <img
                 src={capturedDataUrl}
@@ -1017,14 +1017,14 @@ export function AttendanceConsole({
               </>
             )}
 
-            <div className="absolute top-3 left-3 bg-[#0F172A]/80 backdrop-blur-md px-2.5 py-1.5 rounded-full flex items-center gap-1.5 border border-white/10">
+            <div className="absolute top-3 left-3 bg-[#0F172A]/80 backdrop-blur-md px-2.5 py-1.5 rounded-[6px] flex items-center gap-1.5 border border-white/20">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               <span className="text-[10px] font-bold tracking-wide uppercase text-white">
                 {capturedDataUrl ? "Foto Terambil" : "Pratinjau Kamera"}
               </span>
             </div>
 
-            <div className="absolute top-3 right-3 bg-[#0F172A]/75 backdrop-blur-md px-2 py-1 rounded-md text-[10px] font-mono text-brand-200 border border-brand-400/30">
+            <div className="absolute top-3 right-3 bg-[#0F172A]/75 backdrop-blur-md px-2 py-1 rounded-[6px] text-[10px] font-mono text-brand-200 border border-brand-400/30">
               {similarity === null
                 ? hasFace
                   ? "SAMPEL: -"
@@ -1046,7 +1046,7 @@ export function AttendanceConsole({
             <div className="absolute bottom-0 inset-x-0 bg-[#0F172A]/85 backdrop-blur-md px-3 py-2.5 text-white flex items-center justify-between border-t border-white/10">
               <div className="flex items-center gap-2 min-w-0">
                 <div
-                  className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${
+                  className={`w-6 h-6 rounded-[6px] flex items-center justify-center shrink-0 ${
                     insideRadius && branchConfigured
                       ? "bg-emerald-500/20 text-emerald-400"
                       : "bg-amber-500/20 text-amber-300"
@@ -1066,7 +1066,7 @@ export function AttendanceConsole({
                 </div>
               </div>
               <span
-                className={`px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0 ${
+                className={`px-2 py-0.5 rounded-[6px] text-[10px] font-bold shrink-0 ${
                   insideRadius && branchConfigured
                     ? "bg-emerald-500/20 border border-emerald-400/40 text-emerald-300"
                     : "bg-amber-500/20 border border-amber-400/40 text-amber-200"
@@ -1156,7 +1156,7 @@ export function AttendanceConsole({
                 <button
                   type="button"
                   onClick={() => setScanDiminta(true)}
-                  className="h-12 px-6 rounded-full primary-gradient text-white font-body-bold text-body-bold flex items-center gap-2 clay-glow active:scale-95 transition-transform"
+                  className="h-12 px-6 rounded-[8px] primary-gradient text-white font-body-bold text-body-bold flex items-center gap-2 clay-glow hover:opacity-95 transition-opacity"
                 >
                   <Icon
                     name={mode === "checkout" ? "logout" : "photo_camera"}
@@ -1174,7 +1174,7 @@ export function AttendanceConsole({
                   type="button"
                   onClick={handleRetake}
                   disabled={busy !== null}
-                  className="h-11 px-5 rounded-full bg-surface-container-low text-text-secondary font-caption text-caption flex items-center gap-1.5 active:scale-95 transition-transform disabled:opacity-50"
+                  className="h-11 px-5 rounded-[8px] bg-surface-container-low text-text-secondary font-caption text-caption flex items-center gap-1.5 hover:bg-surface-container transition-colors disabled:opacity-50"
                 >
                   <Icon name="restart_alt" className="text-[18px]" />
                   Ulangi
@@ -1331,10 +1331,10 @@ export function AttendanceConsole({
         ) : null}
         {hasFace && faceStatus !== null && faceStatus !== "approved" ? (
           <div
-            className={`rounded-2xl p-3.5 font-caption text-caption leading-relaxed ${
+            className={`rounded-[8px] p-3.5 font-caption text-caption leading-relaxed border ${
               faceStatus === "rejected"
-                ? "bg-danger-surface text-danger-text"
-                : "bg-warning-surface text-warning-text"
+                ? "bg-danger-surface text-danger-text border-red-200"
+                : "bg-warning-surface text-warning-text border-amber-200"
             }`}
           >
             <span className="font-body-bold text-body-bold flex items-center gap-1.5 mb-1">
@@ -1354,7 +1354,7 @@ export function AttendanceConsole({
             type="button"
             onClick={handleRegisterFace}
             disabled={busy !== null || !capturedBlob}
-            className="w-full h-[50px] rounded-full bg-surface border border-brand-200 text-brand-700 font-body-bold text-body-bold flex items-center justify-center gap-2.5 active:scale-[0.98] transition-all disabled:opacity-60"
+            className="w-full h-11 rounded-[8px] bg-surface border border-brand-200 text-brand-700 font-body-bold text-body-bold flex items-center justify-center gap-2.5 hover:bg-surface-variant transition-colors disabled:opacity-60"
           >
             <Icon name="face_retouching_natural" className="text-[22px]" />
             {busy === "register" ? "Mendaftarkan..." : "Daftarkan Ulang Face ID"}
@@ -1366,7 +1366,7 @@ export function AttendanceConsole({
             type="button"
             onClick={handleRegisterFace}
             disabled={busy !== null || !capturedBlob}
-            className="w-full h-[50px] rounded-full bg-surface border border-brand-200 text-brand-700 font-body-bold text-body-bold flex items-center justify-center gap-2.5 active:scale-[0.98] transition-all disabled:opacity-60"
+            className="w-full h-11 rounded-[8px] bg-surface border border-brand-200 text-brand-700 font-body-bold text-body-bold flex items-center justify-center gap-2.5 hover:bg-surface-variant transition-colors disabled:opacity-60"
           >
             <Icon name="face_retouching_natural" className="text-[22px]" />
             {busy === "register" ? "Mendaftarkan..." : "Daftarkan Face ID"}
@@ -1374,7 +1374,7 @@ export function AttendanceConsole({
         ) : null}
 
         {mode === "done" ? (
-          <div className="w-full h-[50px] rounded-full bg-success-surface text-success-text font-body-bold text-body-bold flex items-center justify-center gap-2.5">
+          <div className="w-full h-11 rounded-[8px] bg-success-surface text-success-text border border-success-base/30 font-body-bold text-body-bold flex items-center justify-center gap-2.5">
             <Icon name="verified" className="text-[22px]" />
             Absensi hari ini sudah lengkap
           </div>
@@ -1383,7 +1383,7 @@ export function AttendanceConsole({
             type="button"
             onClick={handleSubmit}
             disabled={!canSubmit || busy !== null}
-            className="w-full h-[50px] rounded-full primary-gradient text-white font-bold text-[14px] flex items-center justify-center gap-2.5 clay-glow active:scale-[0.98] transition-all disabled:opacity-60"
+            className="w-full h-11 rounded-[8px] primary-gradient text-white font-bold text-[14px] flex items-center justify-center gap-2.5 clay-glow hover:opacity-95 transition-opacity disabled:opacity-60"
           >
             <Icon name="restart_alt" className="text-[22px]" />
             <span className="tracking-wide uppercase">
@@ -1397,14 +1397,14 @@ export function AttendanceConsole({
         ) : null}
 
         {error ? (
-          <div className="p-3 rounded-xl bg-danger-surface text-danger-text font-body text-body flex items-center gap-2">
+          <div className="p-3 rounded-[8px] bg-danger-surface text-danger-text font-body text-body flex items-center gap-2 border border-red-200">
             <Icon name="error" className="text-[18px]" />
             <span className="flex-1">{error}</span>
           </div>
         ) : null}
 
         {info ? (
-          <div className="p-3 rounded-xl bg-success-surface text-success-text font-body text-body flex items-center gap-2">
+          <div className="p-3 rounded-[8px] bg-success-surface text-success-text font-body text-body flex items-center gap-2 border border-success-base/30">
             <Icon name="check_circle" className="text-[18px]" />
             <span className="flex-1">{info}</span>
           </div>
@@ -1420,7 +1420,7 @@ export function AttendanceConsole({
       {/* Riwayat kehadiran */}
       {history.length ? (
         <section className="px-gutter pt-4 lg:px-0 lg:pt-0">
-          <div className="bg-surface rounded-[20px] p-4 clay-card border border-white/80">
+          <div className="bg-surface rounded-[10px] p-4 clay-card border border-white/80">
             <div className="flex items-center gap-2 mb-3">
               <Icon name="history" className="text-brand-600 text-[18px]" />
               <span className="font-body-bold text-body-bold text-text-primary">
@@ -1447,7 +1447,7 @@ export function AttendanceConsole({
                     </span>
                   </div>
                   <span
-                    className={`px-2 py-0.5 rounded-full font-caption text-caption ${
+                    className={`px-2 py-0.5 rounded-[6px] font-caption text-caption border border-border-subtle ${
                       ATTENDANCE_STATUS_STYLE[row.status] ??
                       "bg-surface-container-low text-text-secondary"
                     }`}

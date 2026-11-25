@@ -94,9 +94,9 @@ export function RegisterForm() {
 
   if (done) {
     return (
-      <div className="bg-surface rounded-3xl p-6 sm:p-7 flex flex-col gap-5 clay-card text-center">
-        <div className="w-14 h-14 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center mx-auto">
-          <Icon name="mark_email_read" className="text-[28px]" />
+      <div className="bg-surface rounded-[10px] p-6 sm:p-7 flex flex-col gap-5 clay-card text-center border border-border">
+        <div className="w-12 h-12 rounded-[8px] bg-brand-50 text-brand-600 flex items-center justify-center mx-auto border border-brand-200">
+          <Icon name="mark_email_read" className="text-[26px]" />
         </div>
         <div className="flex flex-col gap-1.5">
           <h2 className="font-headline-1 text-headline-1 text-text-primary">
@@ -110,9 +110,9 @@ export function RegisterForm() {
         </div>
         <Link
           href="/login"
-          className="w-full h-[46px] rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-600 font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-[0.99] transition-all duration-200"
+          className="w-full h-11 rounded-[8px] bg-brand-50 hover:bg-brand-100 text-brand-700 font-body-bold text-body-bold flex items-center justify-center gap-2 transition-colors border border-brand-200"
         >
-          <Icon name="login" className="text-[22px] text-brand-600" />
+          <Icon name="login" className="text-[20px] text-brand-600" />
           <span>Kembali ke Halaman Masuk</span>
         </Link>
       </div>
@@ -122,7 +122,7 @@ export function RegisterForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-surface rounded-3xl p-6 sm:p-7 flex flex-col gap-5 clay-card"
+      className="bg-surface rounded-[10px] p-6 sm:p-7 flex flex-col gap-5 clay-card border border-border"
     >
       <div className="flex flex-col gap-1.5">
         <label
@@ -141,7 +141,7 @@ export function RegisterForm() {
             autoComplete="name"
             value={fullName}
             onChange={(event) => setFullName(event.target.value)}
-            className="w-full h-12 pl-11 pr-4 rounded-xl bg-slate-50 text-text-primary font-body-regular text-body-regular placeholder:text-text-muted focus:outline-none focus:bg-white focus:shadow-md transition-all duration-200"
+            className="w-full h-11 pl-11 pr-4 rounded-[8px] bg-surface-container-low border border-border text-text-primary font-body text-body placeholder:text-text-muted focus:outline-none focus:bg-surface focus:border-brand-500 transition-colors"
             placeholder="Nama sesuai data staf"
           />
         </div>
@@ -164,7 +164,7 @@ export function RegisterForm() {
             autoComplete="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            className="w-full h-12 pl-11 pr-4 rounded-xl bg-slate-50 text-text-primary font-body-regular text-body-regular placeholder:text-text-muted focus:outline-none focus:bg-white focus:shadow-md transition-all duration-200"
+            className="w-full h-11 pl-11 pr-4 rounded-[8px] bg-surface-container-low border border-border text-text-primary font-body text-body placeholder:text-text-muted focus:outline-none focus:bg-surface focus:border-brand-500 transition-colors"
             placeholder="nama@rbautoluxe.id"
           />
         </div>
@@ -188,7 +188,7 @@ export function RegisterForm() {
             autoComplete="tel"
             value={phone}
             onChange={(event) => setPhone(event.target.value)}
-            className="w-full h-12 pl-11 pr-4 rounded-xl bg-slate-50 text-text-primary font-body-regular text-body-regular placeholder:text-text-muted focus:outline-none focus:bg-white focus:shadow-md transition-all duration-200"
+            className="w-full h-11 pl-11 pr-4 rounded-[8px] bg-surface-container-low border border-border text-text-primary font-body text-body placeholder:text-text-muted focus:outline-none focus:bg-surface focus:border-brand-500 transition-colors"
             placeholder="0812 3456 7890"
           />
         </div>
@@ -211,7 +211,7 @@ export function RegisterForm() {
             autoComplete="bday"
             value={dateOfBirth}
             onChange={(event) => setDateOfBirth(event.target.value)}
-            className="w-full h-12 pl-11 pr-4 rounded-xl bg-slate-50 text-text-primary font-body-regular text-body-regular placeholder:text-text-muted focus:outline-none focus:bg-white focus:shadow-md transition-all duration-200"
+            className="w-full h-11 pl-11 pr-4 rounded-[8px] bg-surface-container-low border border-border text-text-primary font-body text-body placeholder:text-text-muted focus:outline-none focus:bg-surface focus:border-brand-500 transition-colors"
           />
         </div>
       </div>
@@ -233,7 +233,7 @@ export function RegisterForm() {
             autoComplete="new-password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            className="w-full h-12 pl-11 pr-12 rounded-xl bg-slate-50 text-text-primary font-body-regular text-body-regular placeholder:text-text-muted focus:outline-none focus:bg-white focus:shadow-md transition-all duration-200"
+            className="w-full h-11 pl-11 pr-12 rounded-[8px] bg-surface-container-low border border-border text-text-primary font-body text-body placeholder:text-text-muted focus:outline-none focus:bg-surface focus:border-brand-500 transition-colors"
             placeholder="Minimal 8 karakter"
           />
           <button
@@ -264,14 +264,14 @@ export function RegisterForm() {
             autoComplete="new-password"
             value={confirmPassword}
             onChange={(event) => setConfirmPassword(event.target.value)}
-            className="w-full h-12 pl-11 pr-4 rounded-xl bg-slate-50 text-text-primary font-body-regular text-body-regular placeholder:text-text-muted focus:outline-none focus:bg-white focus:shadow-md transition-all duration-200"
+            className="w-full h-11 pl-11 pr-4 rounded-[8px] bg-surface-container-low border border-border text-text-primary font-body text-body placeholder:text-text-muted focus:outline-none focus:bg-surface focus:border-brand-500 transition-colors"
             placeholder="Ulangi kata sandi"
           />
         </div>
       </div>
 
       {error && (
-        <div className="flex items-start gap-2.5 p-3 rounded-xl bg-danger-surface text-danger-text">
+        <div className="flex items-start gap-2.5 p-3 rounded-[8px] bg-danger-surface text-danger-text border border-danger-base/30">
           <Icon name="error" className="text-[18px] shrink-0" />
           <p className="font-caption text-caption leading-relaxed">{error}</p>
         </div>
@@ -280,7 +280,7 @@ export function RegisterForm() {
       <button
         type="submit"
         disabled={loading}
-        className="w-full h-[50px] rounded-full text-on-primary font-headline-2 text-headline-2 flex items-center justify-center gap-2 active:scale-[0.98] transition-all duration-200 cursor-pointer primary-gradient clay-glow disabled:opacity-70 disabled:cursor-not-allowed"
+        className="w-full h-11 rounded-[8px] text-white font-body-bold text-body-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity cursor-pointer primary-gradient clay-glow disabled:opacity-70 disabled:cursor-not-allowed shadow-sm"
       >
         <span>{loading ? "MENDAFTAR..." : "DAFTAR AKUN STAF"}</span>
         {!loading && (
@@ -289,7 +289,7 @@ export function RegisterForm() {
       </button>
 
       <div className="relative flex items-center justify-center my-1">
-        <div className="w-full h-[1px] bg-slate-200" />
+        <div className="w-full h-[1px] bg-border" />
         <span className="absolute px-3 bg-surface font-caption text-caption text-text-muted uppercase tracking-wider">
           sudah punya akun
         </span>
@@ -297,9 +297,9 @@ export function RegisterForm() {
 
       <Link
         href="/login"
-        className="w-full h-[46px] rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-600 font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-[0.99] transition-all duration-200"
+        className="w-full h-11 rounded-[8px] bg-brand-50 hover:bg-brand-100 text-brand-700 font-body-bold text-body-bold flex items-center justify-center gap-2 transition-colors border border-brand-200"
       >
-        <Icon name="login" className="text-[22px] text-brand-600" />
+        <Icon name="login" className="text-[20px] text-brand-600" />
         <span>Masuk ke Sistem</span>
       </Link>
     </form>

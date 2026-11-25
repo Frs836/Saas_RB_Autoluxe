@@ -106,13 +106,13 @@ export function InvoiceHistory({
   return (
     <main className="flex-1 px-gutter pt-4 pb-nav-plain lg:pb-8 flex flex-col gap-3 lg:max-w-4xl lg:mx-auto lg:px-6">
       {/* Tab Switcher */}
-      <div className="flex bg-surface p-1 rounded-2xl shadow-sm border border-outline-variant/60 gap-1">
+      <div className="flex bg-surface p-1 rounded-[10px] clay-card gap-1">
         <button
           type="button"
           onClick={() => setActiveTab("invoice")}
-          className={`flex-1 py-2.5 rounded-xl font-body-bold text-caption flex items-center justify-center gap-2 transition-all ${
+          className={`flex-1 py-2.5 rounded-[8px] font-body-bold text-caption flex items-center justify-center gap-2 transition-all ${
             activeTab === "invoice"
-              ? "bg-brand-600 text-white shadow-sm"
+              ? "primary-gradient clay-glow text-white"
               : "text-text-secondary hover:bg-surface-container"
           }`}
         >
@@ -122,9 +122,9 @@ export function InvoiceHistory({
         <button
           type="button"
           onClick={() => setActiveTab("maintenance")}
-          className={`flex-1 py-2.5 rounded-xl font-body-bold text-caption flex items-center justify-center gap-2 transition-all ${
+          className={`flex-1 py-2.5 rounded-[8px] font-body-bold text-caption flex items-center justify-center gap-2 transition-all ${
             activeTab === "maintenance"
-              ? "bg-brand-600 text-white shadow-sm"
+              ? "primary-gradient clay-glow text-white"
               : "text-text-secondary hover:bg-surface-container"
           }`}
         >
@@ -138,7 +138,7 @@ export function InvoiceHistory({
       ) : (
         <>
           {invoices.length === 0 ? (
-            <div className="clay-card p-8 flex flex-col items-center text-center gap-2">
+            <div className="clay-card rounded-[10px] p-8 flex flex-col items-center text-center gap-2">
               <Icon name="receipt_long" className="text-[40px] text-text-muted" />
               <p className="font-body text-body text-text-secondary">
                 Belum ada invoice yang tercatat.
@@ -147,20 +147,20 @@ export function InvoiceHistory({
           ) : (
             <>
       <div className="grid grid-cols-3 gap-2">
-        <div className="clay-card p-3 flex flex-col items-center gap-0.5">
-          <span className="font-headline-2 text-headline-2 text-text-primary">
+        <div className="clay-card rounded-[10px] p-3 flex flex-col items-center gap-0.5">
+          <span className="font-headline-2 text-headline-2 text-text-primary tabular-nums">
             {tersaring.length}
           </span>
           <span className="font-caption text-caption text-text-muted">Invoice</span>
         </div>
-        <div className="clay-card p-3 flex flex-col items-center gap-0.5">
-          <span className="font-headline-2 text-headline-2 text-brand-600">
+        <div className="clay-card rounded-[10px] p-3 flex flex-col items-center gap-0.5">
+          <span className="font-headline-2 text-headline-2 text-brand-600 tabular-nums">
             {formatRupiah(totalNilai)}
           </span>
           <span className="font-caption text-caption text-text-muted">Total</span>
         </div>
-        <div className="clay-card p-3 flex flex-col items-center gap-0.5">
-          <span className="font-headline-2 text-headline-2 text-warning-text">
+        <div className="clay-card rounded-[10px] p-3 flex flex-col items-center gap-0.5">
+          <span className="font-headline-2 text-headline-2 text-warning-text tabular-nums">
             {belumLunas}
           </span>
           <span className="font-caption text-caption text-text-muted">Belum Lunas</span>
@@ -170,19 +170,19 @@ export function InvoiceHistory({
       <div className="relative">
         <Icon
           name="search"
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[20px]"
+          className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted text-[20px]"
         />
         <input
           value={cari}
           onChange={(e) => setCari(e.target.value)}
           type="search"
           placeholder="Cari nomor invoice, plat, atau nama..."
-          className="w-full h-12 pl-11 pr-4 rounded-2xl bg-surface text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+          className="w-full h-11 pl-11 pr-4 rounded-[8px] border border-border bg-surface text-body text-text-primary outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
         />
       </div>
 
       {tersaring.length === 0 ? (
-        <div className="clay-card p-6 flex flex-col items-center text-center gap-2">
+        <div className="clay-card rounded-[10px] p-6 flex flex-col items-center text-center gap-2">
           <Icon name="inventory_2" className="text-[32px] text-text-muted" />
           <p className="font-body text-body text-text-secondary">
             Tidak ada invoice yang cocok dengan pencarian ini.
@@ -193,7 +193,7 @@ export function InvoiceHistory({
       {tersaring.map((row) => {
         const terbukaBaris = terbuka === row.id;
         return (
-          <article key={row.id} className="clay-card p-4 flex flex-col gap-2">
+          <article key={row.id} className="clay-card rounded-[10px] p-4 flex flex-col gap-2.5">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
                 <p className="font-body-bold text-body-bold text-text-primary">
@@ -206,10 +206,10 @@ export function InvoiceHistory({
                 </p>
               </div>
               <span
-                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-caption text-caption shrink-0 ${
+                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-[6px] border font-caption text-caption shrink-0 ${
                   row.paymentState === "paid"
-                    ? "bg-success-surface text-success-text"
-                    : "bg-warning-surface text-warning-text"
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                    : "bg-amber-50 text-amber-700 border-amber-200"
                 }`}
               >
                 <Icon
@@ -224,20 +224,20 @@ export function InvoiceHistory({
               <span className="font-caption text-caption text-text-secondary truncate">
                 {row.licensePlate} · {row.customerName}
               </span>
-              <span className="font-body-bold text-body-bold text-text-primary shrink-0">
+              <span className="font-body-bold text-body-bold text-text-primary tabular-nums shrink-0">
                 {formatRupiah(row.totalPrice)}
               </span>
             </div>
 
             <div className="flex flex-wrap gap-1.5">
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container font-micro-badge text-micro-badge text-text-secondary">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[6px] border border-border bg-surface-container font-micro-badge text-micro-badge text-text-secondary">
                 {STATUS_LABEL[row.status] ?? row.status}
               </span>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container font-micro-badge text-micro-badge text-text-secondary">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[6px] border border-border bg-surface-container font-micro-badge text-micro-badge text-text-secondary">
                 {PAYMENT_LABEL[row.paymentMethod] ?? row.paymentMethod}
               </span>
               {row.vehicleSize ? (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container font-micro-badge text-micro-badge text-text-secondary">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[6px] border border-border bg-surface-container font-micro-badge text-micro-badge text-text-secondary">
                   {sizeLabel(row.vehicleSize as VehicleSize)}
                 </span>
               ) : null}
@@ -247,21 +247,21 @@ export function InvoiceHistory({
               <button
                 type="button"
                 onClick={() => setTerbuka(terbukaBaris ? null : row.id)}
-                className="flex-1 min-h-11 rounded-xl bg-surface-container text-text-secondary font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+                className="flex-1 min-h-11 rounded-[8px] border border-border bg-surface text-text-secondary font-caption text-caption flex items-center justify-center gap-1.5 hover:bg-surface-container transition-colors"
               >
                 <Icon name="expand_more" className={`text-[18px] ${terbukaBaris ? "rotate-180" : ""}`} />
                 {terbukaBaris ? "Tutup" : "Rincian"}
               </button>
               <Link
                 href={`/invoice/${row.orderId}`}
-                className="flex-1 min-h-11 rounded-xl bg-brand-600 text-white font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform shadow-sm"
+                className="flex-1 min-h-11 rounded-[8px] primary-gradient clay-glow text-white font-caption text-caption flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity"
               >
                 <Icon name="description" className="text-[18px]" />
                 PDF &amp; Garansi
               </Link>
               <a
                 href={`/pos/orders/${row.orderId}`}
-                className="flex-1 min-h-11 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+                className="flex-1 min-h-11 rounded-[8px] border border-brand-200 bg-brand-50 text-brand-700 font-caption text-caption flex items-center justify-center gap-1.5 hover:bg-brand-100 transition-colors"
               >
                 <Icon name="receipt_long" className="text-[18px]" />
                 Order
@@ -278,7 +278,7 @@ export function InvoiceHistory({
                   )}
                   target="_blank"
                   rel="noreferrer"
-                  className="min-h-11 w-11 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center justify-center active:scale-95 transition-transform shrink-0"
+                  className="min-h-11 w-11 rounded-[8px] border border-emerald-200 bg-emerald-50 text-emerald-700 font-caption text-caption flex items-center justify-center hover:bg-emerald-100 transition-colors shrink-0"
                   aria-label="Kirim ke WhatsApp"
                 >
                   <Icon name="chat" className="text-[18px]" />
@@ -287,9 +287,9 @@ export function InvoiceHistory({
             </div>
 
             {terbukaBaris ? (
-              <div className="pt-3 mt-1 border-t border-outline-variant/40 flex flex-col gap-3">
+              <div className="pt-3 mt-1 border-t border-border flex flex-col gap-3">
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="rounded-xl bg-surface-container/60 p-2.5">
+                  <div className="rounded-[8px] bg-surface-container-low border border-border p-2.5">
                     <p className="font-micro-badge text-micro-badge text-text-muted">
                       Kendaraan
                     </p>
@@ -297,7 +297,7 @@ export function InvoiceHistory({
                       {row.vehicleModel}
                     </p>
                   </div>
-                  <div className="rounded-xl bg-surface-container/60 p-2.5">
+                  <div className="rounded-[8px] bg-surface-container-low border border-border p-2.5">
                     <p className="font-micro-badge text-micro-badge text-text-muted">
                       Paket Layanan
                     </p>
@@ -320,7 +320,7 @@ export function InvoiceHistory({
                         <span className="font-caption text-caption text-text-secondary truncate">
                           {item.quantity}x {item.name}
                         </span>
-                        <span className="font-caption text-caption text-text-primary shrink-0">
+                        <span className="font-caption text-caption text-text-primary tabular-nums shrink-0">
                           {formatRupiah(item.total)}
                         </span>
                       </div>
@@ -338,7 +338,7 @@ export function InvoiceHistory({
                   </p>
                   <Link
                     href={`/invoice/${row.orderId}`}
-                    className="min-h-11 rounded-xl bg-brand-600 text-white font-body-bold text-caption flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-sm"
+                    className="min-h-11 rounded-[8px] primary-gradient clay-glow text-white font-body-bold text-caption flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
                   >
                     <Icon name="description" className="text-[18px]" />
                     Buka &amp; Cetak Invoice PDF A4 (Garansi + Jadwal Perawatan)
@@ -359,7 +359,7 @@ export function InvoiceHistory({
                       )}
                       target="_blank"
                       rel="noreferrer"
-                      className="min-h-11 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+                      className="min-h-11 rounded-[8px] border border-emerald-200 bg-emerald-50 text-emerald-700 font-caption text-caption flex items-center justify-center gap-1.5 hover:bg-emerald-100 transition-colors"
                     >
                       <Icon name="chat" className="text-[18px]" />
                       Kirim ulang ke WhatsApp

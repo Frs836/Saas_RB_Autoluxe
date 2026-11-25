@@ -277,7 +277,7 @@ export function StockOpnameView({
           type="button"
           disabled={busy}
           onClick={openOpname}
-          className="h-11 rounded-xl primary-gradient text-on-primary font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-60"
+          className="h-11 rounded-xl primary-gradient text-on-primary font-body-bold text-body-bold flex items-center justify-center gap-2 transition-transform disabled:opacity-60"
         >
           <Icon name="add" className="text-[20px]" />
           {busy ? "Membuka..." : "Buka atau Lanjutkan Opname"}
@@ -341,7 +341,7 @@ export function StockOpnameView({
               <button
                 type="button"
                 onClick={handleExportExcel}
-                className="h-8 px-2.5 rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-700 font-caption text-caption font-semibold flex items-center gap-1.5 transition-colors border border-brand-200/60 active:scale-95 shadow-sm"
+                className="h-8 px-2.5 rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-700 font-caption text-caption font-semibold flex items-center gap-1.5 transition-colors border border-brand-200/60 shadow-sm"
                 title="Download Laporan Stok Opname (.xlsx)"
               >
                 <Icon name="download" className="text-[16px]" />
@@ -485,7 +485,7 @@ export function StockOpnameView({
             type="button"
             disabled={busy}
             onClick={saveCounts}
-            className="flex-1 py-3.5 lg:py-2.5 rounded-2xl lg:rounded-xl bg-surface-container text-text-secondary font-body-bold text-body-bold flex items-center justify-center gap-1.5 active:scale-95 transition-transform disabled:opacity-60"
+            className="flex-1 py-3.5 lg:py-2.5 rounded-2xl lg:rounded-xl bg-surface-container text-text-secondary font-body-bold text-body-bold flex items-center justify-center gap-1.5 transition-transform disabled:opacity-60"
           >
             <Icon name="save" className="text-[20px]" />
             Simpan Draf
@@ -494,7 +494,7 @@ export function StockOpnameView({
             type="button"
             disabled={busy}
             onClick={submit}
-            className="flex-1 py-3.5 lg:py-2.5 rounded-2xl lg:rounded-xl primary-gradient text-on-primary font-body-bold text-body-bold flex items-center justify-center gap-1.5 active:scale-95 transition-transform disabled:opacity-60"
+            className="flex-1 py-3.5 lg:py-2.5 rounded-2xl lg:rounded-xl primary-gradient text-on-primary font-body-bold text-body-bold flex items-center justify-center gap-1.5 transition-transform disabled:opacity-60"
           >
             <Icon name={busy ? "hourglass_top" : "task_alt"} className="text-[20px]" />
             Kirim dan Koreksi

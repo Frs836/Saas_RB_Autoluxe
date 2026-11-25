@@ -47,7 +47,7 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Ambil session untuk sidebar — tidak akan throw, hanya null jika belum login
+  // Ambil session untuk sidebar - tidak akan throw, hanya null jika belum login
   const profile = await getSessionProfile();
 
   // Cek notifikasi unread hanya jika user sudah login
@@ -62,7 +62,7 @@ export default async function RootLayout({
         .eq("is_read", false);
       hasUnread = (count ?? 0) > 0;
     } catch {
-      // Tidak critical — sidebar tetap render tanpa badge
+      // Tidak critical - sidebar tetap render tanpa badge
     }
   }
 
@@ -73,7 +73,7 @@ export default async function RootLayout({
         <ToastProvider>
           <ServiceWorkerRegistrar />
           {profile ? (
-            // User sudah login — render dengan sidebar di desktop
+            // User sudah login - render dengan sidebar di desktop
             <AppShellClient
               role={profile.role}
               fullName={profile.fullName}
@@ -88,7 +88,7 @@ export default async function RootLayout({
               {children}
             </AppShellClient>
           ) : (
-            // Belum login (halaman /login, /register, /track) — tanpa sidebar
+            // Belum login (halaman /login, /register, /track) - tanpa sidebar
             <>{children}</>
           )}
         </ToastProvider>

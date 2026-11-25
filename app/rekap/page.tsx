@@ -28,7 +28,7 @@ export default async function RekapPage() {
           backHref="/dashboard"
         />
         <main className="flex-1 flex items-center justify-center px-gutter">
-          <div className="w-full max-w-[420px] bg-surface rounded-3xl p-6 clay-card text-center flex flex-col items-center gap-3">
+          <div className="w-full max-w-[420px] bg-surface rounded-[10px] p-6 clay-card border border-border text-center flex flex-col items-center gap-3">
             <Icon name="account_tree" className="text-[40px] text-warning-base" />
             <h1 className="font-headline-1 text-headline-1 text-text-primary">
               Cabang Belum Ditugaskan

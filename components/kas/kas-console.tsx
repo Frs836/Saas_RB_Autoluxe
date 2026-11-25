@@ -350,7 +350,7 @@ export function KasConsole({
           )}
         </section>
 
-        {/* Form on mobile (inside left panel flow) — hidden on desktop since right panel has it */}
+        {/* Form on mobile (inside left panel flow) - hidden on desktop since right panel has it */}
         {canManage && (
           <section className="clay-card flex flex-col gap-space-md p-space-lg lg:hidden">
             <div className="flex items-center justify-between">
@@ -824,7 +824,7 @@ export function KasConsole({
             ref={videoRef}
             playsInline
             muted
-            className="w-full max-w-[420px] aspect-square object-cover rounded-3xl"
+            className="w-full max-w-[420px] aspect-square object-cover rounded-[10px]"
           />
           <div className="flex items-center gap-3">
             <button
@@ -864,7 +864,7 @@ export function KasConsole({
               <button
                 type="button"
                 onClick={() => setPaymentModal(null)}
-                className="w-10 h-10 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary active:scale-95"
+                className="w-10 h-10 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary "
                 aria-label="Tutup"
               >
                 <Icon name="close" className="text-[22px]" />

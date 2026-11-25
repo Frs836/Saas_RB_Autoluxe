@@ -177,7 +177,7 @@ export async function gantiEmail(input: {
   const cek = await verifikasiPasswordLama(konteks.user.email ?? "", input.passwordLama);
   if (!cek.ok) return { ok: false, message: cek.pesan, field: "email" };
 
-  // Update email langsung via admin client (service_role) — tidak butuh konfirmasi email
+  // Update email langsung via admin client (service_role) - tidak butuh konfirmasi email
   // karena kita tidak punya server email untuk verifikasi.
   const { createClient: buatAdmin } = await import("@supabase/supabase-js");
   const adminSupa = buatAdmin(

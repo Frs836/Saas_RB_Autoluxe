@@ -140,7 +140,7 @@ export function ThermalPrintButton({
           type="button"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
-          className="h-11 px-3 rounded-xl bg-surface-container text-text-secondary font-caption text-caption flex items-center gap-1 active:scale-95 transition-transform"
+          className="h-11 px-3 rounded-xl bg-surface-container text-text-secondary font-caption text-caption flex items-center gap-1 transition-transform"
         >
           <Icon name="bluetooth" className="text-[18px]" />
         </button>
@@ -150,7 +150,7 @@ export function ThermalPrintButton({
         <button
           type="button"
           onClick={pair}
-          className="h-10 px-3 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center gap-1.5 self-start active:scale-95 transition-transform"
+          className="h-10 px-3 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center gap-1.5 self-start transition-transform"
         >
           <Icon name="add" className="text-[16px]" />
           Pasangkan printer baru
@@ -161,7 +161,7 @@ export function ThermalPrintButton({
         type="button"
         onClick={print}
         disabled={busy || printers.length === 0}
-        className={`h-11 px-4 rounded-xl bg-brand-500 text-white font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform disabled:opacity-50 ${
+        className={`h-11 px-4 rounded-xl bg-brand-500 text-white font-caption text-caption flex items-center justify-center gap-1.5 transition-transform disabled:opacity-50 ${
           compact ? "" : "w-full"
         }`}
       >

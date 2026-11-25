@@ -648,7 +648,7 @@ export function RekapConsole({
       {/* Desktop 2-column grid: filter sidebar kiri, konten utama kanan */}
       <div className="lg:grid lg:grid-cols-4 lg:gap-6 lg:items-start lg:px-gutter lg:pt-4">
 
-        {/* LEFT COLUMN — filter & navigasi */}
+        {/* LEFT COLUMN - filter & navigasi */}
         <div className="lg:col-span-1 lg:sticky lg:top-20 flex flex-col">
           {/* Pemilih tampilan: harian, kalender bulanan, atau tiga bulan bergulir */}
           <section className="px-gutter pt-3 lg:px-0 lg:pt-0">
@@ -685,7 +685,7 @@ export function RekapConsole({
             </div>
           </section>
 
-          {/* Navigasi tanggal — hanya di mode harian */}
+          {/* Navigasi tanggal - hanya di mode harian */}
           {mode === "harian" && (
             <section className="px-gutter pt-4 lg:px-0">
               <div className="bg-surface rounded-[10px] p-3 clay-card border border-white/80 flex items-center gap-3">
@@ -727,7 +727,7 @@ export function RekapConsole({
             </section>
           )}
 
-          {/* Filter pill — hanya di mode harian */}
+          {/* Filter pill - hanya di mode harian */}
           {mode === "harian" && (
             <section className="px-gutter pt-4 lg:px-0">
               <div className="flex gap-2 overflow-x-auto no-scrollbar lg:flex-col lg:overflow-x-visible">
@@ -771,7 +771,7 @@ export function RekapConsole({
           </section>
         </div>
 
-        {/* RIGHT COLUMN — konten utama */}
+        {/* RIGHT COLUMN - konten utama */}
         <div className="lg:col-span-3 flex flex-col">
 
       {mode !== "harian" ? (
@@ -853,7 +853,7 @@ export function RekapConsole({
         </div>
       </section>
 
-      {/* Navigasi tanggal — mobile only (desktop ada di sidebar) */}
+      {/* Navigasi tanggal - mobile only (desktop ada di sidebar) */}
       <section className="px-gutter pt-4 lg:hidden">
         <div className="bg-surface rounded-[10px] p-3 clay-card border border-white/80 flex items-center gap-3">
           <button
@@ -893,7 +893,7 @@ export function RekapConsole({
         </div>
       </section>
 
-      {/* Filter pill — mobile only (desktop ada di sidebar) */}
+      {/* Filter pill - mobile only (desktop ada di sidebar) */}
       <section className="px-gutter pt-4 lg:hidden">
         <div className="flex gap-2 overflow-x-auto no-scrollbar">
           {filterPills.map((pill) => (
@@ -1087,7 +1087,7 @@ export function RekapConsole({
                             <button
                               type="button"
                               onClick={() => void openModal(person, log)}
-                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface border border-brand-200 text-brand-700 font-caption text-caption active:scale-95 transition-transform"
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface border border-brand-200 text-brand-700 font-caption text-caption transition-transform"
                             >
                               <Icon name="photo_camera" className="text-[13px]" />
                               Selfie
@@ -1185,7 +1185,7 @@ function BulananPanel({
               type="button"
               aria-label="Bulan sebelumnya"
               onClick={() => setBulan(shiftMonth(bulan, -1))}
-              className="w-11 h-11 rounded-xl bg-clay-overlay flex items-center justify-center text-text-primary active:scale-95 transition-transform"
+              className="w-11 h-11 rounded-xl bg-clay-overlay flex items-center justify-center text-text-primary transition-transform"
             >
               <Icon name="chevron_left" className="text-[20px]" />
             </button>
@@ -1196,7 +1196,7 @@ function BulananPanel({
               type="button"
               aria-label="Bulan berikutnya"
               onClick={() => setBulan(shiftMonth(bulan, 1))}
-              className="w-11 h-11 rounded-xl bg-clay-overlay flex items-center justify-center text-text-primary active:scale-95 transition-transform"
+              className="w-11 h-11 rounded-xl bg-clay-overlay flex items-center justify-center text-text-primary transition-transform"
             >
               <Icon name="chevron_right" className="text-[20px]" />
             </button>
@@ -1471,7 +1471,7 @@ function VerificationModal({
             type="button"
             onClick={onClose}
             aria-label="Tutup"
-            className="w-9 h-9 rounded-xl bg-surface-container-low text-text-secondary flex items-center justify-center active:scale-95 transition-transform shrink-0"
+            className="w-9 h-9 rounded-xl bg-surface-container-low text-text-secondary flex items-center justify-center transition-transform shrink-0"
           >
             <Icon name="close" className="text-[18px]" />
           </button>
@@ -1578,7 +1578,7 @@ function VerificationModal({
           <button
             type="button"
             onClick={onClose}
-            className="w-full h-11 rounded-full bg-surface-container-low text-text-secondary font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform"
+            className="w-full h-11 rounded-full bg-surface-container-low text-text-secondary font-body-bold text-body-bold flex items-center justify-center gap-2 transition-transform"
           >
             <Icon name="verified_user" className="text-[18px]" />
             Tutup Verifikasi

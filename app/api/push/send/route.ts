@@ -1,5 +1,5 @@
 /**
- * Legacy internal endpoint — no longer called from lib/push.ts.
+ * Legacy internal endpoint - no longer called from lib/push.ts.
  * Kept for backward compatibility. VAPID init inside handler only.
  */
 import { NextRequest, NextResponse } from "next/server";

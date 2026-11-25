@@ -241,7 +241,7 @@ export function StaffScheduleView({
                             "flex items-center gap-1 disabled:opacity-50 " +
                             (aktif
                               ? "bg-white text-text-primary font-body-bold"
-                              : "text-text-secondary active:scale-95 transition-transform")
+                              : "text-text-secondary transition-transform")
                           }
                         >
                           <Icon name={LABEL_JADWAL[opsi].ikon} className="text-[15px]" />

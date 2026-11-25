@@ -49,12 +49,12 @@ export default async function PengaturanKomisiPage() {
         }))}
         profiles={(profiles ?? []).map((p) => ({
           id: p.id as string,
-          fullName: (p.full_name as string) ?? "—",
+          fullName: (p.full_name as string) ?? "-",
           role: (p.role as string) ?? "karyawan",
         }))}
         services={(services ?? []).map((s) => ({
           id: s.id as string,
-          name: (s.name as string) ?? "—",
+          name: (s.name as string) ?? "-",
         }))}
       />
       <BottomNav role={session.role} />

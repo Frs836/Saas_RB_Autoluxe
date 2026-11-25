@@ -254,7 +254,7 @@ export function AccountSettings({
         </div>
       </section>
 
-      {/* Data diri — tombol pembuka modal */}
+      {/* Data diri - tombol pembuka modal */}
       <section className="bg-surface rounded-[10px] p-4 clay-card border border-white/80">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
@@ -275,7 +275,7 @@ export function AccountSettings({
         </div>
       </section>
 
-      {/* Email — tombol pembuka modal */}
+      {/* Email - tombol pembuka modal */}
       <section className="bg-surface rounded-[10px] p-4 clay-card border border-white/80">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
@@ -296,7 +296,7 @@ export function AccountSettings({
         </div>
       </section>
 
-      {/* Kata sandi — tombol pembuka modal */}
+      {/* Kata sandi - tombol pembuka modal */}
       <section className="bg-surface rounded-[10px] p-4 clay-card border border-white/80">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">

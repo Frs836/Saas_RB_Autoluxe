@@ -110,7 +110,7 @@ export async function GET(req: NextRequest) {
   }
 
   // -----------------------------------------------------------------
-  // Anomali device fingerprint — notifikasi ke owner/manager per cabang.
+  // Anomali device fingerprint - notifikasi ke owner/manager per cabang.
   // Baris yang sudah ditandai "[notified]" pada anomaly_reason dilewati
   // agar tidak spam setiap menit cron berjalan.
   // -----------------------------------------------------------------

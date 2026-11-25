@@ -1197,12 +1197,12 @@ function ClosedSummary({
           Cetak Bukti (Opsional)
         </button>
 
-        {/* Tombol buka shift baru — untuk lanjut shift atau shift sore */}
+        {/* Tombol buka shift baru - untuk lanjut shift atau shift sore */}
         {onBukaShiftBaru && (
           <button
             type="button"
             onClick={onBukaShiftBaru}
-            className="w-full h-12 rounded-xl bg-brand-50 text-brand-700 font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform"
+            className="w-full h-12 rounded-xl bg-brand-50 text-brand-700 font-body-bold text-body-bold flex items-center justify-center gap-2 transition-transform"
           >
             <Icon name="play_circle" className="text-[20px]" />
             Buka Shift Kasir Baru
@@ -1239,7 +1239,7 @@ function generateWhatsAppReport(params: {
       : `${success.difference > 0 ? "LEBIH" : "KURANG"} Rp ${formatRupiah(Math.abs(success.difference))}`;
 
   return [
-    `📊 *LAPORAN TUTUP KAS — RB AUTOLUXE*`,
+    `📊 *LAPORAN TUTUP KAS - RB AUTOLUXE*`,
     `Cabang: ${branch.name} | Tanggal: ${today}`,
     `Tutup: ${formatTimeWib(new Date())} WIB | Oleh: ${profile.fullName}`,
     ``,

@@ -417,7 +417,7 @@ export function PosConsole({
           </p>
           <Link
             href="/pos/orders"
-            className="mt-1 px-5 py-3 rounded-xl bg-primary text-white font-body-bold text-body-bold active:scale-95 transition-transform"
+            className="mt-1 px-5 py-3 rounded-xl bg-primary text-white font-body-bold text-body-bold transition-transform"
           >
             Lihat Antrean Order
           </Link>
@@ -508,7 +508,7 @@ export function PosConsole({
               href={result.waHref}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full py-4 lg:py-2.5 rounded-2xl lg:rounded-xl bg-whatsapp text-white font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-[0_8px_20px_-6px_rgba(37,211,102,0.6)]"
+              className="w-full py-4 lg:py-2.5 rounded-2xl lg:rounded-xl bg-whatsapp text-white font-body-bold text-body-bold flex items-center justify-center gap-2 transition-transform shadow-[0_8px_20px_-6px_rgba(37,211,102,0.6)]"
             >
               <Icon name="chat" className="text-[22px]" />
               Kirim Nota ke WhatsApp Pelanggan
@@ -529,7 +529,7 @@ export function PosConsole({
           ) : null}
           <Link
             href="/pos/orders"
-            className="w-full py-4 lg:py-2.5 rounded-2xl lg:rounded-xl bg-primary text-white font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform"
+            className="w-full py-4 lg:py-2.5 rounded-2xl lg:rounded-xl bg-primary text-white font-body-bold text-body-bold flex items-center justify-center gap-2 transition-transform"
           >
             <Icon name="list_alt" className="text-[22px]" />
             Lihat Antrean Order
@@ -537,7 +537,7 @@ export function PosConsole({
           <button
             type="button"
             onClick={resetOrder}
-            className="w-full py-4 lg:py-2.5 rounded-2xl lg:rounded-xl bg-surface-container-low text-text-primary font-body-bold text-body-bold active:scale-95 transition-transform"
+            className="w-full py-4 lg:py-2.5 rounded-2xl lg:rounded-xl bg-surface-container-low text-text-primary font-body-bold text-body-bold transition-transform"
           >
             Buat Order Baru
           </button>
@@ -549,7 +549,7 @@ export function PosConsole({
   /* ── Shared split-panel layout: catalog (left) + checkout (right) ──
    *
    * Di mobile: hanya section yang sesuai `step` yang terlihat (block/hidden).
-   * Di desktop (lg:): keduanya tampil bersamaan dalam grid 5-kolom — katalog
+   * Di desktop (lg:): keduanya tampil bersamaan dalam grid 5-kolom - katalog
    * mengambil 3 kolom, checkout 2 kolom. Step "done" masih dikembalikan lebih
    * awal di atas, jadi tidak masuk ke sini.
    */

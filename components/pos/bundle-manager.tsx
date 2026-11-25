@@ -318,7 +318,7 @@ function ProductionModal({
               type="button"
               disabled={pending}
               onClick={handleSubmit}
-              className="w-full rounded-2xl bg-brand-500 text-white font-label-bold text-label-bold py-3.5 flex items-center justify-center gap-2 active:scale-[0.98] transition-transform disabled:opacity-50"
+              className="w-full rounded-2xl bg-brand-500 text-white font-label-bold text-label-bold py-3.5 flex items-center justify-center gap-2 transition-transform disabled:opacity-50"
             >
               <Icon name="science" className="text-[20px]" />
               {pending ? "Mengajukan Produksi…" : "Ajukan Produksi Racikan"}
@@ -380,7 +380,7 @@ function ClaimUsageModal({
   }
 
   return (
-    <Modal open onClose={onClose} title={`Klaim Pemakaian — ${bundle.bundle_name}`}>
+    <Modal open onClose={onClose} title={`Klaim Pemakaian - ${bundle.bundle_name}`}>
       <div className="flex flex-col gap-4">
         {/* Info Sisa Stok Fisik */}
         <div className="rounded-2xl bg-surface-container-low p-3.5 flex items-center justify-between border border-outline-variant/40">
@@ -448,7 +448,7 @@ function ClaimUsageModal({
           type="button"
           disabled={pending}
           onClick={handleSubmit}
-          className="w-full rounded-2xl bg-brand-500 text-white font-label-bold text-label-bold py-3.5 flex items-center justify-center gap-2 active:scale-[0.98] transition-transform disabled:opacity-50"
+          className="w-full rounded-2xl bg-brand-500 text-white font-label-bold text-label-bold py-3.5 flex items-center justify-center gap-2 transition-transform disabled:opacity-50"
         >
           <Icon name="shopping_cart_checkout" className="text-[20px]" />
           {pending ? "Mengajukan Klaim…" : "Ajukan Klaim Pemakaian"}
@@ -503,7 +503,7 @@ function OpnameModal({
   }
 
   return (
-    <Modal open onClose={onClose} title={`Opname Fisik — ${bundle.bundle_name}`}>
+    <Modal open onClose={onClose} title={`Opname Fisik - ${bundle.bundle_name}`}>
       <div className="flex flex-col gap-4">
         {/* Stok Sistem Saat Ini */}
         <div className="rounded-2xl bg-surface-container-low p-3.5 flex items-center justify-between border border-outline-variant/40">
@@ -567,7 +567,7 @@ function OpnameModal({
           type="button"
           disabled={pending}
           onClick={handleSubmit}
-          className="w-full rounded-2xl bg-brand-500 text-white font-label-bold text-label-bold py-3.5 flex items-center justify-center gap-2 active:scale-[0.98] transition-transform disabled:opacity-50"
+          className="w-full rounded-2xl bg-brand-500 text-white font-label-bold text-label-bold py-3.5 flex items-center justify-center gap-2 transition-transform disabled:opacity-50"
         >
           <Icon name="tune" className="text-[20px]" />
           {pending ? "Menyimpan Penyesuaian…" : "Simpan Penyesuaian Opname"}
@@ -744,7 +744,7 @@ function BatchOpnameModal({
           type="button"
           disabled={pending}
           onClick={handleSave}
-          className="w-full rounded-2xl bg-brand-500 text-white font-label-bold text-label-bold py-3.5 flex items-center justify-center gap-2 active:scale-[0.98] transition-transform disabled:opacity-50"
+          className="w-full rounded-2xl bg-brand-500 text-white font-label-bold text-label-bold py-3.5 flex items-center justify-center gap-2 transition-transform disabled:opacity-50"
         >
           <Icon name="tune" className="text-[20px]" />
           {pending ? "Menyimpan Opname…" : "Simpan Semua Penyesuaian Opname"}
@@ -871,7 +871,7 @@ function BundleFormModal({
     <Modal
       open
       onClose={onClose}
-      title={editing ? `Edit Racikan — ${editing.bundle_name}` : "Buat Racikan Baru"}
+      title={editing ? `Edit Racikan - ${editing.bundle_name}` : "Buat Racikan Baru"}
     >
       <div className="flex flex-col gap-4">
         {/* Nama Racikan */}
@@ -975,7 +975,7 @@ function BundleFormModal({
                     <option value="">Pilih bahan gudang…</option>
                     {availableItems.map((it) => (
                       <option key={it.id} value={it.id}>
-                        {it.item_name} ({it.unit}) — @{formatRupiah(it.unit_cost)}/{it.unit}
+                        {it.item_name} ({it.unit}) - @{formatRupiah(it.unit_cost)}/{it.unit}
                       </option>
                     ))}
                   </select>
@@ -999,7 +999,7 @@ function BundleFormModal({
                     <button
                       type="button"
                       onClick={() => removeComponent(idx)}
-                      className="shrink-0 w-8 h-8 rounded-lg bg-danger-surface text-danger-text flex items-center justify-center active:scale-95"
+                      className="shrink-0 w-8 h-8 rounded-lg bg-danger-surface text-danger-text flex items-center justify-center "
                     >
                       <Icon name="delete" className="text-[16px]" />
                     </button>
@@ -1021,7 +1021,7 @@ function BundleFormModal({
           <button
             type="button"
             onClick={addComponent}
-            className="flex items-center gap-1.5 text-brand-600 font-label text-label mt-1 w-fit active:scale-95"
+            className="flex items-center gap-1.5 text-brand-600 font-label text-label mt-1 w-fit "
           >
             <Icon name="add_circle" className="text-[18px]" />
             Tambah Bahan Lain
@@ -1076,7 +1076,7 @@ function BundleFormModal({
           type="button"
           disabled={pending}
           onClick={handleSave}
-          className="w-full rounded-2xl bg-brand-500 text-white font-label-bold text-label-bold py-3.5 active:scale-[0.98] transition-transform disabled:opacity-50 mt-1"
+          className="w-full rounded-2xl bg-brand-500 text-white font-label-bold text-label-bold py-3.5 transition-transform disabled:opacity-50 mt-1"
         >
           {pending ? "Menyimpan…" : editing ? "Simpan Perubahan Racikan" : "Simpan Racikan Baru"}
         </button>
@@ -1123,7 +1123,7 @@ function DeleteModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-3 rounded-2xl bg-surface-container text-text-secondary font-body-bold text-body-bold active:scale-95 transition-transform"
+            className="flex-1 py-3 rounded-2xl bg-surface-container text-text-secondary font-body-bold text-body-bold transition-transform"
           >
             Batal
           </button>
@@ -1131,7 +1131,7 @@ function DeleteModal({
             type="button"
             disabled={pending}
             onClick={handleDelete}
-            className="flex-1 py-3 rounded-2xl bg-danger text-white font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-50"
+            className="flex-1 py-3 rounded-2xl bg-danger text-white font-body-bold text-body-bold flex items-center justify-center gap-2 transition-transform disabled:opacity-50"
           >
             {pending ? "Menghapus…" : "Hapus Racikan"}
           </button>
@@ -1295,7 +1295,7 @@ export function BundleManager({
               {/* Tombol Halaman Opname Bulanan Racikan & Export */}
               <Link
                 href="/stok/racikan/opname"
-                className="flex-1 sm:flex-initial px-4 py-2.5 rounded-2xl bg-surface-container border border-outline-variant text-text-primary font-label-bold text-label-bold flex items-center justify-center gap-2 active:scale-95 transition-transform hover:bg-surface-container-high"
+                className="flex-1 sm:flex-initial px-4 py-2.5 rounded-2xl bg-surface-container border border-outline-variant text-text-primary font-label-bold text-label-bold flex items-center justify-center gap-2 transition-transform hover:bg-surface-container-high"
                 title="Buka Halaman Opname Fisik Bulanan Racikan & Export Excel"
               >
                 <Icon name="fact_check" className="text-[18px]" />
@@ -1307,7 +1307,7 @@ export function BundleManager({
                 <button
                   type="button"
                   onClick={() => setIsNewBundleOpen(true)}
-                  className="flex-1 sm:flex-initial px-4 py-2.5 rounded-2xl bg-brand-500 text-white font-label-bold text-label-bold flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-sm"
+                  className="flex-1 sm:flex-initial px-4 py-2.5 rounded-2xl bg-brand-500 text-white font-label-bold text-label-bold flex items-center justify-center gap-2 transition-transform shadow-sm"
                 >
                   <Icon name="add_circle" className="text-[18px]" />
                   + Racikan Baru
@@ -1350,7 +1350,7 @@ export function BundleManager({
                 <button
                   type="button"
                   onClick={() => setIsNewBundleOpen(true)}
-                  className="mt-2 px-5 py-2.5 rounded-2xl bg-brand-500 text-white font-label-bold text-label-bold active:scale-95 transition-transform"
+                  className="mt-2 px-5 py-2.5 rounded-2xl bg-brand-500 text-white font-label-bold text-label-bold transition-transform"
                 >
                   + Buat Racikan Baru
                 </button>
@@ -1444,7 +1444,7 @@ export function BundleManager({
                             setProductionTarget(bundle);
                             setIsProductionOpen(true);
                           }}
-                          className="flex-1 min-h-10 rounded-xl bg-brand-500 text-white font-caption text-caption font-bold flex items-center justify-center gap-1 active:scale-95 transition-transform shadow-xs"
+                          className="flex-1 min-h-10 rounded-xl bg-brand-500 text-white font-caption text-caption font-bold flex items-center justify-center gap-1 transition-transform shadow-xs"
                           title="Produksi Racikan (Potong Bahan Baku Gudang)"
                         >
                           <Icon name="science" className="text-[16px]" />
@@ -1455,7 +1455,7 @@ export function BundleManager({
                         <button
                           type="button"
                           onClick={() => setClaimUsageTarget(bundle)}
-                          className="flex-1 min-h-10 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption font-semibold flex items-center justify-center gap-1 active:scale-95 transition-transform"
+                          className="flex-1 min-h-10 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption font-semibold flex items-center justify-center gap-1 transition-transform"
                           title="Klaim Pemakaian Racikan untuk Order / Operasional"
                         >
                           <Icon name="shopping_cart_checkout" className="text-[16px]" />
@@ -1468,7 +1468,7 @@ export function BundleManager({
                         <button
                           type="button"
                           onClick={() => setOpnameTarget(bundle)}
-                          className="flex-1 min-h-9 rounded-xl bg-surface-container text-text-secondary font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform"
+                          className="flex-1 min-h-9 rounded-xl bg-surface-container text-text-secondary font-caption text-caption flex items-center justify-center gap-1 transition-transform"
                           title="Opname Penyesuaian Stok Fisik"
                         >
                           <Icon name="tune" className="text-[15px]" />
@@ -1480,7 +1480,7 @@ export function BundleManager({
                           <button
                             type="button"
                             onClick={() => setEditingBundle(bundle)}
-                            className="px-3 min-h-9 rounded-xl bg-surface-container text-text-primary font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform"
+                            className="px-3 min-h-9 rounded-xl bg-surface-container text-text-primary font-caption text-caption flex items-center justify-center gap-1 transition-transform"
                             title="Edit Racikan & Formula"
                           >
                             <Icon name="edit" className="text-[15px]" />
@@ -1492,7 +1492,7 @@ export function BundleManager({
                           <button
                             type="button"
                             onClick={() => setDeleteTarget(bundle)}
-                            className="px-3 min-h-9 rounded-xl bg-danger-surface text-danger-text font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform"
+                            className="px-3 min-h-9 rounded-xl bg-danger-surface text-danger-text font-caption text-caption flex items-center justify-center gap-1 transition-transform"
                             title="Hapus Racikan"
                           >
                             <Icon name="delete" className="text-[15px]" />
@@ -1682,7 +1682,7 @@ export function BundleManager({
                             type="button"
                             disabled={isBusy}
                             onClick={() => handleConfirmClaim(claim)}
-                            className="flex-1 py-2.5 rounded-xl bg-success-surface text-success-text font-caption text-caption font-bold flex items-center justify-center gap-1 active:scale-95 transition-transform disabled:opacity-60"
+                            className="flex-1 py-2.5 rounded-xl bg-success-surface text-success-text font-caption text-caption font-bold flex items-center justify-center gap-1 transition-transform disabled:opacity-60"
                           >
                             <Icon name="check" className="text-[18px]" />
                             {isProduce ? "Setujui Produksi" : "Setujui Pemakaian"}
@@ -1691,7 +1691,7 @@ export function BundleManager({
                             type="button"
                             disabled={isBusy}
                             onClick={() => handleRejectClaim(claim)}
-                            className="flex-1 py-2.5 rounded-xl bg-danger-surface text-danger-text font-caption text-caption font-bold flex items-center justify-center gap-1 active:scale-95 transition-transform disabled:opacity-60"
+                            className="flex-1 py-2.5 rounded-xl bg-danger-surface text-danger-text font-caption text-caption font-bold flex items-center justify-center gap-1 transition-transform disabled:opacity-60"
                           >
                             <Icon name="close" className="text-[18px]" />
                             Tolak

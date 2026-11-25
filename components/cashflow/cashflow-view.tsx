@@ -151,7 +151,7 @@ export function CashFlowView({
         <div className="flex gap-2 flex-wrap">
           {(["bulan_ini","bulan_lalu","3bulan","tahun_ini"] as const).map((p) => (
             <button key={p} type="button" onClick={() => applyPreset(p)}
-              className="px-3 h-9 rounded-full bg-surface-container-low text-text-secondary font-caption text-caption active:scale-95 transition-transform">
+              className="px-3 h-9 rounded-full bg-surface-container-low text-text-secondary font-caption text-caption transition-transform">
               {p === "bulan_ini" ? "Bulan Ini" : p === "bulan_lalu" ? "Bulan Lalu" : p === "3bulan" ? "3 Bulan" : "Tahun Ini"}
             </button>
           ))}

@@ -233,7 +233,7 @@ export function StaffManagementPage({ session, branches, branchId }: Props) {
 
         {/* Desktop: 2-column grid */}
         <div className="hidden lg:grid lg:grid-cols-3 lg:gap-6 lg:items-start lg:px-gutter lg:py-6">
-          {/* LEFT — daftar staf */}
+          {/* LEFT - daftar staf */}
           <div className="lg:col-span-1 flex flex-col gap-3">
             <h2 className="font-headline-3 text-headline-3 text-text-primary">Kelola Staf</h2>
 
@@ -304,7 +304,7 @@ export function StaffManagementPage({ session, branches, branchId }: Props) {
             )}
           </div>
 
-          {/* RIGHT — form tambah staf atau placeholder */}
+          {/* RIGHT - form tambah staf atau placeholder */}
           <div className="lg:col-span-2">
             {bisaKelolaStaf ? (
               <div className="bg-surface rounded-[10px] clay-card p-6 flex flex-col gap-4">

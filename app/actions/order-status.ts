@@ -78,7 +78,7 @@ export async function applyOrderStatusAction(
   revalidatePath("/pos/orders");
   revalidatePath(`/pos/orders/${orderId}`);
 
-  // Kirim push notification secara async — tidak boleh crash action
+  // Kirim push notification secara async - tidak boleh crash action
   void (async () => {
     try {
       const { order_number, license_plate, branch_id, teamIds } =
@@ -102,11 +102,11 @@ export async function applyOrderStatusAction(
           });
         }
       } else if (status === "in_progress" && prevStatus === "qc_review") {
-        // B) QC ditolak — kembalikan ke teknisi
+        // B) QC ditolak - kembalikan ke teknisi
         if (teamIds.length > 0) {
           await sendPushToProfiles({
             profileIds: teamIds,
-            title: "QC Ditolak — Perlu Perbaikan",
+            title: "QC Ditolak - Perlu Perbaikan",
             body: `Order ${order_number} dikembalikan untuk perbaikan. Periksa temuan QC.`,
             url: "/pos/orders",
           });

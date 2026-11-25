@@ -522,7 +522,7 @@ export function ServiceManager({
         Tambah Jasa Baru
       </button>
 
-      {/* Modal tambah/ubah jasa — tidak lagi muncul di bawah halaman */}
+      {/* Modal tambah/ubah jasa - tidak lagi muncul di bawah halaman */}
       <Modal
         open={bukaPanel}
         onClose={tutup}

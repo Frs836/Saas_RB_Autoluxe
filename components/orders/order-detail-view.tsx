@@ -464,7 +464,7 @@ export function OrderDetailView({
   // alasannya ditulis, karena server juga akan menolak permintaannya.
   const butuhTeknisi = order.status === "queued" && order.team.length === 0;
 
-  // Deteksi kategori layanan — mirror dari logic di tracking page dan database
+  // Deteksi kategori layanan - mirror dari logic di tracking page dan database
   const pkg = (order.servicePackage ?? "").toLowerCase().trim();
   type ServiceCat = "coating_graphene"|"coating_premium"|"coating_light"|"detailing_full"|"detailing_polish"|"detailing_interior"|"wash_premium"|"wash_super"|"wash_jamur"|"wash_basic";
   const serviceCategory: ServiceCat =
@@ -968,7 +968,7 @@ export function OrderDetailView({
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => { if (!waPhone.trim()) { e.preventDefault(); return; } setWaModalOpen(false); }}
-                  className={`w-full py-3 rounded-xl font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform ${
+                  className={`w-full py-3 rounded-xl font-body-bold text-body-bold flex items-center justify-center gap-2 transition-transform ${
                     waPhone.trim() ? "bg-whatsapp text-white shadow-[0_8px_20px_-6px_rgba(37,211,102,0.6)]" : "bg-surface-container text-text-muted opacity-60"
                   }`}
                 >
@@ -991,7 +991,7 @@ export function OrderDetailView({
         {/* Right column: progress timeline + actions (sticky on desktop) */}
         <div className="lg:col-span-1 flex flex-col gap-4 lg:sticky lg:top-20">
 
-        {/* Action controls — desktop only (card in sidebar) */}
+        {/* Action controls - desktop only (card in sidebar) */}
         {actionControls ? (
           <section className="hidden lg:block clay-card p-4">
             {actionControls}
@@ -1163,7 +1163,7 @@ export function OrderDetailView({
         </section>
       </div>
 
-      {/* Mobile floating action bar (hidden on desktop — shown in right column card) */}
+      {/* Mobile floating action bar (hidden on desktop - shown in right column card) */}
       {actionControls ? (
         <div className="lg:hidden fixed bottom-nav-offset left-0 right-0 z-action-bar px-gutter pb-3 pt-3 bg-surface/95 backdrop-blur-md border-t border-outline-variant">
           {actionControls}
@@ -1172,7 +1172,7 @@ export function OrderDetailView({
 
       {teamOpen ? (
         <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center">
-          <div className="w-full max-w-[440px] max-h-[85vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl bg-surface p-4 flex flex-col gap-3">
+          <div className="w-full max-w-[440px] max-h-[85vh] overflow-y-auto rounded-t-[10px] sm:rounded-[10px] bg-surface p-4 flex flex-col gap-3 border border-border">
             <div className="flex items-center justify-between">
               <h2 className="font-headline-2 text-headline-2 text-text-primary">
                 Atur Tim Teknisi
@@ -1282,7 +1282,7 @@ export function OrderDetailView({
 
       {addMemberOpen && (
         <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center">
-          <div className="w-full max-w-[440px] max-h-[85vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl bg-surface p-4 flex flex-col gap-3">
+          <div className="w-full max-w-[440px] max-h-[85vh] overflow-y-auto rounded-t-[10px] sm:rounded-[10px] bg-surface p-4 flex flex-col gap-3 border border-border">
             <div className="flex items-center justify-between">
               <h2 className="font-headline-2 text-headline-2 text-text-primary">Tambah Anggota Tim</h2>
               <button type="button" onClick={() => setAddMemberOpen(false)} className="w-10 h-10 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary">
@@ -1372,7 +1372,7 @@ export function OrderDetailView({
             <img
               src={preview}
               alt="Pratinjau foto inspeksi"
-              className="w-full max-w-[420px] aspect-square object-cover rounded-3xl"
+              className="w-full max-w-[420px] aspect-square object-cover rounded-[10px]"
             />
           ) : kameraGagal ? (
             /*
@@ -1380,7 +1380,7 @@ export function OrderDetailView({
              * tidak pernah berisi apa pun dan tombol jepret yang tidak
              * melakukan apa-apa. Sekarang jelas keadaannya.
              */
-            <div className="w-full max-w-[420px] aspect-square rounded-3xl bg-white/10 flex flex-col items-center justify-center gap-2 px-gutter text-center">
+            <div className="w-full max-w-[420px] aspect-square rounded-[10px] bg-white/10 flex flex-col items-center justify-center gap-2 px-gutter text-center">
               <Icon name="no_photography" className="text-[40px] text-white/70" />
               <span className="font-caption text-caption text-white/80">
                 Kamera tidak aktif. Pilih foto dari perangkat di bawah.
@@ -1391,7 +1391,7 @@ export function OrderDetailView({
               ref={videoRef}
               playsInline
               muted
-              className="w-full max-w-[420px] aspect-square object-cover rounded-3xl"
+              className="w-full max-w-[420px] aspect-square object-cover rounded-[10px]"
             />
           )}
 
@@ -1432,7 +1432,7 @@ export function OrderDetailView({
                  * seluler membuka kamera, sementara di komputer ia membuka
                  * pemilih berkas.
                  */}
-                <label className="h-12 px-5 rounded-full bg-white/15 text-white font-body-bold text-body-bold flex items-center gap-2 cursor-pointer active:scale-95 transition-transform">
+                <label className="h-12 px-5 rounded-full bg-white/15 text-white font-body-bold text-body-bold flex items-center gap-2 cursor-pointer transition-transform">
                   <Icon name="photo_library" className="text-[20px]" />
                   Pilih Foto
                   <input

@@ -124,7 +124,7 @@ export function PushSubscribeButton() {
       type="button"
       disabled={config.disabled}
       onClick={state === "subscribed" ? unsubscribe : subscribe}
-      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-body text-body active:scale-[0.98] transition-transform disabled:cursor-not-allowed ${config.cls}`}
+      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-body text-body transition-transform disabled:cursor-not-allowed ${config.cls}`}
     >
       <Icon name={config.icon} className="text-[20px] shrink-0" />
       <span className="flex-1 text-left">{config.label}</span>

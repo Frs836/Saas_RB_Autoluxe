@@ -92,7 +92,7 @@ export function AddStaffPanel({
       <button
         type="button"
         onClick={() => setBuka(true)}
-        className="w-full h-12 px-4 rounded-xl primary-gradient text-on-primary font-body-bold text-body-bold flex items-center justify-center gap-2 clay-fab active:scale-[0.98] transition-transform"
+        className="w-full h-12 px-4 rounded-xl primary-gradient text-on-primary font-body-bold text-body-bold flex items-center justify-center gap-2 clay-fab transition-transform"
       >
         <Icon name="person_add" className="text-[20px]" />
         Tambah Staf
@@ -113,7 +113,7 @@ export function AddStaffPanel({
           type="button"
           onClick={() => setBuka(false)}
           aria-label="Batal menambah staf"
-          className="w-11 h-11 rounded-xl bg-clay-overlay flex items-center justify-center text-text-secondary active:scale-95 transition-transform"
+          className="w-11 h-11 rounded-xl bg-clay-overlay flex items-center justify-center text-text-secondary transition-transform"
         >
           <Icon name="close" className="text-[20px]" />
         </button>
@@ -215,7 +215,7 @@ export function AddStaffPanel({
         type="button"
         onClick={() => void kirim()}
         disabled={sibuk || Boolean(masalah)}
-        className="w-full h-12 rounded-full primary-gradient text-white font-body-bold text-body-bold flex items-center justify-center gap-2 clay-fab active:scale-[0.98] transition-transform disabled:opacity-50"
+        className="w-full h-12 rounded-full primary-gradient text-white font-body-bold text-body-bold flex items-center justify-center gap-2 clay-fab transition-transform disabled:opacity-50"
       >
         <Icon name={sibuk ? "hourglass_top" : "person_add"} className="text-[20px]" />
         {sibuk ? "Membuat..." : "Buat Akun"}

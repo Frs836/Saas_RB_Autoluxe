@@ -138,7 +138,7 @@ export function AuditView({
         p_offset: 0,
       });
       if (rpcErr) { setError(rpcErr.message); return; }
-      // RPC returns SETOF json — each row is a plain JSON object
+      // RPC returns SETOF json - each row is a plain JSON object
       setRows(((data ?? []) as any[]).map(normalizeRow));
     });
   }
@@ -174,7 +174,7 @@ export function AuditView({
         <div className="flex gap-2 flex-wrap">
           {(["today","week","month"] as const).map((p) => (
             <button key={p} type="button" onClick={() => applyPreset(p)}
-              className="px-3 h-9 rounded-full bg-surface-container-low text-text-secondary font-caption text-caption active:scale-95 transition-transform">
+              className="px-3 h-9 rounded-full bg-surface-container-low text-text-secondary font-caption text-caption transition-transform">
               {p === "today" ? "Hari Ini" : p === "week" ? "7 Hari" : "30 Hari"}
             </button>
           ))}

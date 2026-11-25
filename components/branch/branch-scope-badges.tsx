@@ -62,7 +62,7 @@ export function BranchScopeBadges({
             type="button"
             onClick={() => pilih(ALL_BRANCHES)}
             disabled={pending}
-            className={`shrink-0 min-h-10 px-3.5 rounded-full font-body-bold text-body-bold flex items-center gap-1.5 active:scale-95 transition-transform disabled:opacity-60 ${
+            className={`shrink-0 min-h-10 px-3.5 rounded-full font-body-bold text-body-bold flex items-center gap-1.5 transition-transform disabled:opacity-60 ${
               idAktif === ALL_BRANCHES
                 ? "bg-brand-600 text-white"
                 : "bg-surface text-text-secondary"
@@ -79,7 +79,7 @@ export function BranchScopeBadges({
             type="button"
             onClick={() => pilih(b.id)}
             disabled={pending}
-            className={`shrink-0 min-h-10 px-3.5 rounded-full font-body-bold text-body-bold flex items-center gap-1.5 active:scale-95 transition-transform disabled:opacity-60 ${
+            className={`shrink-0 min-h-10 px-3.5 rounded-full font-body-bold text-body-bold flex items-center gap-1.5 transition-transform disabled:opacity-60 ${
               idAktif === b.id
                 ? "bg-brand-600 text-white"
                 : "bg-surface text-text-secondary"

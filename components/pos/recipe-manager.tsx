@@ -431,7 +431,7 @@ export function RecipeManager({
               onChange={(e) => setQty({ ...qty, [key]: e.target.value })}
               disabled={disabled || sibuk}
               className="h-11 rounded-[8px] border border-border bg-surface px-3 font-body text-body text-text-primary text-center outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
-              placeholder="—"
+              placeholder="-"
               aria-label={SIZE_LABELS[key].label}
             />
           </label>
@@ -644,7 +644,7 @@ export function RecipeManager({
               >
                 {items.map((item) => (
                   <option key={item.id} value={item.id}>
-                    {item.item_name} — stok {formatAngka(item.current_stock)} {item.unit}
+                    {item.item_name} - stok {formatAngka(item.current_stock)} {item.unit}
                   </option>
                 ))}
               </select>
@@ -722,7 +722,7 @@ export function RecipeManager({
               >
                 {bundles.map((b) => (
                   <option key={b.id} value={b.id}>
-                    {b.bundle_name} — stok {b.current_stock ?? 0} {b.unit}
+                    {b.bundle_name} - stok {b.current_stock ?? 0} {b.unit}
                     {b.unit_cost && b.unit_cost > 0
                       ? ` (@${formatAngka(Math.round(b.unit_cost))}/${b.unit})`
                       : ""}

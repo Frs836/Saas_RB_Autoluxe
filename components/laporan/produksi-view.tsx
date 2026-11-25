@@ -101,7 +101,7 @@ export function ProduksiView({
 
       // Sheet 1: Ringkasan
       const summarySheet = [
-        ["LAPORAN BIAYA PRODUKSI & PEMAKAIAN BAHAN — RB AUTOLUXE", ""],
+        ["LAPORAN BIAYA PRODUKSI & PEMAKAIAN BAHAN - RB AUTOLUXE", ""],
         ["Cabang:", branchName],
         ["Tanggal Ekspor:", new Date().toLocaleDateString("id-ID")],
         [],

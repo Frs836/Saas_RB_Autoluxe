@@ -19,7 +19,7 @@ import { Modal } from "@/components/ui/modal";
  * pengaturan cabang, jadi cabang baru tidak perlu diisi ulang setelah dibuat.
  */
 export function CreateBranchPanel({
-  triggerClassName = "w-full h-11 px-4 rounded-xl primary-gradient text-on-primary font-body-bold text-body-bold flex items-center justify-center gap-2 clay-fab active:scale-[0.98] transition-transform",
+  triggerClassName = "w-full h-11 px-4 rounded-xl primary-gradient text-on-primary font-body-bold text-body-bold flex items-center justify-center gap-2 clay-fab transition-transform",
 }: {
   triggerClassName?: string;
 } = {}) {
@@ -250,7 +250,7 @@ export function CreateBranchPanel({
           type="button"
           onClick={() => void kirim()}
           disabled={sibuk || Boolean(masalah)}
-          className="w-full h-12 rounded-full primary-gradient text-white font-body-bold text-body-bold flex items-center justify-center gap-2 clay-fab active:scale-[0.98] transition-transform disabled:opacity-50"
+          className="w-full h-12 rounded-full primary-gradient text-white font-body-bold text-body-bold flex items-center justify-center gap-2 clay-fab transition-transform disabled:opacity-50"
         >
           <Icon name={sibuk ? "hourglass_top" : "add_business"} className="text-[20px]" />
           {sibuk ? "Membuat..." : "Buat Cabang"}

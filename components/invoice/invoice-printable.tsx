@@ -103,11 +103,11 @@ export function InvoicePrintable({ data }: { data: PrintableInvoiceData }) {
         (m12 ? `• *Bulan ke-12 (1 Thn):* ${formatDateWib(m12.dueDate)}\n` : "")
       : "") +
     `\nBuka invoice resmi: ${shareUrl}\n\n` +
-    `RB AUTOLUXE — Premium Detailing & Paint Protection`;
+    `RB AUTOLUXE - Premium Detailing & Paint Protection`;
 
   return (
     <div className="min-h-screen bg-surface-container-low pb-12 print:bg-white print:p-0 print:pb-0">
-      {/* Top Action Bar — hidden when printing */}
+      {/* Top Action Bar - hidden when printing */}
       <header className="sticky top-0 z-40 clay-nav px-4 py-3 flex items-center justify-between gap-3 print:hidden">
         <div className="flex items-center gap-2">
           <Link
@@ -196,7 +196,7 @@ export function InvoicePrintable({ data }: { data: PrintableInvoiceData }) {
               </p>
               <p className="text-xs text-slate-600 flex items-center gap-1 mt-0.5">
                 <Icon name="phone" className="text-[14px] text-slate-400" />
-                {data.customerPhone || "—"}
+                {data.customerPhone || "-"}
               </p>
             </div>
 
@@ -207,7 +207,7 @@ export function InvoicePrintable({ data }: { data: PrintableInvoiceData }) {
               </span>
               <div className="flex items-center justify-between gap-2">
                 <p className="text-base font-bold text-slate-900">
-                  {data.vehicleModel || "—"}
+                  {data.vehicleModel || "-"}
                 </p>
                 <span className="px-2.5 py-0.5 rounded-lg bg-brand-50 border border-brand-200 font-bold text-xs text-brand-800 shrink-0">
                   {data.licensePlate}

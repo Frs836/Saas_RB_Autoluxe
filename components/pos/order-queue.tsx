@@ -71,14 +71,14 @@ const TRANSITIONS: Record<string, { status: string; label: string; icon: string;
 
 const STATUS_SERAH_TERIMA = new Set(["menunggu_diambil", "diserahkan"]);
 
-// Deteksi kategori layanan — sama dengan logic di tracking page dan database
+// Deteksi kategori layanan - sama dengan logic di tracking page dan database
 function detectCat(servicePackage: string | null): "wash" | "detailing" | "coating" {
   const pkg = (servicePackage ?? "").toLowerCase().trim();
-  // Coating — exact names first
+  // Coating - exact names first
   if (pkg === "graphene package" || pkg.includes("graphene")) return "coating";
   if (pkg === "premium package"  || pkg === "light package")   return "coating";
   if (pkg.includes("coating") || pkg.includes("ceramic") || pkg.includes("nano") || pkg.includes("layer")) return "coating";
-  // Wash — dicek sebelum detailing agar "Wash Poles" atau "Cuci & Interior" tetap WASH!
+  // Wash - dicek sebelum detailing agar "Wash Poles" atau "Cuci & Interior" tetap WASH!
   if (pkg.includes("wash") || pkg.includes("cuci")) return "wash";
   // Detailing (murni detailing tanpa kata wash)
   if (pkg === "full package" || pkg.includes("full package")) return "detailing";
@@ -330,7 +330,7 @@ export function OrderQueue({
               <button
                 type="button"
                 onClick={() => setShowTeamModal(false)}
-                className="w-10 h-10 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary active:scale-95"
+                className="w-10 h-10 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary "
                 aria-label="Tutup"
               >
                 <Icon name="close" className="text-[22px]" />
@@ -388,7 +388,7 @@ export function OrderQueue({
               <button
                 type="button"
                 onClick={() => setShowTeamModal(false)}
-                className="flex-1 py-3 rounded-xl bg-surface-container-low text-text-secondary font-body-bold text-body-bold active:scale-95"
+                className="flex-1 py-3 rounded-xl bg-surface-container-low text-text-secondary font-body-bold text-body-bold "
               >
                 Batal
               </button>
@@ -396,7 +396,7 @@ export function OrderQueue({
                 type="button"
                 disabled={teamModalLoading || selectedStaff.length === 0}
                 onClick={submitClaimWithTeam}
-                className="flex-1 py-3 rounded-xl primary-gradient text-white font-body-bold text-body-bold active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2"
+                className="flex-1 py-3 rounded-xl primary-gradient text-white font-body-bold text-body-bold disabled:opacity-60 flex items-center justify-center gap-2"
               >
                 {teamModalLoading ? (
                   <>

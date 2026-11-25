@@ -75,7 +75,7 @@ export function ProfilView({
       {/* Desktop 2-column grid wrapper */}
       <div className="lg:grid lg:grid-cols-3 lg:gap-6 lg:items-start lg:px-gutter lg:pt-6">
 
-        {/* LEFT COLUMN — identitas + cabang */}
+        {/* LEFT COLUMN - identitas + cabang */}
         <div className="lg:col-span-1 lg:sticky lg:top-20 flex flex-col">
           {/* Kartu identitas */}
           <section className="px-gutter pt-4 lg:px-0 lg:pt-0">
@@ -150,7 +150,7 @@ export function ProfilView({
             </div>
           </section>
 
-          {/* Keluar — di desktop ada di kiri bawah */}
+          {/* Keluar - di desktop ada di kiri bawah */}
           <section className="px-gutter pt-3 lg:px-0 hidden lg:block">
             <form action="/auth/signout" method="post">
               <button
@@ -167,7 +167,7 @@ export function ProfilView({
           </section>
         </div>
 
-        {/* RIGHT COLUMN — modul + konten bawah */}
+        {/* RIGHT COLUMN - modul + konten bawah */}
         <div className="lg:col-span-2 flex flex-col">
           {/* Menu modul - Tabs dengan Dropdown per kategori */}
           <section className="px-gutter pt-2.5 lg:px-0 lg:pt-0">
@@ -257,7 +257,7 @@ export function ProfilView({
 
       </div>
 
-      {/* Keluar — di mobile ada di bawah (di luar grid) */}
+      {/* Keluar - di mobile ada di bawah (di luar grid) */}
       <section className="px-gutter pt-3 lg:hidden">
         <form action="/auth/signout" method="post">
           <button

@@ -68,7 +68,7 @@ export async function createStaffProfile(data: CreateStaffData): Promise<CreateS
   let authUserId: string;
 
   if (existingAuth) {
-    // Auth user sudah ada — cek apakah profil juga sudah ada
+    // Auth user sudah ada - cek apakah profil juga sudah ada
     const { data: existingProfile } = await admin
       .from("profiles")
       .select("id")
@@ -85,7 +85,7 @@ export async function createStaffProfile(data: CreateStaffData): Promise<CreateS
       user_metadata: { full_name: data.fullName.trim() },
     });
   } else {
-    // Buat auth user baru — trigger on_auth_user_created akan otomatis INSERT profil
+    // Buat auth user baru - trigger on_auth_user_created akan otomatis INSERT profil
     // dengan role karyawan dan branch pertama. Kita UPDATE setelah itu.
     const { data: authData, error: authError } = await admin.auth.admin.createUser({
       email:         data.email.toLowerCase().trim(),
@@ -144,7 +144,7 @@ export async function createStaffProfile(data: CreateStaffData): Promise<CreateS
     return { ok: true, data: { profile: insertedProfile, authUserId } };
   }
 
-  // 6. Activity log — actor_id pakai profiles.id bukan auth.uid()
+  // 6. Activity log - actor_id pakai profiles.id bukan auth.uid()
   await admin.from("activity_logs").insert({
     actor_id:  actorProfile.id,
     action:    "staff.create",

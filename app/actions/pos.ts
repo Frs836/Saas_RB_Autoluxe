@@ -32,7 +32,7 @@ export type CreateOrderResult =
  * Pemanggilan dilakukan dari server action agar cache Next.js App Router pada
  * halaman `/pos/orders` dapat diinvalidasi via `revalidatePath` setelah order
  * berhasil dibuat. `revalidatePath` hanya dipanggil jika RPC berhasil dan
- * menghasilkan `order_number` yang valid — cache tidak disentuh jika order
+ * menghasilkan `order_number` yang valid - cache tidak disentuh jika order
  * gagal tersimpan.
  */
 export async function createPosOrder(

@@ -625,7 +625,7 @@ export function BranchSettingsView({ branches, activeBranchId }: Props) {
         ) : null}
       </section>
 
-      {/* Zona Berbahaya — Hapus Cabang */}
+      {/* Zona Berbahaya - Hapus Cabang */}
       <section className="clay-card rounded-[10px] p-4 flex flex-col gap-2 border border-red-200">
         <h3 className="font-body-bold text-body-bold text-red-700 flex items-center gap-1.5">
           <Icon name="delete_forever" className="text-[18px]" />

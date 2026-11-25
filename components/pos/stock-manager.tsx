@@ -493,7 +493,7 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
             key={item.key}
             type="button"
             onClick={() => setTab(item.key as "items" | "claims")}
-            className={`flex-1 min-h-11 rounded-xl font-body-bold text-body-bold flex items-center justify-center active:scale-95 transition-transform ${
+            className={`flex-1 min-h-11 rounded-xl font-body-bold text-body-bold flex items-center justify-center transition-transform ${
               tab === item.key
                 ? "bg-surface text-text-primary shadow-[0_1px_4px_rgba(15,23,42,0.08)]"
                 : "text-text-secondary"
@@ -540,7 +540,7 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
                     key={h}
                     type="button"
                     onClick={() => setHuruf(h)}
-                    className={`min-w-9 h-9 shrink-0 rounded-lg font-caption text-caption flex items-center justify-center active:scale-95 transition-transform ${
+                    className={`min-w-9 h-9 shrink-0 rounded-lg font-caption text-caption flex items-center justify-center transition-transform ${
                       huruf === h
                         ? "bg-brand-600 text-white"
                         : "bg-surface-container-low text-text-secondary"
@@ -563,7 +563,7 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
                     onClick={() => {
                       setInOpen(true);
                     }}
-                    className="flex-1 min-h-11 rounded-xl bg-success-surface text-success-text font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+                    className="flex-1 min-h-11 rounded-xl bg-success-surface text-success-text font-caption text-caption flex items-center justify-center gap-1.5 transition-transform"
                   >
                     <Icon name="move_to_inbox" className="text-[18px]" />
                     Tambah Stok Masuk
@@ -571,14 +571,14 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
                   <button
                     type="button"
                     onClick={() => setNewItemOpen(true)}
-                    className="flex-1 min-h-11 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+                    className="flex-1 min-h-11 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center justify-center gap-1.5 transition-transform"
                   >
                     <Icon name="add_circle" className="text-[18px]" />
                     Item Baru
                   </button>
                   <a
                     href="/stok/opname"
-                    className="flex-1 min-h-11 rounded-xl bg-surface-container text-text-secondary font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+                    className="flex-1 min-h-11 rounded-xl bg-surface-container text-text-secondary font-caption text-caption flex items-center justify-center gap-1.5 transition-transform"
                   >
                     <Icon name="fact_check" className="text-[18px]" />
                     Opname
@@ -667,7 +667,7 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
                     <button
                       type="button"
                       onClick={() => openClaim(item)}
-                      className="flex-1 min-h-10 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform"
+                      className="flex-1 min-h-10 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center justify-center gap-1 transition-transform"
                     >
                       <Icon name="shopping_cart_checkout" className="text-[15px]" />
                       Klaim
@@ -676,7 +676,7 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
                       <button
                         type="button"
                         onClick={() => openEditItem(item)}
-                        className="px-2.5 min-h-10 rounded-xl bg-surface-container text-text-primary font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform"
+                        className="px-2.5 min-h-10 rounded-xl bg-surface-container text-text-primary font-caption text-caption flex items-center justify-center gap-1 transition-transform"
                         title="Edit Item"
                       >
                         <Icon name="edit" className="text-[15px]" />
@@ -686,7 +686,7 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
                       <button
                         type="button"
                         onClick={() => { setDeleteTarget(item); setDeleteError(null); }}
-                        className="px-2.5 min-h-10 rounded-xl bg-danger-surface text-danger-text font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform"
+                        className="px-2.5 min-h-10 rounded-xl bg-danger-surface text-danger-text font-caption text-caption flex items-center justify-center gap-1 transition-transform"
                         title="Hapus Item"
                       >
                         <Icon name="delete" className="text-[15px]" />
@@ -836,7 +836,7 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
                           type="button"
                           disabled={busy}
                           onClick={() => confirmClaim(claim)}
-                          className="flex-1 py-2.5 rounded-xl bg-success-surface text-success-text font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform disabled:opacity-60"
+                          className="flex-1 py-2.5 rounded-xl bg-success-surface text-success-text font-caption text-caption flex items-center justify-center gap-1 transition-transform disabled:opacity-60"
                         >
                           <Icon name="check" className="text-[18px]" />
                           Setujui Pengambilan
@@ -845,7 +845,7 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
                           type="button"
                           disabled={busy}
                           onClick={() => rejectClaim(claim)}
-                          className="flex-1 py-2.5 rounded-xl bg-danger-surface text-danger-text font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform disabled:opacity-60"
+                          className="flex-1 py-2.5 rounded-xl bg-danger-surface text-danger-text font-caption text-caption flex items-center justify-center gap-1 transition-transform disabled:opacity-60"
                         >
                           <Icon name="close" className="text-[18px]" />
                           Tolak
@@ -871,7 +871,7 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
                 type="button"
                 onClick={() => setSelected(null)}
                 aria-label="Tutup"
-                className="w-9 h-9 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary active:scale-95"
+                className="w-9 h-9 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary "
               >
                 <Icon name="close" className="text-[20px]" />
               </button>
@@ -937,7 +937,7 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
               type="button"
               disabled={submitting}
               onClick={submitClaim}
-              className="w-full py-4 lg:py-2.5 rounded-2xl lg:rounded-xl bg-primary text-white font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-60"
+              className="w-full py-4 lg:py-2.5 rounded-2xl lg:rounded-xl bg-primary text-white font-body-bold text-body-bold flex items-center justify-center gap-2 transition-transform disabled:opacity-60"
             >
               <Icon name={submitting ? "hourglass_top" : "send"} className="text-[22px]" />
               {submitting ? "Mengirim..." : "Ajukan Klaim"}
@@ -969,7 +969,7 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
                 type="button"
                 onClick={() => setDeleteTarget(null)}
                 disabled={deleteLoading}
-                className="flex-1 py-3 rounded-2xl bg-surface-container text-text-secondary font-body-bold text-body-bold active:scale-95 transition-transform disabled:opacity-60"
+                className="flex-1 py-3 rounded-2xl bg-surface-container text-text-secondary font-body-bold text-body-bold transition-transform disabled:opacity-60"
               >
                 Batal
               </button>
@@ -977,7 +977,7 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
                 type="button"
                 onClick={deleteItem}
                 disabled={deleteLoading}
-                className="flex-1 py-3 rounded-2xl bg-danger-base text-white font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-60"
+                className="flex-1 py-3 rounded-2xl bg-danger-base text-white font-body-bold text-body-bold flex items-center justify-center gap-2 transition-transform disabled:opacity-60"
               >
                 {deleteLoading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Icon name="delete" className="text-[18px]" />}
                 {deleteLoading ? "Menghapus..." : "Hapus"}
@@ -1104,7 +1104,7 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
                 type="button"
                 disabled={submitting}
                 onClick={submitStockIn}
-                className="w-full py-3 rounded-xl bg-success-base text-white font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-60"
+                className="w-full py-3 rounded-xl bg-success-base text-white font-body-bold text-body-bold flex items-center justify-center gap-2 transition-transform disabled:opacity-60"
               >
                 <Icon name={submitting ? "hourglass_top" : "inventory_2"} className="text-[20px]" />
                 {submitting ? "Mencatat..." : "Catat Stok Masuk"}
@@ -1121,7 +1121,7 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
           <div className="fixed inset-x-4 bottom-4 z-[61] bg-surface rounded-2xl p-5 shadow-xl max-w-md mx-auto flex flex-col gap-4" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between">
               <h3 className="font-headline-2 text-headline-2 text-text-primary">Tambah Item Stok Baru</h3>
-              <button type="button" onClick={() => setNewItemOpen(false)} className="w-9 h-9 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary active:scale-95">
+              <button type="button" onClick={() => setNewItemOpen(false)} className="w-9 h-9 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary ">
                 <Icon name="close" className="text-[20px]" />
               </button>
             </div>
@@ -1195,11 +1195,11 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
             {newItemError && <p className="font-caption text-caption text-danger-text">{newItemError}</p>}
             <div className="flex gap-3">
               <button type="button" onClick={() => setNewItemOpen(false)}
-                className="flex-1 py-3 rounded-xl bg-surface-container-low text-text-secondary font-body-bold text-body-bold active:scale-95">
+                className="flex-1 py-3 rounded-xl bg-surface-container-low text-text-secondary font-body-bold text-body-bold ">
                 Batal
               </button>
               <button type="button" onClick={submitNewItem} disabled={newItemLoading}
-                className="flex-1 py-3 rounded-xl bg-primary text-white font-body-bold text-body-bold active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2">
+                className="flex-1 py-3 rounded-xl bg-primary text-white font-body-bold text-body-bold disabled:opacity-60 flex items-center justify-center gap-2">
                 {newItemLoading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Icon name="add_circle" className="text-[20px]" />}
                 {newItemLoading ? "Menyimpan..." : "Tambah Item"}
               </button>
@@ -1297,11 +1297,11 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
 
             <div className="flex gap-3">
               <button type="button" onClick={() => setEditItemTarget(null)}
-                className="flex-1 py-3 rounded-xl bg-surface-container-low text-text-secondary font-body-bold text-body-bold active:scale-95">
+                className="flex-1 py-3 rounded-xl bg-surface-container-low text-text-secondary font-body-bold text-body-bold ">
                 Batal
               </button>
               <button type="button" onClick={submitEditItem} disabled={editItemLoading}
-                className="flex-1 py-3 rounded-xl bg-primary text-white font-body-bold text-body-bold active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2">
+                className="flex-1 py-3 rounded-xl bg-primary text-white font-body-bold text-body-bold disabled:opacity-60 flex items-center justify-center gap-2">
                 {editItemLoading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Icon name="check_circle" className="text-[20px]" />}
                 {editItemLoading ? "Menyimpan..." : "Simpan Perubahan"}
               </button>

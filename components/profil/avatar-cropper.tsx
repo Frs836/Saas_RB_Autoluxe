@@ -166,7 +166,7 @@ export function AvatarCropper({
           ) : null}
         </div>
 
-        {/* Preview Live 80×80px — mirip avatar holder */}
+        {/* Preview Live 80×80px - mirip avatar holder */}
         <div className="flex flex-col items-center gap-2">
           <span className="font-caption text-caption text-white/70">Preview (80×80)</span>
           <div className="relative overflow-hidden rounded-[20px] border border-white/80">

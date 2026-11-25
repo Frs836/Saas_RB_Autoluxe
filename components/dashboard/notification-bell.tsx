@@ -99,7 +99,7 @@ export function NotificationBell() {
           ? `Notifikasi, ${belum} pesan belum dibaca`
           : "Notifikasi, tidak ada pesan baru"
       }
-      className="relative w-11 h-11 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary shadow-[inset_0px_2px_4px_rgba(255,255,255,0.95)] active:scale-[0.98] transition-transform"
+      className="relative w-11 h-11 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary shadow-[inset_0px_2px_4px_rgba(255,255,255,0.95)] transition-transform"
     >
       <Icon name="notifications" className="text-[20px]" />
       {belum > 0 ? (

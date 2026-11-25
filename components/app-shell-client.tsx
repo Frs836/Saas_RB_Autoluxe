@@ -41,7 +41,7 @@ export function AppShellClient({
 
   return (
     <>
-      {/* Sidebar — hanya muncul di lg ke atas */}
+      {/* Sidebar - hanya muncul di lg ke atas */}
       <div className="hidden lg:block">
         <DesktopSidebar
           role={role}
@@ -52,7 +52,7 @@ export function AppShellClient({
         />
       </div>
 
-      {/* Main content — geser ke kanan sesuai lebar sidebar */}
+      {/* Main content - geser ke kanan sesuai lebar sidebar */}
       <div className={`w-full transition-all duration-300 ${
         collapsed ? "lg:pl-[72px]" : "lg:pl-[240px]"
       }`}>

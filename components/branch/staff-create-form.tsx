@@ -259,14 +259,14 @@ export function StaffCreateForm({ branches }: { branches: { id: string; name: st
         <button
           type="button"
           onClick={() => router.back()}
-          className="px-6 py-2.5 rounded-xl bg-surface-container text-text-secondary font-medium active:scale-95 transition-transform"
+          className="px-6 py-2.5 rounded-xl bg-surface-container text-text-secondary font-medium transition-transform"
         >
           Batal
         </button>
         <button
           type="submit"
           disabled={loading}
-          className="px-6 py-2.5 rounded-xl bg-primary text-white font-medium active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2 transition-transform shadow-sm"
+          className="px-6 py-2.5 rounded-xl bg-primary text-white font-medium disabled:opacity-60 flex items-center justify-center gap-2 transition-transform shadow-sm"
         >
           {loading ? (
             <>

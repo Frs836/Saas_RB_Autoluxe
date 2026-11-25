@@ -29,7 +29,7 @@ export function ServiceWorkerRegistrar() {
           if (!newWorker) return;
           newWorker.addEventListener("statechange", () => {
             if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
-              // SW baru sudah terinstall — kirim pesan untuk skip waiting
+              // SW baru sudah terinstall - kirim pesan untuk skip waiting
               newWorker.postMessage({ type: "SKIP_WAITING" });
             }
           });

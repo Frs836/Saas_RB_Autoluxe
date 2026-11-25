@@ -81,13 +81,13 @@ type ServiceCategory =
 
 function detectCategory(servicePackage: string | null): ServiceCategory {
   const pkg = (servicePackage ?? "").toLowerCase().trim();
-  // Coating — exact package names
+  // Coating - exact package names
   if (pkg === "graphene package" || pkg.includes("graphene"))        return "coating_graphene";
   if (pkg === "premium package"  || pkg.includes("5 layer"))         return "coating_graphene";
   if (pkg === "light package"    || pkg.includes("2 layer") || pkg.includes("light package")) return "coating_light";
   if (pkg.includes("3 layer") || pkg.includes("nano ceramic"))       return "coating_premium";
   if (pkg.includes("coating") || pkg.includes("ceramic") || pkg.includes("nano")) return "coating_light";
-  // Wash variants — dicek sebelum kata poles/interior agar "Wash Poles", "Cuci & Interior" tetap WASH!
+  // Wash variants - dicek sebelum kata poles/interior agar "Wash Poles", "Cuci & Interior" tetap WASH!
   if (pkg.includes("premium wash"))  return "wash_premium";
   if (pkg.includes("super wash"))    return "wash_super";
   if (pkg.includes("jamur kaca") || pkg.includes("jamur")) return "wash_jamur";

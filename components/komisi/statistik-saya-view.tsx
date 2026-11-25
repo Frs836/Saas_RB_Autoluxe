@@ -87,7 +87,7 @@ export function StatistikSayaView({
         <div className="flex gap-2 flex-wrap">
           {(["bulan_ini","bulan_lalu","3bulan"] as const).map((p) => (
             <button key={p} type="button" onClick={() => applyPreset(p)}
-              className="px-3 h-9 rounded-full bg-surface-container-low text-text-secondary font-caption text-caption active:scale-95 transition-transform">
+              className="px-3 h-9 rounded-full bg-surface-container-low text-text-secondary font-caption text-caption transition-transform">
               {p === "bulan_ini" ? "Bulan Ini" : p === "bulan_lalu" ? "Bulan Lalu" : "3 Bulan"}
             </button>
           ))}
@@ -120,7 +120,7 @@ export function StatistikSayaView({
           <div className="flex flex-col gap-3">
             {orders.map((o) => (
               <Link key={o.id} href={`/pos/orders/${o.id}`}
-                className="clay-card p-4 flex flex-col gap-2 active:scale-[0.99] transition-transform">
+                className="clay-card p-4 flex flex-col gap-2 transition-transform">
                 <div className="flex items-center justify-between gap-2">
                   <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-micro-badge text-micro-badge ${
                     o.isLead ? "bg-brand-50 text-brand-700" : "bg-surface-container text-text-secondary"

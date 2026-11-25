@@ -130,7 +130,10 @@ const branchMap = new Map(
 // Semua order cabang diambil tanpa filter status supaya tagihan (order belum
   // lunas) ikut terhitung. Omzet dan unit terjual tetap memakai order selesai.
   const allOrders = ordersRes.data ?? [];
-  const completedOrders = allOrders.filter((o) => o.status === "completed");
+  // Order "selesai" mencakup tiga status: completed, menunggu_diambil, diserahkan
+  const completedOrders = allOrders.filter((o) =>
+    ["completed", "menunggu_diambil", "diserahkan"].includes(o.status ?? ""),
+  );
   const cashRows = cashRes.data ?? [];
   const stockRows = stockRes.data ?? [];
 
@@ -199,7 +202,10 @@ const branchMap = new Map(
   const unitsSold = Array.from(soldByName.values()).sort((a, b) => b.qty - a.qty);
 
   // Tagihan: order yang pembayarannya belum lunas.
-  const unpaidOrders = allOrders.filter((o) => o.payment_state === "unpaid");
+  // Tagihan belum lunas: exclude order cancelled agar tidak mencemari saldo piutang
+  const unpaidOrders = allOrders.filter(
+    (o) => o.payment_state === "unpaid" && o.status !== "cancelled",
+  );
 
   // Mutasi stok terakhir beserta nama barangnya.
   const itemNameById = new Map(stockRows.map((s) => [s.id as string, s.item_name as string]));

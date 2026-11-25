@@ -95,6 +95,9 @@ export const PERMISSIONS = [
   "branch.switch",
   "branch.manage",
   "system.maintenance",
+
+  /* Komisi */
+  "commission.manage",   // setting tarif komisi per karyawan
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];
@@ -231,6 +234,7 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "reports.cashflow",
     "data.import",
     "system.maintenance",
+    "commission.manage",
   ],
   owner: [
     "attendance.self",
@@ -264,6 +268,7 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "reports.cashflow",
     "data.import",
     "system.maintenance",
+    "commission.manage",
   ],
 };
 
@@ -450,6 +455,7 @@ export const PROFILE_MENU: readonly ProfileMenuItem[] = [
   { label: "Verifikasi Wajah", caption: "Tinjau sampel wajah staf", icon: "face_retouching_natural", href: "/pengaturan/wajah", permission: "branch.manage", category: "staf_cabang" },
   { label: "Kelola Jasa POS", caption: "Nama, harga per ukuran, dan status", icon: "edit_note", href: "/pengaturan/jasa", permission: "services.manage", category: "staf_cabang" },
   { label: "Resep Bahan Jasa", caption: "Bahan gudang yang terpotong saat checkout", icon: "inventory_2", href: "/pengaturan/resep", permission: "services.manage", category: "staf_cabang" },
+  { label: "Pengaturan Komisi", caption: "Tarif komisi per karyawan (% atau flat)", icon: "percent", href: "/pengaturan/komisi", permission: "commission.manage", category: "staf_cabang" },
   // Keuangan
   { label: "Kas Titipan Shift", caption: "Buka kas, rekap & tutup audit shift", icon: "payments", href: "/shift", permission: "cash.shift_manage", category: "keuangan" },
   { label: "Kas Keluar", caption: "Petty cash operasional + foto nota", icon: "receipt_long", href: "/kas", permission: "cash.petty_manage", category: "keuangan" },

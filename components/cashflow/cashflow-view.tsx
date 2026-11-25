@@ -188,14 +188,14 @@ export function CashFlowView({
       {report && (
         <>
           {/* Net cash hero */}
-          <div className={`relative overflow-hidden rounded-[20px] p-5 clay-glow ${net >= 0 ? "primary-gradient text-on-primary" : "bg-danger-surface"}`}>
+          <div className={`relative overflow-hidden rounded-[10px] p-5 clay-glow ${net >= 0 ? "primary-gradient text-on-primary" : "bg-danger-surface"}`}>
             <div className="relative z-10">
               <p className="font-caption text-caption opacity-80">Net Arus Kas</p>
               <p className="font-metric-display text-metric-display text-white tracking-tight leading-none mt-1">
                 {formatRupiah(net)}
               </p>
               <p className="font-caption text-caption opacity-80 mt-1">
-                {fmtDate(from)} — {fmtDate(to)}
+                {fmtDate(from)} hingga {fmtDate(to)}
               </p>
             </div>
           </div>
@@ -254,7 +254,7 @@ export function CashFlowView({
 
           {/* Detail transaksi toggle */}
           <button type="button" onClick={() => setShowTx((v) => !v)}
-            className="clay-card p-4 flex items-center justify-between active:scale-[0.99] transition-transform">
+            className="clay-card p-4 flex items-center justify-between hover:bg-surface-variant transition-colors">
             <span className="font-body-bold text-body-bold text-text-primary">
               Detail Transaksi ({(report.transactions ?? []).length})
             </span>
@@ -280,7 +280,7 @@ export function CashFlowView({
 
           {/* Export */}
           <button type="button" onClick={exportExcel}
-            className="w-full py-4 lg:py-2.5 rounded-2xl lg:rounded-xl bg-success-base text-white font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform">
+            className="w-full py-4 lg:py-2.5 rounded-[8px] primary-gradient clay-glow text-white font-body-bold text-body-bold flex items-center justify-center gap-2 hover:opacity-95 transition-opacity">
             <Icon name="download" className="text-[22px]" />
             Export Excel (.xlsx)
           </button>

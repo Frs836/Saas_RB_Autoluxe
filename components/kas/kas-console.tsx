@@ -317,7 +317,7 @@ export function KasConsole({
             <Icon name="schedule" className="text-[16px] mx-auto" />
             Bayar Nanti ({unpaidCount})
             {unpaidCount > 0 && (
-              <span className="ml-1.5 px-1.5 py-0.5 text-[10px] rounded-full bg-brand-500 text-white">
+              <span className="ml-1.5 px-1.5 py-0.5 text-[10px] rounded-[6px] bg-brand-500 text-white">
                 {unpaidCount}
               </span>
             )}
@@ -419,7 +419,7 @@ export function KasConsole({
                       onClick={() =>
                         setForm((f) => ({ ...f, paymentMethod: option.value }))
                       }
-                      className={`h-11 rounded-xl font-caption text-caption transition-colors ${
+                      className={`h-11 rounded-[8px] font-caption text-caption transition-colors ${
                         form.paymentMethod === option.value
                           ? "bg-primary text-white shadow-[0px_8px_16px_rgba(37,99,235,0.25)]"
                           : "bg-surface-container-low text-text-secondary shadow-[inset_0px_2px_4px_rgba(255,255,255,0.95)]"
@@ -433,7 +433,7 @@ export function KasConsole({
 
               <div className="flex flex-col gap-space-xs">
                 <label className="font-caption text-caption text-text-secondary">Nominal</label>
-                <div className="relative flex items-center h-12 rounded-xl bg-surface shadow-[inset_0px_2px_4px_rgba(15,23,42,0.06)] px-3">
+                <div className="relative flex items-center h-12 rounded-[8px] bg-surface shadow-[inset_0px_2px_4px_rgba(15,23,42,0.06)] px-3">
                   <span className="font-body-bold text-headline-2 text-primary-container pr-2">Rp</span>
                   <input
                     value={form.amount}
@@ -664,7 +664,7 @@ export function KasConsole({
             <section className="clay-card flex flex-col gap-space-md p-space-lg">
               <div className="flex items-center justify-between">
                 <h2 className="font-headline-2 text-headline-2 text-text-primary">Catat Transaksi Kas</h2>
-                <span className="px-2 py-0.5 rounded-full bg-brand-50 text-brand-600 font-micro-badge text-micro-badge">Petty Cash</span>
+                <span className="px-2 py-0.5 rounded-[6px] bg-brand-50 border border-brand-200 text-brand-600 font-micro-badge text-micro-badge">Petty Cash</span>
               </div>
               <form onSubmit={onSubmit} className="flex flex-col gap-space-md">
                 <div className="flex flex-col gap-space-xs">
@@ -676,7 +676,7 @@ export function KasConsole({
                         setForm((f) => ({ ...f, type: "out", category: "Perlengkapan Wash" }));
                         setProofPath(null);
                       }}
-                      className={`h-11 rounded-xl font-body-bold text-body-bold transition-colors ${
+                      className={`h-11 rounded-[8px] font-body-bold text-body-bold transition-colors ${
                         form.type === "out"
                           ? "bg-brand-500 text-on-primary shadow-[0px_8px_16px_rgba(37,99,235,0.25)]"
                           : "bg-surface-container-low text-text-secondary shadow-[inset_0px_2px_4px_rgba(255,255,255,0.95)]"
@@ -690,7 +690,7 @@ export function KasConsole({
                         setForm((f) => ({ ...f, type: "in", category: "Lainnya" }));
                         setProofPath(null);
                       }}
-                      className={`h-11 rounded-xl font-body-bold text-body-bold transition-colors ${
+                      className={`h-11 rounded-[8px] font-body-bold text-body-bold transition-colors ${
                         form.type === "in"
                           ? "bg-success-base text-white shadow-[0px_8px_16px_rgba(16,185,129,0.25)]"
                           : "bg-surface-container-low text-text-secondary shadow-[inset_0px_2px_4px_rgba(255,255,255,0.95)]"
@@ -706,7 +706,7 @@ export function KasConsole({
                   <select
                     value={form.category}
                     onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-                    className="h-12 rounded-xl bg-surface px-3 font-body-regular text-body-regular text-text-primary shadow-[inset_0px_2px_4px_rgba(15,23,42,0.06)]"
+                    className="h-12 rounded-[8px] bg-surface px-3 font-body-regular text-body-regular text-text-primary shadow-[inset_0px_2px_4px_rgba(15,23,42,0.06)]"
                   >
                     {CATEGORIES_OUT.map((cat) => (
                       <option key={cat} value={cat}>
@@ -762,7 +762,7 @@ export function KasConsole({
                     value={form.description}
                     onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                     placeholder="Keterangan transaksi"
-                    className="h-12 rounded-xl bg-surface px-3 font-body-regular text-body-regular text-text-primary shadow-[inset_0px_2px_4px_rgba(15,23,42,0.06)]"
+                    className="h-12 rounded-[8px] bg-surface px-3 font-body-regular text-body-regular text-text-primary shadow-[inset_0px_2px_4px_rgba(15,23,42,0.06)]"
                   />
                 </div>
 
@@ -806,7 +806,7 @@ export function KasConsole({
                 <button
                   type="submit"
                   disabled={disabled}
-                  className="h-[50px] rounded-full primary-gradient text-on-primary font-body-bold text-body-bold shadow-[0px_10px_22px_rgba(37,99,235,0.24)] disabled:opacity-60"
+                  className="h-[50px] rounded-[8px] primary-gradient clay-glow text-on-primary font-body-bold text-body-bold shadow-[0px_10px_22px_rgba(37,99,235,0.24)] disabled:opacity-60"
                 >
                   {loading ? "Menyimpan..." : "Simpan Transaksi"}
                 </button>
@@ -830,7 +830,7 @@ export function KasConsole({
             <button
               type="button"
               onClick={closeCamera}
-              className="h-12 px-5 rounded-full bg-white/15 text-white font-body-bold text-body-bold"
+              className="h-12 px-5 rounded-[8px] bg-white/15 text-white font-body-bold text-body-bold"
             >
               Batal
             </button>
@@ -838,7 +838,7 @@ export function KasConsole({
               type="button"
               onClick={captureProof}
               disabled={loading}
-              className="h-14 w-14 rounded-full primary-gradient text-on-primary flex items-center justify-center clay-glow disabled:opacity-60"
+              className="h-14 w-14 rounded-[8px] primary-gradient text-on-primary flex items-center justify-center clay-glow disabled:opacity-60"
               aria-label="Ambil foto"
             >
               <Icon name="photo_camera" className="text-[28px]" />
@@ -855,7 +855,7 @@ export function KasConsole({
             onClick={() => setPaymentModal(null)}
           />
           <div
-            className="fixed inset-x-0 bottom-0 z-[61] max-h-[92dvh] bg-surface rounded-t-2xl flex flex-col shadow-xl"
+            className="fixed inset-x-0 bottom-0 z-[61] max-h-[92dvh] bg-surface rounded-t-[10px] flex flex-col shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -873,7 +873,7 @@ export function KasConsole({
 
             <div className="flex-1 overflow-y-auto px-5 pb-6 flex flex-col gap-4">
               {/* Order summary */}
-              <div className="rounded-2xl bg-surface-container/60 p-4 flex flex-col gap-2">
+              <div className="rounded-[8px] bg-surface-container/60 p-4 flex flex-col gap-2">
                 <div className="flex items-center justify-between">
                   <span className="font-caption text-caption text-text-muted">No. Order</span>
                   <span className="font-body-bold text-body-bold text-text-primary">{paymentModal.orderNumber}</span>
@@ -990,7 +990,7 @@ export function KasConsole({
                 <button
                   type="button"
                   onClick={() => setPaymentModal(null)}
-                  className="flex-1 py-3 rounded-xl bg-surface-container-low text-text-secondary font-body-bold text-body-bold active:scale-95"
+                  className="flex-1 py-3 rounded-[8px] bg-surface-container-low text-text-secondary font-body-bold text-body-bold"
                 >
                   Batal
                 </button>
@@ -998,7 +998,7 @@ export function KasConsole({
                   type="button"
                   disabled={payLoading}
                   onClick={handleRecordPayment}
-                  className="flex-1 py-3 rounded-xl primary-gradient text-white font-body-bold text-body-bold active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2"
+                  className="flex-1 py-3 rounded-[8px] primary-gradient clay-glow text-white font-body-bold text-body-bold disabled:opacity-60 flex items-center justify-center gap-2"
                 >
                   {payLoading ? (
                     <>

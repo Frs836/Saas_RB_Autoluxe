@@ -392,14 +392,14 @@ export function ShiftConsole({
             if (!showHistory) void fetchHistory();
             setShowHistory((v) => !v);
           }}
-          className="w-full min-h-11 rounded-xl bg-surface text-text-secondary font-caption text-caption flex items-center justify-center gap-1.5 clay-card active:scale-95 transition-transform"
+          className="w-full min-h-11 rounded-[8px] bg-surface text-text-secondary font-caption text-caption flex items-center justify-center gap-1.5 clay-card transition-colors"
         >
           <Icon name="history" className="text-[16px]" />
           {showHistory ? "Tutup Riwayat Tutup Kas" : "Riwayat Penutupan Kas"}
         </button>
 
         {showHistory ? (
-          <div className="mt-2.5 bg-surface rounded-[20px] p-4 clay-card border border-white/80">
+          <div className="mt-2.5 bg-surface rounded-[10px] p-4 clay-card border border-white/80">
             {historyPending ? (
               <p className="font-caption text-caption text-text-muted text-center py-3">
                 Memuat riwayat...
@@ -420,7 +420,7 @@ export function ShiftConsole({
                   return (
                     <div
                       key={row.id}
-                      className="rounded-2xl border border-border-subtle bg-surface-container-low/60 hover:bg-surface-container-low transition-all overflow-hidden"
+                      className="rounded-[10px] border border-border-subtle bg-surface-container-low/60 hover:bg-surface-container-low transition-all overflow-hidden"
                     >
                       {/* Baris Ringkasan yang Dapat Diklik */}
                       <button
@@ -455,12 +455,12 @@ export function ShiftConsole({
 
                         <div className="flex items-center gap-2 shrink-0">
                           <span
-                            className={`px-2.5 py-1 rounded-full font-caption text-caption font-semibold ${
+                            className={`px-2.5 py-1 rounded-[6px] font-caption text-caption font-semibold border ${
                               isSesuai
-                                ? "bg-success-surface text-success-text"
+                                ? "bg-success-surface text-success-text border-success-base/30"
                                 : isLebih
-                                  ? "bg-warning-surface text-warning-text"
-                                  : "bg-danger-surface text-danger-text"
+                                  ? "bg-warning-surface text-warning-text border-amber-200"
+                                  : "bg-danger-surface text-danger-text border-red-200"
                             }`}
                           >
                             {isSesuai
@@ -648,7 +648,7 @@ export function ShiftConsole({
 
       {/* Pintasan rekap */}
       <section className="px-gutter pt-4">
-        <div className="bg-clay-overlay rounded-2xl p-3.5 flex items-center justify-between gap-3 border border-border-subtle">
+        <div className="bg-clay-overlay rounded-[10px] p-3.5 flex items-center justify-between gap-3 border border-border-subtle">
           <div className="flex flex-col gap-0.5 min-w-0">
             <span className="font-body-bold text-body-bold text-text-primary">
               Rekap Kehadiran Staf
@@ -659,7 +659,7 @@ export function ShiftConsole({
           </div>
           <Link
             href="/rekap"
-            className="min-h-11 px-3.5 rounded-xl primary-gradient text-white font-caption text-caption flex items-center gap-1.5 shrink-0 active:scale-95 transition-transform"
+            className="min-h-11 px-3.5 rounded-[8px] primary-gradient clay-glow text-white font-caption text-caption flex items-center gap-1.5 shrink-0 transition-opacity hover:opacity-95"
           >
             <Icon name="groups" className="text-[16px]" />
             Buka Rekap
@@ -916,23 +916,23 @@ function AuditForm({
 
   return (
     <section className="px-gutter pt-4">
-      <div className="bg-surface rounded-[24px] p-4 sm:p-5 clay-card border border-white/80 inner-clay-highlight space-y-4">
+      <div className="bg-surface rounded-[10px] p-4 sm:p-5 clay-card border border-white/80 space-y-4">
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2">
-            <span className="p-1.5 rounded-lg bg-brand-50 text-brand-600">
+            <span className="p-1.5 rounded-[8px] bg-brand-50 border border-brand-200 text-primary">
               <Icon name="fact_check" className="text-[18px]" />
             </span>
             <span className="font-body-bold text-body-bold text-text-primary">
               Rekonsiliasi Kas Shift
             </span>
           </div>
-          <span className="font-micro-badge text-micro-badge px-2 py-0.5 rounded-full bg-brand-50 text-brand-700">
+          <span className="font-micro-badge text-micro-badge px-2 py-0.5 rounded-[6px] bg-brand-50 border border-brand-200 text-brand-700">
             POS AUTO-SYNC
           </span>
         </div>
 
         {/* Rincian perhitungan otomatis */}
-        <div className="bg-surface-container-low rounded-2xl p-3.5 space-y-2.5">
+        <div className="bg-surface-container-low rounded-[8px] p-3.5 space-y-2.5">
           <div className="flex items-center justify-between">
             <span className="font-caption text-caption text-text-secondary">
               Modal Awal Titipan
@@ -955,7 +955,7 @@ function AuditForm({
         </div>
 
         {/* Ekspektasi */}
-        <div className="bg-brand-50 border border-brand-200 rounded-2xl p-3.5 flex items-center justify-between">
+        <div className="bg-brand-50 border border-brand-200 rounded-[8px] p-3.5 flex items-center justify-between">
           <div className="flex flex-col gap-0.5">
             <span className="font-body-bold text-body-bold text-brand-700">
               Ekspektasi Kas Fisik Laci
@@ -979,11 +979,11 @@ function AuditForm({
               Kas Fisik di Laci
               <span className="text-danger-text font-extrabold">*</span>
             </label>
-            <span className="font-micro-badge text-micro-badge px-2 py-0.5 rounded-full bg-warning-surface text-warning-text">
+            <span className="font-micro-badge text-micro-badge px-2 py-0.5 rounded-[6px] bg-warning-surface border border-amber-200 text-warning-text">
               WAJIB DIHITUNG
             </span>
           </div>
-          <div className="flex items-center gap-2 h-14 bg-surface-container-low rounded-2xl px-3 focus-within:ring-2 focus-within:ring-brand-500/20">
+          <div className="flex items-center gap-2 h-14 bg-surface-container-low rounded-[8px] px-3 focus-within:ring-2 focus-within:ring-brand-500/20">
             <span className="font-body-bold text-body-bold text-brand-700">Rp</span>
             <input
               id="physical-cash"
@@ -1000,7 +1000,7 @@ function AuditForm({
                 key={value}
                 type="button"
                 onClick={() => add(value)}
-                className="h-10 px-3 rounded-full bg-surface border border-border-strong text-text-secondary font-caption text-caption active:scale-95 transition-transform"
+                className="h-10 px-3 rounded-[8px] bg-surface border border-border-strong text-text-secondary font-caption text-caption transition-colors hover:bg-surface-variant tabular-nums"
               >
                 +{formatRupiah(value)}
               </button>
@@ -1009,7 +1009,7 @@ function AuditForm({
               <button
                 type="button"
                 onClick={() => setPhysical("")}
-                className="h-10 px-3 rounded-full bg-danger-surface text-danger-text font-caption text-caption active:scale-95 transition-transform"
+                className="h-10 px-3 rounded-[8px] bg-danger-surface text-danger-text font-caption text-caption hover:opacity-90 transition-opacity"
               >
                 Bersihkan
               </button>
@@ -1017,7 +1017,7 @@ function AuditForm({
           </div>
 
           <div
-            className={`mt-1.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-micro-badge text-micro-badge ${
+            className={`mt-1.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] font-micro-badge text-micro-badge ${
               liveDifference === 0
                 ? "bg-success-surface text-success-text"
                 : "bg-warning-surface text-warning-text"
@@ -1058,7 +1058,7 @@ function AuditForm({
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Jelaskan penyebab selisih atau kondisi kas fisik dengan jujur..."
-            className="w-full h-20 p-3 bg-surface border border-border-strong rounded-2xl font-body text-body text-text-primary placeholder:text-text-muted outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 resize-none"
+            className="w-full h-20 p-3 bg-surface border border-border-strong rounded-[8px] font-body text-body text-text-primary placeholder:text-text-muted outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 resize-none"
           />
           {notesRequired && !notesValid ? (
             <p className="font-caption text-caption text-danger-text">
@@ -1068,7 +1068,7 @@ function AuditForm({
         </div>
 
         {/* Tanda tangan digital */}
-        <div className="bg-surface-container-low rounded-2xl p-3 flex items-center gap-3">
+        <div className="bg-surface-container-low rounded-[8px] p-3 flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-brand-500 text-white flex items-center justify-center font-micro-badge text-micro-badge shrink-0">
             {initials(profile.fullName)}
           </div>
@@ -1080,7 +1080,7 @@ function AuditForm({
               {profile.fullName} • {nowClock ?? "--:--"} WIB
             </span>
           </div>
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-surface text-success-text font-micro-badge text-micro-badge border border-success-surface shrink-0">
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-[6px] bg-surface text-success-text font-micro-badge text-micro-badge border border-success-surface shrink-0">
             <Icon name="verified" className="text-[13px]" />
             SHA-256 VALID
           </span>
@@ -1090,7 +1090,7 @@ function AuditForm({
           type="button"
           onClick={onSubmit}
           disabled={!canSubmit}
-          className="w-full h-[50px] rounded-full primary-gradient text-white font-bold text-[14px] tracking-wide uppercase flex items-center justify-center gap-2.5 clay-glow active:scale-[0.98] transition-all disabled:opacity-60"
+          className="w-full h-[50px] rounded-[8px] primary-gradient clay-glow text-white font-bold text-[14px] tracking-wide uppercase flex items-center justify-center gap-2.5 hover:opacity-95 transition-opacity disabled:opacity-60"
         >
           <Icon name="savings" className="text-[22px]" />
           {busy ? "Menutup Audit..." : "Simpan & Tutup Audit Shift"}
@@ -1114,10 +1114,10 @@ function ClosedSummary({
   const diff = handoff.difference ?? 0;
   return (
     <section className="px-gutter pt-4">
-      <div className="bg-surface rounded-[24px] p-4 sm:p-5 clay-card border border-white/80 inner-clay-highlight space-y-4">
+      <div className="bg-surface rounded-[10px] p-4 sm:p-5 clay-card border border-white/80 space-y-4">
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2">
-            <span className="p-1.5 rounded-lg bg-success-surface text-success-text">
+            <span className="p-1.5 rounded-[8px] bg-success-surface text-success-text">
               <Icon name="task_alt" className="text-[18px]" />
             </span>
             <span className="font-body-bold text-body-bold text-text-primary">
@@ -1129,10 +1129,10 @@ function ClosedSummary({
           </span>
         </div>
 
-        <div className="bg-success-surface rounded-2xl p-3.5 space-y-2.5">
+        <div className="bg-success-surface rounded-[8px] p-3.5 space-y-2.5">
           <div className="flex items-center justify-between">
             <span className="font-caption text-caption text-success-text">Status Kas</span>
-            <span className="font-micro-badge text-micro-badge px-2 py-0.5 rounded-full bg-surface text-success-text">
+            <span className="font-micro-badge text-micro-badge px-2 py-0.5 rounded-[6px] bg-surface text-success-text border border-success-base/30">
               {diff === 0 ? "SESUAI" : "ADA SELISIH"}
             </span>
           </div>
@@ -1159,7 +1159,7 @@ function ClosedSummary({
         </div>
 
         {handoff.notes ? (
-          <div className="bg-clay-overlay rounded-2xl p-3">
+          <div className="bg-clay-overlay rounded-[8px] p-3">
             <span className="font-caption text-caption text-text-muted block">
               Catatan Audit
             </span>
@@ -1169,7 +1169,7 @@ function ClosedSummary({
           </div>
         ) : null}
 
-        <div className="flex items-center justify-between bg-surface-container-low rounded-2xl p-3">
+        <div className="flex items-center justify-between bg-surface-container-low rounded-[8px] p-3">
           <div className="flex flex-col gap-0.5">
             <span className="font-caption text-caption text-text-secondary">
               Dibuka oleh
@@ -1191,7 +1191,7 @@ function ClosedSummary({
         <button
           type="button"
           onClick={handlePrint}
-          className="w-full h-[50px] rounded-full primary-gradient text-white font-bold text-[14px] tracking-wide uppercase flex items-center justify-center gap-2.5 clay-glow active:scale-[0.98] transition-all"
+          className="w-full h-[50px] rounded-[8px] primary-gradient clay-glow text-white font-bold text-[14px] tracking-wide uppercase flex items-center justify-center gap-2.5 hover:opacity-95 transition-opacity"
         >
           <Icon name="print" className="text-[22px]" />
           Cetak Bukti (Opsional)
@@ -1294,7 +1294,7 @@ function SuccessCard({
   const finalExpected = success?.expected ?? handoff.expectedCash ?? 0;
   return (
     <section className="px-gutter pt-4">
-      <div className="bg-surface rounded-[24px] p-4 sm:p-5 clay-card border border-white/80 inner-clay-highlight space-y-4">
+      <div className="bg-surface rounded-[10px] p-4 sm:p-5 clay-card border border-white/80 space-y-4">
         <div className="flex flex-col items-center gap-2 text-center px-1">
           <div className="w-16 h-16 rounded-full bg-success-surface text-success-text flex items-center justify-center">
             <Icon name="verified" className="text-[36px]" />
@@ -1309,7 +1309,7 @@ function SuccessCard({
           </div>
         </div>
 
-        <div className="bg-success-surface rounded-2xl p-3.5 space-y-2">
+        <div className="bg-success-surface rounded-[8px] p-3.5 space-y-2">
           <div className="flex items-center justify-between">
             <span className="font-caption text-caption text-success-text">Kas Fisik</span>
             <span className="font-body-bold text-body-bold text-success-text">
@@ -1325,10 +1325,10 @@ function SuccessCard({
           <div className="flex items-center justify-between border-t border-success-base/20 pt-2">
             <span className="font-body-bold text-body-bold text-success-text">Selisih</span>
             <span
-              className={`px-2 py-0.5 rounded-full font-micro-badge text-micro-badge ${
+              className={`px-2 py-0.5 rounded-[6px] font-micro-badge text-micro-badge border ${
                 diff === 0
-                  ? "bg-surface text-success-text"
-                  : "bg-warning-surface text-warning-text"
+                  ? "bg-surface text-success-text border-success-base/30"
+                  : "bg-warning-surface text-warning-text border-amber-200"
               }`}
             >
               {diff === 0 ? "SESUAI" : `${diff > 0 ? "+" : "-"}${formatRupiah(Math.abs(diff))}`}
@@ -1337,7 +1337,7 @@ function SuccessCard({
         </div>
 
         {hash ? (
-          <div className="bg-surface-container-low rounded-2xl p-3 flex items-center gap-2.5">
+          <div className="bg-surface-container-low rounded-[8px] p-3 flex items-center gap-2.5">
             <Icon name="fingerprint" className="text-success-text text-[18px] shrink-0" />
             <div className="flex-1 min-w-0">
               <span className="font-caption text-caption text-text-muted block">
@@ -1347,7 +1347,7 @@ function SuccessCard({
                 {hash}
               </span>
             </div>
-            <span className="font-micro-badge text-micro-badge px-2 py-1 rounded-full bg-success-surface text-success-text shrink-0">
+            <span className="font-micro-badge text-micro-badge px-2 py-1 rounded-[6px] bg-success-surface text-success-text border border-success-base/30 shrink-0">
               VALID
             </span>
           </div>
@@ -1366,7 +1366,7 @@ function SuccessCard({
               href={whatsappLink(ownerPhone, whatsappMessage)}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full h-12 rounded-full bg-[#25D366]/10 text-[#25D366] font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-[0.98] transition-all border border-[#25D366]/20"
+              className="w-full h-12 rounded-[8px] bg-[#25D366]/10 text-[#25D366] font-body-bold text-body-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity border border-[#25D366]/20"
             >
               <Icon name="chat" className="text-[20px]" />
               Kirim Laporan ke WhatsApp
@@ -1375,7 +1375,7 @@ function SuccessCard({
           <button
             type="button"
             onClick={handlePrint}
-            className="w-full h-12 rounded-full bg-surface-container text-text-secondary font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
+            className="w-full h-12 rounded-[8px] bg-surface-container text-text-secondary font-body-bold text-body-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
           >
             <Icon name="print" className="text-[20px]" />
             Cetak Bukti (Opsional)
@@ -1383,14 +1383,14 @@ function SuccessCard({
           <button
             type="button"
             onClick={onReload}
-            className="w-full h-11 rounded-full bg-surface-container-low text-text-secondary font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform"
+            className="w-full h-11 rounded-[8px] bg-surface-container-low text-text-secondary font-body-bold text-body-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
           >
             <Icon name="refresh" className="text-[18px]" />
             Muat Ringkasan Terbaru
           </button>
           <a
             href="/dashboard"
-            className="w-full h-[50px] rounded-full primary-gradient text-white font-bold text-[14px] tracking-wide uppercase flex items-center justify-center gap-2.5 clay-glow active:scale-[0.98] transition-all"
+            className="w-full h-[50px] rounded-[8px] primary-gradient clay-glow text-white font-bold text-[14px] tracking-wide uppercase flex items-center justify-center gap-2.5 hover:opacity-95 transition-opacity"
           >
             <Icon name="home" className="text-[22px]" />
             Selesai, Kembali ke Beranda

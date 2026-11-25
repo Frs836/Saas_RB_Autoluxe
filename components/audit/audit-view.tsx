@@ -204,7 +204,7 @@ export function AuditView({
         {CATEGORY_FILTERS.map((f) => (
           <button key={f.key} type="button"
             onClick={() => { setCategory(f.key); fetchRows(f.key, from, to); }}
-            className={`shrink-0 px-3 h-9 rounded-full font-caption text-caption flex items-center gap-1.5 active:scale-95 transition-transform ${
+            className={`shrink-0 px-3 h-9 rounded-[8px] font-caption text-caption flex items-center gap-1.5 hover:opacity-90 transition-opacity ${
               category === f.key ? "bg-primary text-white" : "bg-surface-container-low text-text-secondary"
             }`}>
             <Icon name={f.icon} className="text-[14px]" />

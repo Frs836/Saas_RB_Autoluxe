@@ -268,7 +268,7 @@ export function BundleOpnameView({
             type="button"
             disabled={busy}
             onClick={openOpname}
-            className="h-11 rounded-xl primary-gradient text-on-primary font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-60 shadow-sm"
+            className="h-11 rounded-[8px] primary-gradient clay-glow text-on-primary font-body-bold text-body-bold flex items-center justify-center gap-2 hover:opacity-95 transition-opacity disabled:opacity-60 shadow-sm"
           >
             <Icon name="add" className="text-[20px]" />
             {busy ? "Membuka..." : "Buka atau Lanjutkan Opname"}
@@ -336,13 +336,13 @@ export function BundleOpnameView({
                 <button
                   type="button"
                   onClick={handleExportExcel}
-                  className="h-8 px-2.5 rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-700 font-caption text-caption font-semibold flex items-center gap-1.5 transition-colors border border-brand-200/60 active:scale-95 shadow-sm"
+                  className="h-8 px-2.5 rounded-[8px] bg-brand-50 hover:bg-brand-100 text-brand-700 font-caption text-caption font-semibold flex items-center gap-1.5 transition-colors border border-brand-200/60 shadow-sm"
                   title="Download Laporan Stok Opname Racikan (.xlsx)"
                 >
                   <Icon name="download" className="text-[16px]" />
                   Export Excel
                 </button>
-                <span className="px-2.5 py-0.5 rounded-full bg-surface-container text-text-secondary font-micro-badge text-micro-badge">
+                <span className="px-2.5 py-0.5 rounded-[6px] bg-surface-container border border-border-subtle text-text-secondary font-micro-badge text-micro-badge">
                   {readOnly ? "Sudah dikirim" : "Draf"}
                 </span>
               </div>
@@ -373,7 +373,7 @@ export function BundleOpnameView({
                 return (
                   <div
                     key={line.id}
-                    className="rounded-2xl border border-border-subtle bg-surface-container-low/70 p-3.5 flex flex-col gap-2.5 shadow-sm"
+                    className="rounded-[10px] border border-border-subtle bg-surface-container-low/70 p-3.5 flex flex-col gap-2.5 shadow-sm"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex flex-col min-w-0">
@@ -487,7 +487,7 @@ export function BundleOpnameView({
               type="button"
               disabled={busy}
               onClick={saveCounts}
-              className="flex-1 py-3.5 lg:py-2.5 rounded-2xl lg:rounded-xl bg-surface-container text-text-secondary font-body-bold text-body-bold flex items-center justify-center gap-1.5 active:scale-95 transition-transform disabled:opacity-60"
+              className="flex-1 py-3.5 lg:py-2.5 rounded-[8px] bg-surface-container text-text-secondary font-body-bold text-body-bold flex items-center justify-center gap-1.5 disabled:opacity-60"
             >
               <Icon name="save" className="text-[20px]" />
               Simpan Draf
@@ -496,7 +496,7 @@ export function BundleOpnameView({
               type="button"
               disabled={busy}
               onClick={submit}
-              className="flex-1 py-3.5 lg:py-2.5 rounded-2xl lg:rounded-xl primary-gradient text-on-primary font-body-bold text-body-bold flex items-center justify-center gap-1.5 active:scale-95 transition-transform disabled:opacity-60"
+              className="flex-1 py-3.5 lg:py-2.5 rounded-[8px] primary-gradient clay-glow text-on-primary font-body-bold text-body-bold flex items-center justify-center gap-1.5 disabled:opacity-60"
             >
               <Icon name={busy ? "hourglass_top" : "task_alt"} className="text-[20px]" />
               Kirim dan Koreksi

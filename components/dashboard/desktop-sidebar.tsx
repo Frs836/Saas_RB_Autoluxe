@@ -100,7 +100,7 @@ export function DesktopSidebar({
 
   return (
     <aside
-      className={`fixed left-0 top-0 h-full z-50 flex flex-col bg-surface border-r border-border-subtle clay-nav transition-all duration-300 ${sidebarWidth}`}
+      className={`fixed left-0 top-0 h-full z-50 flex flex-col bg-primary text-white border-r border-primary-hover transition-all duration-200 ${sidebarWidth}`}
     >
       {/* Logo area */}
       <div
@@ -112,31 +112,31 @@ export function DesktopSidebar({
             alt="RB AUTOLUXE"
             width={32}
             height={32}
-            className="w-8 h-8 rounded-lg object-contain shrink-0"
+            className="w-8 h-8 rounded-[8px] object-contain shrink-0 bg-white p-0.5"
             priority
           />
           {!collapsed && (
-            <span className="font-headline-2 text-headline-2 text-text-primary tracking-tight truncate leading-tight whitespace-nowrap">
+            <span className="font-headline-2 text-headline-2 text-white tracking-tight truncate leading-tight whitespace-nowrap">
               RB AUTOLUXE
             </span>
           )}
         </div>
       </div>
 
-      {/* Profile mini — only visible when expanded */}
+      {/* Profile mini: only visible when expanded */}
       {!collapsed && mounted && (
-        <div className="mx-3 mb-3 px-3 py-2 rounded-xl bg-surface-container-low shrink-0">
+        <div className="mx-3 mb-3 px-3 py-2 rounded-[8px] bg-white/10 shrink-0">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full primary-gradient flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0">
               <span className="font-body-bold text-[11px] text-white leading-none">
                 {initials(fullName)}
               </span>
             </div>
             <div className="flex flex-col min-w-0">
-              <span className="font-body-bold text-body-bold text-text-primary truncate leading-tight text-[13px]">
+              <span className="font-body-bold text-body-bold text-white truncate leading-tight text-[13px]">
                 {fullName}
               </span>
-              <span className="font-caption text-caption text-text-muted truncate text-[11px]">
+              <span className="font-caption text-caption text-white/75 truncate text-[11px]">
                 {roleLabel(role)}
               </span>
             </div>
@@ -146,7 +146,7 @@ export function DesktopSidebar({
 
       {/* Nav items */}
       <nav className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-1 flex flex-col gap-1">
-      {/* Primary nav items (bottomNavFor) */}
+        {/* Primary nav items (bottomNavFor) */}
         {primaryNav.map((item) => {
           const active = pathname === item.href || pathname.startsWith(item.href + "/");
           return (
@@ -155,17 +155,17 @@ export function DesktopSidebar({
               href={item.href}
               prefetch={false}
               title={collapsed ? item.label : undefined}
-              className={`flex items-center gap-3 rounded-xl transition-colors
+              className={`flex items-center gap-3 rounded-[8px] transition-colors duration-150
                 ${collapsed ? "justify-center w-11 h-11 mx-auto" : "px-3 py-2.5"}
                 ${
                   active
-                    ? "primary-gradient text-white"
-                    : "text-text-muted hover:bg-brand-50 hover:text-text-primary"
+                    ? "bg-white/15 text-white font-body-bold"
+                    : "text-white/80 hover:bg-white/10 hover:text-white"
                 }`}
             >
               <Icon
                 name={item.icon}
-                className={`text-[22px] shrink-0 ${active ? "text-white" : ""}`}
+                className="text-[22px] shrink-0 text-current"
               />
               {!collapsed && (
                 <span className="font-body-regular text-body-regular truncate text-[13px]">
@@ -178,7 +178,7 @@ export function DesktopSidebar({
 
         {/* Separator between primary and secondary nav */}
         {secondaryNav.length > 0 && (
-          <div className="my-1 mx-2 h-px bg-border-subtle shrink-0" />
+          <div className="my-1.5 mx-2 h-px bg-white/15 shrink-0" />
         )}
 
         {/* Secondary nav items (profileMenuFor) */}
@@ -190,17 +190,17 @@ export function DesktopSidebar({
               href={item.href}
               prefetch={false}
               title={collapsed ? item.label : undefined}
-              className={`flex items-center gap-3 rounded-xl transition-colors
+              className={`flex items-center gap-3 rounded-[8px] transition-colors duration-150
                 ${collapsed ? "justify-center w-11 h-11 mx-auto" : "px-3 py-2.5"}
                 ${
                   active
-                    ? "primary-gradient text-white"
-                    : "text-text-muted hover:bg-brand-50 hover:text-text-primary"
+                    ? "bg-white/15 text-white font-body-bold"
+                    : "text-white/80 hover:bg-white/10 hover:text-white"
                 }`}
             >
               <Icon
                 name={item.icon}
-                className={`text-[22px] shrink-0 ${active ? "text-white" : ""}`}
+                className="text-[22px] shrink-0 text-current"
               />
               {!collapsed && (
                 <span className="font-body-regular text-body-regular truncate text-[13px]">
@@ -213,23 +213,24 @@ export function DesktopSidebar({
       </nav>
 
       {/* Bottom fixed items */}
-      <div className="px-2 py-2 flex flex-col gap-1 shrink-0 border-t border-border-subtle">
+      <div className="px-2 py-2 flex flex-col gap-1 shrink-0 border-t border-white/15">
         {/* Notifications */}
         <Link
           href="/notifikasi"
           prefetch={false}
           title={collapsed ? "Notifikasi" : undefined}
-          className={`relative flex items-center gap-3 rounded-xl transition-colors text-text-muted hover:bg-brand-50 hover:text-text-primary
+          className={`relative flex items-center gap-3 rounded-[8px] transition-colors duration-150
             ${collapsed ? "justify-center w-11 h-11 mx-auto" : "px-3 py-2.5"}
-            ${pathname === "/notifikasi" ? "primary-gradient text-white" : ""}`}
+            ${
+              pathname === "/notifikasi"
+                ? "bg-white/15 text-white font-body-bold"
+                : "text-white/80 hover:bg-white/10 hover:text-white"
+            }`}
         >
           <span className="relative shrink-0">
-            <Icon
-              name="notifications"
-              className={`text-[22px] ${pathname === "/notifikasi" ? "text-white" : ""}`}
-            />
+            <Icon name="notifications" className="text-[22px] text-current" />
             {hasUnread && (
-              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-danger-base" />
+              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-400" />
             )}
           </span>
           {!collapsed && (
@@ -244,14 +245,15 @@ export function DesktopSidebar({
           href="/profil"
           prefetch={false}
           title={collapsed ? "Profil" : undefined}
-          className={`flex items-center gap-3 rounded-xl transition-colors text-text-muted hover:bg-brand-50 hover:text-text-primary
+          className={`flex items-center gap-3 rounded-[8px] transition-colors duration-150
             ${collapsed ? "justify-center w-11 h-11 mx-auto" : "px-3 py-2.5"}
-            ${pathname === "/profil" ? "primary-gradient text-white" : ""}`}
+            ${
+              pathname === "/profil"
+                ? "bg-white/15 text-white font-body-bold"
+                : "text-white/80 hover:bg-white/10 hover:text-white"
+            }`}
         >
-          <Icon
-            name="account_circle"
-            className={`text-[22px] shrink-0 ${pathname === "/profil" ? "text-white" : ""}`}
-          />
+          <Icon name="account_circle" className="text-[22px] shrink-0 text-current" />
           {!collapsed && (
             <span className="font-body-regular text-body-regular text-[13px]">
               Profil
@@ -264,7 +266,7 @@ export function DesktopSidebar({
           <button
             type="submit"
             title={collapsed ? "Keluar" : undefined}
-            className={`w-full flex items-center gap-3 rounded-xl transition-colors text-text-muted hover:bg-danger-surface hover:text-danger-text
+            className={`w-full flex items-center gap-3 rounded-[8px] transition-colors duration-150 text-white/80 hover:bg-red-500/20 hover:text-white
               ${collapsed ? "justify-center w-11 h-11 mx-auto" : "px-3 py-2.5"}`}
           >
             <Icon name="logout" className="text-[22px] shrink-0" />
@@ -281,8 +283,8 @@ export function DesktopSidebar({
       <button
         type="button"
         onClick={toggle}
-        aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        className="absolute -right-3 top-16 w-6 h-6 rounded-full bg-surface border border-border-subtle clay-nav flex items-center justify-center text-text-muted hover:text-text-primary hover:bg-brand-50 transition-colors z-50"
+        aria-label={collapsed ? "Buka sidebar" : "Tutup sidebar"}
+        className="absolute -right-3 top-16 w-6 h-6 rounded-[6px] bg-surface border border-border-strong shadow-subtle flex items-center justify-center text-text-primary hover:bg-surface-variant transition-colors duration-150 z-50"
       >
         <Icon
           name={collapsed ? "chevron_right" : "chevron_left"}

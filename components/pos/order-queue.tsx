@@ -45,14 +45,14 @@ export type QueueOrder = {
 };
 
 const STATUS_META: Record<string, { label: string; cls: string; icon: string }> = {
-  queued:               { label: "Antrean",            cls: "bg-warning-surface text-warning-text",              icon: "hourglass_top"  },
-  in_progress:          { label: "Dikerjakan",          cls: "bg-brand-50 text-brand-700",                        icon: "build"          },
-  qc_review:            { label: "QC Review",           cls: "bg-surface-container-high text-text-secondary",     icon: "fact_check"     },
-  completed:            { label: "Selesai",             cls: "bg-success-surface text-success-text",              icon: "task_alt"       },
-  menunggu_pembayaran:  { label: "Menunggu Pembayaran", cls: "bg-warning-surface text-warning-text",              icon: "payments"       },
-  menunggu_diambil:     { label: "Siap Diambil",        cls: "bg-success-surface text-success-text",              icon: "local_shipping" },
-  diserahkan:           { label: "Sudah Diserahkan",    cls: "bg-success-surface text-success-text",              icon: "verified"       },
-  cancelled:            { label: "Dibatalkan",          cls: "bg-danger-surface text-danger-text",                icon: "cancel"         },
+  queued:               { label: "Antre",               cls: "bg-warning-surface text-warning-text border border-amber-200",   icon: "hourglass_top"  },
+  in_progress:          { label: "Dikerjakan",          cls: "bg-brand-50 text-primary border border-brand-200",             icon: "build"          },
+  qc_review:            { label: "Cek QC",              cls: "bg-surface-variant text-text-secondary border border-border-subtle", icon: "fact_check" },
+  completed:            { label: "Selesai",             cls: "bg-success-surface text-success-text border border-emerald-200", icon: "task_alt"       },
+  menunggu_pembayaran:  { label: "Menunggu Bayar",      cls: "bg-warning-surface text-warning-text border border-amber-200",   icon: "payments"       },
+  menunggu_diambil:     { label: "Siap Diambil",        cls: "bg-success-surface text-success-text border border-emerald-200", icon: "local_shipping" },
+  diserahkan:           { label: "Diserahkan",          cls: "bg-success-surface text-success-text border border-emerald-200", icon: "verified"       },
+  cancelled:            { label: "Dibatalkan",          cls: "bg-danger-surface text-danger-text border border-red-200",       icon: "cancel"         },
 };
 
 const TRANSITIONS: Record<string, { status: string; label: string; icon: string; cls?: string }[]> = {
@@ -62,10 +62,10 @@ const TRANSITIONS: Record<string, { status: string; label: string; icon: string;
     { status: "completed",   label: "Selesaikan",   icon: "task_alt"    },
   ],
   qc_review:        [
-    { status: "completed",   label: "QC Lulus ✓",   icon: "task_alt",   cls: "bg-success-surface text-success-text" },
-    { status: "in_progress", label: "Gagal QC / Revisi", icon: "undo",  cls: "bg-warning-surface text-warning-text" },
+    { status: "completed",   label: "QC Lulus",   icon: "task_alt",   cls: "bg-success-surface text-success-text border border-emerald-200" },
+    { status: "in_progress", label: "Revisi QC",  icon: "undo",       cls: "bg-warning-surface text-warning-text border border-amber-200" },
   ],
-  completed:        [{ status: "menunggu_diambil", label: "Siapkan untuk Diambil",  icon: "local_shipping"}],
+  completed:        [{ status: "menunggu_diambil", label: "Siapkan Diambil",        icon: "local_shipping"}],
   menunggu_diambil: [{ status: "diserahkan",       label: "Serahkan ke Pelanggan",  icon: "verified"      }],
 };
 
@@ -113,10 +113,10 @@ function actionsFor(status: string, servicePackage: string | null) {
 
 const FILTERS = [
   { key: "all",                 label: "Semua"       },
-  { key: "queued",              label: "Antrean"     },
+  { key: "queued",              label: "Antre"       },
   { key: "in_progress",         label: "Dikerjakan"  },
-  { key: "qc_review",           label: "QC Review"   },
-  { key: "menunggu_pembayaran", label: "Bayar"        },
+  { key: "qc_review",           label: "Cek QC"      },
+  { key: "menunggu_pembayaran", label: "Bayar"       },
   { key: "selesai",             label: "Selesai"     },
 ];
 
@@ -420,20 +420,20 @@ export function OrderQueue({
         {/* stat cards */}
         <div className="grid grid-cols-4 lg:grid-cols-5 gap-2">
           {[
-            { key: "queued",              label: "Antrean", value: counts.queued,              warn: false },
+            { key: "queued",              label: "Antre",   value: counts.queued,              warn: false },
             { key: "in_progress",         label: "Kerja",   value: counts.in_progress,          warn: false },
             { key: "qc_review",           label: "QC",      value: counts.qc_review,            warn: false },
-            { key: "menunggu_pembayaran",  label: "Bayar",   value: counts.menunggu_pembayaran,  warn: counts.menunggu_pembayaran > 0 },
+            { key: "menunggu_pembayaran", label: "Bayar",   value: counts.menunggu_pembayaran,  warn: counts.menunggu_pembayaran > 0 },
           ].map((stat) => (
             <button
               key={stat.key}
               type="button"
               onClick={() => setFilter(stat.key)}
-              className={`clay-card p-3 flex flex-col items-center gap-0.5 active:scale-95 transition-transform ${
-                filter === stat.key ? "ring-2 ring-brand-400" : ""
+              className={`clay-card rounded-[10px] p-3 flex flex-col items-center gap-0.5 transition-colors duration-150 ${
+                filter === stat.key ? "border-primary bg-brand-50/60" : "hover:border-border-strong"
               }`}
             >
-              <span className={`font-headline-2 text-headline-2 ${stat.warn ? "text-warning-text" : "text-text-primary"}`}>
+              <span className={`font-headline-2 text-headline-2 tabular-nums ${stat.warn ? "text-warning-text" : "text-text-primary"}`}>
                 {stat.value}
               </span>
               <span className={`font-caption text-caption ${stat.warn ? "text-warning-text" : "text-text-muted"}`}>
@@ -441,15 +441,14 @@ export function OrderQueue({
               </span>
             </button>
           ))}
-          {/* 5th stat card — desktop only */}
           <button
             type="button"
             onClick={() => setFilter("selesai")}
-            className={`hidden lg:flex clay-card p-3 flex-col items-center gap-0.5 active:scale-95 transition-transform ${
-              filter === "selesai" ? "ring-2 ring-brand-400" : ""
+            className={`hidden lg:flex clay-card rounded-[10px] p-3 flex-col items-center gap-0.5 transition-colors duration-150 ${
+              filter === "selesai" ? "border-primary bg-brand-50/60" : "hover:border-border-strong"
             }`}
           >
-            <span className="font-headline-2 text-headline-2 text-text-primary">
+            <span className="font-headline-2 text-headline-2 text-text-primary tabular-nums">
               {counts.selesai}
             </span>
             <span className="font-caption text-caption text-text-muted">
@@ -464,8 +463,8 @@ export function OrderQueue({
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Cari plat, nama, atau no. order..."
-            className="w-full h-12 pl-10 pr-3 rounded-2xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+            placeholder="Cari plat nomor, nama pelanggan, atau no. order..."
+            className="w-full h-11 pl-10 pr-3 rounded-[8px] border border-border-strong bg-surface font-body text-body text-text-primary placeholder:text-text-muted outline-none focus-visible:ring-2 focus-visible:ring-accent"
           />
         </div>
 
@@ -476,10 +475,10 @@ export function OrderQueue({
               key={item.key}
               type="button"
               onClick={() => setFilter(item.key)}
-              className={`shrink-0 px-4 min-h-11 rounded-full font-caption text-caption flex items-center active:scale-95 transition-transform ${
+              className={`shrink-0 px-4 min-h-[44px] rounded-[8px] border font-caption text-caption flex items-center transition-colors duration-150 ${
                 filter === item.key
-                  ? "bg-primary text-white"
-                  : "bg-surface-container-low text-text-secondary"
+                  ? "bg-primary text-white border-primary"
+                  : "bg-surface text-text-secondary border-border-subtle hover:bg-surface-variant"
               }`}
             >
               {item.label}
@@ -489,7 +488,7 @@ export function OrderQueue({
 
         {/* error banner */}
         {error && (
-          <div className="p-3 rounded-xl bg-danger-surface text-danger-text font-body text-body flex items-center gap-2">
+          <div className="p-3 rounded-[8px] bg-danger-surface border border-red-200 text-danger-text font-body text-body flex items-center gap-2">
             <Icon name="error" className="text-[20px]" />
             {error}
           </div>
@@ -497,11 +496,20 @@ export function OrderQueue({
 
         {/* order cards */}
         {filtered.length === 0 ? (
-          <div className="clay-card p-8 flex flex-col items-center text-center gap-2">
+          <div className="clay-card rounded-[10px] p-8 flex flex-col items-center text-center gap-3">
             <Icon name="inbox" className="text-[40px] text-text-muted" />
             <p className="font-body text-body text-text-secondary">
               Tidak ada order pada filter ini.
             </p>
+            {filter !== "all" && (
+              <button
+                type="button"
+                onClick={() => setFilter("all")}
+                className="min-h-[44px] px-4 rounded-[8px] border border-border-strong bg-surface hover:bg-surface-variant font-caption text-caption text-text-primary transition-colors duration-150"
+              >
+                Lihat Semua Order
+              </button>
+            )}
           </div>
         ) : (
           <div className="flex flex-col gap-3 lg:gap-4">
@@ -520,16 +528,16 @@ export function OrderQueue({
                 : null;
 
               return (
-                <div key={order.id} className="clay-card p-4 lg:p-6 flex flex-col gap-3">
+                <div key={order.id} className="clay-card rounded-[10px] p-4 lg:p-5 flex flex-col gap-3">
                   {/* header: order number + status badge */}
                   <div className="flex items-center justify-between gap-2">
                     <Link
                       href={`/pos/orders/${order.id}`}
-                      className="font-caption text-caption font-mono text-brand-600 font-semibold inline-flex items-center min-h-11 self-start -my-2.5"
+                      className="font-caption text-caption font-mono text-primary font-semibold inline-flex items-center min-h-[44px] self-start -my-2.5 hover:underline"
                     >
                       {order.order_number}
                     </Link>
-                    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-caption text-caption ${meta.cls}`}>
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-[6px] font-caption text-caption ${meta.cls}`}>
                       <Icon name={meta.icon} className="text-[14px]" />
                       {meta.label}
                     </span>
@@ -537,7 +545,7 @@ export function OrderQueue({
 
                   {/* vehicle info */}
                   <div className="flex items-start gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-surface-container flex items-center justify-center shrink-0 text-brand-600">
+                    <div className="w-12 h-12 rounded-[8px] bg-surface-variant flex items-center justify-center shrink-0 text-primary">
                       <Icon
                         name={(order.vehicle_size ?? "").startsWith("Motor") ? "two_wheeler" : "directions_car"}
                         className="text-[24px]"
@@ -549,12 +557,12 @@ export function OrderQueue({
                           {order.vehicle_model ?? "Kendaraan"}
                         </h3>
                         {order.license_plate && (
-                          <span className="font-micro-badge text-micro-badge px-1.5 py-0.5 rounded bg-surface-container-high text-text-secondary font-mono shrink-0">
+                          <span className="font-micro-badge text-micro-badge px-1.5 py-0.5 rounded-[6px] bg-surface-variant border border-border-subtle text-text-secondary font-mono shrink-0">
                             {order.license_plate}
                           </span>
                         )}
                       </div>
-                      <p className="font-caption text-caption text-brand-600 mt-0.5 truncate lg:whitespace-normal">
+                      <p className="font-caption text-caption text-primary mt-0.5 truncate lg:whitespace-normal">
                         {order.service_package ?? "Paket layanan"}
                       </p>
                       <p className="font-caption text-caption text-text-muted mt-0.5 truncate lg:whitespace-normal">
@@ -564,26 +572,25 @@ export function OrderQueue({
                             : "Data pelanggan belum diisi"
                           : "Data pelanggan disembunyikan"}
                       </p>
-                      {/* Desktop: always show customer name regardless of role */}
                       {isStaff && (
                         <p className="hidden lg:block font-caption text-caption text-text-muted mt-0.5">
-                          {order.customer_name ?? "—"}
+                          {order.customer_name ?? "-"}
                         </p>
                       )}
                     </div>
                   </div>
 
                   {/* team + price row */}
-                  <div className="flex items-center justify-between gap-2 bg-surface-container-low rounded-xl px-3 py-2">
+                  <div className="flex items-center justify-between gap-2 bg-surface-variant rounded-[8px] px-3 py-2">
                     <div className="flex items-center gap-1.5 min-w-0">
                       {order.team.length === 0 ? (
                         perluTeknisi ? (
                           <Link
                             href={`/pos/orders/${order.id}`}
-                            className="font-caption text-caption text-brand-600 flex items-center gap-1 min-h-9"
+                            className="font-caption text-caption text-primary flex items-center gap-1 min-h-9 hover:underline"
                           >
                             <Icon name="group_add" className="text-[16px]" />
-                            Belum ada teknisi — atur dulu
+                            Belum ada teknisi. Atur sekarang
                           </Link>
                         ) : (
                           <span className="font-caption text-caption text-text-muted">Belum ada teknisi</span>
@@ -596,7 +603,7 @@ export function OrderQueue({
                                 key={member.user_id ?? idx}
                                 title={member.full_name}
                                 className={`w-6 h-6 rounded-full flex items-center justify-center font-micro-badge text-micro-badge border-2 border-surface ${
-                                  member.is_lead ? "bg-brand-500 text-white" : "bg-brand-200 text-brand-700"
+                                  member.is_lead ? "bg-primary text-white" : "bg-brand-100 text-primary"
                                 }`}
                               >
                                 {initials(member.full_name)}
@@ -609,14 +616,14 @@ export function OrderQueue({
                         </>
                       )}
                     </div>
-                    <span className="font-body-bold text-body-bold text-text-primary shrink-0">
+                    <span className="font-body-bold text-body-bold text-text-primary shrink-0 tabular-nums">
                       {formatRupiah(order.total_price ?? 0)}
                     </span>
                   </div>
 
                   {/* time + payment */}
                   <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <span className="font-caption text-caption text-text-muted">
+                    <span className="font-caption text-caption text-text-muted tabular-nums">
                       {formatDateWib(order.created_at)} • {formatTimeWib(order.created_at)} WIB
                     </span>
                     <div className="flex items-center gap-1.5">
@@ -626,7 +633,7 @@ export function OrderQueue({
                         </span>
                       )}
                       {order.payment_state === "unpaid" && (
-                        <span className="px-2 py-0.5 rounded-full bg-warning-surface text-warning-text font-micro-badge text-micro-badge">
+                        <span className="px-2 py-0.5 rounded-[6px] bg-warning-surface border border-amber-200 text-warning-text font-micro-badge text-micro-badge">
                           Bayar Nanti
                         </span>
                       )}
@@ -647,7 +654,7 @@ export function OrderQueue({
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label="Hubungi pelanggan via WhatsApp"
-                        className="w-11 h-11 rounded-xl bg-whatsapp/10 text-whatsapp flex items-center justify-center shrink-0 active:scale-95 transition-transform"
+                        className="w-11 h-11 rounded-[8px] bg-success-surface border border-emerald-200 text-success-text flex items-center justify-center shrink-0 hover:opacity-90 transition-opacity"
                       >
                         <Icon name="chat" className="text-[20px]" />
                       </a>
@@ -667,10 +674,10 @@ export function OrderQueue({
                                 : undefined
                             }
                             onClick={() => transition(order, action.status)}
-                            className={`flex-1 py-2.5 rounded-xl font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform disabled:opacity-60 ${
+                            className={`flex-1 min-h-[44px] px-3 rounded-[8px] font-caption text-caption font-semibold flex items-center justify-center gap-1 transition-colors duration-150 disabled:opacity-50 ${
                               action.cls ?? (action.status === "completed"
-                                ? "bg-success-surface text-success-text"
-                                : "bg-primary text-white")
+                                ? "bg-success-surface text-success-text border border-emerald-200"
+                                : "bg-primary hover:bg-primary-hover text-white")
                             }`}
                           >
                             <Icon name={action.icon} className="text-[18px]" />
@@ -687,7 +694,7 @@ export function OrderQueue({
                         disabled={busy}
                         onClick={() => cancel(order)}
                         aria-label="Batalkan order"
-                        className="w-10 h-10 rounded-xl bg-danger-surface text-danger-text flex items-center justify-center shrink-0 active:scale-95 transition-transform disabled:opacity-60"
+                        className="w-11 h-11 rounded-[8px] bg-danger-surface border border-red-200 text-danger-text flex items-center justify-center shrink-0 hover:opacity-90 transition-opacity disabled:opacity-50"
                       >
                         <Icon name="cancel" className="text-[20px]" />
                       </button>
@@ -695,36 +702,24 @@ export function OrderQueue({
 
                     {/* karyawan: claim / start work */}
                     {canStartWork && order.status === "queued" && !canManage && (
-                      perluTeknisi ? (
-                        <button
-                          type="button"
-                          disabled={busy || !canClaimOrder}
-                          title={!canClaimOrder ? "Kamu sedang mengerjakan order lain. Selesaikan dulu." : undefined}
-                          onClick={() => openTeamModal(order)}
-                          className="flex-1 py-2.5 rounded-xl bg-primary text-white font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform disabled:opacity-60"
-                        >
-                          <Icon name="engineering" className="text-[18px]" />
-                          Kerjakan Antrian Ini
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          disabled={busy}
-                          onClick={() => openTeamModal(order)}
-                          className="flex-1 py-2.5 rounded-xl bg-primary text-white font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform disabled:opacity-60"
-                        >
-                          <Icon name="engineering" className="text-[18px]" />
-                          Kerjakan Sekarang
-                        </button>
-                      )
+                      <button
+                        type="button"
+                        disabled={busy || (perluTeknisi && !canClaimOrder)}
+                        title={perluTeknisi && !canClaimOrder ? "Anda sedang mengerjakan order lain. Selesaikan dulu." : undefined}
+                        onClick={() => openTeamModal(order)}
+                        className="flex-1 min-h-[44px] px-3 rounded-[8px] bg-primary hover:bg-primary-hover text-white font-caption text-caption font-semibold flex items-center justify-center gap-1 transition-colors duration-150 disabled:opacity-50"
+                      >
+                        <Icon name="engineering" className="text-[18px]" />
+                        {perluTeknisi ? "Kerjakan Antrean Ini" : "Kerjakan Sekarang"}
+                      </button>
                     )}
 
                     <Link
                       href={`/pos/orders/${order.id}`}
-                      className="min-h-11 px-3 rounded-xl bg-surface-container text-text-secondary flex items-center gap-1 font-caption text-caption shrink-0"
+                      className="min-h-[44px] px-3 rounded-[8px] bg-surface-variant border border-border-subtle hover:bg-border-subtle text-text-secondary flex items-center gap-1 font-caption text-caption shrink-0 transition-colors duration-150"
                     >
                       <Icon name="photo_camera" className="text-[18px]" />
-                      Inspeksi
+                      Detail
                     </Link>
 
                     {!canManage && !canStartWork && (

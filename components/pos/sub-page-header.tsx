@@ -30,15 +30,14 @@ export function SubPageHeader({
   }
 
   return (
-    <header className="sticky top-0 z-40 bg-surface/90 backdrop-blur-md shadow-[0_1px_8px_rgba(0,0,0,0.04)] pt-safe lg:pt-3">
-      <div className="h-16 px-gutter lg:px-6 flex items-center justify-between gap-space-sm">
+    <header className="sticky top-0 z-40 bg-surface border-b border-border-subtle pt-safe lg:pt-2">
+      <div className="h-14 px-gutter lg:px-6 flex items-center justify-between gap-space-sm">
         <div className="flex items-center gap-space-sm min-w-0">
           <button
             type="button"
             onClick={handleBack}
             aria-label="Kembali"
-            // 11×11 supaya target sentuh mencapai 44px
-            className="w-11 h-11 shrink-0 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary active:scale-95 transition-transform shadow-[inset_0px_2px_4px_rgba(255,255,255,0.95)]"
+            className="w-11 h-11 shrink-0 rounded-[8px] bg-surface-variant hover:bg-border-subtle flex items-center justify-center text-text-primary transition-colors duration-150"
           >
             <Icon name="arrow_back" className="text-[22px]" />
           </button>

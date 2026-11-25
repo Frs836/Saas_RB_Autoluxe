@@ -88,19 +88,13 @@ const PHASES = [
 type PhaseKey = (typeof PHASES)[number]["key"];
 
 const STATUS_META: Record<string, { label: string; cls: string; step: number }> = {
-  queued: { label: "Dalam Antrean", cls: "bg-surface-container text-text-secondary", step: 0 },
-  in_progress: { label: "Sedang Dikerjakan", cls: "bg-brand-50 text-brand-700", step: 1 },
-  qc_review: { label: "Menunggu QC", cls: "bg-warning-surface text-warning-text", step: 2 },
-  completed: { label: "Pengerjaan Selesai", cls: "bg-success-surface text-success-text", step: 3 },
-  /*
-   * Dua tahap di bawah ini ditambahkan migrasi 0030. Semuanya tidak ada di
-   * peta ini, sehingga lookup falls back ke "Dalam Antrean". Padahal order
-   * sudah selesai dikerjakan, dan kekeliruan inilah yang membuat halaman
-   * lacak pelanggan menampilkan "Diproses" terus-menerus.
-   */
-  menunggu_diambil: { label: "Siap Diambil", cls: "bg-success-surface text-success-text", step: 4 },
-  diserahkan: { label: "Sudah Diserahkan", cls: "bg-success-surface text-success-text", step: 5 },
-  cancelled: { label: "Dibatalkan", cls: "bg-danger-surface text-danger-text", step: -1 },
+  queued: { label: "Antre", cls: "bg-warning-surface text-warning-text border border-amber-200", step: 0 },
+  in_progress: { label: "Dikerjakan", cls: "bg-brand-50 text-primary border border-brand-200", step: 1 },
+  qc_review: { label: "Cek QC", cls: "bg-surface-variant text-text-secondary border border-border-subtle", step: 2 },
+  completed: { label: "Selesai", cls: "bg-success-surface text-success-text border border-emerald-200", step: 3 },
+  menunggu_diambil: { label: "Siap Diambil", cls: "bg-success-surface text-success-text border border-emerald-200", step: 4 },
+  diserahkan: { label: "Diserahkan", cls: "bg-success-surface text-success-text border border-emerald-200", step: 5 },
+  cancelled: { label: "Dibatalkan", cls: "bg-danger-surface text-danger-text border border-red-200", step: -1 },
 };
 
 const STORAGE_PUBLIC_BASE = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/inspection-photos`;
@@ -635,16 +629,16 @@ export function OrderDetailView({
     }
     if (canDecideQc) {
       primaryActions.push({
-        label: "QC Lulus ✓",
+        label: "QC Lulus",
         icon: "verified",
         status: "completed",
-        cls: "bg-success-base text-white",
+        cls: "bg-success-base text-white hover:opacity-90",
       });
       primaryActions.push({
-        label: "Gagal QC — Revisi",
+        label: "Revisi QC",
         icon: "undo",
         status: "in_progress",
-        cls: "bg-warning-surface text-warning-text",
+        cls: "bg-warning-surface text-warning-text border border-amber-200",
       });
     }
   }
@@ -652,13 +646,13 @@ export function OrderDetailView({
   const actionControls = (primaryActions.length > 0 || canUpload) && (
     <div className="flex flex-col gap-2.5">
       {error ? (
-        <p className="p-2.5 rounded-xl bg-danger-surface text-danger-text font-caption text-caption flex items-center gap-1.5">
+        <p className="p-2.5 rounded-[8px] bg-danger-surface border border-red-200 text-danger-text font-caption text-caption flex items-center gap-1.5">
           <Icon name="error" className="text-[16px] shrink-0" />
           <span>{error}</span>
         </p>
       ) : null}
       {success ? (
-        <p className="p-2.5 rounded-xl bg-success-surface text-success-text font-caption text-caption flex items-center gap-1.5">
+        <p className="p-2.5 rounded-[8px] bg-success-surface border border-emerald-200 text-success-text font-caption text-caption flex items-center gap-1.5">
           <Icon name="check_circle" className="text-[16px] shrink-0" />
           <span>{success}</span>
         </p>
@@ -677,7 +671,7 @@ export function OrderDetailView({
                   : undefined
               }
               onClick={() => changeStatus(action.status)}
-              className={`flex-1 min-w-[140px] py-3 rounded-xl font-body-bold text-body-bold flex items-center justify-center gap-1.5 active:scale-95 transition-transform disabled:opacity-60 shadow-sm ${action.cls}`}
+              className={`flex-1 min-w-[140px] min-h-[44px] py-2.5 px-3 rounded-[8px] font-body-bold text-body-bold flex items-center justify-center gap-1.5 transition-colors duration-150 disabled:opacity-50 ${action.cls}`}
             >
               <Icon name={action.icon} className="text-[18px]" />
               {action.label}
@@ -700,7 +694,7 @@ export function OrderDetailView({
             setPhase(pekerjaanSelesai && hasBefore ? "after" : "before");
             void openCamera();
           }}
-          className="w-full py-3 rounded-xl bg-primary/10 text-primary flex items-center justify-center gap-2 border border-primary/20 active:scale-95 transition-transform font-body-bold text-body-bold"
+          className="w-full min-h-[44px] py-2.5 rounded-[8px] bg-brand-50 hover:bg-brand-100 text-primary flex items-center justify-center gap-2 border border-brand-200 transition-colors duration-150 font-body-bold text-body-bold"
         >
           <Icon name="add_a_photo" className="text-[20px]" />
           Tambah Foto Inspeksi
@@ -711,7 +705,7 @@ export function OrderDetailView({
         <p className="font-caption text-caption text-text-muted text-center py-1">
           {order.status === "cancelled"
             ? "Order dibatalkan, inspeksi foto sudah tidak dibuka."
-            : "Foto kondisi awal diambil saat pengerjaan berjalan. Foto hasil akhir dibuka setelah pengerjaan selesai atau unit siap diambil."}
+            : "Foto kondisi awal diambil saat pengerjaan berjalan. Foto hasil akhir dibuka setelah pengerjaan selesai."}
         </p>
       ) : null}
     </div>
@@ -719,13 +713,13 @@ export function OrderDetailView({
 
   return (
     <div className="flex flex-col w-full min-h-screen">
-      <div className="sticky top-0 z-40 bg-surface/90 backdrop-blur-md pt-safe lg:pt-3 shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
-        <div className="h-16 px-gutter lg:px-6 flex items-center gap-3">
+      <div className="sticky top-0 z-40 bg-surface border-b border-border-subtle pt-safe lg:pt-2">
+        <div className="h-14 px-gutter lg:px-6 flex items-center gap-3">
           <button
             type="button"
             onClick={() => router.back()}
             aria-label="Kembali ke antrean"
-            className="w-10 h-10 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary active:scale-95 transition-transform"
+            className="w-11 h-11 rounded-[8px] bg-surface-variant hover:bg-border-subtle flex items-center justify-center text-text-primary transition-colors duration-150"
           >
             <Icon name="arrow_back" className="text-[22px]" />
           </button>
@@ -738,7 +732,7 @@ export function OrderDetailView({
             </span>
           </div>
           <span
-            className={`ml-auto px-2.5 py-1 rounded-full font-caption text-caption ${meta.cls}`}
+            className={`ml-auto px-2.5 py-0.5 rounded-[6px] font-caption text-caption ${meta.cls}`}
           >
             {meta.label}
           </span>
@@ -748,9 +742,9 @@ export function OrderDetailView({
       <div className="px-gutter py-4 lg:px-6 lg:py-6 pb-48 lg:pb-8 flex flex-col gap-4 lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start">
         {/* Left column: order info + items + photos */}
         <div className="lg:col-span-1 flex flex-col gap-4">
-        <section className="clay-card p-4 flex flex-col gap-3">
+        <section className="clay-card rounded-[10px] p-4 flex flex-col gap-3">
           <div className="flex items-start gap-3">
-            <div className="w-12 h-12 rounded-xl bg-surface-container flex items-center justify-center shrink-0 text-brand-600">
+            <div className="w-12 h-12 rounded-[8px] bg-surface-variant flex items-center justify-center shrink-0 text-primary">
               <Icon name={(order.vehicleSize ?? "").startsWith("Motor") ? "two_wheeler" : "directions_car"} className="text-[26px]" />
             </div>
             <div className="flex-1 min-w-0">
@@ -758,11 +752,11 @@ export function OrderDetailView({
                 <h1 className="font-headline-2 text-headline-2 text-text-primary truncate">
                   {order.vehicleModel}
                 </h1>
-                <span className="font-micro-badge text-micro-badge px-2 py-0.5 rounded bg-surface-container-high text-text-secondary font-mono shrink-0">
+                <span className="font-micro-badge text-micro-badge px-2 py-0.5 rounded-[6px] bg-surface-variant border border-border-subtle text-text-secondary font-mono shrink-0">
                   {order.licensePlate}
                 </span>
               </div>
-              <p className="font-caption text-caption text-brand-600 mt-0.5 truncate">
+              <p className="font-caption text-caption text-primary mt-0.5 truncate">
                 {order.servicePackage}
               </p>
               <p className="font-caption text-caption text-text-muted mt-0.5 truncate">
@@ -773,13 +767,13 @@ export function OrderDetailView({
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-xl bg-surface-container-low px-3 py-2.5">
+            <div className="rounded-[8px] bg-surface-variant border border-border-subtle px-3 py-2.5">
               <p className="font-caption text-caption text-text-muted">Total</p>
-              <p className="font-headline-2 text-headline-2 text-primary">
+              <p className="font-headline-2 text-headline-2 text-primary tabular-nums">
                 {formatRupiah(order.totalPrice)}
               </p>
             </div>
-            <div className="rounded-xl bg-surface-container-low px-3 py-2.5">
+            <div className="rounded-[8px] bg-surface-variant border border-border-subtle px-3 py-2.5">
               <p className="font-caption text-caption text-text-muted">Pembayaran</p>
               <p className="font-body-bold text-body-bold text-text-primary">
                 {order.paymentState === "unpaid"
@@ -799,7 +793,7 @@ export function OrderDetailView({
                   <span className="text-text-secondary truncate">
                     {item.quantity}x {item.name}
                   </span>
-                  <span className="text-text-primary font-body-bold shrink-0">
+                  <span className="text-text-primary font-body-bold shrink-0 tabular-nums">
                     {formatRupiah(item.price * item.quantity)}
                   </span>
                 </div>
@@ -808,13 +802,13 @@ export function OrderDetailView({
           ) : null}
 
           {productionCosts && productionCosts.length > 0 ? (
-            <div className="mt-2 p-3 rounded-2xl bg-brand-50/60 border border-brand-100 flex flex-col gap-2">
-              <div className="flex items-center justify-between text-caption font-bold text-brand-900">
+            <div className="mt-2 p-3 rounded-[8px] bg-brand-50 border border-brand-200 flex flex-col gap-2">
+              <div className="flex items-center justify-between text-caption font-bold text-text-primary">
                 <span className="flex items-center gap-1.5">
-                  <Icon name="science" className="text-[16px] text-brand-600" />
+                  <Icon name="science" className="text-[16px] text-primary" />
                   Modal Bahan Terpakai (HPP)
                 </span>
-                <span className="text-danger-text">
+                <span className="text-danger-text tabular-nums">
                   {formatRupiah(productionCosts.reduce((acc, c) => acc + c.costAmount, 0))}
                 </span>
               </div>
@@ -822,11 +816,11 @@ export function OrderDetailView({
                 {productionCosts.map((c, i) => (
                   <div key={i} className="flex items-center justify-between text-text-secondary">
                     <span className="truncate">{c.quantity} {c.unit} {c.itemName}</span>
-                    <span className="text-text-primary font-medium shrink-0">{formatRupiah(c.costAmount)}</span>
+                    <span className="text-text-primary font-medium shrink-0 tabular-nums">{formatRupiah(c.costAmount)}</span>
                   </div>
                 ))}
               </div>
-              <div className="pt-1.5 border-t border-brand-100 flex items-center justify-between text-xs font-semibold text-success-text">
+              <div className="pt-1.5 border-t border-brand-200 flex items-center justify-between text-xs font-semibold text-success-text tabular-nums">
                 <span>Margin Kotor Jasa:</span>
                 <span>
                   {formatRupiah(order.totalPrice - productionCosts.reduce((acc, c) => acc + c.costAmount, 0))} (
@@ -843,8 +837,8 @@ export function OrderDetailView({
             {order.team.length > 0 ? (
               order.team.map((m) => (
                 <div key={m.id} className="flex items-center gap-1.5">
-                  <span className="px-2 py-1 rounded-full bg-surface-container text-text-secondary font-caption text-caption flex items-center gap-1">
-                    {m.is_lead && <Icon name="star" className="text-[12px] text-brand-500" />}
+                  <span className="px-2 py-1 rounded-[6px] bg-surface-variant border border-border-subtle text-text-secondary font-caption text-caption flex items-center gap-1">
+                    {m.is_lead && <Icon name="star" className="text-[12px] text-primary" />}
                     {m.full_name}
                   </span>
                   {canAddToActiveTeam && ["in_progress", "qc_review"].includes(order.status) && order.team.length > 1 && (
@@ -853,15 +847,15 @@ export function OrderDetailView({
                       disabled={removeMemberBusy === m.id}
                       onClick={() => void lepasAnggota(m.id, m.full_name)}
                       title={`Lepas ${m.full_name} dari tim`}
-                      className="w-6 h-6 rounded-full bg-danger-surface text-danger-text flex items-center justify-center active:scale-95 transition-transform disabled:opacity-60"
+                      className="w-7 h-7 rounded-[6px] bg-danger-surface border border-red-200 text-danger-text flex items-center justify-center hover:opacity-85 transition-opacity disabled:opacity-50"
                     >
-                      <Icon name="close" className="text-[12px]" />
+                      <Icon name="close" className="text-[14px]" />
                     </button>
                   )}
                 </div>
               ))
             ) : (
-              <span className="px-2 py-1 rounded-full bg-surface-container text-text-secondary font-caption text-caption">
+              <span className="px-2 py-1 rounded-[6px] bg-surface-variant border border-border-subtle text-text-secondary font-caption text-caption">
                 Belum ada teknisi
               </span>
             )}
@@ -873,7 +867,7 @@ export function OrderDetailView({
                   setTeamError(null);
                   setTeamOpen(true);
                 }}
-                className="min-h-9 px-3 rounded-full bg-brand-50 text-brand-700 font-caption text-caption flex items-center gap-1 active:scale-95 transition-transform"
+                className="min-h-[36px] px-3 rounded-[8px] bg-brand-50 border border-brand-200 hover:bg-brand-100 text-primary font-caption text-caption flex items-center gap-1 transition-colors duration-150"
               >
                 <Icon name="group_add" className="text-[16px]" />
                 Atur Tim
@@ -883,24 +877,23 @@ export function OrderDetailView({
               <button
                 type="button"
                 onClick={() => { setAddMemberDraft([]); setAddMemberError(null); setAddMemberOpen(true); }}
-                className="min-h-9 px-3 rounded-full bg-success-surface text-success-text font-caption text-caption flex items-center gap-1 active:scale-95 transition-transform"
+                className="min-h-[36px] px-3 rounded-[8px] bg-success-surface border border-emerald-200 text-success-text font-caption text-caption flex items-center gap-1 hover:opacity-90 transition-opacity"
               >
                 <Icon name="person_add" className="text-[16px]" />
                 Tambah Anggota
               </button>
             )}
-            <span className="px-2 py-1 rounded-full bg-surface-container text-text-secondary font-caption text-caption">
+            <span className="px-2 py-1 rounded-[6px] bg-surface-variant border border-border-subtle text-text-secondary font-caption text-caption tabular-nums">
               Dibuat {formatDateWib(order.createdAt)} {formatTimeWib(order.createdAt)}
             </span>
           </div>
 
           <div className="flex gap-2 flex-wrap">
-            {/* Invoice & Garansi PDF HANYA untuk layanan Coating / Detailing / Polish (BUKAN cuci biasa / wash), dan setelah pengerjaan dimulai atau lunas */}
             {!serviceCategory.startsWith("wash") &&
             (order.status !== "queued" || order.paymentState === "paid") && (
               <Link
                 href={`/invoice/${order.id}`}
-                className="px-3 py-2 rounded-xl bg-brand-600 text-white font-caption text-caption flex items-center gap-1 shadow-sm active:scale-95 transition-transform"
+                className="min-h-[44px] px-3 py-2 rounded-[8px] bg-primary hover:bg-primary-hover text-white font-caption text-caption flex items-center gap-1 transition-colors duration-150"
               >
                 <Icon name="description" className="text-[16px]" />
                 {hasWarranty || warranty ? "Invoice & Garansi PDF" : "Invoice PDF"}
@@ -910,7 +903,7 @@ export function OrderDetailView({
               href={trackUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-3 py-2 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center gap-1"
+              className="min-h-[44px] px-3 py-2 rounded-[8px] bg-brand-50 border border-brand-200 hover:bg-brand-100 text-primary font-caption text-caption flex items-center gap-1 transition-colors duration-150"
             >
               <Icon name="link" className="text-[16px]" />
               Lacak Pelanggan
@@ -921,7 +914,7 @@ export function OrderDetailView({
                 setWaPhone(order.customerPhone ?? "");
                 setWaModalOpen(true);
               }}
-              className="px-3 py-2 rounded-xl bg-whatsapp/10 text-whatsapp font-caption text-caption flex items-center gap-1 active:scale-95 transition-transform"
+              className="min-h-[44px] px-3 py-2 rounded-[8px] bg-success-surface border border-emerald-200 text-success-text font-caption text-caption flex items-center gap-1 hover:opacity-90 transition-opacity"
             >
               <Icon name="chat" className="text-[16px]" />
               Kirim Nota WA
@@ -931,11 +924,11 @@ export function OrderDetailView({
           {/* Modal Kirim Nota WA */}
           {waModalOpen && (
             <>
-              <div className="fixed inset-0 z-[60] bg-black/50" onClick={() => setWaModalOpen(false)} />
-              <div className="fixed inset-x-4 bottom-4 z-[61] bg-surface rounded-2xl p-5 shadow-xl max-w-md mx-auto flex flex-col gap-4" onClick={(e) => e.stopPropagation()}>
+              <div className="fixed inset-0 z-[60] bg-slate-950/50" onClick={() => setWaModalOpen(false)} />
+              <div className="fixed inset-x-4 bottom-4 z-[61] bg-surface border border-border-subtle rounded-[10px] p-5 shadow-modal max-w-md mx-auto flex flex-col gap-4" onClick={(e) => e.stopPropagation()}>
                 <div className="flex items-center justify-between">
                   <h3 className="font-headline-2 text-headline-2 text-text-primary">Kirim Nota ke WhatsApp</h3>
-                  <button type="button" onClick={() => setWaModalOpen(false)} className="w-9 h-9 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary active:scale-95">
+                  <button type="button" onClick={() => setWaModalOpen(false)} className="w-11 h-11 rounded-[8px] bg-surface-variant hover:bg-border-subtle flex items-center justify-center text-text-primary transition-colors duration-150">
                     <Icon name="close" className="text-[20px]" />
                   </button>
                 </div>
@@ -947,7 +940,7 @@ export function OrderDetailView({
                     value={waPhone}
                     onChange={(e) => setWaPhone(e.target.value)}
                     placeholder="08123456789"
-                    className="h-12 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+                    className="h-11 px-3 rounded-[8px] border border-border-strong bg-surface font-body text-body text-text-primary outline-none focus-visible:ring-2 focus-visible:ring-accent"
                   />
                   <span className="font-micro-badge text-micro-badge text-text-muted">Format: 08xxxxxxxxxx</span>
                 </label>

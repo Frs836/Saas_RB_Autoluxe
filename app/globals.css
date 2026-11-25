@@ -8,9 +8,16 @@
     width: 100vw;
     margin: 0;
     padding: 0;
-    background-color: #f0f4fa;
+    background-color: #f8fafc;
+    color: #0f172a;
     font-family: var(--font-plus-jakarta), "Plus Jakarta Sans", ui-sans-serif,
       system-ui, sans-serif;
+  }
+
+  /* Indikator fokus keyboard jelas untuk aksesibilitas (R-32) */
+  :focus-visible {
+    outline: 2px solid #0284c7;
+    outline-offset: 2px;
   }
 
   body {
@@ -50,12 +57,12 @@
  * token di sini dan tidak boleh ditulis ulang sebagai angka.
  */
 :root {
-  --nav-h: 68px;
-  --nav-h-fab: 88px;
-  /* Tinggi bilah aksi yang menempel di atas navigasi bawah: tombol 56px
+  --nav-h: 64px;
+  --nav-h-fab: 64px;
+  /* Tinggi bilah aksi yang menempel di atas navigasi bawah: tombol 48px
      ditambah padding atas dan bawah 12px. */
-  --action-bar-h: 104px;
-  --sidebar-w: 72px;
+  --action-bar-h: 88px;
+  --sidebar-w: 68px;
   --sidebar-w-expanded: 240px;
 }
 
@@ -141,66 +148,47 @@
  * verifikasi wajah, dan beberapa panel lain terpengaruh. Memberi latar di
  * sini menutup semuanya sekaligus dan tidak bisa terlewat di panel baru.
  */
+/*
+ * Surface kartu operasional: putih solid dengan border struktural 1px
+ * dan bayangan tipis, menggantikan gaya claymorphism sebelumnya.
+ */
 .clay-card {
   background-color: #ffffff;
-  box-shadow: 0px 12px 28px -6px rgba(37, 99, 235, 0.12),
-    0px 8px 12px -4px rgba(15, 23, 42, 0.03),
-    inset 0px 2px 4px rgba(255, 255, 255, 0.95),
-    inset 0px -2px 4px rgba(37, 99, 235, 0.05);
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
 .clay-nav {
-  box-shadow: 0px 12px 28px -6px rgba(37, 99, 235, 0.12),
-    0px 8px 12px -4px rgba(15, 23, 42, 0.03);
+  background-color: #ffffff;
+  border-color: #e2e8f0;
+  box-shadow: 0 -1px 3px rgba(15, 23, 42, 0.04);
 }
 
 .clay-fab {
-  box-shadow: 0px 10px 22px rgba(37, 99, 235, 0.32),
-    inset 0px 2px 4px rgba(255, 255, 255, 0.3);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
 }
 
 .clay-glow {
-  box-shadow: 0px 10px 22px rgba(37, 99, 235, 0.32);
+  box-shadow: 0 1px 3px rgba(30, 58, 138, 0.16);
 }
 
 .clay-notch {
-  box-shadow: 0px 12px 28px -6px rgba(37, 99, 235, 0.12),
-    0px 8px 12px -4px rgba(15, 23, 42, 0.03),
-    inset 0px 2px 4px rgba(255, 255, 255, 0.95),
-    inset 0px -2px 4px rgba(37, 99, 235, 0.05);
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
-.inner-highlight {
-  box-shadow: inset 0px 2px 4px rgba(255, 255, 255, 0.95),
-    inset 0px -2px 4px rgba(37, 99, 235, 0.05);
-}
-
+.inner-highlight,
 .inner-clay-highlight {
-  box-shadow: inset 0px 2px 4px rgba(255, 255, 255, 0.95),
-    inset 0px -2px 4px rgba(37, 99, 235, 0.04);
+  box-shadow: none;
 }
 
 .primary-gradient {
-  background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 50%, #60a5fa 100%);
+  background-color: #1e3a8a;
 }
 
 .pulse-ring {
-  animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
-}
-
-@keyframes pulse-ring {
-  0% {
-    transform: scale(0.95);
-    opacity: 0.8;
-  }
-  50% {
-    transform: scale(1.02);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(0.95);
-    opacity: 0.8;
-  }
+  /* Animasi loop dihapus sesuai standar MOTION 1 */
 }
 
 .custom-scroll::-webkit-scrollbar {

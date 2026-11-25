@@ -26,16 +26,16 @@ export function DashboardHeader({
   branchScope?: BranchScope;
 }) {
   return (
-    <header className="sticky top-0 z-40 bg-surface/90 backdrop-blur-md shadow-[0_2px_4px_rgba(15,23,42,0.03)] px-gutter lg:px-6 pt-safe lg:pt-3 pb-3">
+    <header className="sticky top-0 z-40 bg-surface border-b border-border-subtle px-gutter lg:px-6 pt-safe lg:pt-3 pb-3">
       <div className="flex items-center justify-between gap-space-sm">
-        {/* Branding: mobile only — desktop has sidebar branding */}
+        {/* Branding: mobile only (desktop has sidebar branding) */}
         <div className="flex items-center gap-space-sm min-w-0 lg:hidden">
           <Image
             src="/rb-logo-new.png"
             alt="RB AUTOLUXE"
             width={32}
             height={32}
-            className="w-8 h-8 rounded-lg object-contain shrink-0"
+            className="w-8 h-8 rounded-[8px] object-contain shrink-0"
             priority
           />
           <div className="flex flex-col min-w-0">
@@ -50,9 +50,9 @@ export function DashboardHeader({
                 variant="header"
               />
             ) : (
-              <span className="flex items-center gap-1 px-2 py-0.5 mt-0.5 rounded-full bg-brand-50 w-fit">
-                <Icon name="storefront" className="text-[13px] text-brand-600" />
-                <span className="font-caption text-caption text-brand-700 truncate max-w-[140px]">
+              <span className="flex items-center gap-1 px-2 py-0.5 mt-0.5 rounded-[6px] bg-brand-50 border border-brand-200 w-fit">
+                <Icon name="storefront" className="text-[13px] text-primary" />
+                <span className="font-caption text-caption text-primary truncate max-w-[140px]">
                   {branchName}
                 </span>
               </span>
@@ -77,9 +77,9 @@ export function DashboardHeader({
           <Link
             href="/profil"
             aria-label="Buka profil"
-            className="w-11 h-11 rounded-xl bg-brand-50 shadow-[inset_0px_2px_4px_rgba(255,255,255,0.95)] flex items-center justify-center active:scale-[0.98] transition-transform"
+            className="w-11 h-11 rounded-[8px] bg-brand-50 border border-brand-200 hover:bg-brand-100 flex items-center justify-center transition-colors duration-150"
           >
-            <span className="font-body-bold text-body-bold text-brand-600">
+            <span className="font-body-bold text-body-bold text-primary">
               {initials(fullName)}
             </span>
           </Link>

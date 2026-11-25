@@ -587,7 +587,7 @@ export function PosConsole({
               <Link
                 href="/pos/orders"
                 aria-label="Antrean order"
-                className="w-11 h-11 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary active:scale-95 transition-transform"
+                className="w-11 h-11 rounded-[8px] bg-surface-variant hover:bg-border-subtle flex items-center justify-center text-text-primary transition-colors duration-150"
               >
                 <Icon name="list_alt" className="text-[22px]" />
               </Link>
@@ -603,10 +603,10 @@ export function PosConsole({
                     key={type.value}
                     type="button"
                     onClick={() => setVehicleType(type.value)}
-                    className={`flex-1 py-3 rounded-2xl flex items-center justify-center gap-2 font-body-bold text-body-bold active:scale-95 transition-transform ${
+                    className={`flex-1 min-h-[44px] py-2.5 rounded-[8px] border flex items-center justify-center gap-2 font-body-bold text-body-bold transition-colors duration-150 ${
                       active
-                        ? "bg-primary text-white"
-                        : "bg-surface-container-low text-text-secondary"
+                        ? "bg-primary text-white border-primary"
+                        : "bg-surface text-text-secondary border-border-strong hover:bg-surface-variant"
                     }`}
                   >
                     <Icon name={type.icon} className="text-[20px]" />
@@ -616,11 +616,6 @@ export function PosConsole({
               })}
             </div>
 
-            {/*
-              Ukuran ditampilkan untuk mobil maupun motor. Motor memakai huruf
-              ukuran yang sama (S/M/L/XL) tetapi disimpan sebagai label "Motor S"
-              sampai "Motor XL" supaya tiap ukuran punya tarif sendiri.
-            */}
             <div className="flex gap-2">
               {MOBIL_SIZES.map((option) => {
                 const active = size === option;
@@ -629,13 +624,10 @@ export function PosConsole({
                     key={option}
                     type="button"
                     onClick={() => setSize(option)}
-                    // min-h-11 karena py-2.5 hanya menghasilkan 40px. Tombol ukuran kendaraan
-                    // ditekan di awal transaksi, sering dengan satu tangan sambil
-                    // memegang kunci unit.
-                    className={`flex-1 min-h-11 rounded-xl font-body-bold text-body-bold flex items-center justify-center active:scale-95 transition-transform ${
+                    className={`flex-1 min-h-[44px] rounded-[8px] border font-body-bold text-body-bold flex items-center justify-center transition-colors duration-150 ${
                       active
-                        ? "bg-brand-600 text-white"
-                        : "bg-surface-container-low text-text-secondary"
+                        ? "bg-primary text-white border-primary"
+                        : "bg-surface text-text-secondary border-border-strong hover:bg-surface-variant"
                     }`}
                   >
                     {vehicleType === "motor" ? `Motor ${option}` : option}
@@ -650,7 +642,7 @@ export function PosConsole({
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Cari layanan..."
-                className="w-full h-12 pl-10 pr-3 rounded-2xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+                className="w-full h-11 pl-10 pr-3 rounded-[8px] border border-border-strong bg-surface font-body text-body text-text-primary placeholder:text-text-muted outline-none focus-visible:ring-2 focus-visible:ring-accent"
               />
             </div>
 
@@ -658,10 +650,10 @@ export function PosConsole({
               <button
                 type="button"
                 onClick={() => setActiveCategory("all")}
-                className={`shrink-0 px-4 min-h-11 rounded-full font-caption text-caption flex items-center active:scale-95 transition-transform ${
+                className={`shrink-0 px-4 min-h-[44px] rounded-[8px] border font-caption text-caption flex items-center transition-colors duration-150 ${
                   activeCategory === "all"
-                    ? "bg-primary text-white"
-                    : "bg-surface-container-low text-text-secondary"
+                    ? "bg-primary text-white border-primary"
+                    : "bg-surface text-text-secondary border-border-subtle hover:bg-surface-variant"
                 }`}
               >
                 Semua
@@ -671,10 +663,10 @@ export function PosConsole({
                   key={category}
                   type="button"
                   onClick={() => setActiveCategory(category)}
-                  className={`shrink-0 px-4 min-h-11 rounded-full font-caption text-caption flex items-center active:scale-95 transition-transform ${
+                  className={`shrink-0 px-4 min-h-[44px] rounded-[8px] border font-caption text-caption flex items-center transition-colors duration-150 ${
                     activeCategory === category
-                      ? "bg-primary text-white"
-                      : "bg-surface-container-low text-text-secondary"
+                      ? "bg-primary text-white border-primary"
+                      : "bg-surface text-text-secondary border-border-subtle hover:bg-surface-variant"
                   }`}
                 >
                   {CATEGORY_LABELS[category] ?? category}
@@ -695,9 +687,9 @@ export function PosConsole({
                   {filteredMain.map((service) => {
                     const qty = qtyInCart(service.id);
                     return (
-                      <div key={service.id} className="clay-card p-3 flex flex-col gap-2">
-                        <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center">
-                          <Icon name={CATEGORY_ICONS[service.category] ?? "build"} className="text-brand-600 text-[22px]" />
+                      <div key={service.id} className="clay-card rounded-[10px] p-3 flex flex-col gap-2">
+                        <div className="w-9 h-9 rounded-[8px] bg-brand-50 border border-brand-200 flex items-center justify-center">
+                          <Icon name={CATEGORY_ICONS[service.category] ?? "build"} className="text-primary text-[20px]" />
                         </div>
                         <div className="flex flex-col">
                           <span className="font-body-bold text-body-bold text-text-primary leading-tight line-clamp-2">
@@ -707,25 +699,25 @@ export function PosConsole({
                             {CATEGORY_LABELS[service.category] ?? service.category}
                           </span>
                         </div>
-                        <span className="font-body-bold text-body-bold text-primary">
+                        <span className="font-body-bold text-body-bold text-primary tabular-nums">
                           {formatRupiah(priceForSize(service, effSize))}
                         </span>
                         {qty > 0 ? (
-                          <div className="flex items-center justify-between bg-surface-container-low rounded-xl p-1">
+                          <div className="flex items-center justify-between bg-surface-variant rounded-[8px] p-1">
                             <button
                               type="button"
                               onClick={() => changeQty(service.id, -1)}
-                              className="w-11 h-11 rounded-lg bg-surface flex items-center justify-center active:scale-95"
+                              className="w-11 h-11 rounded-[6px] bg-surface border border-border-subtle flex items-center justify-center hover:bg-border-subtle transition-colors duration-150"
                             >
                               <Icon name="remove" className="text-[18px] text-text-secondary" />
                             </button>
-                            <span className="font-body-bold text-body-bold text-text-primary">
+                            <span className="font-body-bold text-body-bold text-text-primary tabular-nums">
                               {qty}
                             </span>
                             <button
                               type="button"
                               onClick={() => changeQty(service.id, 1)}
-                              className="w-11 h-11 rounded-lg bg-primary text-white flex items-center justify-center active:scale-95"
+                              className="w-11 h-11 rounded-[6px] bg-primary hover:bg-primary-hover text-white flex items-center justify-center transition-colors duration-150"
                             >
                               <Icon name="add" className="text-[18px]" />
                             </button>
@@ -734,7 +726,7 @@ export function PosConsole({
                           <button
                             type="button"
                             onClick={() => addToCart(service.id)}
-                            className="min-h-11 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center justify-center gap-1 active:scale-95 transition-transform"
+                            className="min-h-[44px] rounded-[8px] bg-brand-50 border border-brand-200 hover:bg-brand-100 text-primary font-caption text-caption flex items-center justify-center gap-1 transition-colors duration-150"
                           >
                             <Icon name="add" className="text-[16px]" />
                             Tambah
@@ -758,16 +750,16 @@ export function PosConsole({
                     return (
                       <div
                         key={service.id}
-                        className="clay-card p-3 flex items-center gap-3"
+                        className="clay-card rounded-[10px] p-3 flex items-center gap-3"
                       >
-                        <div className="w-10 h-10 rounded-xl bg-surface-container-low flex items-center justify-center shrink-0">
-                          <Icon name="add_circle" className="text-brand-600 text-[22px]" />
+                        <div className="w-10 h-10 rounded-[8px] bg-surface-variant flex items-center justify-center shrink-0">
+                          <Icon name="add_circle" className="text-primary text-[20px]" />
                         </div>
                         <div className="flex flex-col min-w-0 flex-1">
                           <span className="font-body-bold text-body-bold text-text-primary truncate">
                             {service.name}
                           </span>
-                          <span className="font-body-bold text-body-bold text-primary">
+                          <span className="font-body-bold text-body-bold text-primary tabular-nums">
                             {formatRupiah(priceForSize(service, effSize))}
                           </span>
                         </div>
@@ -776,17 +768,17 @@ export function PosConsole({
                             <button
                               type="button"
                               onClick={() => changeQty(service.id, -1)}
-                              className="w-11 h-11 rounded-lg bg-surface-container-low flex items-center justify-center active:scale-95"
+                              className="w-11 h-11 rounded-[8px] bg-surface-variant border border-border-subtle flex items-center justify-center"
                             >
                               <Icon name="remove" className="text-[18px] text-text-secondary" />
                             </button>
-                            <span className="font-body-bold text-body-bold text-text-primary w-5 text-center">
+                            <span className="font-body-bold text-body-bold text-text-primary w-5 text-center tabular-nums">
                               {qty}
                             </span>
                             <button
                               type="button"
                               onClick={() => changeQty(service.id, 1)}
-                              className="w-11 h-11 rounded-lg bg-primary text-white flex items-center justify-center active:scale-95"
+                              className="w-11 h-11 rounded-[8px] bg-primary hover:bg-primary-hover text-white flex items-center justify-center"
                             >
                               <Icon name="add" className="text-[18px]" />
                             </button>
@@ -796,7 +788,7 @@ export function PosConsole({
                             type="button"
                             onClick={() => addToCart(service.id)}
                             aria-label={`Tambah ${service.name}`}
-                            className="w-11 h-11 rounded-xl bg-brand-50 text-brand-700 flex items-center justify-center active:scale-95 transition-transform"
+                            className="w-11 h-11 rounded-[8px] bg-brand-50 border border-brand-200 hover:bg-brand-100 text-primary flex items-center justify-center transition-colors duration-150"
                           >
                             <Icon name="add" className="text-[20px]" />
                           </button>
@@ -811,12 +803,12 @@ export function PosConsole({
 
           {itemCount > 0 ? (
             <div className="fixed bottom-nav-offset left-0 right-0 z-action-bar px-gutter lg:hidden">
-              <div className="bg-surface rounded-[24px] clay-fab px-4 py-3 border border-outline-variant">
+              <div className="bg-surface rounded-[10px] px-4 py-3 border border-border-strong shadow-modal">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-caption text-caption text-text-secondary">
+                  <span className="font-caption text-caption text-text-secondary tabular-nums">
                     {itemCount} layanan dipilih
                   </span>
-                  <span className="font-headline-2 text-headline-2 text-primary">
+                  <span className="font-headline-2 text-headline-2 text-primary tabular-nums">
                     {formatRupiah(total)}
                   </span>
                 </div>
@@ -826,10 +818,10 @@ export function PosConsole({
                     setError(null);
                     setStep("checkout");
                   }}
-                  className="w-full py-4 rounded-full primary-gradient text-white font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-95 transition-transform"
+                  className="w-full min-h-[48px] rounded-[8px] bg-primary hover:bg-primary-hover text-white font-body-bold text-body-bold flex items-center justify-center gap-2 transition-colors duration-150"
                 >
                   Lanjut ke Checkout
-                  <Icon name="arrow_forward" className="text-[22px]" />
+                  <Icon name="arrow_forward" className="text-[20px]" />
                 </button>
               </div>
             </div>
@@ -837,17 +829,13 @@ export function PosConsole({
         </div>
       </div>
 
-      {/* ── Checkout section (kanan di desktop) ── */}
+      {/* Checkout section (kanan di desktop) */}
       <div
-        className={`${step === "checkout" ? "block" : "hidden"} lg:block lg:col-span-2 lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto lg:border-l lg:border-slate-200 lg:bg-white lg:shadow-[-4px_0_12px_rgba(0,0,0,0.04)]`}
+        className={`${step === "checkout" ? "block" : "hidden"} lg:block lg:col-span-2 lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto lg:border-l lg:border-border-subtle lg:bg-surface`}
       >
         <div className="pb-[calc(15rem+env(safe-area-inset-bottom))] lg:pb-6">
-          {/*
-           * Header checkout: tombol kembali hanya tampil di mobile karena di
-           * desktop katalog dan checkout terlihat bersamaan.
-           */}
-          <div className="sticky top-0 z-40 bg-surface/90 backdrop-blur-md pt-safe lg:pt-3 shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
-            <div className="h-16 px-gutter lg:px-6 flex items-center gap-3">
+          <div className="sticky top-0 z-40 bg-surface border-b border-border-subtle pt-safe lg:pt-2">
+            <div className="h-14 px-gutter lg:px-6 flex items-center gap-3">
               <button
                 type="button"
                 onClick={() => {
@@ -855,7 +843,7 @@ export function PosConsole({
                   setStep("catalog");
                 }}
                 aria-label="Kembali ke katalog"
-                className="w-11 h-11 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary active:scale-95 transition-transform lg:hidden"
+                className="w-11 h-11 rounded-[8px] bg-surface-variant hover:bg-border-subtle flex items-center justify-center text-text-primary transition-colors duration-150 lg:hidden"
               >
                 <Icon name="arrow_back" className="text-[22px]" />
               </button>
@@ -866,22 +854,22 @@ export function PosConsole({
           </div>
 
           <div className="px-gutter lg:px-6 py-4 flex flex-col gap-4">
-            <section className="clay-card p-4 flex flex-col gap-3">
+            <section className="clay-card rounded-[10px] p-4 flex flex-col gap-3">
               <h2 className="font-body-bold text-body-bold text-text-primary flex items-center gap-2">
-                <Icon name="directions_car" className="text-[20px] text-brand-600" />
+                <Icon name="directions_car" className="text-[20px] text-primary" />
                 Data Kendaraan
               </h2>
               <div className="grid grid-cols-2 gap-3">
                 <label className="flex flex-col gap-1">
-                  <span className="font-caption text-caption text-text-muted">
+                  <span className="font-caption text-caption text-text-secondary">
                     Nomor Plat
                   </span>
                   <input
                     value={licensePlate}
                     onChange={ubahTeks("licensePlate", setLicensePlate)}
                     placeholder="B 1234 XYZ"
-                    className={`h-12 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary uppercase outline-none focus:ring-2 focus:ring-brand-400 ${
-                      fieldError?.field === "licensePlate" ? "ring-2 ring-danger-base" : ""
+                    className={`h-11 px-3 rounded-[8px] border bg-surface font-body text-body text-text-primary uppercase outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+                      fieldError?.field === "licensePlate" ? "border-danger-base ring-1 ring-danger-base" : "border-border-strong"
                     }`}
                   />
                   {fieldError?.field === "licensePlate" ? (
@@ -891,15 +879,15 @@ export function PosConsole({
                   ) : null}
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="font-caption text-caption text-text-muted">
+                  <span className="font-caption text-caption text-text-secondary">
                     Model
                   </span>
                   <input
                     value={vehicleModel}
                     onChange={ubahTeks("vehicleModel", setVehicleModel)}
                     placeholder="Avanza"
-                    className={`h-12 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400 ${
-                      fieldError?.field === "vehicleModel" ? "ring-2 ring-danger-base" : ""
+                    className={`h-11 px-3 rounded-[8px] border bg-surface font-body text-body text-text-primary outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+                      fieldError?.field === "vehicleModel" ? "border-danger-base ring-1 ring-danger-base" : "border-border-strong"
                     }`}
                   />
                   {fieldError?.field === "vehicleModel" ? (
@@ -910,33 +898,33 @@ export function PosConsole({
                 </label>
               </div>
               <div className="flex items-center gap-2 text-text-secondary font-caption text-caption">
-                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-brand-50 text-brand-700">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[6px] bg-brand-50 border border-brand-200 text-primary">
                   <Icon name={vehicleType === "motor" ? "two_wheeler" : "directions_car"} className="text-[14px]" />
                   {vehicleType === "motor" ? "Motor" : "Mobil"}
                 </span>
-                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-surface-container-high">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[6px] bg-surface-variant border border-border-subtle">
                   {sizeLabel(effSize)}
                 </span>
               </div>
             </section>
 
             {role !== "karyawan" && (
-              <section className="clay-card p-4 flex flex-col gap-3">
+              <section className="clay-card rounded-[10px] p-4 flex flex-col gap-3">
                 <h2 className="font-body-bold text-body-bold text-text-primary flex items-center gap-2">
-                  <Icon name="person" className="text-[20px] text-brand-600" />
+                  <Icon name="person" className="text-[20px] text-primary" />
                   Data Pelanggan
                 </h2>
                 <label className="flex flex-col gap-1">
-                  <span className="font-caption text-caption text-text-muted flex items-center gap-1">
+                  <span className="font-caption text-caption text-text-secondary flex items-center gap-1">
                     Nama Pelanggan
-                    <span className="text-text-muted/50 text-[11px]">(opsional)</span>
+                    <span className="text-text-muted text-[11px]">(opsional)</span>
                   </span>
                   <input
                     value={customerName}
                     onChange={ubahTeks("customerName", setCustomerName)}
-                    placeholder="Nama pelanggan (opsional)"
-                    className={`h-12 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400 ${
-                      fieldError?.field === "customerName" ? "ring-2 ring-danger-base" : ""
+                    placeholder="Nama pelanggan"
+                    className={`h-11 px-3 rounded-[8px] border bg-surface font-body text-body text-text-primary outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+                      fieldError?.field === "customerName" ? "border-danger-base ring-1 ring-danger-base" : "border-border-strong"
                     }`}
                   />
                   {fieldError?.field === "customerName" ? (
@@ -946,17 +934,17 @@ export function PosConsole({
                   ) : null}
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="font-caption text-caption text-text-muted flex items-center gap-1">
+                  <span className="font-caption text-caption text-text-secondary flex items-center gap-1">
                     Nomor WhatsApp
-                    <span className="text-text-muted/50 text-[11px]">(opsional)</span>
+                    <span className="text-text-muted text-[11px]">(opsional)</span>
                   </span>
                   <input
                     value={customerPhone}
                     onChange={ubahTeks("customerPhone", setCustomerPhone)}
                     inputMode="tel"
-                    placeholder="08123456789 (opsional)"
-                    className={`h-12 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400 ${
-                      fieldError?.field === "customerPhone" ? "ring-2 ring-danger-base" : ""
+                    placeholder="08123456789"
+                    className={`h-11 px-3 rounded-[8px] border bg-surface font-body text-body text-text-primary outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+                      fieldError?.field === "customerPhone" ? "border-danger-base ring-1 ring-danger-base" : "border-border-strong"
                     }`}
                   />
                   {fieldError?.field === "customerPhone" ? (
@@ -968,12 +956,12 @@ export function PosConsole({
               </section>
             )}
 
-            <section className="clay-card p-4 flex flex-col gap-3">
+            <section className="clay-card rounded-[10px] p-4 flex flex-col gap-3">
               <h2 className="font-body-bold text-body-bold text-text-primary flex items-center gap-2">
-                <Icon name="groups" className="text-[20px] text-brand-600" />
+                <Icon name="groups" className="text-[20px] text-primary" />
                 Tim Teknisi
                 <span className="font-caption text-caption text-text-muted ml-auto">
-                  maks 5
+                  Maksimal 5
                 </span>
               </h2>
               {teamOptions.length === 0 ? (
@@ -997,12 +985,12 @@ export function PosConsole({
                             ? "Sedang mengerjakan unit lain. Selesaikan unit itu dulu."
                             : undefined
                         }
-                        className={`px-3 min-h-11 rounded-full font-caption text-caption flex items-center gap-1 active:scale-95 transition-transform ${
+                        className={`px-3 min-h-[44px] rounded-[8px] border font-caption text-caption flex items-center gap-1 transition-colors duration-150 ${
                           selected
-                            ? "bg-primary text-white"
+                            ? "bg-primary text-white border-primary"
                             : locked
-                              ? "bg-surface-container-low text-text-muted opacity-60"
-                              : "bg-surface-container-low text-text-secondary"
+                              ? "bg-surface-variant text-text-muted border-border-subtle opacity-60"
+                              : "bg-surface text-text-secondary border-border-strong hover:bg-surface-variant"
                         }`}
                       >
                         {selected && index === 0 ? (
@@ -1017,8 +1005,7 @@ export function PosConsole({
               )}
               {teamOptions.some((m) => m.busy) ? (
                 <p className="font-caption text-caption text-text-muted">
-                  Teknisi bertanda sibuk sedang mengerjakan unit lain dan baru bisa dipilih
-                  setelah unit itu selesai.
+                  Teknisi bertanda sibuk sedang mengerjakan unit lain dan bisa dipilih kembali setelah unit selesai.
                 </p>
               ) : null}
               {selectedTeam.length > 0 ? (
@@ -1028,15 +1015,14 @@ export function PosConsole({
               ) : null}
             </section>
 
-            <section className="clay-card p-4 flex flex-col gap-3">
-              {/* Status Pembayaran — tersedia untuk semua role (karyawan, admin_kasir, maintainer, owner) */}
+            <section className="clay-card rounded-[10px] p-4 flex flex-col gap-3">
               <h2 className="font-body-bold text-body-bold text-text-primary flex items-center gap-2">
-                <Icon name="paid" className="text-[20px] text-brand-600" />
+                <Icon name="paid" className="text-[20px] text-primary" />
                 Status Pembayaran
               </h2>
               <p className="font-caption text-caption text-text-muted">
                 {isEmployee
-                  ? <>Uang yang diterima dicatat sebagai <b className="text-text-primary">kas titipan</b> atas nama Anda.</>
+                  ? <>Uang yang diterima dicatat sebagai <b className="text-text-primary">kas di tangan</b> atas nama Anda.</>
                   : <>Pilih status pembayaran untuk order ini.</>
                 }
               </p>
@@ -1045,10 +1031,10 @@ export function PosConsole({
                   type="button"
                   onClick={() => setPaymentState("paid")}
                   aria-pressed={paymentState === "paid"}
-                  className={`px-2 py-3 rounded-xl flex flex-col items-center gap-1 active:scale-95 transition-transform ${
+                  className={`px-2 py-3 min-h-[44px] rounded-[8px] border flex flex-col items-center gap-1 transition-colors duration-150 ${
                     paymentState === "paid"
-                      ? "bg-primary text-white"
-                      : "bg-surface-container-low text-text-secondary"
+                      ? "bg-primary text-white border-primary"
+                      : "bg-surface text-text-secondary border-border-strong hover:bg-surface-variant"
                   }`}
                 >
                   <Icon name="paid" className="text-[20px]" />
@@ -1058,10 +1044,10 @@ export function PosConsole({
                   type="button"
                   onClick={() => setPaymentState("dp")}
                   aria-pressed={paymentState === "dp"}
-                  className={`px-2 py-3 rounded-xl flex flex-col items-center gap-1 active:scale-95 transition-transform ${
+                  className={`px-2 py-3 min-h-[44px] rounded-[8px] border flex flex-col items-center gap-1 transition-colors duration-150 ${
                     paymentState === "dp"
-                      ? "bg-brand-100 text-brand-700 ring-2 ring-brand-400"
-                      : "bg-surface-container-low text-text-secondary"
+                      ? "bg-brand-50 text-primary border-primary"
+                      : "bg-surface text-text-secondary border-border-strong hover:bg-surface-variant"
                   }`}
                 >
                   <Icon name="account_balance_wallet" className="text-[20px]" />
@@ -1071,10 +1057,10 @@ export function PosConsole({
                   type="button"
                   onClick={() => setPaymentState("unpaid")}
                   aria-pressed={paymentState === "unpaid"}
-                  className={`px-2 py-3 rounded-xl flex flex-col items-center gap-1 active:scale-95 transition-transform ${
+                  className={`px-2 py-3 min-h-[44px] rounded-[8px] border flex flex-col items-center gap-1 transition-colors duration-150 ${
                     paymentState === "unpaid"
-                      ? "bg-warning-surface text-warning-text ring-2 ring-warning-border"
-                      : "bg-surface-container-low text-text-secondary"
+                      ? "bg-warning-surface text-warning-text border-amber-300"
+                      : "bg-surface text-text-secondary border-border-strong hover:bg-surface-variant"
                   }`}
                 >
                   <Icon name="schedule" className="text-[20px]" />
@@ -1082,36 +1068,34 @@ export function PosConsole({
                 </button>
               </div>
 
-              {/* Input nominal DP */}
               {paymentState === "dp" && (
                 <div className="flex flex-col gap-1">
                   <label className="font-caption text-caption text-text-secondary">
                     Nominal DP <span className="text-danger-text">*</span>
                   </label>
-                  <div className="relative flex items-center h-12 rounded-xl bg-surface shadow-[inset_0px_2px_4px_rgba(15,23,42,0.06)] px-3">
-                    <span className="font-body-bold text-brand-600 pr-2">Rp</span>
+                  <div className="relative flex items-center h-11 rounded-[8px] border border-border-strong bg-surface px-3 focus-within:ring-2 focus-within:ring-accent">
+                    <span className="font-body-bold text-primary pr-2">Rp</span>
                     <input
                       value={dpAmount}
                       onChange={(e) => setDpAmount(e.target.value.replace(/\D/g, ""))}
                       placeholder="0"
                       inputMode="numeric"
-                      className="w-full h-full bg-transparent font-headline-2 text-headline-2 font-semibold text-text-primary focus:outline-none"
+                      className="w-full h-full bg-transparent font-headline-2 text-headline-2 font-semibold text-text-primary tabular-nums focus:outline-none"
                     />
                   </div>
                   {dpAmountNum > 0 && (
-                    <p className="font-caption text-caption text-text-muted">
+                    <p className="font-caption text-caption text-text-muted tabular-nums">
                       Sisa tagihan: <b className="text-warning-text">{formatRupiah(total - dpAmountNum)}</b>
                     </p>
                   )}
                 </div>
               )}
 
-              {/* Metode Pembayaran: HANYA jika Lunas atau DP (disembunyikan saat Bayar Nanti) */}
               {paymentState !== "unpaid" ? (
                 <>
-                  <div className="h-px bg-outline-variant" />
+                  <div className="h-px bg-border-subtle" />
                   <h3 className="font-body-bold text-body-bold text-text-primary flex items-center gap-2">
-                    <Icon name="payments" className="text-[20px] text-brand-600" />
+                    <Icon name="payments" className="text-[20px] text-primary" />
                     Metode Pembayaran {paymentState === "dp" ? "(Untuk DP)" : ""}
                   </h3>
                   <div className="grid grid-cols-3 gap-2">
@@ -1122,10 +1106,10 @@ export function PosConsole({
                           key={method}
                           type="button"
                           onClick={() => setPaymentMethod(method)}
-                          className={`py-3 rounded-xl flex flex-col items-center gap-1 active:scale-95 transition-transform ${
+                          className={`py-3 min-h-[44px] rounded-[8px] border flex flex-col items-center gap-1 transition-colors duration-150 ${
                             active
-                              ? "bg-primary text-white"
-                              : "bg-surface-container-low text-text-secondary"
+                              ? "bg-primary text-white border-primary"
+                              : "bg-surface text-text-secondary border-border-strong hover:bg-surface-variant"
                           }`}
                         >
                           <Icon name={PAYMENT_ICONS[method]} className="text-[20px]" />
@@ -1139,54 +1123,54 @@ export function PosConsole({
                 </>
               ) : null}
 
-              <div className="flex items-start gap-2 p-3 rounded-xl bg-surface-container-low">
+              <div className="flex items-start gap-2 p-3 rounded-[8px] bg-surface-variant border border-border-subtle">
                 <Icon name={
                   paymentState === "paid" ? "check_circle"
                   : paymentState === "dp" ? "account_balance_wallet"
                   : "hourglass_empty"
-                } className="text-[18px] text-brand-600 mt-0.5" />
-                <p className="font-caption text-caption text-text-secondary">
+                } className="text-[18px] text-primary mt-0.5" />
+                <p className="font-caption text-caption text-text-secondary tabular-nums">
                   {paymentState === "paid" ? (
                     isEmployee
-                      ? <>Kas titipan <b className="text-text-primary">{formatRupiah(total)}</b> atas nama Anda.</>
+                      ? <>Pembayaran <b className="text-text-primary">{formatRupiah(total)}</b> dicatat sebagai kas di tangan Anda.</>
                       : <>Pembayaran <b className="text-text-primary">{formatRupiah(total)}</b> masuk kas cabang.</>
                   ) : paymentState === "dp" ? (
                     dpAmountNum > 0
-                      ? <>DP <b className="text-text-primary">{formatRupiah(dpAmountNum)}</b> dicatat. Sisa <b className="text-warning-text">{formatRupiah(total - dpAmountNum)}</b> diselesaikan via Kas.</>
-                      : <>Masukkan jumlah DP di atas.</>
+                      ? <>DP <b className="text-text-primary">{formatRupiah(dpAmountNum)}</b> dicatat. Sisa <b className="text-warning-text">{formatRupiah(total - dpAmountNum)}</b> dilunasi di menu Kas.</>
+                      : <>Masukkan nominal DP di atas.</>
                   ) : (
-                    <>Tagihan <b>{formatRupiah(total)}</b> dicatat sebagai Bayar Nanti. Metode pembayaran akan dipilih saat pelunasan di menu <b>Kas › Bayar Nanti</b>.</>
+                    <>Tagihan <b>{formatRupiah(total)}</b> disimpan sebagai piutang. Pelunasan dicatat di menu Kas saat pelanggan membayar.</>
                   )}
                 </p>
               </div>
 
-              <div className="h-px bg-outline-variant" />
+              <div className="h-px bg-border-subtle" />
               <button
                 type="button"
                 onClick={() => setStartWork((prev) => !prev)}
                 disabled={selectedTeam.length === 0}
                 aria-pressed={startWork}
-                className={`px-3 py-3 rounded-xl flex items-center gap-3 active:scale-95 transition-transform disabled:opacity-50 ${
+                className={`px-3 py-3 min-h-[44px] rounded-[8px] border flex items-center gap-3 transition-colors duration-150 disabled:opacity-50 ${
                   startWork
-                    ? "bg-success-surface text-success-text"
-                    : "bg-surface-container-low text-text-secondary"
+                    ? "bg-success-surface text-success-text border-emerald-200"
+                    : "bg-surface text-text-secondary border-border-strong hover:bg-surface-variant"
                 }`}
               >
                 <Icon name={startWork ? "check_box" : "check_box_outline_blank"} className="text-[20px]" />
                 <span className="flex flex-col items-start">
-                  <span className="font-caption text-caption">
+                  <span className="font-caption text-caption font-semibold">
                     Kerjakan Sekarang
                   </span>
                   <span className="font-micro-badge text-micro-badge opacity-80">
                     {selectedTeam.length === 0
                       ? "Pilih teknisi dulu"
-                      : "Langsung berstatus \u201cSedang Dikerjakan\u201d"}
+                      : "Langsung berstatus Dikerjakan"}
                   </span>
                 </span>
               </button>
             </section>
 
-            <section className="clay-card p-4 flex flex-col gap-2">
+            <section className="clay-card rounded-[10px] p-4 flex flex-col gap-2">
               <div className="flex items-center justify-between">
                 <h2 className="font-body-bold text-body-bold text-text-primary">
                   Rincian Pesanan
@@ -1201,24 +1185,22 @@ export function PosConsole({
                     <span className="text-text-secondary">
                       {line.qty}x {line.service.name}
                     </span>
-                    {/* Tombol edit harga */}
                     <button
                       type="button"
                       onClick={() => {
                         const input = window.prompt(
-                          `Harga custom untuk "${line.service.name}":\n(Kosongkan untuk pakai harga katalog: ${formatRupiah(line.catalogPrice)})`,
+                          `Harga khusus untuk "${line.service.name}":\n(Kosongkan untuk pakai harga katalog: ${formatRupiah(line.catalogPrice)})`,
                           line.customPrice !== undefined ? String(line.customPrice) : ""
                         );
-                        if (input === null) return; // cancel
+                        if (input === null) return;
                         const trimmed = input.trim();
                         const newPrice = trimmed === "" ? undefined : Number(trimmed.replace(/\D/g, ""));
                         if (trimmed !== "" && (isNaN(newPrice!) || newPrice! < 0)) return;
 
-                        // Jika ada custom price, minta alasan
                         let note: string | undefined;
                         if (newPrice !== undefined && newPrice !== line.catalogPrice) {
                           const noteInput = window.prompt(
-                            `Alasan penyesuaian harga (promo/nego):\nContoh: "Promo lebaran", "Nego pelanggan"`,
+                            `Alasan penyesuaian harga (promo atau nego):\nContoh: "Promo akhir bulan", "Nego pelanggan"`,
                             line.discountNote ?? ""
                           );
                           if (noteInput === null) return;
@@ -1231,20 +1213,20 @@ export function PosConsole({
                             : c
                         ));
                       }}
-                      className="flex flex-col items-end active:scale-95 transition-transform"
+                      className="flex flex-col items-end hover:opacity-80 transition-opacity"
                     >
-                      <span className={`font-body-bold ${line.customPrice !== undefined ? "text-warning-text" : "text-text-primary"}`}>
+                      <span className={`font-body-bold tabular-nums ${line.customPrice !== undefined ? "text-warning-text" : "text-text-primary"}`}>
                         {formatRupiah(line.price * line.qty)}
                       </span>
                       {line.customPrice !== undefined && (
-                        <span className="font-micro-badge text-micro-badge text-text-muted line-through">
+                        <span className="font-micro-badge text-micro-badge text-text-muted line-through tabular-nums">
                           {formatRupiah(line.catalogPrice * line.qty)}
                         </span>
                       )}
                     </button>
                   </div>
                   {line.discountNote && (
-                    <div className="flex items-center gap-1 px-2 py-0.5 bg-warning-surface rounded-lg w-fit">
+                    <div className="flex items-center gap-1 px-2 py-0.5 bg-warning-surface border border-amber-200 rounded-[6px] w-fit">
                       <Icon name="local_offer" className="text-[12px] text-warning-text" />
                       <span className="font-micro-badge text-micro-badge text-warning-text">
                         {line.discountNote}
@@ -1253,53 +1235,44 @@ export function PosConsole({
                   )}
                 </div>
               ))}
-              <div className="h-px bg-outline-variant my-1" />
+              <div className="h-px bg-border-subtle my-1" />
               <div className="flex items-center justify-between">
                 <span className="font-body-bold text-body-bold text-text-primary">
                   Total
                 </span>
-                <span className="font-headline-2 text-headline-2 text-primary">
+                <span className="font-headline-2 text-headline-2 text-primary tabular-nums">
                   {formatRupiah(total)}
                 </span>
               </div>
               {resolved.some(l => l.customPrice !== undefined) && (
-                <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-warning-surface rounded-xl">
+                <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-warning-surface border border-amber-200 rounded-[8px]">
                   <Icon name="local_offer" className="text-[14px] text-warning-text shrink-0" />
                   <span className="font-caption text-caption text-warning-text">
-                    Ada penyesuaian harga — pastikan sudah disetujui atasan
+                    Ada penyesuaian harga. Pastikan sudah disetujui atasan.
                   </span>
                 </div>
               )}
             </section>
 
             {error ? (
-              <div className="p-3 rounded-xl bg-danger-surface text-danger-text font-body text-body flex items-center gap-2">
+              <div className="p-3 rounded-[8px] bg-danger-surface border border-red-200 text-danger-text font-body text-body flex items-center gap-2">
                 <Icon name="error" className="text-[20px]" />
                 {error}
               </div>
             ) : null}
           </div>
 
-          {/*
-           * Tombol melayang, terpisah dari navigasi bawah.
-           *
-           * Sebelumnya bilahnya menempel tepat di tepi navigasi dengan latar
-           * yang sama, sehingga keduanya terbaca sebagai satu blok besar dan
-           * rincian di bawahnya tertutup. Sekarang bentuknya pil dengan
-           * bayangan sendiri, jaraknya diberikan oleh token --nav-h-fab. Tinggi
-           * navigasi sendiri 68px, jadi jaraknya selalu terlihat.
-           */}
-          <div className="fixed bottom-nav-offset left-0 right-0 z-action-bar px-gutter lg:sticky lg:bottom-0 lg:left-auto lg:right-auto lg:px-4 lg:py-3 lg:bg-white/95 lg:backdrop-blur-sm lg:border-t lg:border-slate-100">
+          <div className="fixed bottom-nav-offset left-0 right-0 z-action-bar px-gutter py-3 bg-surface border-t border-border-subtle lg:sticky lg:bottom-0 lg:left-auto lg:right-auto lg:px-4">
             <button
               type="button"
               disabled={submitting}
               onClick={submitOrder}
-              className="w-full py-4 lg:py-3 rounded-full primary-gradient text-white font-body-bold text-body-bold flex items-center justify-center gap-2 clay-fab active:scale-95 transition-transform disabled:opacity-60"
+              className="w-full min-h-[48px] px-4 rounded-[8px] bg-primary hover:bg-primary-hover text-white font-body-bold text-body-bold flex items-center justify-center gap-2 transition-colors duration-150 disabled:opacity-60 tabular-nums"
             >
-              <Icon name={submitting ? "hourglass_top" : "check_circle"} className="text-[22px]" />
+              <Icon name={submitting ? "hourglass_top" : "check_circle"} className="text-[20px]" />
               {submitting
                 ? "Memproses..."
-                : `${startWork ? "Simpan & Kerjakan" : "Buat Order"} - ${formatRupiah(total)}`}
+                : `${startWork ? "Simpan & Kerjakan" : "Simpan Order"} (${formatRupiah(total)})`}
             </button>
           </div>
         </div>

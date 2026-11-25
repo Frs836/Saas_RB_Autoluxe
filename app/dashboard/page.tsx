@@ -19,12 +19,10 @@ import { Icon } from "@/components/ui/icon";
 
 
 const ORDER_STAGE: Record<string, { label: string; progress: number }> = {
-  queued: { label: "Dalam Antrean", progress: 10 },
-  in_progress: { label: "Sedang Dikerjakan", progress: 60 },
-  qc_review: { label: "Review QC", progress: 85 },
-  // Pengerjaan selesai tapi belum diambil adalah tahap yang paling sering
-  // ditanyakan pelanggan, jadi harus punya label sendiri.
-  completed: { label: "Pengerjaan Selesai", progress: 95 },
+  queued: { label: "Antre", progress: 10 },
+  in_progress: { label: "Dikerjakan", progress: 60 },
+  qc_review: { label: "Cek QC", progress: 85 },
+  completed: { label: "Selesai", progress: 95 },
   menunggu_diambil: { label: "Siap Diambil", progress: 100 },
 };
 
@@ -259,38 +257,28 @@ const jamSekarang = wibNow();
       />
 
       <div className="px-gutter lg:px-6 pt-space-md lg:pt-6 grid grid-cols-2 lg:grid-cols-4 gap-space-md">
-        <section className="col-span-2 relative overflow-hidden rounded-[20px] p-5 primary-gradient text-on-primary clay-glow">
-          <div className="absolute -right-6 -bottom-6 opacity-10 pointer-events-none text-white">
-            <Icon name="directions_car" className="text-[130px]" />
-          </div>
-          <div className="relative z-10 flex flex-col gap-3">
+        <section className="col-span-2 relative overflow-hidden rounded-[10px] p-4 sm:p-5 bg-primary text-white border border-primary-hover">
+          <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between gap-2">
-              <span className="font-caption text-caption text-brand-100 flex items-center gap-1.5">
+              <span className="font-caption text-caption text-white/80 flex items-center gap-1.5 tabular-nums">
                 <Icon name="schedule" className="text-[16px]" />
-                Jam Resmi: {openedTime} WIB
+                Jam Buka: {openedTime} WIB
               </span>
-              <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-md">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[6px] bg-white/15">
                 <Icon name={attendance?.status === "hadir" ? "verified" : "info"} className="text-[14px] text-white" />
                 <span className="font-micro-badge text-micro-badge text-white tracking-wider uppercase">
                   {badge.text}
                 </span>
-              </div>
+              </span>
             </div>
             <div className="flex flex-col">
-              {/*
-                Angka besar itu jam berjalan, bukan jam absen.
-                Sebelumnya kolom ini diisi jam check-in dari database, jadi
-                selama staf belum absen isinya tetap dua strip dan tidak pernah
-                bergerak. Jam absen dipisahkan ke bawah supaya keduanya tidak
-                saling menggantikan.
-              */}
-              <h2 className="font-metric-display text-metric-display text-white tracking-tight leading-none">
-                <LiveClock jamAwal={jamSekarang.timeLabel} />
-                <span className="font-headline-2 text-headline-2 text-brand-100 font-normal">
+              <h2 className="font-metric-display text-metric-display text-white tracking-tight leading-none tabular-nums">
+                <LiveClock jamAwal={jamSekarang.timeLabel} />{" "}
+                <span className="font-headline-2 text-headline-2 text-white/80 font-normal">
                   WIB
                 </span>
               </h2>
-              <p className="font-caption text-caption text-brand-100 mt-1">
+              <p className="font-caption text-caption text-white/80 mt-1 tabular-nums">
                 {clockInTime
                   ? `Absen masuk tercatat ${clockInTime}`
                   : "Belum absen hari ini"}
@@ -299,11 +287,11 @@ const jamSekarang = wibNow();
             <div className="pt-1">
               <Link
                 href="/absensi"
-                className="w-full h-11 px-4 rounded-xl bg-white/20 flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
+                className="w-full min-h-[44px] px-4 rounded-[8px] bg-white/15 hover:bg-white/25 flex items-center justify-center gap-2 transition-colors duration-150"
               >
                 <Icon name={clockInTime ? "how_to_reg" : "face_retouching_natural"} className="text-[20px] text-white" />
                 <span className="font-body-bold text-body-bold text-white">
-                  {clockInTime ? "Absensi Hari Ini Tercatat" : "Buka Scanner Face ID"}
+                  {clockInTime ? "Lihat Riwayat Absensi" : "Absen Masuk Sekarang"}
                 </span>
               </Link>
             </div>
@@ -313,18 +301,18 @@ const jamSekarang = wibNow();
         {canSeeBranchCash ? (
           <Link
             href="/shift"
-            aria-label="Buka Audit Shift"
-            className="col-span-1 rounded-[20px] p-4 bg-surface flex flex-col justify-between clay-card active:scale-[0.98] transition-transform"
+            aria-label="Buka Kas Shift"
+            className="col-span-1 rounded-[10px] p-4 bg-surface border border-border-subtle hover:border-border-strong shadow-subtle flex flex-col justify-between transition-colors duration-150"
           >
             <div className="flex flex-col gap-2">
-              <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center text-brand-600 shadow-[inset_0px_1px_2px_rgba(255,255,255,0.9)]">
+              <div className="w-10 h-10 rounded-[8px] bg-brand-50 border border-brand-200 flex items-center justify-center text-primary">
                 <Icon name="payments" className="text-[22px]" />
               </div>
               <div>
                 <span className="font-caption text-caption text-text-secondary line-clamp-1">
-                  Kas Titipan Shift
+                  Kas Shift
                 </span>
-                <div className="font-headline-1 text-headline-1 text-text-primary mt-0.5 tracking-tight">
+                <div className="font-headline-1 text-headline-1 text-text-primary mt-0.5 tracking-tight tabular-nums">
                   {handoff?.opening_cash != null
                     ? formatRupiahShort(handoff.opening_cash)
                     : "Belum ada"}
@@ -332,41 +320,41 @@ const jamSekarang = wibNow();
               </div>
             </div>
             <div className="mt-3 pt-2">
-              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-warning-surface text-warning-text w-full">
+              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[6px] bg-warning-surface text-warning-text w-full">
                 <Icon name={handoff?.status === "closed" ? "task_alt" : "pending"} className="text-[13px] shrink-0" />
                 <span className="font-micro-badge text-micro-badge truncate">
                   {handoff?.status === "closed"
-                    ? "Shift Sudah Ditutup"
-                    : "Audit Shift Berjalan"}
+                    ? "Shift Ditutup"
+                    : "Shift Berjalan"}
                 </span>
               </div>
             </div>
           </Link>
         ) : (
-          <section className="col-span-1 rounded-[20px] p-4 bg-surface flex flex-col justify-between clay-card">
+          <section className="col-span-1 rounded-[10px] p-4 bg-surface border border-border-subtle shadow-subtle flex flex-col justify-between">
             <div className="flex flex-col gap-2">
-              <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center text-brand-600 shadow-[inset_0px_1px_2px_rgba(255,255,255,0.9)]">
+              <div className="w-10 h-10 rounded-[8px] bg-brand-50 border border-brand-200 flex items-center justify-center text-primary">
                 <Icon name="savings" className="text-[22px]" />
               </div>
               <div>
                 <span className="font-caption text-caption text-text-secondary line-clamp-1">
-                  Kas Titipan Saya
+                  Kas di Tangan
                 </span>
-                <div className="font-headline-1 text-headline-1 text-text-primary mt-0.5 tracking-tight">
+                <div className="font-headline-1 text-headline-1 text-text-primary mt-0.5 tracking-tight tabular-nums">
                   {heldTotal > 0 ? formatRupiahShort(heldTotal) : "Rp 0"}
                 </div>
               </div>
             </div>
             <div className="mt-3 pt-2 flex flex-col gap-1">
-              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 w-full">
+              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[6px] bg-brand-50 text-brand-700 w-full">
                 <Icon name="account_balance_wallet" className="text-[13px] shrink-0" />
-                <span className="font-micro-badge text-micro-badge truncate">
+                <span className="font-micro-badge text-micro-badge truncate tabular-nums">
                   Tunai {formatRupiahShort(heldCash)}
                 </span>
               </div>
-              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container text-text-secondary w-full">
+              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[6px] bg-surface-variant text-text-secondary w-full">
                 <Icon name="qr_code_scanner" className="text-[13px] shrink-0" />
-                <span className="font-micro-badge text-micro-badge truncate">
+                <span className="font-micro-badge text-micro-badge truncate tabular-nums">
                   QRIS/Transfer {formatRupiahShort(heldDigital)}
                 </span>
               </div>
@@ -374,16 +362,16 @@ const jamSekarang = wibNow();
           </section>
         )}
 
-        <section className="col-span-1 rounded-[20px] p-4 bg-surface flex flex-col justify-between clay-card">
+        <section className="col-span-1 rounded-[10px] p-4 bg-surface border border-border-subtle shadow-subtle flex flex-col justify-between">
           <div className="flex flex-col gap-2">
-            <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center text-brand-600 shadow-[inset_0px_1px_2px_rgba(255,255,255,0.9)]">
+            <div className="w-10 h-10 rounded-[8px] bg-brand-50 border border-brand-200 flex items-center justify-center text-primary">
               <Icon name="garage" className="text-[22px]" />
             </div>
             <div>
               <span className="font-caption text-caption text-text-secondary line-clamp-1">
                 Order Dikerjakan
               </span>
-              <div className="font-headline-1 text-headline-1 text-text-primary mt-0.5 tracking-tight flex items-baseline gap-1">
+              <div className="font-headline-1 text-headline-1 text-text-primary mt-0.5 tracking-tight flex items-baseline gap-1 tabular-nums">
                 {inProgress.length}
                 <span className="font-caption text-caption text-text-muted">
                   Unit
@@ -392,24 +380,24 @@ const jamSekarang = wibNow();
             </div>
           </div>
           <div className="mt-3 pt-2">
-            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 w-full">
-              <span className="h-1.5 w-1.5 rounded-full bg-brand-500 animate-pulse shrink-0" />
-              <span className="font-micro-badge text-micro-badge truncate">
+            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[6px] bg-brand-50 text-brand-700 w-full">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
+              <span className="font-micro-badge text-micro-badge truncate tabular-nums">
                 {queued.length} Antre • {qcReview.length} QC
               </span>
             </div>
           </div>
         </section>
 
-        {/* Badge Status Kasir — visible untuk semua role di cabang yang sama */}
+        {/* Status Kasir */}
         {branchId && (
-          <section className="col-span-2 lg:col-span-4 rounded-[20px] p-4 bg-surface clay-card flex items-center justify-between gap-4">
+          <section className="col-span-2 lg:col-span-4 rounded-[10px] p-4 bg-surface border border-border-subtle shadow-subtle flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div
-                className={`w-3 h-3 rounded-full shrink-0 ${
+                className={`w-2.5 h-2.5 rounded-full shrink-0 ${
                   handoffRaw?.status === "open"
-                    ? "bg-success-base animate-pulse"
-                    : "bg-surface-container-high"
+                    ? "bg-success-base"
+                    : "bg-border-strong"
                 }`}
               />
               <div className="flex flex-col gap-0.5">
@@ -420,9 +408,9 @@ const jamSekarang = wibNow();
                     ? "Kasir Sudah Tutup"
                     : "Kasir Belum Buka Hari Ini"}
                 </span>
-                <span className="font-caption text-caption text-text-muted">
+                <span className="font-caption text-caption text-text-muted tabular-nums">
                   {handoffRaw?.status === "open" && handoffOpenerName
-                    ? `Dibuka oleh ${handoffOpenerName} • ${formatTimeWib(handoffRaw.opened_at)} WIB`
+                    ? `Dibuka oleh ${handoffOpenerName} (${formatTimeWib(handoffRaw.opened_at)} WIB)`
                     : handoffRaw?.status === "closed"
                     ? `Ditutup pukul ${formatTimeWib(handoffRaw.closed_at)} WIB`
                     : "Hubungi admin kasir atau kepala karyawan"}
@@ -432,7 +420,7 @@ const jamSekarang = wibNow();
             {can(role, "cash.shift_manage") && (
               <Link
                 href="/shift"
-                className="shrink-0 h-9 px-4 rounded-xl bg-brand-50 text-brand-700 font-caption text-caption flex items-center gap-1.5 active:scale-95 transition-transform"
+                className="shrink-0 min-h-[44px] px-4 rounded-[8px] bg-brand-50 border border-brand-200 hover:bg-brand-100 text-primary font-caption text-caption flex items-center gap-1.5 transition-colors duration-150"
               >
                 <Icon name="point_of_sale" className="text-[16px]" />
                 {handoffRaw?.status === "open" ? "Tutup Kasir" : "Buka Kasir"}
@@ -444,31 +432,30 @@ const jamSekarang = wibNow();
         {!canSeeBranchCash && unpaidCount > 0 ? (
           <Link
             href="/pos/orders"
-            className="col-span-2 lg:col-span-4 rounded-[16px] p-3.5 bg-warning-surface flex items-center gap-3 active:scale-[0.98] transition-transform"
+            className="col-span-2 lg:col-span-4 rounded-[10px] p-3.5 bg-warning-surface border border-amber-200 flex items-center gap-3 transition-colors duration-150"
           >
             <Icon name="hourglass_top" className="text-[22px] text-warning-text shrink-0" />
             <div className="min-w-0">
               <p className="font-caption text-caption text-warning-text font-semibold">
                 {unpaidCount} order menunggu pembayaran kasir
               </p>
-              <p className="font-micro-badge text-micro-badge text-warning-text opacity-80">
+              <p className="font-micro-badge text-micro-badge text-warning-text tabular-nums">
                 Total tagihan {formatRupiah(unpaidTotal)}
               </p>
             </div>
           </Link>
         ) : null}
 
-        <section className="col-span-2 rounded-[20px] p-4 bg-surface clay-card">
+        <section className="col-span-2 rounded-[10px] p-4 bg-surface border border-border-subtle shadow-subtle">
           <div className="flex items-center justify-between mb-3">
             <div>
               <h3 className="font-headline-2 text-headline-2 text-text-primary leading-tight">
-                Aksi Cepat Operasional
+                Aksi Cepat
               </h3>
               <p className="font-caption text-caption text-text-muted">
-                Pintasan sesuai hak akses {roleLabel(role)}
+                Menu utama untuk {roleLabel(role)}
               </p>
             </div>
-            <Icon name="bolt" className="text-text-muted text-[18px]" />
           </div>
           <div className="grid grid-cols-4 gap-2">
             {quickActions.map((action) =>
@@ -477,10 +464,10 @@ const jamSekarang = wibNow();
                   key={action.label}
                   type="button"
                   aria-disabled="true"
-                  title={action.disabledTitle ?? "Modul menyusul"}
-                  className="group flex flex-col items-center gap-1.5 p-2 rounded-xl bg-surface-container-low text-center cursor-not-allowed opacity-70"
+                  title={action.disabledTitle ?? "Segera hadir"}
+                  className="flex flex-col items-center gap-1.5 p-2 rounded-[8px] bg-surface-variant text-center cursor-not-allowed opacity-60 min-h-[44px]"
                 >
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-[inset_0px_1px_2px_rgba(255,255,255,0.9)] bg-brand-50 text-brand-600">
+                  <div className="w-10 h-10 rounded-[8px] flex items-center justify-center bg-brand-50 text-primary">
                     <Icon name={action.icon} className="text-[20px]" />
                   </div>
                   <span className="font-micro-badge text-micro-badge text-text-primary leading-tight line-clamp-1">
@@ -491,13 +478,13 @@ const jamSekarang = wibNow();
                 <Link
                   key={action.label}
                   href={action.href}
-                  className="group flex flex-col items-center gap-1.5 p-2 rounded-xl bg-surface-container-low text-center active:scale-95 transition-transform"
+                  className="flex flex-col items-center gap-1.5 p-2 rounded-[8px] bg-surface-variant hover:bg-border-subtle text-center transition-colors duration-150 min-h-[44px]"
                 >
                   <div
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-[inset_0px_1px_2px_rgba(255,255,255,0.9)] ${
+                    className={`w-10 h-10 rounded-[8px] flex items-center justify-center ${
                       action.primary
-                        ? "bg-brand-500 text-on-primary"
-                        : "bg-brand-50 text-brand-600"
+                        ? "bg-primary text-white"
+                        : "bg-brand-50 text-primary border border-brand-200"
                     }`}
                   >
                     <Icon name={action.icon} className="text-[20px]" />
@@ -511,70 +498,63 @@ const jamSekarang = wibNow();
           </div>
           {heldCount > 0 ? (
             <p className="mt-3 font-caption text-caption text-text-muted">
-              Anda memegang {heldCount} kas titipan hari ini. Serahkan ke Admin
+              Anda memegang {heldCount} pembayaran hari ini. Serahkan ke Admin
               Kasir saat shift dibuka.
             </p>
           ) : null}
         </section>
 
         {liveOrder && (
-          // Kartu ini adalah order yang sedang dikerjakan, jadi harus bisa
-          // diklik untuk membuka detailnya. Sebelumnya berupa section biasa
-          // tanpa tautan sama sekali, sehingga satu-satunya jalan ke detail
-          // order harus lewat menu Antrean.
           <Link
             href={`/pos/orders/${liveOrder.id}`}
             aria-label={`Buka detail order ${liveOrder.order_number}`}
-            className="col-span-2 rounded-[20px] p-4 bg-surface clay-card active:scale-[0.99] transition-transform"
+            className="col-span-2 rounded-[10px] p-4 bg-surface border border-border-subtle hover:border-border-strong shadow-subtle transition-colors duration-150"
           >
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success-base opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-success-base" />
-                </span>
+                <span className="inline-flex rounded-full h-2 w-2 bg-success-base" />
                 <span className="font-caption text-caption text-text-primary font-semibold">
                   {ORDER_STAGE[liveOrder.status]?.label ?? "Order Aktif"}
                 </span>
               </div>
-              <span className="font-caption text-caption text-brand-600 font-medium font-mono">
+              <span className="font-caption text-caption text-primary font-medium font-mono">
                 {liveOrder.order_number}
               </span>
             </div>
             <div className="flex gap-3 items-center">
-              <div className="w-16 h-16 rounded-xl bg-surface-container flex items-center justify-center shrink-0 text-brand-600 shadow-[inset_0px_1px_2px_rgba(0,0,0,0.05)]">
-                <Icon name="directions_car" className="text-[30px]" />
+              <div className="w-14 h-14 rounded-[8px] bg-surface-variant flex items-center justify-center shrink-0 text-primary">
+                <Icon name="directions_car" className="text-[28px]" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-1">
                   <h4 className="font-body-bold text-body-bold text-text-primary truncate">
                     {liveOrder.vehicle_model ?? "Kendaraan"}
                   </h4>
-                  <span className="font-micro-badge text-micro-badge px-2 py-0.5 rounded bg-surface-container-high text-text-secondary font-mono shrink-0">
+                  <span className="font-micro-badge text-micro-badge px-2 py-0.5 rounded-[6px] bg-surface-variant border border-border-subtle text-text-secondary font-mono shrink-0">
                     {liveOrder.license_plate}
                   </span>
                 </div>
-                <p className="font-caption text-caption text-brand-600 mt-0.5 truncate">
+                <p className="font-caption text-caption text-primary mt-0.5 truncate">
                   {liveOrder.service_package ?? "Paket layanan"}
                 </p>
                 <div className="mt-2 flex items-center gap-2">
-                  <div className="w-full bg-surface-container rounded-full h-2 overflow-hidden">
+                  <div className="w-full bg-surface-variant rounded-[4px] h-2 overflow-hidden">
                     <div
-                      className="bg-gradient-to-r from-brand-600 to-brand-400 h-2 rounded-full"
+                      className="bg-primary h-2 rounded-[4px]"
                       style={{
                         width: `${ORDER_STAGE[liveOrder.status]?.progress ?? 0}%`,
                       }}
                     />
                   </div>
-                  <span className="font-micro-badge text-micro-badge text-text-muted shrink-0">
+                  <span className="font-micro-badge text-micro-badge text-text-muted shrink-0 tabular-nums">
                     {ORDER_STAGE[liveOrder.status]?.progress ?? 0}%
                   </span>
                 </div>
               </div>
             </div>
-            <div className="mt-3 pt-3 flex items-center justify-between bg-surface-container-low px-3 py-2 rounded-xl">
+            <div className="mt-3 pt-2.5 flex items-center justify-between bg-surface-variant px-3 py-2 rounded-[8px]">
               <div className="flex items-center gap-2">
-                <div className="w-5 h-5 rounded-full bg-brand-200 text-brand-700 flex items-center justify-center font-micro-badge text-micro-badge">
+                <div className="w-5 h-5 rounded-full bg-brand-100 text-primary flex items-center justify-center font-micro-badge text-micro-badge">
                   {liveAssignee
                     ? liveAssignee
                         .split(/\s+/)
@@ -588,19 +568,16 @@ const jamSekarang = wibNow();
                   {liveAssignee ? `Teknisi: ${liveAssignee}` : "Belum ada teknisi"}
                 </span>
               </div>
-              <span className="font-caption text-caption text-success-text font-medium">
+              <span className="font-caption text-caption text-success-text font-semibold tabular-nums">
                 {formatRupiah(liveOrder.total_price)}
               </span>
             </div>
-            <p className="mt-2 font-micro-badge text-micro-badge text-brand-600 text-right">
-              Ketuk untuk membuka detail pengerjaan
-            </p>
           </Link>
         )}
 
         {note && (
-          <section className="col-span-2 rounded-[20px] p-3.5 bg-brand-50 flex items-start gap-3 shadow-[0px_2px_4px_rgba(15,23,42,0.03)]">
-            <div className="w-8 h-8 rounded-lg bg-surface flex items-center justify-center text-brand-600 shrink-0 shadow-[0px_2px_4px_rgba(37,99,235,0.08)]">
+          <section className="col-span-2 rounded-[10px] p-3.5 bg-brand-50 border border-brand-200 flex items-start gap-3">
+            <div className="w-8 h-8 rounded-[8px] bg-surface border border-brand-200 flex items-center justify-center text-primary shrink-0">
               <Icon name="campaign" className="text-[18px]" />
             </div>
             <div className="flex-1 min-w-0">

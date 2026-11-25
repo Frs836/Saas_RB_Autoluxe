@@ -21,57 +21,36 @@ export function BottomNav({ role }: Props) {
 
   const renderItem = (item: NavItem) => {
     const active = pathname.startsWith(item.href);
-    const classes = `flex flex-col items-center justify-center min-w-[56px] min-h-[44px] gap-0.5 transition-colors ${
-      active ? "text-brand-500 font-body-bold" : "text-text-muted"
+    const classes = `flex flex-col items-center justify-center min-w-[56px] min-h-[44px] px-1 rounded-[8px] gap-0.5 transition-colors duration-150 ${
+      active
+        ? "text-primary font-body-bold"
+        : "text-text-muted hover:text-text-primary"
     }`;
 
-    /*
-   * Prefetch dimatikan untuk navigasi bawah.
-   *
-   * Setiap halaman memuat navigasi dengan lima tautan. Dengan prefetch aktif,
-   * Next.js langsung menarik tampilan RSC kelimanya sekaligus begitu halaman
-   * muncul. Pengukuran menunjukkan server hanya membutuhkan 160 sampai 460 ms
-   * untuk mengirim HTML, tetapi dokumen baru selesai 2,4 sampai 3,8 detik
-   * kemudian karena berkas JavaScript berebut jaringan dengan sepuluh
-   * permintaan prefetch itu.
-   *
-   * Navigasi bawah adalah menu utama yang selalu terlihat, jadi tautannya
-   * selalu sudah ada di layar. Tanpa prefetch, perpindahan halaman sedikit
-   * lebih lambat, tetapi halaman pertama benar-benar tampil jauh lebih cepat.
-   */
-  return (
-    <Link key={item.href} href={item.href} prefetch={false} className={classes}>
-      <Icon name={item.icon} className="text-[22px]" />
-      <span className="font-caption text-caption">{item.label}</span>
-    </Link>
-  );
+    return (
+      <Link key={item.href} href={item.href} prefetch={false} className={classes}>
+        <Icon name={item.icon} className="text-[22px]" />
+        <span className="font-caption text-caption leading-none">{item.label}</span>
+      </Link>
+    );
   };
 
   return (
-    <nav className="lg:hidden fixed bottom-0 w-full z-nav pb-safe bg-surface rounded-t-[24px] clay-nav">
-      <div className="relative flex items-center justify-around h-[var(--nav-h)] px-space-xs">
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-nav pb-safe bg-surface border-t border-border-subtle">
+      <div className="flex items-center justify-around h-[var(--nav-h)] px-2">
         {renderItem(items[0])}
         {renderItem(items[1])}
         {showFab ? (
-          /*
-           * Tombol tambah order duduk di dalam navigasi, tidak keluar dari
-           * container. Sebelumnya memakai -top-5 yang menambah 20px tinggi
-           * efektif navigasi tanpa ada halaman yang tahu, jadi isi di
-           * bawahnya tertutup. Sekarang tinggi navigasi tetap 68px dan
-           * ruang kosongnya disediakan oleh token --nav-h-fab.
-           */
-          <div className="relative flex flex-col items-center justify-center">
-            <Link
-              href="/pos"
-              prefetch={false}
-              aria-label="Buat Order Baru"
-              className="w-14 h-14 rounded-full primary-gradient flex items-center justify-center text-on-primary clay-fab active:scale-95 transition-transform"
-            >
-              <Icon name="add" className="text-[28px]" />
-            </Link>
-          </div>
+          <Link
+            href="/pos"
+            prefetch={false}
+            aria-label="Buat Order Baru"
+            className="w-11 h-11 rounded-[8px] bg-primary hover:bg-primary-hover active:opacity-90 flex items-center justify-center text-white transition-colors duration-150"
+          >
+            <Icon name="add" className="text-[24px]" />
+          </Link>
         ) : (
-          <div className="w-14" aria-hidden="true" />
+          <div className="w-11" aria-hidden="true" />
         )}
         {renderItem(items[2])}
         {renderItem(items[3])}

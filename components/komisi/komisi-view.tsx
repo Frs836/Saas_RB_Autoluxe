@@ -135,7 +135,7 @@ export function KomisiView({
               key={p.key}
               type="button"
               onClick={() => applyPreset(p.key)}
-              className="px-3 h-9 rounded-full bg-surface-container-low text-text-secondary font-caption text-caption active:scale-95 transition-transform"
+              className="px-3 min-h-[44px] rounded-[8px] border border-border-strong bg-surface hover:bg-surface-variant text-text-secondary font-caption text-caption transition-colors"
             >
               {p.label}
             </button>
@@ -150,7 +150,7 @@ export function KomisiView({
               type="date"
               value={from}
               onChange={(e) => { setFrom(e.target.value); fetchReport(e.target.value, to); }}
-              className="h-11 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+              className="h-11 px-3 rounded-[8px] border border-border-strong bg-surface font-body text-body text-text-primary outline-none focus-visible:ring-2 focus-visible:ring-accent"
             />
           </label>
           <label className="flex flex-col gap-1">
@@ -159,7 +159,7 @@ export function KomisiView({
               type="date"
               value={to}
               onChange={(e) => { setTo(e.target.value); fetchReport(from, e.target.value); }}
-              className="h-11 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+              className="h-11 px-3 rounded-[8px] border border-border-strong bg-surface font-body text-body text-text-primary outline-none focus-visible:ring-2 focus-visible:ring-accent"
             />
           </label>
         </div>
@@ -167,21 +167,21 @@ export function KomisiView({
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="clay-card p-4 flex flex-col gap-1">
-          <div className="w-9 h-9 rounded-xl bg-brand-50 flex items-center justify-center">
-            <Icon name="groups" className="text-brand-600 text-[20px]" />
+        <div className="clay-card rounded-[10px] p-4 flex flex-col gap-1">
+          <div className="w-9 h-9 rounded-[8px] bg-brand-50 border border-brand-200 flex items-center justify-center">
+            <Icon name="groups" className="text-primary text-[20px]" />
           </div>
           <p className="font-caption text-caption text-text-muted mt-2">Total Karyawan</p>
-          <p className="font-headline-1 text-headline-1 text-text-primary">{filtered.length}</p>
+          <p className="font-headline-1 text-headline-1 text-text-primary tabular-nums">{filtered.length}</p>
           <p className="font-micro-badge text-micro-badge text-text-muted">aktif di periode ini</p>
         </div>
-        <div className="clay-card p-4 flex flex-col gap-1">
-          <div className="w-9 h-9 rounded-xl bg-brand-50 flex items-center justify-center">
-            <Icon name="directions_car" className="text-brand-600 text-[20px]" />
+        <div className="clay-card rounded-[10px] p-4 flex flex-col gap-1">
+          <div className="w-9 h-9 rounded-[8px] bg-brand-50 border border-brand-200 flex items-center justify-center">
+            <Icon name="directions_car" className="text-primary text-[20px]" />
           </div>
           <p className="font-caption text-caption text-text-muted mt-2">Total Unit</p>
-          <p className="font-headline-1 text-headline-1 text-text-primary">{totalOrders}</p>
-          <p className="font-micro-badge text-micro-badge text-brand-600">{formatRupiah(totalRevenue)}</p>
+          <p className="font-headline-1 text-headline-1 text-text-primary tabular-nums">{totalOrders}</p>
+          <p className="font-micro-badge text-micro-badge text-primary tabular-nums">{formatRupiah(totalRevenue)}</p>
         </div>
       </div>
 
@@ -192,13 +192,13 @@ export function KomisiView({
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Cari nama karyawan atau cabang..."
-          className="w-full h-12 pl-10 pr-3 rounded-2xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+          className="w-full h-11 pl-10 pr-3 rounded-[8px] border border-border-strong bg-surface font-body text-body text-text-primary outline-none focus-visible:ring-2 focus-visible:ring-accent"
         />
       </div>
 
       {/* Staff list */}
       {filtered.length === 0 ? (
-        <div className="clay-card p-8 flex flex-col items-center text-center gap-2">
+        <div className="clay-card rounded-[10px] p-8 flex flex-col items-center text-center gap-2">
           <Icon name="inbox" className="text-[40px] text-text-muted" />
           <p className="font-body text-body text-text-secondary">
             Tidak ada data komisi pada periode ini.
@@ -209,19 +209,16 @@ export function KomisiView({
           {filtered.map((row) => {
             const isOpen = expanded === row.profileId;
             return (
-              <div key={row.profileId} className="clay-card overflow-hidden">
-                {/* Header row — klik untuk expand */}
+              <div key={row.profileId} className="clay-card rounded-[10px] overflow-hidden">
                 <button
                   type="button"
                   onClick={() => setExpanded(isOpen ? null : row.profileId)}
-                  className="w-full p-4 flex items-center gap-3 text-left active:bg-surface-container-low transition-colors"
+                  className="w-full p-4 flex items-center gap-3 text-left hover:bg-surface-variant/60 transition-colors"
                 >
-                  {/* Avatar */}
-                  <div className="w-11 h-11 rounded-full bg-brand-500 text-white flex items-center justify-center font-body-bold text-body-bold shrink-0">
+                  <div className="w-11 h-11 rounded-full primary-gradient text-white flex items-center justify-center font-body-bold text-body-bold shrink-0">
                     {initials(row.fullName)}
                   </div>
 
-                  {/* Name + role + branch */}
                   <div className="flex-1 min-w-0">
                     <p className="font-body-bold text-body-bold text-text-primary truncate">{row.fullName}</p>
                     <p className="font-caption text-caption text-text-muted truncate">
@@ -229,9 +226,8 @@ export function KomisiView({
                     </p>
                   </div>
 
-                  {/* Total orders badge */}
                   <div className="flex flex-col items-end shrink-0">
-                    <span className="font-headline-2 text-headline-2 text-text-primary">
+                    <span className="font-headline-2 text-headline-2 text-text-primary tabular-nums">
                       {row.totalOrders}
                     </span>
                     <span className="font-micro-badge text-micro-badge text-text-muted">unit</span>
@@ -243,20 +239,18 @@ export function KomisiView({
                   />
                 </button>
 
-                {/* Expanded detail */}
                 {isOpen && (
-                  <div className="px-4 pb-4 flex flex-col gap-3 border-t border-outline-variant">
-                    {/* Revenue */}
+                  <div className="px-4 pb-4 flex flex-col gap-3 border-t border-border-subtle">
                     <div className="pt-3 grid grid-cols-2 gap-2">
-                      <div className="rounded-xl bg-surface-container/60 p-3">
+                      <div className="rounded-[8px] bg-surface-variant border border-border-subtle p-3">
                         <p className="font-caption text-caption text-text-muted">Total Revenue</p>
-                        <p className="font-body-bold text-body-bold text-brand-600 mt-0.5">
+                        <p className="font-body-bold text-body-bold text-primary mt-0.5 tabular-nums">
                           {formatRupiah(row.totalRevenue)}
                         </p>
                       </div>
-                      <div className="rounded-xl bg-surface-container/60 p-3">
+                      <div className="rounded-[8px] bg-surface-variant border border-border-subtle p-3">
                         <p className="font-caption text-caption text-text-muted">Revenue sebagai Lead</p>
-                        <p className="font-body-bold text-body-bold text-text-primary mt-0.5">
+                        <p className="font-body-bold text-body-bold text-text-primary mt-0.5 tabular-nums">
                           {formatRupiah(row.leadRevenue)}
                         </p>
                       </div>

@@ -216,14 +216,14 @@ export function ProduksiView({
             Laporan Biaya Produksi (HPP Jasa)
           </h2>
           <p className="font-caption text-caption text-text-muted">
-            Transparansi biaya modal bahan terpakai per ukuran mobil & laba kotor jasa.
+            Modal bahan terpakai per ukuran kendaraan dan margin kotor tiap order.
           </p>
         </div>
         <button
           type="button"
           onClick={handleExportExcel}
           disabled={exporting}
-          className="inline-flex items-center gap-1.5 min-h-11 px-4 rounded-full primary-gradient text-white font-body-bold text-caption active:scale-[0.98] transition-transform disabled:opacity-70 shadow-sm"
+          className="inline-flex items-center gap-1.5 min-h-[44px] px-4 rounded-[8px] primary-gradient clay-glow text-white font-body-bold text-caption hover:opacity-95 transition-opacity disabled:opacity-70"
         >
           <Icon name="download" className="text-[18px]" />
           {exporting ? "Menyiapkan..." : "Ekspor Excel"}
@@ -232,37 +232,37 @@ export function ProduksiView({
 
       {/* Ringkasan Finansial Produksi */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="clay-card p-3.5 flex flex-col gap-1 border-l-4 border-l-danger-base">
+        <div className="clay-card rounded-[10px] p-3.5 flex flex-col gap-1">
           <span className="font-caption text-caption text-text-muted">Total Modal Bahan (HPP)</span>
-          <span className="font-headline-2 text-headline-2 text-danger-text font-bold">
+          <span className="font-headline-2 text-headline-2 text-danger-text font-bold tabular-nums">
             {rupiah(summary.total_production_cost)}
           </span>
-          <span className="font-micro-badge text-[10px] text-text-muted">
+          <span className="font-micro-badge text-[10px] text-text-muted tabular-nums">
             Dari {summary.total_orders} unit kendaraan
           </span>
         </div>
 
-        <div className="clay-card p-3.5 flex flex-col gap-1 border-l-4 border-l-brand-600">
+        <div className="clay-card rounded-[10px] p-3.5 flex flex-col gap-1">
           <span className="font-caption text-caption text-text-muted">Total Omzet Order</span>
-          <span className="font-headline-2 text-headline-2 text-brand-700 font-bold">
+          <span className="font-headline-2 text-headline-2 text-primary font-bold tabular-nums">
             {rupiah(summary.total_revenue)}
           </span>
           <span className="font-micro-badge text-[10px] text-text-muted">Nilai jasa bruto</span>
         </div>
 
-        <div className="clay-card p-3.5 flex flex-col gap-1 border-l-4 border-l-success-base">
+        <div className="clay-card rounded-[10px] p-3.5 flex flex-col gap-1">
           <span className="font-caption text-caption text-text-muted">Laba Kotor Jasa</span>
-          <span className="font-headline-2 text-headline-2 text-success-text font-bold">
+          <span className="font-headline-2 text-headline-2 text-success-text font-bold tabular-nums">
             {rupiah(summary.total_gross_profit)}
           </span>
-          <span className="font-micro-badge text-[10px] text-success-text font-semibold">
+          <span className="font-micro-badge text-[10px] text-success-text font-semibold tabular-nums">
             Margin {marginPct}%
           </span>
         </div>
 
-        <div className="clay-card p-3.5 flex flex-col gap-1 border-l-4 border-l-warning-base">
-          <span className="font-caption text-caption text-text-muted">Rata-rata Modal / Mobil</span>
-          <span className="font-headline-2 text-headline-2 text-text-primary font-bold">
+        <div className="clay-card rounded-[10px] p-3.5 flex flex-col gap-1">
+          <span className="font-caption text-caption text-text-muted">Rata-rata Modal / Unit</span>
+          <span className="font-headline-2 text-headline-2 text-text-primary font-bold tabular-nums">
             {summary.total_orders > 0
               ? rupiah(Math.round(summary.total_production_cost / summary.total_orders))
               : "Rp 0"}
@@ -273,9 +273,9 @@ export function ProduksiView({
 
       {/* Akumulasi Konsumsi Bahan Terbanyak */}
       {data?.material_breakdown && data.material_breakdown.length > 0 ? (
-        <section className="bg-surface rounded-2xl p-4 clay-card border border-white/80 flex flex-col gap-3">
+        <section className="bg-surface rounded-[10px] p-4 clay-card flex flex-col gap-3">
           <div className="flex items-center gap-2">
-            <Icon name="inventory_2" className="text-brand-600 text-[20px]" />
+            <Icon name="inventory_2" className="text-primary text-[20px]" />
             <h3 className="font-headline-3 text-headline-3 text-text-primary">
               Akumulasi Bahan Produksi Terpakai
             </h3>
@@ -284,16 +284,16 @@ export function ProduksiView({
             {data.material_breakdown.map((mat) => (
               <div
                 key={mat.item_name}
-                className="p-3 rounded-xl bg-surface-container-low border border-slate-100 flex flex-col gap-1"
+                className="p-3 rounded-[8px] bg-surface-variant border border-border-subtle flex flex-col gap-1"
               >
                 <span className="font-body-bold text-caption text-text-primary truncate" title={mat.item_name}>
                   {mat.item_name}
                 </span>
                 <div className="flex items-baseline justify-between">
-                  <span className="font-caption text-caption text-text-muted">
+                  <span className="font-caption text-caption text-text-muted tabular-nums">
                     {mat.total_qty.toLocaleString("id-ID")} {mat.unit}
                   </span>
-                  <span className="font-body-bold text-caption text-danger-text">
+                  <span className="font-body-bold text-caption text-danger-text tabular-nums">
                     {rupiah(mat.total_cost)}
                   </span>
                 </div>
@@ -304,12 +304,12 @@ export function ProduksiView({
       ) : null}
 
       {/* Riwayat Order & Rincian Bahan yang Dikeluarkan */}
-      <section className="bg-surface rounded-2xl p-4 clay-card border border-white/80 flex flex-col gap-3">
+      <section className="bg-surface rounded-[10px] p-4 clay-card flex flex-col gap-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <Icon name="receipt_long" className="text-brand-600 text-[20px]" />
+            <Icon name="receipt_long" className="text-primary text-[20px]" />
             <h3 className="font-headline-3 text-headline-3 text-text-primary">
-              Riwayat Stok Keluar per Order (Biaya Bahan)
+              Rincian Pemakaian Bahan per Order
             </h3>
           </div>
           <div className="relative">
@@ -319,7 +319,7 @@ export function ProduksiView({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Cari order, plat, paket..."
-              className="h-10 pl-9 pr-3 rounded-xl bg-surface-container-low font-body text-caption outline-none focus:ring-2 focus:ring-brand-400 w-full sm:w-60"
+              className="h-11 pl-9 pr-3 rounded-[8px] border border-border-strong bg-surface font-body text-caption outline-none focus-visible:ring-2 focus-visible:ring-accent w-full sm:w-60"
             />
           </div>
         </div>
@@ -327,11 +327,11 @@ export function ProduksiView({
         {filteredOrders.length === 0 ? (
           <div className="p-8 text-center text-text-muted flex flex-col items-center gap-2">
             <Icon name="search_off" className="text-[36px]" />
-            <p className="font-body text-body">
-              Belum ada data pemakaian bahan produksi pada periode ini.
+            <p className="font-body text-body text-text-primary">
+              Belum ada data pemakaian bahan pada periode ini.
             </p>
             <p className="font-caption text-caption text-text-muted">
-              Biaya modal otomatis tercatat ketika order diselesaikan dan bahan resep terpotong.
+              Pemakaian bahan tercatat otomatis setelah order selesai.
             </p>
           </div>
         ) : (
@@ -347,14 +347,14 @@ export function ProduksiView({
               return (
                 <div
                   key={order.order_id}
-                  className="rounded-2xl border border-slate-200/80 bg-surface p-3.5 transition-all shadow-sm hover:shadow"
+                  className="rounded-[10px] border border-border-subtle bg-surface p-3.5 transition-colors hover:border-border-strong"
                 >
                   <div
                     className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 cursor-pointer select-none"
                     onClick={() => toggleOrder(order.order_id)}
                   >
                     <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center shrink-0 mt-0.5">
+                      <div className="w-10 h-10 rounded-[8px] bg-brand-50 border border-brand-200 text-primary flex items-center justify-center shrink-0 mt-0.5">
                         <Icon name="directions_car" className="text-[22px]" />
                       </div>
                       <div className="min-w-0">
@@ -362,17 +362,17 @@ export function ProduksiView({
                           <span className="font-body-bold text-body-bold text-text-primary">
                             {order.license_plate}
                           </span>
-                          <span className="font-micro-badge text-[10px] px-2 py-0.5 rounded-full bg-surface-container text-text-secondary">
+                          <span className="font-micro-badge text-[10px] px-2 py-0.5 rounded-[6px] bg-surface-variant border border-border-subtle text-text-secondary">
                             {order.order_number}
                           </span>
-                          <span className="font-micro-badge text-[10px] px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 font-bold">
+                          <span className="font-micro-badge text-[10px] px-2 py-0.5 rounded-[6px] bg-brand-50 border border-brand-200 text-primary font-bold">
                             Size {order.vehicle_size}
                           </span>
                         </div>
                         <p className="font-caption text-caption text-text-muted mt-0.5">
                           {order.service_package} {order.vehicle_model ? `· ${order.vehicle_model}` : ""}
                         </p>
-                        <p className="font-micro-badge text-[10px] text-text-muted">
+                        <p className="font-micro-badge text-[10px] text-text-muted tabular-nums">
                           {new Date(order.order_created_at).toLocaleString("id-ID", {
                             timeZone: "Asia/Jakarta",
                             dateStyle: "medium",
@@ -385,17 +385,17 @@ export function ProduksiView({
                     <div className="flex items-center justify-between sm:justify-end gap-4 border-t sm:border-t-0 pt-2 sm:pt-0">
                       <div className="text-right">
                         <div className="font-caption text-caption text-text-muted">Biaya Modal Bahan</div>
-                        <div className="font-headline-3 text-headline-3 text-danger-text font-bold">
+                        <div className="font-headline-3 text-headline-3 text-danger-text font-bold tabular-nums">
                           {rupiah(order.total_production_cost)}
                         </div>
-                        <div className="font-micro-badge text-[10px] text-success-text font-semibold">
+                        <div className="font-micro-badge text-[10px] text-success-text font-semibold tabular-nums">
                           Margin: {rupiah(margin)} ({marginPercentage}%)
                         </div>
                       </div>
                       <button
                         type="button"
                         aria-label="Rincian bahan"
-                        className="w-8 h-8 rounded-full bg-surface-container-low flex items-center justify-center text-text-secondary"
+                        className="w-9 h-9 rounded-[8px] bg-surface-variant flex items-center justify-center text-text-secondary"
                       >
                         <Icon
                           name={isExpanded ? "expand_less" : "expand_more"}

@@ -121,7 +121,7 @@ export function OmsetView({
     { key: "today", label: "Hari Ini" },
     { key: "week", label: "7 Hari" },
     { key: "month", label: "30 Hari" },
-    { key: "custom", label: "Custom" },
+    { key: "custom", label: "Pilih Tanggal" },
   ];
 
   return (
@@ -133,10 +133,10 @@ export function OmsetView({
             key={f.key}
             type="button"
             onClick={() => setMode(f.key)}
-            className={`shrink-0 px-4 h-10 rounded-full font-caption text-caption active:scale-95 transition-transform ${
+            className={`shrink-0 px-4 min-h-[44px] rounded-[8px] border font-caption text-caption transition-colors duration-150 ${
               mode === f.key
-                ? "bg-primary text-white"
-                : "bg-surface-container-low text-text-secondary"
+                ? "bg-primary text-white border-primary"
+                : "bg-surface text-text-secondary border-border-subtle hover:bg-surface-variant"
             }`}
           >
             {f.label}
@@ -146,7 +146,7 @@ export function OmsetView({
 
       {/* Custom date range */}
       {mode === "custom" && (
-        <div className="clay-card p-4 flex flex-col gap-3">
+        <div className="clay-card rounded-[10px] p-4 flex flex-col gap-3">
           <p className="font-body-bold text-body-bold text-text-primary">Pilih Rentang Tanggal</p>
           <div className="grid grid-cols-2 gap-3">
             <label className="flex flex-col gap-1">
@@ -155,7 +155,7 @@ export function OmsetView({
                 type="date"
                 value={customFrom}
                 onChange={(e) => setCustomFrom(e.target.value)}
-                className="h-11 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+                className="h-11 px-3 rounded-[8px] border border-border-strong bg-surface font-body text-body text-text-primary outline-none focus-visible:ring-2 focus-visible:ring-accent"
               />
             </label>
             <label className="flex flex-col gap-1">
@@ -164,24 +164,22 @@ export function OmsetView({
                 type="date"
                 value={customTo}
                 onChange={(e) => setCustomTo(e.target.value)}
-                className="h-11 px-3 rounded-xl bg-surface-container-low font-body text-body text-text-primary outline-none focus:ring-2 focus:ring-brand-400"
+                className="h-11 px-3 rounded-[8px] border border-border-strong bg-surface font-body text-body text-text-primary outline-none focus-visible:ring-2 focus-visible:ring-accent"
               />
             </label>
           </div>
         </div>
       )}
 
-      {/* Omset utama */}
-      <div className="relative overflow-hidden rounded-[20px] p-5 primary-gradient text-on-primary clay-glow">
-        <div className="absolute -right-6 -bottom-6 opacity-10 pointer-events-none text-white">
-          <Icon name="insights" className="text-[130px]" />
-        </div>
+      {/* Omzet utama */}
+      <div className="relative overflow-hidden rounded-[10px] p-5 primary-gradient text-white clay-glow">
+        <div className="absolute -right-6 -top-6 w-32 h-32 rounded-full bg-sky-400/20 blur-2xl pointer-events-none" />
         <div className="relative z-10">
-          <p className="font-caption text-caption text-brand-100">Total Omset</p>
-          <p className="font-metric-display text-metric-display text-white tracking-tight leading-none mt-1">
+          <p className="font-caption text-caption text-white/80">Total Omzet</p>
+          <p className="font-metric-display text-metric-display text-white tracking-tight leading-none mt-1 tabular-nums">
             {formatRupiah(totalOmset)}
           </p>
-          <p className="font-caption text-caption text-brand-100 mt-2">
+          <p className="font-caption text-caption text-white/80 mt-2 tabular-nums">
             {totalOrders} order aktif • {completedOrders.length} selesai
           </p>
         </div>
@@ -189,50 +187,50 @@ export function OmsetView({
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
-        <div className="clay-card p-4 flex flex-col gap-1">
-          <div className="w-9 h-9 rounded-xl bg-success-surface flex items-center justify-center">
+        <div className="clay-card rounded-[10px] p-4 flex flex-col gap-1">
+          <div className="w-9 h-9 rounded-[8px] bg-success-surface border border-emerald-200 flex items-center justify-center">
             <Icon name="check_circle" className="text-success-text text-[20px]" />
           </div>
           <p className="font-caption text-caption text-text-muted mt-2">Sudah Lunas</p>
-          <p className="font-headline-1 text-headline-1 text-text-primary">{paidOrders}</p>
+          <p className="font-headline-1 text-headline-1 text-text-primary tabular-nums">{paidOrders}</p>
           <p className="font-micro-badge text-micro-badge text-text-muted">order</p>
         </div>
-        <div className="clay-card p-4 flex flex-col gap-1">
-          <div className="w-9 h-9 rounded-xl bg-warning-surface flex items-center justify-center">
+        <div className="clay-card rounded-[10px] p-4 flex flex-col gap-1">
+          <div className="w-9 h-9 rounded-[8px] bg-warning-surface border border-amber-200 flex items-center justify-center">
             <Icon name="schedule" className="text-warning-text text-[20px]" />
           </div>
           <p className="font-caption text-caption text-text-muted mt-2">Belum Lunas</p>
-          <p className="font-headline-1 text-headline-1 text-text-primary">{unpaidOrders}</p>
+          <p className="font-headline-1 text-headline-1 text-text-primary tabular-nums">{unpaidOrders}</p>
           <p className="font-micro-badge text-micro-badge text-text-muted">order</p>
         </div>
-        <div className="clay-card p-4 flex flex-col gap-1">
-          <div className="w-9 h-9 rounded-xl bg-success-surface flex items-center justify-center">
+        <div className="clay-card rounded-[10px] p-4 flex flex-col gap-1">
+          <div className="w-9 h-9 rounded-[8px] bg-success-surface border border-emerald-200 flex items-center justify-center">
             <Icon name="arrow_forward" className="text-success-text text-[20px]" />
           </div>
           <p className="font-caption text-caption text-text-muted mt-2">Kas Masuk</p>
-          <p className="font-headline-2 text-headline-2 text-success-text">{formatRupiah(cashIn)}</p>
+          <p className="font-headline-2 text-headline-2 text-success-text tabular-nums">{formatRupiah(cashIn)}</p>
         </div>
-        <div className="clay-card p-4 flex flex-col gap-1">
-          <div className="w-9 h-9 rounded-xl bg-danger-surface flex items-center justify-center">
+        <div className="clay-card rounded-[10px] p-4 flex flex-col gap-1">
+          <div className="w-9 h-9 rounded-[8px] bg-danger-surface border border-red-200 flex items-center justify-center">
             <Icon name="arrow_back" className="text-danger-text text-[20px]" />
           </div>
           <p className="font-caption text-caption text-text-muted mt-2">Kas Keluar</p>
-          <p className="font-headline-2 text-headline-2 text-danger-text">{formatRupiah(cashOut)}</p>
+          <p className="font-headline-2 text-headline-2 text-danger-text tabular-nums">{formatRupiah(cashOut)}</p>
         </div>
       </div>
 
       {/* Top layanan */}
       {topServices.length > 0 && (
-        <div className="clay-card p-4 flex flex-col gap-3 lg:mt-6">
-          <h3 className="font-headline-2 text-headline-2 text-text-primary">Top Layanan</h3>
+        <div className="clay-card rounded-[10px] p-4 flex flex-col gap-3 lg:mt-2">
+          <h3 className="font-headline-2 text-headline-2 text-text-primary">Layanan Terlaris</h3>
           <div className="flex flex-col gap-2">
             {topServices.map(([name, data]) => (
               <div key={name} className="flex items-center justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <p className="font-body text-body text-text-primary truncate">{name}</p>
-                  <p className="font-caption text-caption text-text-muted">{data.count}x dikerjakan</p>
+                  <p className="font-caption text-caption text-text-muted tabular-nums">{data.count}x dikerjakan</p>
                 </div>
-                <p className="font-body-bold text-body-bold text-text-primary shrink-0">
+                <p className="font-body-bold text-body-bold text-text-primary shrink-0 tabular-nums">
                   {formatRupiah(data.revenue)}
                 </p>
               </div>
@@ -242,9 +240,9 @@ export function OmsetView({
       )}
 
       {filteredOrders.length === 0 && (
-        <div className="clay-card p-8 flex flex-col items-center text-center gap-2">
+        <div className="clay-card rounded-[10px] p-8 flex flex-col items-center text-center gap-2">
           <Icon name="inbox" className="text-[40px] text-text-muted" />
-          <p className="font-body text-body text-text-secondary">Tidak ada data pada periode ini.</p>
+          <p className="font-body text-body text-text-secondary">Belum ada transaksi pada periode ini.</p>
         </div>
       )}
     </div>

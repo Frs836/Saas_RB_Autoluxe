@@ -257,8 +257,9 @@ const jamSekarang = wibNow();
       />
 
       <div className="px-gutter lg:px-6 pt-space-md lg:pt-6 grid grid-cols-2 lg:grid-cols-4 gap-space-md">
-        <section className="col-span-2 relative overflow-hidden rounded-[10px] p-4 sm:p-5 bg-primary text-white border border-primary-hover">
-          <div className="flex flex-col gap-3">
+        <section className="col-span-2 relative overflow-hidden rounded-[10px] p-4 sm:p-5 primary-gradient text-white clay-glow">
+          <div className="absolute -right-8 -top-8 w-36 h-36 rounded-full bg-sky-400/20 blur-2xl pointer-events-none" />
+          <div className="relative z-10 flex flex-col gap-3">
             <div className="flex items-center justify-between gap-2">
               <span className="font-caption text-caption text-white/80 flex items-center gap-1.5 tabular-nums">
                 <Icon name="schedule" className="text-[16px]" />
@@ -287,7 +288,7 @@ const jamSekarang = wibNow();
             <div className="pt-1">
               <Link
                 href="/absensi"
-                className="w-full min-h-[44px] px-4 rounded-[8px] bg-white/15 hover:bg-white/25 flex items-center justify-center gap-2 transition-colors duration-150"
+                className="w-full min-h-[44px] px-4 rounded-[8px] bg-white/15 hover:bg-white/25 border border-white/20 flex items-center justify-center gap-2 transition-colors duration-150"
               >
                 <Icon name={clockInTime ? "how_to_reg" : "face_retouching_natural"} className="text-[20px] text-white" />
                 <span className="font-body-bold text-body-bold text-white">

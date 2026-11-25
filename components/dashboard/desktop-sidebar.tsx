@@ -100,7 +100,7 @@ export function DesktopSidebar({
 
   return (
     <aside
-      className={`fixed left-0 top-0 h-full z-50 flex flex-col bg-primary text-white border-r border-primary-hover transition-all duration-200 ${sidebarWidth}`}
+      className={`fixed left-0 top-0 h-full z-50 flex flex-col bg-[linear-gradient(180deg,#172554_0%,#1e3a8a_60%,#1e40af_100%)] text-white border-r border-white/10 shadow-[4px_0_20px_rgba(15,23,42,0.12)] transition-all duration-200 ${sidebarWidth}`}
     >
       {/* Logo area */}
       <div

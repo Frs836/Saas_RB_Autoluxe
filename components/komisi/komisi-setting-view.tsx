@@ -214,52 +214,53 @@ export function KomisiSettingView({
   return (
     <div className="px-gutter py-4 flex flex-col gap-4 lg:max-w-4xl lg:mx-auto lg:px-6 pb-32">
       {/* Header action */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="font-headline-2 text-headline-2 text-text-primary">
-            Tarif Komisi Karyawan
+            Pengaturan Komisi Karyawan
           </h2>
           <p className="font-caption text-caption text-text-muted mt-0.5">
-            Setting berlaku untuk Laporan Komisi — dihitung otomatis per order.
+            Atur tarif persen atau nominal tetap per order untuk perhitungan laporan komisi.
           </p>
         </div>
         <button
           type="button"
           onClick={openNew}
           disabled={pending}
-          className="flex items-center gap-1.5 px-4 h-10 rounded-xl primary-gradient text-white font-body-bold text-body-bold active:scale-95 transition-transform shrink-0"
+          className="flex items-center gap-1.5 px-4 min-h-[44px] rounded-[8px] primary-gradient clay-glow text-white font-body-bold text-body-bold hover:opacity-95 transition-opacity shrink-0"
         >
           <Icon name="add" className="text-[18px]" />
-          <span className="hidden sm:inline">Tambah</span>
+          <span className="hidden sm:inline">Tambah Aturan</span>
         </button>
       </div>
 
       {/* Form modal overlay */}
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4">
-          <div className="bg-surface rounded-[20px] clay-card w-full max-w-sm flex flex-col gap-4 p-5">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-950/50 p-4">
+          <div className="bg-surface rounded-[10px] border border-border-subtle shadow-modal w-full max-w-sm flex flex-col gap-4 p-5">
             <div className="flex items-center justify-between">
               <h3 className="font-headline-2 text-headline-2 text-text-primary">
-                {editId ? "Edit Komisi" : "Tambah Komisi"}
+                {editId ? "Edit Aturan Komisi" : "Tambah Aturan Komisi"}
               </h3>
               <button
                 type="button"
                 onClick={() => setShowForm(false)}
-                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-container"
+                aria-label="Tutup"
+                className="w-11 h-11 rounded-[8px] bg-surface-variant hover:bg-border-subtle flex items-center justify-center text-text-primary transition-colors"
               >
-                <Icon name="close" className="text-[20px] text-text-muted" />
+                <Icon name="close" className="text-[20px]" />
               </button>
             </div>
 
             {/* Karyawan */}
             <div className="flex flex-col gap-1">
-              <label className="font-caption text-caption text-text-muted">
+              <label className="font-caption text-caption text-text-secondary">
                 Karyawan
               </label>
               <select
                 value={formProfileId}
                 onChange={(e) => setFormProfileId(e.target.value)}
-                className="h-11 rounded-xl border border-border-subtle px-3 font-body-regular text-body-regular text-text-primary bg-surface"
+                className="h-11 rounded-[8px] border border-border-strong px-3 font-body-regular text-body-regular text-text-primary bg-surface"
               >
                 {profiles.map((p) => (
                   <option key={p.id} value={p.id}>
@@ -271,16 +272,16 @@ export function KomisiSettingView({
 
             {/* Jasa (opsional) */}
             <div className="flex flex-col gap-1">
-              <label className="font-caption text-caption text-text-muted">
+              <label className="font-caption text-caption text-text-secondary">
                 Jasa{" "}
-                <span className="text-text-muted/60">(kosong = semua jasa)</span>
+                <span className="text-text-muted">(kosong = semua jasa)</span>
               </label>
               <select
                 value={formServiceId}
                 onChange={(e) => setFormServiceId(e.target.value)}
-                className="h-11 rounded-xl border border-border-subtle px-3 font-body-regular text-body-regular text-text-primary bg-surface"
+                className="h-11 rounded-[8px] border border-border-strong px-3 font-body-regular text-body-regular text-text-primary bg-surface"
               >
-                <option value="">— Semua Jasa —</option>
+                <option value="">Semua Jasa</option>
                 {services.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.name}
@@ -291,7 +292,7 @@ export function KomisiSettingView({
 
             {/* Tipe komisi */}
             <div className="flex flex-col gap-1">
-              <label className="font-caption text-caption text-text-muted">
+              <label className="font-caption text-caption text-text-secondary">
                 Tipe Komisi
               </label>
               <div className="flex gap-2">
@@ -300,10 +301,10 @@ export function KomisiSettingView({
                     key={t}
                     type="button"
                     onClick={() => setFormType(t)}
-                    className={`flex-1 h-11 rounded-xl border font-body-bold text-body-bold transition-colors ${
+                    className={`flex-1 min-h-[44px] rounded-[8px] border font-body-bold text-body-bold transition-colors ${
                       formType === t
-                        ? "primary-gradient text-white border-transparent"
-                        : "border-border-subtle text-text-secondary bg-surface"
+                        ? "bg-primary text-white border-primary"
+                        : "border-border-strong text-text-secondary bg-surface hover:bg-surface-variant"
                     }`}
                   >
                     {t === "percent" ? "Persen (%)" : "Flat (Rp)"}
@@ -314,9 +315,9 @@ export function KomisiSettingView({
 
             {/* Nilai */}
             <div className="flex flex-col gap-1">
-              <label className="font-caption text-caption text-text-muted">
+              <label className="font-caption text-caption text-text-secondary">
                 Nilai{" "}
-                {formType === "percent" ? "(contoh: 5 = 5%)" : "(contoh: 10000 = Rp 10.000)"}
+                {formType === "percent" ? "(contoh: 5 untuk 5%)" : "(contoh: 10000 untuk Rp 10.000)"}
               </label>
               <input
                 type="number"
@@ -325,12 +326,12 @@ export function KomisiSettingView({
                 value={formValue}
                 onChange={(e) => setFormValue(e.target.value)}
                 placeholder={formType === "percent" ? "Misal: 5" : "Misal: 10000"}
-                className="h-11 rounded-xl border border-border-subtle px-3 font-body-regular text-body-regular text-text-primary bg-surface"
+                className="h-11 rounded-[8px] border border-border-strong px-3 font-body-regular text-body-regular text-text-primary bg-surface tabular-nums"
               />
             </div>
 
             {formError && (
-              <p className="font-caption text-caption text-danger-text bg-danger-surface rounded-xl px-3 py-2">
+              <p className="font-caption text-caption text-danger-text bg-danger-surface border border-red-200 rounded-[8px] px-3 py-2">
                 {formError}
               </p>
             )}
@@ -339,9 +340,9 @@ export function KomisiSettingView({
               type="button"
               onClick={handleSave}
               disabled={pending}
-              className="h-12 rounded-xl primary-gradient text-white font-body-bold text-body-bold active:scale-95 transition-transform"
+              className="min-h-[44px] rounded-[8px] primary-gradient clay-glow text-white font-body-bold text-body-bold hover:opacity-95 transition-opacity"
             >
-              {pending ? "Menyimpan…" : "Simpan"}
+              {pending ? "Menyimpan..." : "Simpan Aturan"}
             </button>
           </div>
         </div>
@@ -350,9 +351,9 @@ export function KomisiSettingView({
       {/* Grouped list */}
       <div className="flex flex-col gap-3">
         {grouped.map(({ profile, rules }) => (
-          <div key={profile.id} className="clay-card rounded-[16px] overflow-hidden">
+          <div key={profile.id} className="clay-card rounded-[10px] overflow-hidden">
             {/* Profile header */}
-            <div className="flex items-center gap-3 px-4 py-3 border-b border-outline-variant">
+            <div className="flex items-center gap-3 px-4 py-3 border-b border-border-subtle">
               <div className="w-9 h-9 rounded-full primary-gradient flex items-center justify-center shrink-0">
                 <span className="font-body-bold text-[12px] text-white leading-none">
                   {initials(profile.fullName)}
@@ -369,8 +370,8 @@ export function KomisiSettingView({
               <button
                 type="button"
                 onClick={openNew}
-                title="Tambah rule baru untuk karyawan ini"
-                className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-brand-50 text-brand-600 transition-colors"
+                title="Tambah aturan baru untuk karyawan ini"
+                className="w-10 h-10 rounded-[8px] flex items-center justify-center hover:bg-brand-50 text-primary transition-colors"
               >
                 <Icon name="add" className="text-[18px]" />
               </button>
@@ -380,14 +381,13 @@ export function KomisiSettingView({
             {rules.map((rule) => (
               <div
                 key={rule.id}
-                className="flex items-center gap-3 px-4 py-3 border-b border-outline-variant last:border-0"
+                className="flex items-center gap-3 px-4 py-3 border-b border-border-subtle last:border-0"
               >
-                {/* Type badge */}
                 <div
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                  className={`w-9 h-9 rounded-[8px] flex items-center justify-center shrink-0 ${
                     rule.commissionType === "percent"
-                      ? "bg-brand-50 text-brand-600"
-                      : "bg-amber-50 text-amber-600"
+                      ? "bg-brand-50 border border-brand-200 text-primary"
+                      : "bg-warning-surface border border-amber-200 text-warning-text"
                   }`}
                 >
                   <Icon
@@ -397,7 +397,7 @@ export function KomisiSettingView({
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <p className="font-body-bold text-body-bold text-text-primary">
+                  <p className="font-body-bold text-body-bold text-text-primary tabular-nums">
                     {rule.commissionType === "percent"
                       ? `${rule.value}% per order`
                       : `${formatRupiah(rule.value)} per order`}
@@ -409,37 +409,36 @@ export function KomisiSettingView({
                   </p>
                 </div>
 
-                {/* Active toggle */}
                 <button
                   type="button"
                   onClick={() => handleToggle(rule)}
                   disabled={pending}
                   title={rule.isActive ? "Non-aktifkan" : "Aktifkan"}
-                  className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${
-                    rule.isActive ? "bg-brand-500" : "bg-surface-container-low"
+                  className={`relative w-11 h-6 rounded-[8px] transition-colors shrink-0 ${
+                    rule.isActive ? "bg-primary" : "bg-border-strong"
                   }`}
                 >
                   <span
-                    className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
+                    className={`absolute top-0.5 w-5 h-5 rounded-[6px] bg-white shadow transition-transform ${
                       rule.isActive ? "translate-x-5" : "translate-x-0.5"
                     }`}
                   />
                 </button>
 
-                {/* Edit */}
                 <button
                   type="button"
                   onClick={() => openEdit(rule)}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-surface-container text-text-muted transition-colors"
+                  aria-label="Edit aturan"
+                  className="w-10 h-10 rounded-[8px] flex items-center justify-center hover:bg-surface-variant text-text-secondary transition-colors"
                 >
                   <Icon name="edit" className="text-[16px]" />
                 </button>
 
-                {/* Delete */}
                 <button
                   type="button"
                   onClick={() => handleDelete(rule.id)}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-danger-surface text-danger-text transition-colors"
+                  aria-label="Hapus aturan"
+                  className="w-10 h-10 rounded-[8px] flex items-center justify-center hover:bg-danger-surface text-danger-text transition-colors"
                 >
                   <Icon name="delete" className="text-[16px]" />
                 </button>
@@ -450,14 +449,14 @@ export function KomisiSettingView({
 
         {/* Staf tanpa setting */}
         {noRule.length > 0 && (
-          <div className="clay-card rounded-[16px] p-4">
+          <div className="clay-card rounded-[10px] p-4">
             <p className="font-caption text-caption text-text-muted mb-3">
-              Karyawan belum punya setting komisi:
+              Karyawan belum punya aturan komisi:
             </p>
             <div className="flex flex-col gap-2">
               {noRule.map((p) => (
                 <div key={p.id} className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-surface-container-low flex items-center justify-center shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center shrink-0">
                     <span className="font-caption text-caption text-text-muted">
                       {initials(p.fullName)}
                     </span>
@@ -481,7 +480,7 @@ export function KomisiSettingView({
                       setEditId(null);
                       setShowForm(true);
                     }}
-                    className="text-brand-600 font-caption text-caption hover:underline shrink-0"
+                    className="min-h-[36px] px-2.5 rounded-[8px] bg-brand-50 border border-brand-200 text-primary font-caption text-caption hover:bg-brand-100 shrink-0"
                   >
                     + Tambah
                   </button>
@@ -492,35 +491,35 @@ export function KomisiSettingView({
         )}
 
         {settings.length === 0 && profiles.length === 0 && (
-          <div className="clay-card rounded-[16px] p-8 flex flex-col items-center gap-3 text-center">
+          <div className="clay-card rounded-[10px] p-8 flex flex-col items-center gap-3 text-center">
             <Icon name="badge" className="text-[48px] text-text-muted" />
             <p className="font-body-bold text-body-bold text-text-primary">
-              Belum ada setting komisi
+              Belum ada aturan komisi
             </p>
             <p className="font-caption text-caption text-text-muted">
-              Tekan tombol &quot;Tambah&quot; untuk membuat tarif komisi pertama.
+              Tambah aturan baru agar laporan komisi terhitung otomatis.
             </p>
           </div>
         )}
       </div>
 
       {/* Info panel */}
-      <div className="clay-card rounded-[16px] p-4 bg-brand-50/50 border border-brand-100">
+      <div className="clay-card rounded-[10px] p-4 bg-brand-50 border border-brand-200">
         <div className="flex items-start gap-2">
-          <Icon name="info" className="text-brand-600 text-[18px] shrink-0 mt-0.5" />
+          <Icon name="info" className="text-primary text-[18px] shrink-0 mt-0.5" />
           <div>
-            <p className="font-body-bold text-body-bold text-brand-700">
-              Cara kerja komisi
+            <p className="font-body-bold text-body-bold text-primary">
+              Cara kerja perhitungan komisi
             </p>
-            <ul className="mt-1 space-y-1 font-caption text-caption text-brand-700/80 list-disc list-inside">
+            <ul className="mt-1 space-y-1 font-caption text-caption text-text-secondary list-disc list-inside">
               <li>
-                <strong>Persen:</strong> nilai × total_order / 100 — dihitung per order yang dikerjakan.
+                <strong>Persen:</strong> nilai dikali total order dibagi 100 untuk setiap order yang dikerjakan.
               </li>
               <li>
-                <strong>Flat:</strong> nilai tetap per order, berapapun harganya.
+                <strong>Flat:</strong> nominal tetap per order, berapapun harga jasanya.
               </li>
               <li>
-                Jika ada setting untuk jasa tertentu, rule itu lebih diprioritaskan daripada rule &quot;Semua Jasa&quot;.
+                Aturan untuk jasa tertentu diprioritaskan di atas aturan Semua Jasa.
               </li>
               <li>
                 Hasil kalkulasi muncul di halaman{" "}

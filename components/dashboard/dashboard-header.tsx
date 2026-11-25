@@ -26,7 +26,7 @@ export function DashboardHeader({
   branchScope?: BranchScope;
 }) {
   return (
-    <header className="sticky top-0 z-40 bg-surface border-b border-border-subtle px-gutter lg:px-6 pt-safe lg:pt-3 pb-3">
+    <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-border-subtle/80 shadow-[0_2px_10px_rgba(15,23,42,0.04)] px-gutter lg:px-6 pt-safe lg:pt-3 pb-3">
       <div className="flex items-center justify-between gap-space-sm">
         {/* Branding: mobile only (desktop has sidebar branding) */}
         <div className="flex items-center gap-space-sm min-w-0 lg:hidden">

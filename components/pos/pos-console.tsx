@@ -1262,12 +1262,12 @@ export function PosConsole({
             ) : null}
           </div>
 
-          <div className="fixed bottom-nav-offset left-0 right-0 z-action-bar px-gutter py-3 bg-surface border-t border-border-subtle lg:sticky lg:bottom-0 lg:left-auto lg:right-auto lg:px-4">
+          <div className="fixed bottom-nav-offset left-0 right-0 z-action-bar px-gutter py-3 bg-white/85 backdrop-blur-md border-t border-border-subtle/80 lg:sticky lg:bottom-0 lg:left-auto lg:right-auto lg:px-4">
             <button
               type="button"
               disabled={submitting}
               onClick={submitOrder}
-              className="w-full min-h-[48px] px-4 rounded-[8px] bg-primary hover:bg-primary-hover text-white font-body-bold text-body-bold flex items-center justify-center gap-2 transition-colors duration-150 disabled:opacity-60 tabular-nums"
+              className="w-full min-h-[48px] px-4 rounded-[8px] primary-gradient clay-glow hover:opacity-95 text-white font-body-bold text-body-bold flex items-center justify-center gap-2 transition-opacity duration-150 disabled:opacity-60 tabular-nums"
             >
               <Icon name={submitting ? "hourglass_top" : "check_circle"} className="text-[20px]" />
               {submitting

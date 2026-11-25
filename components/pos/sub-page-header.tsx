@@ -30,7 +30,7 @@ export function SubPageHeader({
   }
 
   return (
-    <header className="sticky top-0 z-40 bg-surface border-b border-border-subtle pt-safe lg:pt-2">
+    <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-border-subtle/80 shadow-[0_2px_10px_rgba(15,23,42,0.04)] pt-safe lg:pt-2">
       <div className="h-14 px-gutter lg:px-6 flex items-center justify-between gap-space-sm">
         <div className="flex items-center gap-space-sm min-w-0">
           <button

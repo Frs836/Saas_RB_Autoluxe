@@ -36,7 +36,7 @@ export function BottomNav({ role }: Props) {
   };
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-nav pb-safe bg-surface border-t border-border-subtle">
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-nav pb-safe clay-nav border-t">
       <div className="flex items-center justify-around h-[var(--nav-h)] px-2">
         {renderItem(items[0])}
         {renderItem(items[1])}
@@ -45,7 +45,7 @@ export function BottomNav({ role }: Props) {
             href="/pos"
             prefetch={false}
             aria-label="Buat Order Baru"
-            className="w-11 h-11 rounded-[8px] bg-primary hover:bg-primary-hover active:opacity-90 flex items-center justify-center text-white transition-colors duration-150"
+            className="w-11 h-11 rounded-[8px] primary-gradient clay-glow hover:opacity-95 active:opacity-90 flex items-center justify-center text-white transition-opacity duration-150"
           >
             <Icon name="add" className="text-[24px]" />
           </Link>

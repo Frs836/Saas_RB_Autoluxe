@@ -497,7 +497,7 @@ export function KasConsole({
               <button
                 type="submit"
                 disabled={disabled}
-                className="h-[50px] rounded-full primary-gradient text-on-primary font-body-bold text-body-bold shadow-[0px_10px_22px_rgba(37,99,235,0.24)] disabled:opacity-60"
+                className="min-h-[48px] rounded-[8px] primary-gradient clay-glow text-white font-body-bold text-body-bold hover:opacity-95 transition-opacity disabled:opacity-60"
               >
                 {loading ? "Menyimpan..." : "Simpan Transaksi"}
               </button>
@@ -537,7 +537,7 @@ export function KasConsole({
                 return (
                   <div
                     key={row.id}
-                    className="rounded-2xl border border-border-subtle bg-surface-container-low/60 hover:bg-surface-container-low transition-all overflow-hidden"
+                    className="rounded-[10px] border border-border-subtle bg-surface-variant/60 hover:bg-surface-variant transition-colors overflow-hidden"
                   >
                     {/* Ringkasan Baris */}
                     <button
@@ -1062,7 +1062,7 @@ function BayarNantiTab({
             return (
               <div
                 key={order.id}
-                className="flex flex-col gap-3 p-4 bg-surface rounded-xl border border-border-subtle"
+                className="flex flex-col gap-3 p-4 bg-surface rounded-[10px] border border-border-subtle shadow-subtle"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
@@ -1071,11 +1071,11 @@ function BayarNantiTab({
                         {order.orderNumber}
                       </span>
                       {isPartial ? (
-                        <span className="px-2 py-0.5 rounded-full bg-warning-surface text-warning-text font-micro-badge text-micro-badge">
-                          Partial
+                        <span className="px-2 py-0.5 rounded-[6px] bg-warning-surface border border-amber-200 text-warning-text font-micro-badge text-micro-badge">
+                          DP / Sebagian
                         </span>
                       ) : (
-                        <span className="px-2 py-0.5 rounded-full bg-danger-surface text-danger-text font-micro-badge text-micro-badge">
+                        <span className="px-2 py-0.5 rounded-[6px] bg-danger-surface border border-red-200 text-danger-text font-micro-badge text-micro-badge">
                           Belum Bayar
                         </span>
                       )}
@@ -1087,17 +1087,17 @@ function BayarNantiTab({
                 </div>
 
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="rounded-xl bg-surface-container/60 p-2.5">
+                  <div className="rounded-[8px] bg-surface-variant border border-border-subtle p-2.5">
                     <p className="font-caption text-caption text-text-muted">Total</p>
-                    <p className="font-body-bold text-body-bold text-text-primary mt-0.5 text-sm">{formatRupiah(order.totalPrice)}</p>
+                    <p className="font-body-bold text-body-bold text-text-primary mt-0.5 text-sm tabular-nums">{formatRupiah(order.totalPrice)}</p>
                   </div>
-                  <div className="rounded-xl bg-surface-container/60 p-2.5">
+                  <div className="rounded-[8px] bg-surface-variant border border-border-subtle p-2.5">
                     <p className="font-caption text-caption text-text-muted">Dibayar</p>
-                    <p className="font-body-bold text-body-bold text-success-text mt-0.5 text-sm">{formatRupiah(order.paidAmount)}</p>
+                    <p className="font-body-bold text-body-bold text-success-text mt-0.5 text-sm tabular-nums">{formatRupiah(order.paidAmount)}</p>
                   </div>
-                  <div className="rounded-xl bg-warning-surface p-2.5">
+                  <div className="rounded-[8px] bg-warning-surface border border-amber-200 p-2.5">
                     <p className="font-caption text-caption text-warning-text">Sisa</p>
-                    <p className="font-body-bold text-body-bold text-warning-text mt-0.5 text-sm">{formatRupiah(sisa)}</p>
+                    <p className="font-body-bold text-body-bold text-warning-text mt-0.5 text-sm tabular-nums">{formatRupiah(sisa)}</p>
                   </div>
                 </div>
 
@@ -1105,7 +1105,7 @@ function BayarNantiTab({
                   <button
                     type="button"
                     onClick={() => onOpenPaymentModal(order)}
-                    className="w-full h-11 rounded-xl primary-gradient text-white font-body-bold text-body-bold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
+                    className="w-full min-h-[44px] rounded-[8px] primary-gradient clay-glow text-white font-body-bold text-body-bold flex items-center justify-center gap-2 hover:opacity-95 transition-opacity"
                   >
                     <Icon name="payments" className="text-[18px]" />
                     Catat Pembayaran

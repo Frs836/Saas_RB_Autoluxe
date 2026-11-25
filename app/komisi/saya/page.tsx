@@ -78,19 +78,17 @@ export default async function StatistikSayaPage() {
 
       <div className="px-gutter py-4 flex flex-col gap-4">
         {/* Hero card */}
-        <div className="relative overflow-hidden rounded-[20px] p-5 primary-gradient text-on-primary clay-glow">
-          <div className="absolute -right-4 -bottom-4 opacity-10 pointer-events-none text-white">
-            <Icon name="bar_chart" className="text-[120px]" />
-          </div>
+        <div className="relative overflow-hidden rounded-[10px] p-5 primary-gradient text-white clay-glow">
+          <div className="absolute -right-6 -top-6 w-32 h-32 rounded-full bg-sky-400/20 blur-2xl pointer-events-none" />
           <div className="relative z-10">
-            <p className="font-caption text-caption text-brand-100">Bulan Ini</p>
-            <p className="font-metric-display text-metric-display text-white tracking-tight leading-none mt-1">
+            <p className="font-caption text-caption text-white/80">Bulan Ini</p>
+            <p className="font-metric-display text-metric-display text-white tracking-tight leading-none mt-1 tabular-nums">
               {completedOrders.length}
             </p>
-            <p className="font-caption text-caption text-brand-100 mt-1">
+            <p className="font-caption text-caption text-white/80 mt-1">
               unit selesai dikerjakan
             </p>
-            <p className="font-headline-2 text-headline-2 text-white mt-2">
+            <p className="font-headline-2 text-headline-2 text-white mt-2 tabular-nums">
               {formatRupiah(totalRevenue)}
             </p>
           </div>
@@ -98,27 +96,27 @@ export default async function StatistikSayaPage() {
 
         {/* Lead vs Anggota */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="clay-card p-4 flex flex-col gap-1">
-            <div className="w-9 h-9 rounded-xl bg-brand-50 flex items-center justify-center">
-              <Icon name="star" className="text-brand-600 text-[20px]" />
+          <div className="clay-card rounded-[10px] p-4 flex flex-col gap-1">
+            <div className="w-9 h-9 rounded-[8px] bg-brand-50 border border-brand-200 flex items-center justify-center">
+              <Icon name="star" className="text-primary text-[20px]" />
             </div>
             <p className="font-caption text-caption text-text-muted mt-2">Sebagai Lead</p>
-            <p className="font-headline-1 text-headline-1 text-text-primary">{leadCount}</p>
+            <p className="font-headline-1 text-headline-1 text-text-primary tabular-nums">{leadCount}</p>
             <p className="font-micro-badge text-micro-badge text-text-muted">unit</p>
           </div>
-          <div className="clay-card p-4 flex flex-col gap-1">
-            <div className="w-9 h-9 rounded-xl bg-surface-container flex items-center justify-center">
+          <div className="clay-card rounded-[10px] p-4 flex flex-col gap-1">
+            <div className="w-9 h-9 rounded-[8px] bg-surface-variant flex items-center justify-center">
               <Icon name="groups" className="text-text-secondary text-[20px]" />
             </div>
             <p className="font-caption text-caption text-text-muted mt-2">Anggota Tim</p>
-            <p className="font-headline-1 text-headline-1 text-text-primary">{memberCount}</p>
+            <p className="font-headline-1 text-headline-1 text-text-primary tabular-nums">{memberCount}</p>
             <p className="font-micro-badge text-micro-badge text-text-muted">unit</p>
           </div>
         </div>
 
         {/* Top layanan */}
         {topServices.length > 0 && (
-          <div className="clay-card p-4 flex flex-col gap-3">
+          <div className="clay-card rounded-[10px] p-4 flex flex-col gap-3">
             <h3 className="font-headline-2 text-headline-2 text-text-primary">Layanan Dikerjakan</h3>
             <div className="flex flex-col gap-2">
               {topServices.map(([name, count]) => (

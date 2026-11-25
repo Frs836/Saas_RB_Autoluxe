@@ -173,10 +173,10 @@ export function LaporanView({ data }: { data: LaporanData }) {
     <div className="flex-1 px-gutter pt-4 pb-nav-plain lg:pb-8 flex flex-col gap-4">
       {/* Row 1 desktop: chart (col-span-2) + tagihan (col-span-1) */}
       <div className="lg:grid lg:grid-cols-3 lg:gap-4 flex flex-col gap-4">
-      <section className="bg-surface rounded-[20px] p-4 clay-card border border-white/80 lg:col-span-2">
+      <section className="bg-surface rounded-[10px] p-4 clay-card lg:col-span-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Icon name="account_balance_wallet" className="text-brand-600 text-[20px]" />
+            <Icon name="account_balance_wallet" className="text-primary text-[20px]" />
             <span className="font-headline-2 text-headline-2 text-text-primary">
               Ringkasan Finansial
             </span>
@@ -185,35 +185,35 @@ export function LaporanView({ data }: { data: LaporanData }) {
             type="button"
             onClick={handleExport}
             disabled={exporting}
-            className="inline-flex items-center gap-1.5 min-h-11 px-3 rounded-full primary-gradient text-white font-body-bold text-caption active:scale-[0.98] transition-transform disabled:opacity-70"
+            className="inline-flex items-center gap-1.5 min-h-[44px] px-3.5 rounded-[8px] primary-gradient clay-glow text-white font-body-bold text-caption hover:opacity-95 transition-opacity disabled:opacity-70"
           >
             <Icon name="download" className="text-[18px]" />
-            {exporting ? "Menyiapkan..." : "Excel"}
+            {exporting ? "Menyiapkan..." : "Ekspor Excel"}
           </button>
         </div>
 
         <div className="grid grid-cols-1 gap-2.5 mt-3 lg:grid-cols-3 lg:gap-4">
-          <div className="rounded-2xl bg-success-surface p-3 flex items-center justify-between">
+          <div className="rounded-[8px] bg-success-surface border border-emerald-200 p-3 flex items-center justify-between">
             <span className="font-caption text-caption text-success-text">
               Total Pemasukan
             </span>
-            <span className="font-body-bold text-body-bold text-success-text">
+            <span className="font-body-bold text-body-bold text-success-text tabular-nums">
               {rupiah(data.finance.income)}
             </span>
           </div>
-          <div className="rounded-2xl bg-danger-surface p-3 flex items-center justify-between">
+          <div className="rounded-[8px] bg-danger-surface border border-red-200 p-3 flex items-center justify-between">
             <span className="font-caption text-caption text-danger-text">
               Total Pengeluaran
             </span>
-            <span className="font-body-bold text-body-bold text-danger-text">
+            <span className="font-body-bold text-body-bold text-danger-text tabular-nums">
               {rupiah(data.finance.expense)}
             </span>
           </div>
-          <div className="rounded-2xl bg-brand-50 p-3 flex items-center justify-between">
-            <span className="font-caption text-caption text-brand-700">
+          <div className="rounded-[8px] bg-brand-50 border border-brand-200 p-3 flex items-center justify-between">
+            <span className="font-caption text-caption text-primary">
               Laba Bersih
             </span>
-            <span className="font-body-bold text-body-bold text-brand-700">
+            <span className="font-body-bold text-body-bold text-primary tabular-nums">
               {rupiah(data.finance.net)}
             </span>
           </div>
@@ -227,7 +227,7 @@ export function LaporanView({ data }: { data: LaporanData }) {
 
         <div className="mt-4">
           <p className="font-body-bold text-body-bold text-text-secondary mb-2">
-            Tren 6 Bulan
+            Arus Kas 6 Bulan Terakhir
           </p>
           <div className="flex items-end justify-between gap-2 h-28">
             {data.finance.monthly.map((m) => (
@@ -256,29 +256,29 @@ export function LaporanView({ data }: { data: LaporanData }) {
         </div>
       </section>
 
-      <section className="bg-surface rounded-[20px] p-4 clay-card border border-white/80 lg:col-span-1">
+      <section className="bg-surface rounded-[10px] p-4 clay-card lg:col-span-1">
         <div className="flex items-center gap-2 mb-3">
-          <Icon name="receipt_long" className="text-brand-600 text-[20px]" />
+          <Icon name="receipt_long" className="text-primary text-[20px]" />
           <span className="font-headline-2 text-headline-2 text-text-primary">
-            Tagihan Belum Lunas
+            Piutang Belum Lunas
           </span>
         </div>
-        <div className="rounded-2xl bg-warning-surface p-3 flex items-center justify-between">
-          <span className="font-caption text-caption text-warning-text">
+        <div className="rounded-[8px] bg-warning-surface border border-amber-200 p-3 flex items-center justify-between">
+          <span className="font-caption text-caption text-warning-text tabular-nums">
             {data.receivables.count} order belum lunas
           </span>
-          <span className="font-body-bold text-body-bold text-warning-text">
+          <span className="font-body-bold text-body-bold text-warning-text tabular-nums">
             {rupiah(data.receivables.total)}
           </span>
         </div>
       </section>
-      </div>{/* end chart+tagihan row */}
+      </div>
 
       {/* Row 2 desktop: omzet cabang + rincian keuangan + unit terjual */}
       <div className="lg:grid lg:grid-cols-3 lg:gap-4 flex flex-col gap-4">
-      <section className="bg-surface rounded-[20px] p-4 clay-card border border-white/80">
+      <section className="bg-surface rounded-[10px] p-4 clay-card">
         <div className="flex items-center gap-2 mb-3">
-          <Icon name="storefront" className="text-brand-600 text-[20px]" />
+          <Icon name="storefront" className="text-primary text-[20px]" />
           <span className="font-headline-2 text-headline-2 text-text-primary">
             Omzet per Cabang
           </span>
@@ -286,7 +286,7 @@ export function LaporanView({ data }: { data: LaporanData }) {
         <div className="flex flex-col gap-3">
           {data.branchRevenue.length === 0 ? (
             <p className="font-caption text-caption text-text-muted">
-              Belum ada order selesai.
+              Belum ada order selesai di cabang ini.
             </p>
           ) : (
             data.branchRevenue.map((b) => (
@@ -295,17 +295,17 @@ export function LaporanView({ data }: { data: LaporanData }) {
                   <span className="font-body-bold text-body-bold text-text-primary">
                     {b.branchName}
                   </span>
-                  <span className="font-body-bold text-body-bold text-brand-600">
+                  <span className="font-body-bold text-body-bold text-primary tabular-nums">
                     {rupiah(b.revenue)}
                   </span>
                 </div>
-                <div className="h-2 rounded-full bg-surface-container overflow-hidden">
+                <div className="h-2 rounded-[4px] bg-surface-variant overflow-hidden">
                   <div
-                    className="h-full rounded-full primary-gradient"
+                    className="h-full rounded-[4px] primary-gradient"
                     style={{ width: `${(b.revenue / maxBranch) * 100}%` }}
                   />
                 </div>
-                <span className="font-caption text-caption text-text-muted">
+                <span className="font-caption text-caption text-text-muted tabular-nums">
                   {b.orders} order selesai
                 </span>
               </div>
@@ -315,9 +315,9 @@ export function LaporanView({ data }: { data: LaporanData }) {
       </section>
 
       {/* Rincian Keuangan */}
-      <section className="bg-surface rounded-[20px] p-4 clay-card border border-white/80">
+      <section className="bg-surface rounded-[10px] p-4 clay-card">
         <div className="flex items-center gap-2 mb-3">
-          <Icon name="payments" className="text-brand-600 text-[20px]" />
+          <Icon name="payments" className="text-primary text-[20px]" />
           <span className="font-headline-2 text-headline-2 text-text-primary">
             Rincian Keuangan per Kategori
           </span>
@@ -331,18 +331,18 @@ export function LaporanView({ data }: { data: LaporanData }) {
             {data.finance.byCategory.map((c) => (
               <div
                 key={`${c.type}-${c.category}`}
-                className="flex items-center justify-between rounded-xl bg-surface-container/60 px-3 py-2"
+                className="flex items-center justify-between rounded-[8px] bg-surface-variant border border-border-subtle px-3 py-2"
               >
                 <div className="min-w-0">
                   <p className="font-body-bold text-caption text-text-primary">
                     {c.category}
                   </p>
-                  <p className="font-caption text-caption text-text-muted">
-                    {c.type === "in" ? "Masuk" : "Keluar"} · {c.count}×
+                  <p className="font-caption text-caption text-text-muted tabular-nums">
+                    {c.type === "in" ? "Masuk" : "Keluar"} · {c.count}x
                   </p>
                 </div>
                 <span
-                  className={`font-body-bold text-body-bold shrink-0 ${
+                  className={`font-body-bold text-body-bold shrink-0 tabular-nums ${
                     c.type === "in" ? "text-success-text" : "text-danger-text"
                   }`}
                 >
@@ -355,7 +355,7 @@ export function LaporanView({ data }: { data: LaporanData }) {
       </section>
 
       {/* Unit Terjual */}
-      <section className="bg-surface rounded-[20px] p-4 clay-card border border-white/80">
+      <section className="bg-surface rounded-[10px] p-4 clay-card">
         <div className="flex items-center gap-2 mb-3">
           <Icon name="inventory_2" className="text-brand-600 text-[20px]" />
           <span className="font-headline-2 text-headline-2 text-text-primary">

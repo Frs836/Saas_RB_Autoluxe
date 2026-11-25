@@ -286,7 +286,7 @@ const data = {
   return (
     <div className="flex flex-col w-full min-h-screen">
       <SubPageHeader
-        title="Laporan Eksekutif"
+        title="Laporan Cabang"
         branchName={
           branchId ? (branchMap.get(branchId) ?? "Cabang Utama") : "Seluruh Cabang"
         }
@@ -299,41 +299,41 @@ const data = {
       <div className="px-4 pt-4 flex flex-col sm:flex-row gap-3">
         <Link
           href="/laporan/produksi"
-          className="flex-1 bg-surface rounded-[16px] p-3.5 clay-card border border-white/80 flex items-center gap-2.5 active:scale-[0.99] transition-transform"
+          className="flex-1 bg-surface rounded-[10px] p-3.5 clay-card hover:border-border-strong flex items-center gap-2.5 transition-colors duration-150"
         >
-          <div className="w-9 h-9 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
+          <div className="w-9 h-9 rounded-[8px] bg-brand-50 border border-brand-200 text-primary flex items-center justify-center shrink-0">
             <Icon name="science" className="text-[18px]" />
           </div>
           <div className="flex-1 min-w-0">
             <span className="font-body-bold text-body-bold text-text-primary block">Biaya Produksi</span>
-            <span className="font-caption text-caption text-text-muted block">HPP modal bahan per size</span>
+            <span className="font-caption text-caption text-text-muted block">HPP bahan per ukuran kendaraan</span>
           </div>
           <Icon name="chevron_right" className="text-text-muted text-[20px] shrink-0 ml-auto" />
         </Link>
         <Link
           href="/laporan/cashflow"
-          className="flex-1 bg-surface rounded-[16px] p-3.5 clay-card border border-white/80 flex items-center gap-2.5 active:scale-[0.99] transition-transform"
+          className="flex-1 bg-surface rounded-[10px] p-3.5 clay-card hover:border-border-strong flex items-center gap-2.5 transition-colors duration-150"
         >
-          <div className="w-9 h-9 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
+          <div className="w-9 h-9 rounded-[8px] bg-brand-50 border border-brand-200 text-primary flex items-center justify-center shrink-0">
             <Icon name="account_balance" className="text-[18px]" />
           </div>
           <div className="flex-1 min-w-0">
             <span className="font-body-bold text-body-bold text-text-primary block">Arus Kas</span>
-            <span className="font-caption text-caption text-text-muted block">Laporan cashflow</span>
+            <span className="font-caption text-caption text-text-muted block">Kas masuk dan kas keluar</span>
           </div>
           <Icon name="chevron_right" className="text-text-muted text-[20px] shrink-0 ml-auto" />
         </Link>
         {can(session.role, "reports.audit") ? (
           <Link
             href="/laporan/aktivitas"
-            className="flex-1 bg-surface rounded-[16px] p-3.5 clay-card border border-white/80 flex items-center gap-2.5 active:scale-[0.99] transition-transform"
+            className="flex-1 bg-surface rounded-[10px] p-3.5 clay-card hover:border-border-strong flex items-center gap-2.5 transition-colors duration-150"
           >
-            <div className="w-9 h-9 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
+            <div className="w-9 h-9 rounded-[8px] bg-brand-50 border border-brand-200 text-primary flex items-center justify-center shrink-0">
               <Icon name="history" className="text-[18px]" />
             </div>
             <div className="flex-1 min-w-0">
               <span className="font-body-bold text-body-bold text-text-primary block">Log Aktivitas</span>
-              <span className="font-caption text-caption text-text-muted block">Audit trail</span>
+              <span className="font-caption text-caption text-text-muted block">Riwayat perubahan staf</span>
             </div>
             <Icon name="chevron_right" className="text-text-muted text-[20px] shrink-0 ml-auto" />
           </Link>

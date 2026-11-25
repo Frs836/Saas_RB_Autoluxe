@@ -713,7 +713,7 @@ export function OrderDetailView({
 
   return (
     <div className="flex flex-col w-full min-h-screen">
-      <div className="sticky top-0 z-40 bg-surface border-b border-border-subtle pt-safe lg:pt-2">
+      <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-border-subtle/80 shadow-[0_2px_10px_rgba(15,23,42,0.04)] pt-safe lg:pt-2">
         <div className="h-14 px-gutter lg:px-6 flex items-center gap-3">
           <button
             type="button"

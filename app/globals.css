@@ -8,7 +8,7 @@
     width: 100vw;
     margin: 0;
     padding: 0;
-    background-color: #f8fafc;
+    background-color: #eff4fb;
     color: #0f172a;
     font-family: var(--font-plus-jakarta), "Plus Jakarta Sans", ui-sans-serif,
       system-ui, sans-serif;
@@ -149,42 +149,48 @@
  * sini menutup semuanya sekaligus dan tidak bisa terlewat di panel baru.
  */
 /*
- * Surface kartu operasional: putih solid dengan border struktural 1px
- * dan bayangan tipis, menggantikan gaya claymorphism sebelumnya.
+ * Surface kartu Web OS: putih dengan border tipis, elevasi halus,
+ * dan cahaya rim atas agar berdimensi tanpa terlihat berat.
  */
 .clay-card {
   background-color: #ffffff;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(203, 213, 225, 0.8);
+  box-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .clay-nav {
-  background-color: #ffffff;
-  border-color: #e2e8f0;
-  box-shadow: 0 -1px 3px rgba(15, 23, 42, 0.04);
+  background-color: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-color: rgba(226, 232, 240, 0.85);
+  box-shadow: 0 -4px 20px -4px rgba(15, 23, 42, 0.08);
 }
 
 .clay-fab {
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+  box-shadow: 0 10px 26px -6px rgba(30, 58, 138, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
 }
 
 .clay-glow {
-  box-shadow: 0 1px 3px rgba(30, 58, 138, 0.16);
+  box-shadow: 0 10px 26px -6px rgba(30, 58, 138, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
 }
 
 .clay-notch {
   background-color: #ffffff;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(203, 213, 225, 0.8);
+  box-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.06);
 }
 
 .inner-highlight,
 .inner-clay-highlight {
-  box-shadow: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
 }
 
 .primary-gradient {
-  background-color: #1e3a8a;
+  background: linear-gradient(135deg, #172554 0%, #1e3a8a 55%, #1d4ed8 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
 }
 
 .pulse-ring {

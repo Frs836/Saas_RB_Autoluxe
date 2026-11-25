@@ -333,23 +333,23 @@ export function ShiftConsole({
       <div className="lg:col-span-1 flex flex-col">
       {/* Kartu status shift & kasir */}
       <section className="px-gutter pt-4 lg:px-0 lg:pt-0">
-        <div className="bg-surface rounded-[24px] p-5 clay-card border border-white/80 flex flex-col gap-4">
+        <div className="bg-surface rounded-[10px] p-5 clay-card flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <div className="flex flex-col gap-1">
               <span className="font-caption text-caption text-text-muted tracking-wide uppercase">
-                Shift &amp; Kasir
+                Kas Shift &amp; Kasir
               </span>
               <span className="font-headline-2 text-headline-2 text-text-primary">
                 {branch.name}
               </span>
             </div>
             <span
-              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-micro-badge text-micro-badge ${
+              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-[6px] border font-micro-badge text-micro-badge ${
                 handoff === null
-                  ? "bg-surface-container text-text-secondary"
+                  ? "bg-surface-variant border-border-subtle text-text-secondary"
                   : handoff.status === "open"
-                    ? "bg-success-surface text-success-text"
-                    : "bg-brand-50 text-brand-700"
+                    ? "bg-success-surface border-emerald-200 text-success-text"
+                    : "bg-brand-50 border-brand-200 text-primary"
               }`}
             >
               <span
@@ -358,26 +358,26 @@ export function ShiftConsole({
                     ? "bg-text-muted"
                     : handoff.status === "open"
                       ? "bg-success-base"
-                      : "bg-brand-500"
+                      : "bg-primary"
                 }`}
               />
               {handoff === null ? "Belum Buka" : handoff.status === "open" ? "Aktif" : "Selesai"}
             </span>
           </div>
 
-          <div className="flex items-center gap-3 bg-surface-container-low rounded-2xl p-3">
-            <div className="w-11 h-11 rounded-2xl bg-success-surface text-success-text flex items-center justify-center shrink-0">
+          <div className="flex items-center gap-3 bg-surface-variant border border-border-subtle rounded-[8px] p-3">
+            <div className="w-11 h-11 rounded-[8px] bg-success-surface border border-emerald-200 text-success-text flex items-center justify-center shrink-0">
               <Icon name="verified_user" className="text-[24px]" />
             </div>
             <div className="flex-1 min-w-0">
               <span className="font-caption text-caption text-text-secondary block">
-                Kas Titipan Pagi
+                Modal Awal Kas Shift
               </span>
-              <span className="font-body-bold text-body-bold text-text-primary block">
+              <span className="font-body-bold text-body-bold text-text-primary block tabular-nums">
                 {handoff ? formatRupiah(handoff.openingCash) : "Belum dibuka"}
               </span>
             </div>
-            <span className="font-caption text-caption text-text-muted shrink-0">
+            <span className="font-caption text-caption text-text-muted shrink-0 tabular-nums">
               {shiftWindow}
             </span>
           </div>
@@ -719,24 +719,24 @@ function BukaKasForm({
 
   return (
     <section className="px-gutter pt-4">
-      <div className="bg-surface rounded-[24px] p-4 sm:p-5 clay-card border border-white/80 inner-clay-highlight space-y-4">
+      <div className="bg-surface rounded-[10px] p-4 sm:p-5 clay-card space-y-4">
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2">
-            <span className="p-1.5 rounded-lg bg-brand-50 text-brand-600">
+            <span className="p-1.5 rounded-[8px] bg-brand-50 border border-brand-200 text-primary">
               <Icon name="savings" className="text-[18px]" />
             </span>
             <span className="font-body-bold text-body-bold text-text-primary">
-              Serah Terima Kas Titipan Pagi
+              Serah Terima Kas Shift Pagi
             </span>
           </div>
-          <span className="font-caption text-caption text-text-muted">{shiftWindow}</span>
+          <span className="font-caption text-caption text-text-muted tabular-nums">{shiftWindow}</span>
         </div>
 
         {pendingHolds && pendingHolds.length > 0 && (
-          <div className="bg-warning-surface rounded-2xl p-3.5 flex flex-col gap-2">
+          <div className="bg-warning-surface border border-amber-200 rounded-[10px] p-3.5 flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <span className="font-body-bold text-body-bold text-warning-text">
-                Kas Titipan Belum Diserahkan
+                Kas di Tangan Belum Disetor
               </span>
               <span className="font-caption text-caption text-warning-text">
                 {pendingHolds.length} karyawan
@@ -747,16 +747,16 @@ function BukaKasForm({
                 <span className="font-caption text-caption text-text-secondary truncate">
                   {hold.staffName} • {hold.paymentMethod}
                 </span>
-                <span className="font-body-bold text-body-bold text-text-primary shrink-0">
+                <span className="font-body-bold text-body-bold text-text-primary shrink-0 tabular-nums">
                   {formatRupiah(hold.amount)}
                 </span>
               </div>
             ))}
-            <div className="border-t border-warning-text/20 pt-2 flex items-center justify-between">
+            <div className="border-t border-amber-200 pt-2 flex items-center justify-between">
               <span className="font-body-bold text-body-bold text-warning-text">
-                Total Titipan
+                Total Setoran
               </span>
-              <span className="font-headline-2 text-headline-2 text-warning-text">
+              <span className="font-headline-2 text-headline-2 text-warning-text tabular-nums">
                 {formatRupiah(pendingHolds.reduce((s, h) => s + h.amount, 0))}
               </span>
             </div>
@@ -767,10 +767,10 @@ function BukaKasForm({
                   String(pendingHolds.reduce((s, h) => s + h.amount, 0))
                 )
               }
-              className="h-10 rounded-xl bg-warning-text text-white font-caption text-caption flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+              className="min-h-[44px] rounded-[8px] bg-warning-text text-white font-caption text-caption flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity"
             >
               <Icon name="auto_fix_high" className="text-[16px]" />
-              Auto-isi dari Total Titipan
+              Isi Otomatis dari Total Setoran
             </button>
           </div>
         )}
@@ -786,15 +786,15 @@ function BukaKasForm({
             </label>
             <span className="font-caption text-caption text-text-muted">Wajib</span>
           </div>
-          <div className="flex items-center gap-2 h-12 bg-surface-container-low rounded-2xl px-3 focus-within:ring-2 focus-within:ring-brand-500/20">
-            <span className="font-body-bold text-body-bold text-brand-700">Rp</span>
+          <div className="flex items-center gap-2 h-11 bg-surface border border-border-strong rounded-[8px] px-3 focus-within:ring-2 focus-within:ring-accent">
+            <span className="font-body-bold text-body-bold text-primary">Rp</span>
             <input
               id="opening-cash"
               inputMode="numeric"
               value={opening}
               onChange={(e) => setOpening(e.target.value)}
               placeholder="0"
-              className="flex-1 bg-transparent font-body-bold text-body-bold text-text-primary placeholder:text-text-muted outline-none"
+              className="flex-1 bg-transparent font-body-bold text-body-bold text-text-primary placeholder:text-text-muted outline-none tabular-nums"
             />
           </div>
           <div className="flex flex-wrap gap-1.5 pt-1">
@@ -803,7 +803,7 @@ function BukaKasForm({
                 key={value}
                 type="button"
                 onClick={() => add(value)}
-                className="h-10 px-3 rounded-full bg-surface border border-border-strong text-text-secondary font-caption text-caption active:scale-95 transition-transform"
+                className="min-h-[36px] px-3 rounded-[8px] bg-surface border border-border-strong hover:bg-surface-variant text-text-secondary font-caption text-caption transition-colors tabular-nums"
               >
                 +{formatRupiah(value)}
               </button>
@@ -812,7 +812,7 @@ function BukaKasForm({
               <button
                 type="button"
                 onClick={() => setOpening("")}
-                className="h-10 px-3 rounded-full bg-danger-surface text-danger-text font-caption text-caption active:scale-95 transition-transform"
+                className="min-h-[36px] px-3 rounded-[8px] bg-danger-surface border border-red-200 text-danger-text font-caption text-caption transition-opacity hover:opacity-90"
               >
                 Bersihkan
               </button>
@@ -830,7 +830,7 @@ function BukaKasForm({
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Contoh: pecahan kas laci diserahkan oleh kasir pagi..."
-            className="w-full p-3 bg-surface border border-border-strong rounded-2xl font-body text-body text-text-primary placeholder:text-text-muted outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 resize-none"
+            className="w-full p-3 bg-surface border border-border-strong rounded-[8px] font-body text-body text-text-primary placeholder:text-text-muted outline-none focus-visible:ring-2 focus-visible:ring-accent resize-none"
           />
         </div>
 
@@ -838,10 +838,10 @@ function BukaKasForm({
           type="button"
           onClick={onSubmit}
           disabled={!canSubmit}
-          className="w-full h-[50px] rounded-full primary-gradient text-white font-bold text-[14px] tracking-wide uppercase flex items-center justify-center gap-2.5 clay-glow active:scale-[0.98] transition-all disabled:opacity-60"
+          className="w-full min-h-[48px] rounded-[8px] primary-gradient clay-glow text-white font-bold text-[14px] tracking-wide uppercase flex items-center justify-center gap-2.5 hover:opacity-95 transition-opacity disabled:opacity-60"
         >
           <Icon name="play_arrow" className="text-[22px]" />
-          {busy ? "Membuka..." : "Buka & Catat Kas Titipan"}
+          {busy ? "Membuka..." : "Buka Shift Kasir"}
         </button>
       </div>
     </section>

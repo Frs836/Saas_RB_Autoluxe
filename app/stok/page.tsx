@@ -137,7 +137,7 @@ export default async function StockPage() {
   return (
     <div className="flex flex-col w-full min-h-screen pb-nav-plain lg:pb-8">
       <SubPageHeader
-        title="Stok & Inventaris"
+        title="Stok Bahan Gudang"
         branchName={branchRes.data?.branch_name ?? "Cabang Utama"}
         backHref="/dashboard"
       />
@@ -148,28 +148,28 @@ export default async function StockPage() {
       <div className="px-4 pt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Link
           href="/stok/racikan"
-          className="flex items-center gap-3 bg-surface rounded-[16px] p-3.5 clay-card border border-white/80 active:scale-[0.99] transition-transform"
+          className="flex items-center gap-3 bg-surface rounded-[10px] p-3.5 clay-card hover:border-border-strong transition-colors duration-150"
         >
-          <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+          <div className="w-9 h-9 rounded-[8px] bg-brand-50 border border-brand-200 text-primary flex items-center justify-center shrink-0">
             <Icon name="science" className="text-[18px]" />
           </div>
           <div className="flex-1 min-w-0">
             <span className="font-body-bold text-body-bold text-text-primary block">Stok Racikan</span>
-            <span className="font-caption text-caption text-text-muted block">Paket racikan bahan (HF + HCL dll)</span>
+            <span className="font-caption text-caption text-text-muted block">Bahan campuran dan harga modal per ml</span>
           </div>
           <Icon name="chevron_right" className="text-text-muted text-[20px] shrink-0" />
         </Link>
         {canManage ? (
           <Link
             href="/stok/opname"
-            className="flex items-center gap-3 bg-surface rounded-[16px] p-3.5 clay-card border border-white/80 active:scale-[0.99] transition-transform"
+            className="flex items-center gap-3 bg-surface rounded-[10px] p-3.5 clay-card hover:border-border-strong transition-colors duration-150"
           >
-            <div className="w-9 h-9 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
+            <div className="w-9 h-9 rounded-[8px] bg-brand-50 border border-brand-200 text-primary flex items-center justify-center shrink-0">
               <Icon name="inventory" className="text-[18px]" />
             </div>
             <div className="flex-1 min-w-0">
-              <span className="font-body-bold text-body-bold text-text-primary block">Stok Opname</span>
-              <span className="font-caption text-caption text-text-muted block">Lakukan rekonsiliasi stok bulanan</span>
+              <span className="font-body-bold text-body-bold text-text-primary block">Opname Stok Gudang</span>
+              <span className="font-caption text-caption text-text-muted block">Cocokkan stok fisik dengan angka sistem</span>
             </div>
             <Icon name="chevron_right" className="text-text-muted text-[20px] shrink-0" />
           </Link>

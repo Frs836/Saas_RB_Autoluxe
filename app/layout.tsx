@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { ServiceWorkerRegistrar } from "@/components/mobile/service-worker-registrar";
 import { ToastProvider } from "@/components/toast";
+import { NavigationProgressProvider } from "@/components/ui/navigation-progress";
 import { AppShellClient } from "@/components/app-shell-client";
 import { getSessionProfile } from "@/lib/rbac-guard";
 import { createClient } from "@/lib/supabase/server";
@@ -71,26 +72,28 @@ export default async function RootLayout({
       <head />
       <body className="min-h-screen flex flex-col antialiased">
         <ToastProvider>
-          <ServiceWorkerRegistrar />
-          {profile ? (
-            // User sudah login - render dengan sidebar di desktop
-            <AppShellClient
-              role={profile.role}
-              fullName={profile.fullName}
-              branchName={
-                profile.branchScope === "all"
-                  ? "Seluruh Cabang"
-                  : (profile.branches.find((b) => b.id === profile.branchId)?.name ?? "Cabang Utama")
-              }
-              hasUnread={hasUnread}
-              profileId={profile.id}
-            >
-              {children}
-            </AppShellClient>
-          ) : (
-            // Belum login (halaman /login, /register, /track) - tanpa sidebar
-            <>{children}</>
-          )}
+          <NavigationProgressProvider>
+            <ServiceWorkerRegistrar />
+            {profile ? (
+              // User sudah login - render dengan sidebar di desktop
+              <AppShellClient
+                role={profile.role}
+                fullName={profile.fullName}
+                branchName={
+                  profile.branchScope === "all"
+                    ? "Seluruh Cabang"
+                    : (profile.branches.find((b) => b.id === profile.branchId)?.name ?? "Cabang Utama")
+                }
+                hasUnread={hasUnread}
+                profileId={profile.id}
+              >
+                {children}
+              </AppShellClient>
+            ) : (
+              // Belum login (halaman /login, /register, /track) - tanpa sidebar
+              <>{children}</>
+            )}
+          </NavigationProgressProvider>
         </ToastProvider>
       </body>
     </html>

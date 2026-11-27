@@ -21,15 +21,15 @@ export function BottomNav({ role }: Props) {
 
   const renderItem = (item: NavItem) => {
     const active = pathname.startsWith(item.href);
-    const classes = `flex flex-col items-center justify-center min-w-[56px] min-h-[44px] px-1 rounded-[8px] gap-0.5 transition-colors duration-150 ${
+    const classes = `flex flex-col items-center justify-center min-w-[56px] min-h-[44px] px-1 rounded-[8px] gap-0.5 transition-all duration-150 active:scale-[0.92] select-none ${
       active
         ? "text-primary font-body-bold"
-        : "text-text-muted hover:text-text-primary"
+        : "text-text-muted hover:text-text-primary active:text-text-primary"
     }`;
 
     return (
       <Link key={item.href} href={item.href} prefetch={false} className={classes}>
-        <Icon name={item.icon} className="text-[22px]" />
+        <Icon name={item.icon} className="text-[22px] transition-transform group-active:scale-95" />
         <span className="font-caption text-caption leading-none">{item.label}</span>
       </Link>
     );
@@ -45,7 +45,7 @@ export function BottomNav({ role }: Props) {
             href="/pos"
             prefetch={false}
             aria-label="Buat Order Baru"
-            className="w-11 h-11 rounded-[8px] primary-gradient clay-glow hover:opacity-95 active:opacity-90 flex items-center justify-center text-white transition-opacity duration-150"
+            className="w-11 h-11 rounded-[8px] primary-gradient clay-glow hover:opacity-95 active:scale-90 active:opacity-85 flex items-center justify-center text-white transition-all duration-150 select-none shadow-md"
           >
             <Icon name="add" className="text-[24px]" />
           </Link>

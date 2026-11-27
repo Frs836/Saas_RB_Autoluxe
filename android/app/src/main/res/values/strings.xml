@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">RB AUTOLUXE</string>
+    <string name="title_activity_main">RB AUTOLUXE</string>
+    <string name="package_name">com.rbautoluxe.app</string>
+    <string name="custom_url_scheme">com.rbautoluxe.app</string>
+</resources>

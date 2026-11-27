@@ -163,6 +163,31 @@ export function FaceVerificationList({
     [note, router],
   );
 
+  const resetFace = useCallback(
+    async (profileId: string, name: string) => {
+      if (!confirm(`Hapus seluruh sampel wajah ${name}? Data wajah akan dikosongkan total dan staf bisa mendaftar ulang.`)) {
+        return;
+      }
+      setError(null);
+      setSuccess(null);
+      setBusyId(profileId);
+      const supabase = createClient();
+      const { error: rpcError } = await (supabase as any).rpc("reset_staff_face", {
+        p_profile_id: profileId,
+      });
+      setBusyId(null);
+
+      if (rpcError) {
+        setError(rpcError.message);
+        return;
+      }
+
+      setSuccess(`Data sampel wajah ${name} telah dihapus/direset total.`);
+      router.refresh();
+    },
+    [router],
+  );
+
   if (registrations.length === 0) {
     return (
       <div className="px-gutter py-6">
@@ -280,12 +305,22 @@ export function FaceVerificationList({
                 type="button"
                 disabled={busy}
                 onClick={() => review(row.profile_id, false)}
-                className="flex-1 h-11 rounded-[8px] bg-red-600 hover:bg-red-700 text-white font-caption text-caption flex items-center justify-center gap-1.5 transition-colors disabled:opacity-60 shadow-sm"
+                className="flex-1 h-11 rounded-[8px] bg-amber-600 hover:bg-amber-700 text-white font-caption text-caption flex items-center justify-center gap-1.5 transition-colors disabled:opacity-60 shadow-sm"
               >
                 <Icon name="close" className="text-[18px]" />
                 Tolak
               </button>
             </div>
+
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => resetFace(row.profile_id, row.full_name)}
+              className="w-full h-10 rounded-[8px] border border-red-200 bg-red-50 hover:bg-red-100 text-danger-text font-caption text-caption flex items-center justify-center gap-1.5 transition-colors disabled:opacity-60"
+            >
+              <Icon name="delete_forever" className="text-[18px]" />
+              Hapus / Reset Sampel Wajah
+            </button>
           </section>
         );
       })}

@@ -19,7 +19,9 @@ import {
   shiftMonth,
   type MonthKey,
 } from "@/lib/attendance-period";
+import { Modal } from '@/components/ui/modal';
 import { Icon } from "@/components/ui/icon";
+
 
 /** Mode tampilan rekap. Harian tetap dipakai untuk melihat rincian satu hari. */
 type Mode = "harian" | "bulanan" | "tiga_bulan";
@@ -1443,12 +1445,8 @@ function VerificationModal({
     log.outsideRadius ?? (distance !== null ? distance > radius : null);
 
   return (
-    <div
-      className="fixed inset-0 z-modal bg-black/60 flex items-end sm:items-center justify-center"
-      role="dialog"
-      aria-modal="true"
-    >
-      <div className="w-full max-w-[420px] bg-surface rounded-t-[24px] sm:rounded-[24px] overflow-hidden flex flex-col">
+    <Modal open={true} onClose={onClose} title={`Verifikasi ${modal.staff.fullName}`}>
+      <div className="w-full flex flex-col">
         <div className="px-4 pt-4 flex items-center gap-3">
           <div
             className={`w-10 h-10 rounded-2xl flex items-center justify-center font-body-bold text-body-bold shrink-0 ${
@@ -1585,6 +1583,6 @@ function VerificationModal({
           </button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

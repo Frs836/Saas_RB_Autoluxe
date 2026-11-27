@@ -9,6 +9,7 @@ import { uploadImageToCloudinary } from "@/lib/cloudinary-upload";
 import { createClient } from "@/lib/supabase/client";
 import { PAYMENT_LABELS, whatsappLink } from "@/lib/pos";
 import { Icon } from "@/components/ui/icon";
+import { Modal } from "@/components/ui/modal";
 import {
   applyOrderStatusAction,
   advanceHandoverAction,
@@ -923,60 +924,55 @@ export function OrderDetailView({
 
           {/* Modal Kirim Nota WA */}
           {waModalOpen && (
-            <>
-              <div className="fixed inset-0 z-[60] bg-slate-950/50" onClick={() => setWaModalOpen(false)} />
-              <div className="fixed inset-x-4 bottom-4 z-[61] bg-surface border border-border-subtle rounded-[10px] p-5 shadow-modal max-w-md mx-auto flex flex-col gap-4" onClick={(e) => e.stopPropagation()}>
-                <div className="flex items-center justify-between">
-                  <h3 className="font-headline-2 text-headline-2 text-text-primary">Kirim Nota ke WhatsApp</h3>
-                  <button type="button" onClick={() => setWaModalOpen(false)} className="w-11 h-11 rounded-[8px] bg-surface-variant hover:bg-border-subtle flex items-center justify-center text-text-primary transition-colors duration-150">
-                    <Icon name="close" className="text-[20px]" />
-                  </button>
-                </div>
-                <label className="flex flex-col gap-1">
-                  <span className="font-caption text-caption text-text-secondary">Nomor WhatsApp Pelanggan</span>
-                  <input
-                    type="tel"
-                    inputMode="tel"
-                    value={waPhone}
-                    onChange={(e) => setWaPhone(e.target.value)}
-                    placeholder="08123456789"
-                    className="h-11 px-3 rounded-[8px] border border-border-strong bg-surface font-body text-body text-text-primary outline-none focus-visible:ring-2 focus-visible:ring-accent"
-                  />
-                  <span className="font-micro-badge text-micro-badge text-text-muted">Format: 08xxxxxxxxxx</span>
-                </label>
-                <div className="p-3 rounded-xl bg-surface-container-low">
-                  <p className="font-caption text-caption text-text-muted">Isi nota yang akan dikirim:</p>
-                  <p className="font-body text-body text-text-primary mt-1 text-sm">
-                    {`✅ ${order.orderNumber} - ${order.vehicleModel} (${order.licensePlate})\n` +
-                     `📋 ${order.servicePackage}\n` +
-                     `💰 ${formatRupiah(order.totalPrice)}\n` +
-                     `🔗 Lacak: ${trackUrl}`}
-                  </p>
-                </div>
-                <a
-                  href={waPhone.trim() ? whatsappLink(
-                    waPhone.trim(),
-                    `Halo, ini nota pengerjaan kendaraan Anda di RB AUTOLUXE:\n\n` +
-                    `✅ No. Order: ${order.orderNumber}\n` +
-                    `🚗 Kendaraan: ${order.vehicleModel} (${order.licensePlate})\n` +
-                    `📋 Layanan: ${order.servicePackage}\n` +
-                    `💰 Total: ${formatRupiah(order.totalPrice)}\n` +
-                    `📊 Status: ${meta.label}\n\n` +
-                    `🔗 Lacak pengerjaan: ${trackUrl}\n\n` +
-                    `Terima kasih telah mempercayakan kendaraan Anda kepada kami! 🙏`
-                  ) : "#"}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => { if (!waPhone.trim()) { e.preventDefault(); return; } setWaModalOpen(false); }}
-                  className={`w-full py-3 rounded-xl font-body-bold text-body-bold flex items-center justify-center gap-2 transition-transform ${
-                    waPhone.trim() ? "bg-whatsapp text-white shadow-[0_8px_20px_-6px_rgba(37,211,102,0.6)]" : "bg-surface-container text-text-muted opacity-60"
-                  }`}
-                >
-                  <Icon name="chat" className="text-[20px]" />
-                  Buka WhatsApp
-                </a>
+            <Modal
+              open={waModalOpen}
+              onClose={() => setWaModalOpen(false)}
+              title="Kirim Nota ke WhatsApp"
+            >
+              <label className="flex flex-col gap-1">
+                <span className="font-caption text-caption text-text-secondary">Nomor WhatsApp Pelanggan</span>
+                <input
+                  type="tel"
+                  inputMode="tel"
+                  value={waPhone}
+                  onChange={(e) => setWaPhone(e.target.value)}
+                  placeholder="08123456789"
+                  className="h-11 px-3 rounded-[8px] border border-border-strong bg-surface font-body text-body text-text-primary outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                />
+                <span className="font-micro-badge text-micro-badge text-text-muted">Format: 08xxxxxxxxxx</span>
+              </label>
+              <div className="p-3 rounded-xl bg-surface-container-low">
+                <p className="font-caption text-caption text-text-muted">Isi nota yang akan dikirim:</p>
+                <p className="font-body text-body text-text-primary mt-1 text-sm whitespace-pre-wrap">
+                  {`✅ ${order.orderNumber} - ${order.vehicleModel} (${order.licensePlate})\n` +
+                   `📋 ${order.servicePackage}\n` +
+                   `💰 ${formatRupiah(order.totalPrice)}\n` +
+                   `🔗 Lacak: ${trackUrl}`}
+                </p>
               </div>
-            </>
+              <a
+                href={waPhone.trim() ? whatsappLink(
+                  waPhone.trim(),
+                  `Halo, ini nota pengerjaan kendaraan Anda di RB AUTOLUXE:\n\n` +
+                  `✅ No. Order: ${order.orderNumber}\n` +
+                  `🚗 Kendaraan: ${order.vehicleModel} (${order.licensePlate})\n` +
+                  `📋 Layanan: ${order.servicePackage}\n` +
+                  `💰 Total: ${formatRupiah(order.totalPrice)}\n` +
+                  `📊 Status: ${meta.label}\n\n` +
+                  `🔗 Lacak pengerjaan: ${trackUrl}\n\n` +
+                  `Terima kasih telah mempercayakan kendaraan Anda kepada kami! 🙏`
+                ) : "#"}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => { if (!waPhone.trim()) { e.preventDefault(); return; } setWaModalOpen(false); }}
+                className={`w-full py-3 rounded-xl font-body-bold text-body-bold flex items-center justify-center gap-2 transition-transform ${
+                  waPhone.trim() ? "bg-whatsapp text-white shadow-[0_8px_20px_-6px_rgba(37,211,102,0.6)]" : "bg-surface-container text-text-muted opacity-60"
+                }`}
+              >
+                <Icon name="chat" className="text-[20px]" />
+                Buka WhatsApp
+              </a>
+            </Modal>
           )}
 
           {order.cancellationReason ? (
@@ -1170,22 +1166,8 @@ export function OrderDetailView({
         </div>
       ) : null}
 
-      {teamOpen ? (
-        <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center">
-          <div className="w-full max-w-[440px] max-h-[85vh] overflow-y-auto rounded-t-[10px] sm:rounded-[10px] bg-surface p-4 flex flex-col gap-3 border border-border">
-            <div className="flex items-center justify-between">
-              <h2 className="font-headline-2 text-headline-2 text-text-primary">
-                Atur Tim Teknisi
-              </h2>
-              <button
-                type="button"
-                onClick={() => setTeamOpen(false)}
-                aria-label="Tutup"
-                className="w-10 h-10 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary"
-              >
-                <Icon name="close" className="text-[20px]" />
-              </button>
-            </div>
+      <Modal open={teamOpen} onClose={() => setTeamOpen(false)} title="Atur Tim Teknisi">
+          <div className="flex flex-col gap-3">
 
             <p className="font-caption text-caption text-text-muted">
               Pilih karyawan lapangan yang mengerjakan order ini. Orang pertama
@@ -1277,18 +1259,10 @@ export function OrderDetailView({
               </button>
             </div>
           </div>
-        </div>
-      ) : null}
+        </Modal>
 
-      {addMemberOpen && (
-        <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center">
-          <div className="w-full max-w-[440px] max-h-[85vh] overflow-y-auto rounded-t-[10px] sm:rounded-[10px] bg-surface p-4 flex flex-col gap-3 border border-border">
-            <div className="flex items-center justify-between">
-              <h2 className="font-headline-2 text-headline-2 text-text-primary">Tambah Anggota Tim</h2>
-              <button type="button" onClick={() => setAddMemberOpen(false)} className="w-10 h-10 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary">
-                <Icon name="close" className="text-[22px]" />
-              </button>
-            </div>
+      <Modal open={addMemberOpen} onClose={() => setAddMemberOpen(false)} title="Tambah Anggota Tim">
+          <div className="flex flex-col gap-3">
             <p className="font-caption text-caption text-text-muted">
               Order {order.orderNumber} sedang dikerjakan. Pilih teknisi yang akan ditambahkan ke tim.
             </p>
@@ -1331,8 +1305,7 @@ export function OrderDetailView({
               </button>
             </div>
           </div>
-        </div>
-      )}
+        </Modal>
 
       {cameraOpen ? (
         <div className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex flex-col items-center justify-center gap-3 p-6">

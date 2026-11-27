@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { setActiveBranch } from "@/app/actions/branch";
 import { ALL_BRANCHES, type BranchOption, type BranchScope } from "@/lib/branch";
 import { Icon } from "@/components/ui/icon";
+import { Modal } from "@/components/ui/modal";
 
 type Props = {
   branches: BranchOption[];
@@ -103,17 +104,8 @@ export function BranchSwitcher({ branches, activeBranchId, scope, variant, onErr
       {trigger}
 
       {open ? (
-        <>
-          <button
-            type="button"
-            aria-label="Tutup pilihan cabang"
-            className="fixed inset-0 z-30 cursor-default"
-            onClick={() => setOpen(false)}
-          />
-          <div
-            role="listbox"
-            className="absolute z-40 mt-2 min-w-[220px] max-w-[85vw] right-0 rounded-[10px] bg-surface p-1.5 border border-border shadow-xl flex flex-col gap-0.5"
-          >
+        <Modal open={open} onClose={() => setOpen(false)} title="Pilih Cabang">
+          <div role="listbox" className="flex flex-col gap-0.5">
             <button
               type="button"
               role="option"
@@ -174,7 +166,7 @@ export function BranchSwitcher({ branches, activeBranchId, scope, variant, onErr
               Pengaturan Cabang
             </a>
           </div>
-        </>
+        </Modal>
       ) : null}
     </div>
   );

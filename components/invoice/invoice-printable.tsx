@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Icon } from "@/components/ui/icon";
+import { Modal } from "@/components/ui/modal";
 import { formatDateWib, formatRupiah, formatTimeWib } from "@/lib/format";
 import { sizeLabel, whatsappLink, type VehicleSize } from "@/lib/pos";
 
@@ -399,67 +400,53 @@ export function InvoicePrintable({ data }: { data: PrintableInvoiceData }) {
 
       {/* Modal Kirim WhatsApp Draft */}
       {waModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm print:hidden">
-          <div className="bg-surface rounded-[10px] max-w-md w-full p-5 border border-border shadow-2xl flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Icon name="chat" className="text-[20px] text-whatsapp" />
-                <h3 className="font-headline-3 text-headline-3 text-text-primary">
-                  Kirim Draft Invoice &amp; Garansi
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setWaModalOpen(false)}
-                className="w-8 h-8 rounded-[8px] border border-border bg-surface flex items-center justify-center text-text-secondary hover:bg-surface-container transition-colors"
-              >
-                <Icon name="close" className="text-[18px]" />
-              </button>
-            </div>
+        <Modal
+          open={waModalOpen}
+          onClose={() => setWaModalOpen(false)}
+          title="Kirim Draft Invoice & Garansi"
+        >
+          <label className="flex flex-col gap-1.5">
+            <span className="font-caption text-caption text-text-secondary">
+              Nomor WhatsApp Tujuan
+            </span>
+            <input
+              type="tel"
+              value={phoneInput}
+              onChange={(e) => setPhoneInput(e.target.value)}
+              placeholder="08123456789"
+              className="h-11 px-3.5 rounded-[8px] border border-border bg-surface font-body text-body text-text-primary outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+            />
+            <span className="text-[11px] text-text-muted">
+              Dapat berupa nomor pelanggan atau nomor kasir/admin.
+            </span>
+          </label>
 
-            <label className="flex flex-col gap-1.5">
-              <span className="font-caption text-caption text-text-secondary">
-                Nomor WhatsApp Tujuan
-              </span>
-              <input
-                type="tel"
-                value={phoneInput}
-                onChange={(e) => setPhoneInput(e.target.value)}
-                placeholder="08123456789"
-                className="h-11 px-3.5 rounded-[8px] border border-border bg-surface font-body text-body text-text-primary outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
-              />
-              <span className="text-[11px] text-text-muted">
-                Dapat berupa nomor pelanggan atau nomor kasir/admin.
-              </span>
-            </label>
-
-            <div className="p-3 rounded-[8px] bg-surface-container-low text-xs text-text-secondary whitespace-pre-wrap max-h-48 overflow-y-auto border border-border">
-              {waDraftMessage}
-            </div>
-
-            <div className="flex gap-2 justify-end pt-2">
-              <button
-                type="button"
-                onClick={() => setWaModalOpen(false)}
-                className="h-11 px-4 rounded-[8px] border border-border bg-surface text-text-secondary font-body-bold text-caption hover:bg-surface-container transition-colors"
-              >
-                Batal
-              </button>
-              <a
-                href={whatsappLink(phoneInput.trim(), waDraftMessage)}
-                target="_blank"
-                rel="noreferrer"
-                onClick={() => setWaModalOpen(false)}
-                className={`h-11 px-5 rounded-[8px] font-body-bold text-caption text-white flex items-center gap-2 hover:opacity-90 transition-opacity shadow-sm ${
-                  phoneInput.trim() ? "bg-whatsapp" : "bg-surface-container text-text-muted pointer-events-none opacity-50"
-                }`}
-              >
-                <Icon name="send" className="text-[18px]" />
-                Kirim via WhatsApp
-              </a>
-            </div>
+          <div className="p-3 rounded-[8px] bg-surface-container-low text-xs text-text-secondary whitespace-pre-wrap max-h-48 overflow-y-auto border border-border">
+            {waDraftMessage}
           </div>
-        </div>
+
+          <div className="flex gap-2 justify-end pt-2">
+            <button
+              type="button"
+              onClick={() => setWaModalOpen(false)}
+              className="h-11 px-4 rounded-[8px] border border-border bg-surface text-text-secondary font-body-bold text-caption hover:bg-surface-container transition-colors"
+            >
+              Batal
+            </button>
+            <a
+              href={whatsappLink(phoneInput.trim(), waDraftMessage)}
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => setWaModalOpen(false)}
+              className={`h-11 px-5 rounded-[8px] font-body-bold text-caption text-white flex items-center gap-2 hover:opacity-90 transition-opacity shadow-sm ${
+                phoneInput.trim() ? "bg-whatsapp" : "bg-surface-container text-text-muted pointer-events-none opacity-50"
+              }`}
+            >
+              <Icon name="send" className="text-[18px]" />
+              Kirim via WhatsApp
+            </a>
+          </div>
+        </Modal>
       )}
     </div>
   );

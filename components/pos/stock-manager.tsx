@@ -861,21 +861,8 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
       )}
 
       {selected ? (
-        <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/40 backdrop-blur-sm">
-          <div className="w-full max-w-[480px] bg-surface rounded-t-[28px] p-5 pb-safe flex flex-col gap-4 shadow-[0_-8px_30px_rgba(0,0,0,0.15)]">
-            <div className="flex items-center justify-between">
-              <h3 className="font-headline-2 text-headline-2 text-text-primary">
-                Klaim Stok
-              </h3>
-              <button
-                type="button"
-                onClick={() => setSelected(null)}
-                aria-label="Tutup"
-                className="w-9 h-9 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary "
-              >
-                <Icon name="close" className="text-[20px]" />
-              </button>
-            </div>
+        <Modal open={!!selected} onClose={() => setSelected(null)} title="Klaim Stok">
+          <div className="flex flex-col gap-4">
             <div className="p-3 rounded-2xl bg-surface-container-low flex items-center justify-between">
               <span className="font-body-bold text-body-bold text-text-primary">
                 {selected.item_name}
@@ -943,21 +930,12 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
               {submitting ? "Mengirim..." : "Ajukan Klaim"}
             </button>
           </div>
-        </div>
+        </Modal>
       ) : null}
 
       {deleteTarget ? (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
-          <div className="w-full max-w-sm bg-surface rounded-[28px] p-6 flex flex-col gap-4 shadow-[0_8px_40px_rgba(0,0,0,0.2)]">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-danger-surface flex items-center justify-center shrink-0">
-                <Icon name="delete_forever" className="text-[24px] text-danger-text" />
-              </div>
-              <div>
-                <h3 className="font-headline-2 text-headline-2 text-text-primary">Hapus Item</h3>
-                <p className="font-caption text-caption text-text-muted">Tindakan ini tidak bisa dibatalkan</p>
-              </div>
-            </div>
+        <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} title="Hapus Item">
+          <div className="flex flex-col gap-4">
             <p className="font-body text-body text-text-secondary">
               Yakin ingin menghapus <span className="font-body-bold text-body-bold text-text-primary">{deleteTarget.item_name}</span>? Data tidak bisa dikembalikan.
             </p>
@@ -984,7 +962,7 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
               </button>
             </div>
           </div>
-        </div>
+        </Modal>
       ) : null}
 
       {/* ─── Modal Stok Masuk ─── */}
@@ -1116,15 +1094,8 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
 
       {/* ─── Modal Tambah Item Stok Baru ─── */}
       {newItemOpen && (
-        <>
-          <div className="fixed inset-0 z-[60] bg-black/50" onClick={() => setNewItemOpen(false)} />
-          <div className="fixed inset-x-4 bottom-4 z-[61] bg-surface rounded-2xl p-5 shadow-xl max-w-md mx-auto flex flex-col gap-4" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between">
-              <h3 className="font-headline-2 text-headline-2 text-text-primary">Tambah Item Stok Baru</h3>
-              <button type="button" onClick={() => setNewItemOpen(false)} className="w-9 h-9 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary ">
-                <Icon name="close" className="text-[20px]" />
-              </button>
-            </div>
+        <Modal open={newItemOpen} onClose={() => setNewItemOpen(false)} title="Tambah Item Stok Baru">
+          <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-3">
               <label className="flex flex-col gap-1">
                 <span className="font-caption text-caption text-text-secondary">Nama Item <span className="text-danger-text">*</span></span>
@@ -1205,25 +1176,13 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
               </button>
             </div>
           </div>
-        </>
+        </Modal>
       )}
 
       {/* Modal Edit Item */}
       {editItemTarget && (
-        <>
-          <div className="fixed inset-0 z-modal-backdrop bg-scrim/40 backdrop-blur-sm" onClick={() => setEditItemTarget(null)} />
-          <div className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-modal max-w-lg mx-auto bg-surface rounded-2xl p-6 shadow-2xl border border-white/80 flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="p-2 rounded-xl bg-brand-50 text-brand-600">
-                  <Icon name="edit" className="text-[20px]" />
-                </span>
-                <span className="font-headline-3 text-headline-3 text-text-primary">Edit Item Stok</span>
-              </div>
-              <button type="button" onClick={() => setEditItemTarget(null)} className="p-1.5 rounded-lg text-text-muted hover:bg-surface-container">
-                <Icon name="close" className="text-[20px]" />
-              </button>
-            </div>
+        <Modal open={!!editItemTarget} onClose={() => setEditItemTarget(null)} title="Edit Item Stok">
+          <div className="flex flex-col gap-4">
 
             <div className="flex flex-col gap-3">
               <label className="flex flex-col gap-1">
@@ -1307,7 +1266,7 @@ const inItem = items.find((item) => item.id === inItemId) ?? null;
               </button>
             </div>
           </div>
-        </>
+        </Modal>
       )}
     </div>
   );

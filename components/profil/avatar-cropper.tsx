@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Icon } from "@/components/ui/icon";
+import { Modal } from "@/components/ui/modal";
 
 const UKURAN_OUTPUT = 512;
 const SISI_BINGKAI = 200;
@@ -126,10 +127,10 @@ export function AvatarCropper({
   const persen = Math.round((skala / skalaAwal) * 100);
 
   return (
-    <div className="fixed inset-0 z-[70] bg-black/90 flex flex-col items-center justify-center gap-3.5 p-gutter">
-      <p className="font-body-bold text-body-bold text-white">Atur Bingkai Foto</p>
-      <p className="font-caption text-caption text-white/70 text-center">
-        Geser & zoom foto supaya wajah berada tepat di dalam bingkai.
+    <Modal open={true} onClose={onBatal} title="Atur Bingkai Foto">
+      <div className="flex flex-col items-center gap-3.5">
+      <p className="font-caption text-caption text-text-secondary text-center">
+        Geser &amp; zoom foto supaya wajah berada tepat di dalam bingkai.
       </p>
 
       {galat ? (
@@ -228,5 +229,6 @@ export function AvatarCropper({
         </button>
       </div>
     </div>
+  </Modal>
   );
 }

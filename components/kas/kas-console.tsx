@@ -6,7 +6,9 @@ import { formatRupiah, formatTimeWib } from "@/lib/format";
 import { canvasToWebp, captureSquareCanvas } from "@/lib/attendance";
 import { createClient } from "@/lib/supabase/client";
 import { useSingleFlight } from "@/lib/use-single-flight";
+import { Modal } from '@/components/ui/modal';
 import { Icon } from "@/components/ui/icon";
+
 
 type PettyCashRow = {
   id: string;
@@ -819,7 +821,8 @@ export function KasConsole({
       </div>{/* end pb-nav */}
 
       {cameraOpen ? (
-        <div className="fixed inset-0 z-[60] bg-black/80 flex flex-col items-center justify-center gap-4 p-gutter">
+        <Modal open={cameraOpen} onClose={closeCamera} title="Foto Bukti">
+          <div className="relative w-full">
           <video
             ref={videoRef}
             playsInline
@@ -844,18 +847,19 @@ export function KasConsole({
               <Icon name="photo_camera" className="text-[28px]" />
             </button>
           </div>
-        </div>
+          </div>
+        </Modal>
       ) : null}
 
       {/* Payment Modal */}
       {paymentModal ? (
         <>
           <div
-            className="fixed inset-0 z-[60] bg-black/50"
+            className="fixed inset-0 z-[70] bg-black/50"
             onClick={() => setPaymentModal(null)}
           />
           <div
-            className="fixed inset-x-0 bottom-0 z-[61] max-h-[92dvh] bg-surface rounded-t-[10px] flex flex-col shadow-xl"
+            className="fixed inset-x-0 bottom-0 z-[71] max-h-[92dvh] bg-surface rounded-t-[10px] flex flex-col shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}

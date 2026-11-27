@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { formatRupiah, formatTimeWib, formatDateWib } from "@/lib/format";
 import { PAYMENT_LABELS, whatsappLink } from "@/lib/pos";
 import { Icon } from "@/components/ui/icon";
+import { Modal } from "@/components/ui/modal";
 import { useSingleFlight } from "@/lib/use-single-flight";
 import { useToast } from "@/components/toast";
 import {
@@ -312,30 +313,9 @@ export function OrderQueue({
   return (
     <>
       {/* ── Modal Pilih Tim ── */}
-      {showTeamModal && claimOrder && (
-        <>
-          {/* backdrop */}
-          <div
-            className="fixed inset-0 z-[60] bg-black/50"
-            onClick={() => setShowTeamModal(false)}
-          />
-          {/* sheet */}
-          <div
-            className="fixed inset-x-0 bottom-0 z-[61] max-h-[90dvh] bg-surface rounded-t-2xl p-6 flex flex-col gap-4 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* header */}
-            <div className="flex items-center justify-between">
-              <h3 className="font-headline-2 text-headline-2 text-text-primary">Pilih Rekan Kerja</h3>
-              <button
-                type="button"
-                onClick={() => setShowTeamModal(false)}
-                className="w-10 h-10 rounded-xl bg-surface-container-low flex items-center justify-center text-text-secondary "
-                aria-label="Tutup"
-              >
-                <Icon name="close" className="text-[22px]" />
-              </button>
-            </div>
+      {claimOrder && (
+        <Modal open={showTeamModal} onClose={() => setShowTeamModal(false)} title="Pilih Rekan Kerja">
+          <div className="flex flex-col gap-4">
 
             <p className="font-caption text-caption text-text-secondary">
               Order <b>{claimOrder.order_number}</b> ({claimOrder.vehicle_model ?? "Kendaraan"})<br />
@@ -412,7 +392,7 @@ export function OrderQueue({
               </button>
             </div>
           </div>
-        </>
+        </Modal>
       )}
 
       {/* ── Main queue list ── */}

@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { formatRupiah } from "@/lib/format";
 import { Icon } from "@/components/ui/icon";
+import { Modal } from "@/components/ui/modal";
 
 /* ------------------------------------------------------------------ types */
 export type CommissionSetting = {
@@ -236,116 +237,104 @@ export function KomisiSettingView({
 
       {/* Form modal overlay */}
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-950/50 p-4">
-          <div className="bg-surface rounded-[10px] border border-border-subtle shadow-modal w-full max-w-sm flex flex-col gap-4 p-5">
-            <div className="flex items-center justify-between">
-              <h3 className="font-headline-2 text-headline-2 text-text-primary">
-                {editId ? "Edit Aturan Komisi" : "Tambah Aturan Komisi"}
-              </h3>
-              <button
-                type="button"
-                onClick={() => setShowForm(false)}
-                aria-label="Tutup"
-                className="w-11 h-11 rounded-[8px] bg-surface-variant hover:bg-border-subtle flex items-center justify-center text-text-primary transition-colors"
-              >
-                <Icon name="close" className="text-[20px]" />
-              </button>
-            </div>
-
-            {/* Karyawan */}
-            <div className="flex flex-col gap-1">
-              <label className="font-caption text-caption text-text-secondary">
-                Karyawan
-              </label>
-              <select
-                value={formProfileId}
-                onChange={(e) => setFormProfileId(e.target.value)}
-                className="h-11 rounded-[8px] border border-border-strong px-3 font-body-regular text-body-regular text-text-primary bg-surface"
-              >
-                {profiles.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.fullName} ({ROLE_LABELS[p.role] ?? p.role})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Jasa (opsional) */}
-            <div className="flex flex-col gap-1">
-              <label className="font-caption text-caption text-text-secondary">
-                Jasa{" "}
-                <span className="text-text-muted">(kosong = semua jasa)</span>
-              </label>
-              <select
-                value={formServiceId}
-                onChange={(e) => setFormServiceId(e.target.value)}
-                className="h-11 rounded-[8px] border border-border-strong px-3 font-body-regular text-body-regular text-text-primary bg-surface"
-              >
-                <option value="">Semua Jasa</option>
-                {services.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Tipe komisi */}
-            <div className="flex flex-col gap-1">
-              <label className="font-caption text-caption text-text-secondary">
-                Tipe Komisi
-              </label>
-              <div className="flex gap-2">
-                {(["percent", "flat"] as const).map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => setFormType(t)}
-                    className={`flex-1 min-h-[44px] rounded-[8px] border font-body-bold text-body-bold transition-colors ${
-                      formType === t
-                        ? "bg-primary text-white border-primary"
-                        : "border-border-strong text-text-secondary bg-surface hover:bg-surface-variant"
-                    }`}
-                  >
-                    {t === "percent" ? "Persen (%)" : "Flat (Rp)"}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Nilai */}
-            <div className="flex flex-col gap-1">
-              <label className="font-caption text-caption text-text-secondary">
-                Nilai{" "}
-                {formType === "percent" ? "(contoh: 5 untuk 5%)" : "(contoh: 10000 untuk Rp 10.000)"}
-              </label>
-              <input
-                type="number"
-                min={0}
-                step={formType === "percent" ? 0.5 : 1000}
-                value={formValue}
-                onChange={(e) => setFormValue(e.target.value)}
-                placeholder={formType === "percent" ? "Misal: 5" : "Misal: 10000"}
-                className="h-11 rounded-[8px] border border-border-strong px-3 font-body-regular text-body-regular text-text-primary bg-surface tabular-nums"
-              />
-            </div>
-
-            {formError && (
-              <p className="font-caption text-caption text-danger-text bg-danger-surface border border-red-200 rounded-[8px] px-3 py-2">
-                {formError}
-              </p>
-            )}
-
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={pending}
-              className="min-h-[44px] rounded-[8px] primary-gradient clay-glow text-white font-body-bold text-body-bold hover:opacity-95 transition-opacity"
+        <Modal
+          open={showForm}
+          onClose={() => setShowForm(false)}
+          title={editId ? "Edit Aturan Komisi" : "Tambah Aturan Komisi"}
+        >
+          {/* Karyawan */}
+          <div className="flex flex-col gap-1">
+            <label className="font-caption text-caption text-text-secondary">
+              Karyawan
+            </label>
+            <select
+              value={formProfileId}
+              onChange={(e) => setFormProfileId(e.target.value)}
+              className="h-11 rounded-[8px] border border-border px-3 font-body text-body text-text-primary bg-surface"
             >
-              {pending ? "Menyimpan..." : "Simpan Aturan"}
-            </button>
+              {profiles.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.fullName} ({ROLE_LABELS[p.role] ?? p.role})
+                </option>
+              ))}
+            </select>
           </div>
-        </div>
+
+          {/* Jasa (opsional) */}
+          <div className="flex flex-col gap-1">
+            <label className="font-caption text-caption text-text-secondary">
+              Jasa{" "}
+              <span className="text-text-muted">(kosong = semua jasa)</span>
+            </label>
+            <select
+              value={formServiceId}
+              onChange={(e) => setFormServiceId(e.target.value)}
+              className="h-11 rounded-[8px] border border-border px-3 font-body text-body text-text-primary bg-surface"
+            >
+              <option value="">Semua Jasa</option>
+              {services.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Tipe komisi */}
+          <div className="flex flex-col gap-1">
+            <label className="font-caption text-caption text-text-secondary">
+              Tipe Komisi
+            </label>
+            <div className="flex gap-2">
+              {(["percent", "flat"] as const).map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setFormType(t)}
+                  className={`flex-1 min-h-[44px] rounded-[8px] border font-body-bold text-body-bold transition-colors ${
+                    formType === t
+                      ? "bg-primary text-white border-primary"
+                      : "border-border text-text-secondary bg-surface hover:bg-surface-variant"
+                  }`}
+                >
+                  {t === "percent" ? "Persen (%)" : "Flat (Rp)"}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Nilai */}
+          <div className="flex flex-col gap-1">
+            <label className="font-caption text-caption text-text-secondary">
+              Nilai{" "}
+              {formType === "percent" ? "(contoh: 5 untuk 5%)" : "(contoh: 10000 untuk Rp 10.000)"}
+            </label>
+            <input
+              type="number"
+              min={0}
+              step={formType === "percent" ? 0.5 : 1000}
+              value={formValue}
+              onChange={(e) => setFormValue(e.target.value)}
+              placeholder={formType === "percent" ? "Misal: 5" : "Misal: 10000"}
+              className="h-11 rounded-[8px] border border-border px-3 font-body text-body text-text-primary bg-surface tabular-nums"
+            />
+          </div>
+
+          {formError && (
+            <p className="font-caption text-caption text-danger-text bg-danger-surface border border-red-200 rounded-[8px] px-3 py-2">
+              {formError}
+            </p>
+          )}
+
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={pending}
+            className="min-h-[44px] rounded-[8px] primary-gradient clay-glow text-white font-body-bold text-body-bold hover:opacity-95 transition-opacity mt-2"
+          >
+            {pending ? "Menyimpan..." : "Simpan Aturan"}
+          </button>
+        </Modal>
       )}
 
       {/* Grouped list */}

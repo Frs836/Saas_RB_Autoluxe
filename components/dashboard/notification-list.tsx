@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/toast";
 import { Icon } from "@/components/ui/icon";
+import { Modal } from "@/components/ui/modal";
 
 export type BarisNotifikasi = {
   id: string;
@@ -318,13 +319,7 @@ function DetailNotifikasi({
   }
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label={baris.title}
-      className="fixed inset-0 z-[90] bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
-      onClick={onTutup}
-    >
+    <Modal open={true} onClose={onTutup} title={baris.title}>
       <div
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => {
@@ -385,6 +380,6 @@ function DetailNotifikasi({
           ) : null}
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

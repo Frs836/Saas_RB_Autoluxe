@@ -6,6 +6,7 @@ import { formatDateWib } from "@/lib/format";
 import { canvasToWebp, captureSquareCanvas } from "@/lib/attendance";
 import { createClient } from "@/lib/supabase/client";
 import { Icon } from "@/components/ui/icon";
+import { Modal } from "@/components/ui/modal";
 import {
   submitTimeOffAction,
   decideTimeOffAction,
@@ -639,7 +640,9 @@ export function TimeOffConsole({
       </div>
 
       {cameraOpen ? (
-        <div className="fixed inset-0 z-[60] bg-black/85 flex flex-col items-center justify-center gap-3 p-gutter">
+        <Modal open={cameraOpen} onClose={closeCamera} title="Foto Bukti">
+          <div className="relative w-full">
+
           {proofPreview ? (
             <img
               src={proofPreview}
@@ -683,7 +686,8 @@ export function TimeOffConsole({
               </button>
             )}
           </div>
-        </div>
+          </div>
+        </Modal>
       ) : null}
 
       <div className="h-[76px]" />

@@ -85,7 +85,7 @@ const [branchRes, ordersRes, cashRes, stockRes] = await Promise.all([
         supabase
           .from("orders")
           .select(
-"id, branch_id, total_price, status, assigned_to, completed_at, created_at, payment_state",
+            "id, branch_id, order_number, license_plate, service_package, total_price, status, assigned_to, completed_at, created_at, payment_state",
           ),
         branchId,
         "orders",
@@ -93,7 +93,7 @@ const [branchRes, ordersRes, cashRes, stockRes] = await Promise.all([
       scopeBranchQuery(
         supabase
           .from("cash_flow")
-          .select("id, type, amount, category, branch_id, created_at"),
+          .select("id, type, amount, category, description, payment_method, order_id, branch_id, created_at"),
         branchId,
         "cash_flow",
       ),
@@ -259,13 +259,60 @@ const lowStock = stockRows
       min: Number(s.min_stock_alert ?? 0),
     }));
 
-const data = {
+  // Rincian Finansial per Metode Pembayaran (Cash, QRIS, Transfer Bank)
+  const METHODS = [
+    { key: "cash", label: "Tunai (Cash)" },
+    { key: "qris", label: "QRIS" },
+    { key: "bank_transfer", label: "Transfer Bank" },
+  ] as const;
+
+  const orderMap = new Map(allOrders.map((o) => [o.id as string, o]));
+
+  const byPaymentMethod = METHODS.map((m) => {
+    const rows = cashRows.filter((c) => (c.payment_method ?? "cash") === m.key);
+    const inRows = rows.filter((c) => c.type === "in");
+    const outRows = rows.filter((c) => c.type === "out");
+    const inc = inRows.reduce((sum, c) => sum + Number(c.amount ?? 0), 0);
+    const exp = outRows.reduce((sum, c) => sum + Number(c.amount ?? 0), 0);
+    return {
+      method: m.key,
+      label: m.label,
+      income: inc,
+      expense: exp,
+      net: inc - exp,
+      incomeCount: inRows.length,
+      expenseCount: outRows.length,
+    };
+  });
+
+  const transactions = cashRows.map((c) => {
+    const relOrder = c.order_id ? orderMap.get(c.order_id as string) : null;
+    let description = c.description ?? "";
+    if (c.category === "pos_order" && relOrder) {
+      description = `Order #${relOrder.order_number}${relOrder.license_plate ? ` (${relOrder.license_plate})` : ""}${relOrder.service_package ? ` - ${relOrder.service_package}` : ""}`;
+    }
+    return {
+      id: c.id as string,
+      type: (c.type ?? "in") as "in" | "out",
+      amount: Number(c.amount ?? 0),
+      category: (c.category ?? "Lainnya") as string,
+      description,
+      paymentMethod: (c.payment_method ?? "cash") as "cash" | "qris" | "bank_transfer",
+      createdAt: c.created_at as string,
+      orderNumber: relOrder?.order_number ?? null,
+      licensePlate: relOrder?.license_plate ?? null,
+    };
+  }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  const data = {
     finance: {
       income,
       expense,
       net: income - expense,
       monthly,
       byCategory: financeByCategory,
+      byPaymentMethod,
+      transactions,
     },
     branchRevenue,
     unitsSold,

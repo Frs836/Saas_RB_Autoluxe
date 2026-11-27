@@ -10,7 +10,7 @@ type CashFlowReport = {
   inflow: { from_orders: number; other: number; total: number };
   outflow: { bahan: number; konsumsi: number; operasional: number; lainnya: number; total: number };
   net_cash: number;
-  by_method: { method: string; masuk: number; keluar: number }[];
+  by_method: { method: string; masuk: number; keluar: number; count_in?: number; count_out?: number }[];
   daily: { date: string; masuk: number; keluar: number; net: number }[];
   transactions: {
     id: string; date: string; type: string; amount: number;
@@ -42,6 +42,7 @@ export function CashFlowView({
   const [from,    setFrom]    = useState(defaultFrom);
   const [to,      setTo]      = useState(defaultTo);
   const [showTx,  setShowTx]  = useState(false);
+  const [methodFilter, setMethodFilter] = useState<"all" | "cash" | "qris" | "bank_transfer">("all");
   const [error,   setError]   = useState<string | null>(initErr);
   const [pending, startTransition] = useTransition();
 
@@ -236,47 +237,141 @@ export function CashFlowView({
             ))}
           </div>
 
-          {/* Per Metode */}
+          {/* Per Metode Pembayaran Grid */}
           {(report.by_method ?? []).length > 0 && (
             <div className="clay-card p-4 flex flex-col gap-3">
-              <h3 className="font-headline-2 text-headline-2 text-text-primary">Per Metode Pembayaran</h3>
-              {report.by_method.map((m) => (
-                <div key={m.method} className="flex items-center justify-between py-1.5 border-b border-outline-variant/40 last:border-0">
-                  <span className="font-caption text-caption text-text-secondary">{METHOD_LABEL[m.method] ?? m.method}</span>
-                  <div className="text-right">
-                    <p className="font-caption text-caption text-success-text">+{formatRupiah(m.masuk)}</p>
-                    {m.keluar > 0 && <p className="font-caption text-caption text-danger-text">-{formatRupiah(m.keluar)}</p>}
-                  </div>
-                </div>
-              ))}
+              <div className="flex items-center gap-2">
+                <Icon name="account_balance_wallet" className="text-primary text-[20px]" />
+                <h3 className="font-headline-2 text-headline-2 text-text-primary">Per Metode Pembayaran</h3>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                {report.by_method.map((m) => {
+                  const isCash = m.method === "cash";
+                  const isQris = m.method === "qris";
+                  const dotColor = isCash ? "bg-emerald-500" : isQris ? "bg-sky-500" : "bg-purple-500";
+                  const badgeBg = isCash ? "bg-emerald-50 text-emerald-700" : isQris ? "bg-sky-50 text-sky-700" : "bg-purple-50 text-purple-700";
+
+                  return (
+                    <div key={m.method} className="p-3 rounded-[8px] bg-surface-variant border border-border-subtle flex flex-col gap-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="font-body-bold text-caption text-text-primary flex items-center gap-1.5">
+                          <span className={`w-2 h-2 rounded-full ${dotColor}`} />
+                          {METHOD_LABEL[m.method] ?? m.method}
+                        </span>
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${badgeBg}`}>
+                          {m.count_in || 0} in
+                        </span>
+                      </div>
+                      <div className="flex flex-col gap-0.5 pt-1 border-t border-border-subtle text-caption">
+                        <div className="flex items-center justify-between">
+                          <span className="text-text-muted">Masuk:</span>
+                          <span className="font-body-bold text-success-text tabular-nums">+{formatRupiah(m.masuk)}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-text-muted">Keluar:</span>
+                          <span className="font-body-bold text-danger-text tabular-nums">-{formatRupiah(m.keluar)}</span>
+                        </div>
+                        <div className="flex items-center justify-between pt-0.5 border-t border-border-subtle/50">
+                          <span className="font-semibold text-text-secondary">Net:</span>
+                          <span className="font-bold text-text-primary tabular-nums">{formatRupiah(m.masuk - m.keluar)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
 
-          {/* Detail transaksi toggle */}
-          <button type="button" onClick={() => setShowTx((v) => !v)}
-            className="clay-card p-4 flex items-center justify-between hover:bg-surface-variant transition-colors">
-            <span className="font-body-bold text-body-bold text-text-primary">
-              Detail Transaksi ({(report.transactions ?? []).length})
-            </span>
-            <Icon name={showTx ? "expand_more" : "chevron_right"} className="text-text-muted text-[20px]" />
-          </button>
-
-          {showTx && (
-            <div className="clay-card flex flex-col divide-y divide-outline-variant/40">
-              {(report.transactions ?? []).map((tx) => (
-                <div key={tx.id} className="px-4 py-3 flex items-center justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-caption text-caption text-text-primary truncate">{tx.category}</p>
-                    {tx.description && <p className="font-micro-badge text-micro-badge text-text-muted truncate">{tx.description}</p>}
-                    <p className="font-micro-badge text-micro-badge text-text-muted">{tx.date} · {METHOD_LABEL[tx.payment_method] ?? tx.payment_method}</p>
-                  </div>
-                  <p className={`font-body-bold text-body-bold shrink-0 ${tx.type === "in" ? "text-success-text" : "text-danger-text"}`}>
-                    {tx.type === "in" ? "+" : "-"}{formatRupiah(tx.amount)}
-                  </p>
-                </div>
-              ))}
+          {/* Detail transaksi toggle & list */}
+          <div className="clay-card p-4 flex flex-col gap-3">
+            <div className="flex items-center justify-between cursor-pointer" onClick={() => setShowTx((v) => !v)}>
+              <span className="font-body-bold text-body-bold text-text-primary flex items-center gap-2">
+                <Icon name="receipt_long" className="text-primary text-[20px]" />
+                Detail Riwayat Transaksi ({(report.transactions ?? []).length})
+              </span>
+              <Icon name={showTx ? "expand_more" : "chevron_right"} className="text-text-muted text-[20px]" />
             </div>
-          )}
+
+            {showTx && (
+              <div className="flex flex-col gap-3 pt-2 border-t border-border-subtle">
+                {/* Method Filter Filter buttons */}
+                <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
+                  {(
+                    [
+                      { key: "all", label: "Semua" },
+                      { key: "cash", label: "Tunai" },
+                      { key: "qris", label: "QRIS" },
+                      { key: "bank_transfer", label: "Transfer" },
+                    ] as const
+                  ).map((f) => (
+                    <button
+                      key={f.key}
+                      type="button"
+                      onClick={() => setMethodFilter(f.key)}
+                      className={`px-3 py-1 text-xs rounded-full border transition-all ${
+                        methodFilter === f.key
+                          ? "bg-primary text-white border-primary shadow-sm"
+                          : "bg-surface-variant text-text-secondary border-border-subtle hover:bg-surface"
+                      }`}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Transaction list */}
+                {(() => {
+                  const filtered = (report.transactions ?? []).filter((tx) =>
+                    methodFilter === "all" ? true : tx.payment_method === methodFilter
+                  );
+
+                  if (filtered.length === 0) {
+                    return (
+                      <p className="p-4 text-center text-text-muted text-caption">
+                        Tidak ada transaksi dengan metode pembayaran ini.
+                      </p>
+                    );
+                  }
+
+                  return (
+                    <div className="flex flex-col divide-y divide-border-subtle">
+                      {filtered.map((tx) => {
+                        const isCash = tx.payment_method === "cash";
+                        const isQris = tx.payment_method === "qris";
+                        const badgeStyle = isCash
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                          : isQris
+                          ? "bg-sky-50 text-sky-700 border-sky-200"
+                          : "bg-purple-50 text-purple-700 border-purple-200";
+
+                        return (
+                          <div key={tx.id} className="py-2.5 flex items-center justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <p className="font-caption text-caption text-text-primary truncate">
+                                {tx.description || tx.category}
+                              </p>
+                              <p className="text-[11px] text-text-muted tabular-nums">
+                                {tx.date} · {tx.category}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <span className={`font-micro-badge text-[10px] px-2 py-0.5 rounded-full border font-semibold ${badgeStyle}`}>
+                                {METHOD_LABEL[tx.payment_method] ?? tx.payment_method}
+                              </span>
+                              <p className={`font-body-bold text-caption tabular-nums shrink-0 ${tx.type === "in" ? "text-success-text" : "text-danger-text"}`}>
+                                {tx.type === "in" ? "+" : "-"}{formatRupiah(tx.amount)}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+          </div>
 
           {/* Export */}
           <button type="button" onClick={exportExcel}

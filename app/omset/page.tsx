@@ -24,7 +24,7 @@ export default async function OmsetPage() {
     scopeBranchQuery(
       supabase
         .from("orders")
-        .select("id, total_price, status, payment_state, created_at, service_package")
+        .select("id, order_number, license_plate, total_price, status, payment_state, payment_method, created_at, service_package")
         .gte("created_at", sinceIso),
       branchId,
       "orders",
@@ -32,7 +32,7 @@ export default async function OmsetPage() {
     scopeBranchQuery(
       supabase
         .from("cash_flow")
-        .select("id, type, amount, category, created_at")
+        .select("id, type, amount, category, payment_method, description, order_id, created_at")
         .gte("created_at", sinceIso),
       branchId,
       "cash_flow",
@@ -41,9 +41,12 @@ export default async function OmsetPage() {
 
   const orders = (ordersRes.data ?? []).map((o) => ({
     id: o.id,
+    orderNumber: o.order_number ?? "",
+    licensePlate: o.license_plate ?? "",
     totalPrice: Number(o.total_price ?? 0),
     status: o.status ?? "",
     paymentState: o.payment_state ?? "",
+    paymentMethod: o.payment_method ?? null,
     createdAt: o.created_at ?? "",
     servicePackage: o.service_package ?? "",
   }));
@@ -53,6 +56,9 @@ export default async function OmsetPage() {
     type: c.type ?? "",
     amount: Number(c.amount ?? 0),
     category: c.category ?? "",
+    paymentMethod: c.payment_method ?? "cash",
+    description: c.description ?? "",
+    orderId: c.order_id ?? null,
     createdAt: c.created_at ?? "",
   }));
 

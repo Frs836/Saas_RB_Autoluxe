@@ -6,9 +6,12 @@ import { formatRupiah } from "@/lib/format";
 
 type OrderRow = {
   id: string;
+  orderNumber?: string;
+  licensePlate?: string;
   totalPrice: number;
   status: string;
   paymentState: string;
+  paymentMethod?: string | null;
   createdAt: string;
   servicePackage: string;
 };
@@ -18,6 +21,9 @@ type CashFlowRow = {
   type: string;
   amount: number;
   category: string;
+  paymentMethod?: string;
+  description?: string;
+  orderId?: string | null;
   createdAt: string;
 };
 
@@ -53,6 +59,7 @@ export function OmsetView({
   cashFlows: CashFlowRow[];
 }) {
   const [mode, setMode] = useState<FilterMode>("today");
+  const [methodFilter, setMethodFilter] = useState<"all" | "cash" | "qris" | "bank_transfer">("all");
   const [customFrom, setCustomFrom] = useState(formatDateInput(todayWib()));
   const [customTo, setCustomTo] = useState(formatDateInput(new Date()));
 
@@ -123,6 +130,52 @@ export function OmsetView({
     { key: "month", label: "30 Hari" },
     { key: "custom", label: "Pilih Tanggal" },
   ];
+
+  // Rincian Omzet & Pemasukan per Metode Pembayaran (Cash, QRIS, Transfer)
+  const methodStats = useMemo(() => {
+    const res = {
+      cash: { masuk: 0, orderCount: 0, keluar: 0 },
+      qris: { masuk: 0, orderCount: 0, keluar: 0 },
+      bank_transfer: { masuk: 0, orderCount: 0, keluar: 0 },
+    };
+
+    for (const c of filteredCash) {
+      const m = (c.paymentMethod ?? "cash") as "cash" | "qris" | "bank_transfer";
+      if (res[m]) {
+        if (c.type === "in") {
+          res[m].masuk += c.amount;
+          if (c.category === "pos_order") res[m].orderCount += 1;
+        } else if (c.type === "out") {
+          res[m].keluar += c.amount;
+        }
+      }
+    }
+
+    return res;
+  }, [filteredCash]);
+
+  // Transaksi gabungan untuk daftar riwayat
+  const combinedTransactions = useMemo(() => {
+    const list = filteredCash.map((c) => {
+      const relOrder = c.orderId ? orders.find((o) => o.id === c.orderId) : null;
+      let label = c.description || c.category;
+      if (c.category === "pos_order" && relOrder) {
+        label = `Order #${relOrder.orderNumber || ""}${relOrder.licensePlate ? ` (${relOrder.licensePlate})` : ""}${relOrder.servicePackage ? ` - ${relOrder.servicePackage}` : ""}`;
+      }
+      return {
+        id: c.id,
+        type: c.type,
+        amount: c.amount,
+        category: c.category,
+        paymentMethod: (c.paymentMethod ?? "cash") as "cash" | "qris" | "bank_transfer",
+        label,
+        createdAt: c.createdAt,
+      };
+    });
+
+    if (methodFilter === "all") return list;
+    return list.filter((t) => t.paymentMethod === methodFilter);
+  }, [filteredCash, orders, methodFilter]);
 
   return (
     <div className="px-gutter py-4 flex flex-col gap-4 pb-nav-plain lg:pb-8">
@@ -218,6 +271,216 @@ export function OmsetView({
           <p className="font-headline-2 text-headline-2 text-danger-text tabular-nums">{formatRupiah(cashOut)}</p>
         </div>
       </div>
+
+      {/* Rincian Finansial per Metode Pembayaran (Cash, QRIS, Transfer) */}
+      <section className="clay-card rounded-[10px] p-4 flex flex-col gap-3">
+        <div className="flex items-center gap-2">
+          <Icon name="account_balance_wallet" className="text-primary text-[20px]" />
+          <h3 className="font-headline-3 text-headline-3 text-text-primary">
+            Rincian per Metode Pembayaran
+          </h3>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {/* Tunai (Cash) */}
+          <div className="p-3.5 rounded-[10px] bg-surface-variant border border-border-subtle flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <span className="font-body-bold text-caption text-text-primary flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" />
+                Tunai (Cash)
+              </span>
+              <span className="font-micro-badge text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold tabular-nums">
+                {methodStats.cash.orderCount} order
+              </span>
+            </div>
+            <div className="flex flex-col gap-1 pt-1 border-t border-border-subtle">
+              <div className="flex items-center justify-between text-caption">
+                <span className="text-text-muted">Masuk:</span>
+                <span className="font-body-bold text-success-text tabular-nums">
+                  {formatRupiah(methodStats.cash.masuk)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-caption">
+                <span className="text-text-muted">Keluar:</span>
+                <span className="font-body-bold text-danger-text tabular-nums">
+                  {formatRupiah(methodStats.cash.keluar)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-caption pt-1 border-t border-border-subtle/60">
+                <span className="font-semibold text-text-secondary">Net:</span>
+                <span className="font-bold text-text-primary tabular-nums">
+                  {formatRupiah(methodStats.cash.masuk - methodStats.cash.keluar)}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* QRIS */}
+          <div className="p-3.5 rounded-[10px] bg-surface-variant border border-border-subtle flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <span className="font-body-bold text-caption text-text-primary flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-sky-500 inline-block" />
+                QRIS
+              </span>
+              <span className="font-micro-badge text-[10px] px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-200 font-semibold tabular-nums">
+                {methodStats.qris.orderCount} order
+              </span>
+            </div>
+            <div className="flex flex-col gap-1 pt-1 border-t border-border-subtle">
+              <div className="flex items-center justify-between text-caption">
+                <span className="text-text-muted">Masuk:</span>
+                <span className="font-body-bold text-success-text tabular-nums">
+                  {formatRupiah(methodStats.qris.masuk)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-caption">
+                <span className="text-text-muted">Keluar:</span>
+                <span className="font-body-bold text-danger-text tabular-nums">
+                  {formatRupiah(methodStats.qris.keluar)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-caption pt-1 border-t border-border-subtle/60">
+                <span className="font-semibold text-text-secondary">Net:</span>
+                <span className="font-bold text-text-primary tabular-nums">
+                  {formatRupiah(methodStats.qris.masuk - methodStats.qris.keluar)}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Transfer Bank */}
+          <div className="p-3.5 rounded-[10px] bg-surface-variant border border-border-subtle flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <span className="font-body-bold text-caption text-text-primary flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-purple-500 inline-block" />
+                Transfer Bank
+              </span>
+              <span className="font-micro-badge text-[10px] px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200 font-semibold tabular-nums">
+                {methodStats.bank_transfer.orderCount} order
+              </span>
+            </div>
+            <div className="flex flex-col gap-1 pt-1 border-t border-border-subtle">
+              <div className="flex items-center justify-between text-caption">
+                <span className="text-text-muted">Masuk:</span>
+                <span className="font-body-bold text-success-text tabular-nums">
+                  {formatRupiah(methodStats.bank_transfer.masuk)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-caption">
+                <span className="text-text-muted">Keluar:</span>
+                <span className="font-body-bold text-danger-text tabular-nums">
+                  {formatRupiah(methodStats.bank_transfer.keluar)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-caption pt-1 border-t border-border-subtle/60">
+                <span className="font-semibold text-text-secondary">Net:</span>
+                <span className="font-bold text-text-primary tabular-nums">
+                  {formatRupiah(methodStats.bank_transfer.masuk - methodStats.bank_transfer.keluar)}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Riwayat & Detail Transaksi Keuangan dengan Filter Metode Pembayaran */}
+      <section className="clay-card rounded-[10px] p-4 flex flex-col gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Icon name="receipt_long" className="text-primary text-[20px]" />
+            <h3 className="font-headline-3 text-headline-3 text-text-primary">
+              Riwayat Transaksi & Metode Bayar
+            </h3>
+          </div>
+          {/* Method Filter Buttons */}
+          <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
+            {(
+              [
+                { key: "all", label: "Semua Metode" },
+                { key: "cash", label: "Tunai" },
+                { key: "qris", label: "QRIS" },
+                { key: "bank_transfer", label: "Transfer" },
+              ] as const
+            ).map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                onClick={() => setMethodFilter(item.key)}
+                className={`px-3 py-1 text-xs rounded-full border transition-all ${
+                  methodFilter === item.key
+                    ? "bg-primary text-white border-primary shadow-sm"
+                    : "bg-surface-variant text-text-secondary border-border-subtle hover:bg-surface"
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {combinedTransactions.length === 0 ? (
+          <div className="p-6 text-center text-text-muted text-caption">
+            Tidak ada transaksi untuk filter metode pembayaran ini.
+          </div>
+        ) : (
+          <div className="flex flex-col divide-y divide-border-subtle">
+            {combinedTransactions.map((tx) => {
+              const isCash = tx.paymentMethod === "cash";
+              const isQris = tx.paymentMethod === "qris";
+              const badgeStyle = isCash
+                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                : isQris
+                ? "bg-sky-50 text-sky-700 border-sky-200"
+                : "bg-purple-50 text-purple-700 border-purple-200";
+              const methodLabel = isCash ? "Tunai" : isQris ? "QRIS" : "Transfer";
+
+              return (
+                <div key={tx.id} className="py-2.5 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div
+                      className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
+                        tx.type === "in"
+                          ? "bg-emerald-50 text-emerald-600"
+                          : "bg-red-50 text-red-600"
+                      }`}
+                    >
+                      <Icon
+                        name={tx.type === "in" ? "arrow_downward" : "arrow_upward"}
+                        className="text-[16px]"
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-body-bold text-caption text-text-primary truncate">
+                        {tx.label}
+                      </p>
+                      <p className="text-[11px] text-text-muted tabular-nums">
+                        {new Date(tx.createdAt).toLocaleString("id-ID", {
+                          dateStyle: "medium",
+                          timeStyle: "short",
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span
+                      className={`font-micro-badge text-[10px] px-2 py-0.5 rounded-full border font-semibold ${badgeStyle}`}
+                    >
+                      {methodLabel}
+                    </span>
+                    <span
+                      className={`font-body-bold text-caption tabular-nums ${
+                        tx.type === "in" ? "text-success-text" : "text-danger-text"
+                      }`}
+                    >
+                      {tx.type === "in" ? "+" : "-"}
+                      {formatRupiah(tx.amount)}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
 
       {/* Top layanan */}
       {topServices.length > 0 && (

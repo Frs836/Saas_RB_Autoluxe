@@ -16,7 +16,9 @@ export default async function ProductionCostReportPage() {
     : { data: null };
 
   const { data: reportData, error } = await (supabase as any).rpc("get_production_cost_report", {
-    ...(branchId ? { p_branch_id: branchId } : {}),
+    p_branch_id: branchId || null,
+    p_from: null,
+    p_to: null,
   });
 
   if (error) {

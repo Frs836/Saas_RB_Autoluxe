@@ -5,6 +5,28 @@ import { Icon } from "@/components/ui/icon";
 
 type Series = { label: string; income: number; expense: number };
 
+export type PaymentMethodSummary = {
+  method: "cash" | "qris" | "bank_transfer";
+  label: string;
+  income: number;
+  expense: number;
+  net: number;
+  incomeCount: number;
+  expenseCount: number;
+};
+
+export type FinancialTransaction = {
+  id: string;
+  type: "in" | "out";
+  amount: number;
+  category: string;
+  description: string;
+  paymentMethod: "cash" | "qris" | "bank_transfer";
+  createdAt: string;
+  orderNumber: string | null;
+  licensePlate: string | null;
+};
+
 export type LaporanData = {
   finance: {
     income: number;
@@ -12,6 +34,8 @@ export type LaporanData = {
     net: number;
     monthly: Series[];
     byCategory: { category: string; type: string; amount: number; count: number }[];
+    byPaymentMethod: PaymentMethodSummary[];
+    transactions: FinancialTransaction[];
   };
   branchRevenue: { branchName: string; orders: number; revenue: number }[];
   unitsSold: { name: string; qty: number; revenue: number }[];
@@ -51,6 +75,12 @@ export function LaporanView({ data }: { data: LaporanData }) {
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
 
+  // Filter untuk riwayat transaksi finansial
+  const [methodFilter, setMethodFilter] = useState<"all" | "cash" | "qris" | "bank_transfer">("all");
+  const [typeFilter, setTypeFilter] = useState<"all" | "in" | "out">("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [displayCount, setDisplayCount] = useState(15);
+
   const maxMonthly = Math.max(
     1,
     ...data.finance.monthly.map((m) => Math.max(m.income, m.expense)),
@@ -81,6 +111,30 @@ export function LaporanView({ data }: { data: LaporanData }) {
           c.type === "in" ? "Masuk" : "Keluar",
           c.count,
           c.amount,
+        ]),
+      ];
+
+      const methodSheet = [
+        ["Metode Pembayaran", "Pemasukan (Masuk)", "Pengeluaran (Keluar)", "Net Kas", "Trx Masuk", "Trx Keluar"],
+        ...(data.finance.byPaymentMethod ?? []).map((m) => [
+          m.label,
+          m.income,
+          m.expense,
+          m.net,
+          m.incomeCount,
+          m.expenseCount,
+        ]),
+      ];
+
+      const transactionSheet = [
+        ["Waktu", "Jenis", "Kategori", "Keterangan", "Metode Pembayaran", "Nominal"],
+        ...(data.finance.transactions ?? []).map((t) => [
+          new Date(t.createdAt).toLocaleString("id-ID", { timeZone: "Asia/Jakarta" }),
+          t.type === "in" ? "Masuk" : "Keluar",
+          t.category,
+          t.description || "-",
+          t.paymentMethod === "cash" ? "Tunai (Cash)" : t.paymentMethod === "qris" ? "QRIS" : "Transfer Bank",
+          t.type === "in" ? t.amount : -t.amount,
         ]),
       ];
 
@@ -134,6 +188,16 @@ export function LaporanView({ data }: { data: LaporanData }) {
       );
       XLSX.utils.book_append_sheet(
         wb,
+        XLSX.utils.aoa_to_sheet(methodSheet),
+        "Per Metode",
+      );
+      XLSX.utils.book_append_sheet(
+        wb,
+        XLSX.utils.aoa_to_sheet(transactionSheet),
+        "Riwayat Transaksi",
+      );
+      XLSX.utils.book_append_sheet(
+        wb,
         XLSX.utils.aoa_to_sheet(branchSheet),
         "Omzet Cabang",
       );
@@ -168,6 +232,23 @@ export function LaporanView({ data }: { data: LaporanData }) {
       setExporting(false);
     }
   }
+
+  const allTx = data.finance.transactions ?? [];
+  const filteredTx = allTx.filter((t) => {
+    if (methodFilter !== "all" && t.paymentMethod !== methodFilter) return false;
+    if (typeFilter !== "all" && t.type !== typeFilter) return false;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const matchDesc = (t.description || "").toLowerCase().includes(q);
+      const matchCat = (t.category || "").toLowerCase().includes(q);
+      const matchPlate = (t.licensePlate || "").toLowerCase().includes(q);
+      const matchOrder = (t.orderNumber || "").toLowerCase().includes(q);
+      if (!matchDesc && !matchCat && !matchPlate && !matchOrder) return false;
+    }
+    return true;
+  });
+
+  const visibleTx = filteredTx.slice(0, displayCount);
 
   return (
     <div className="flex-1 px-gutter pt-4 pb-nav-plain lg:pb-8 flex flex-col gap-4">
@@ -273,6 +354,236 @@ export function LaporanView({ data }: { data: LaporanData }) {
         </div>
       </section>
       </div>
+
+      {/* Section Rincian Finansial per Metode Pembayaran (Cash, QRIS, Transfer) */}
+      <section className="bg-surface rounded-[10px] p-4 clay-card">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Icon name="account_balance_wallet" className="text-primary text-[20px]" />
+            <span className="font-headline-2 text-headline-2 text-text-primary">
+              Rincian per Metode Pembayaran
+            </span>
+          </div>
+          <span className="font-caption text-caption text-text-muted">
+            3 Saluran Kas
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {(data.finance.byPaymentMethod ?? []).map((m) => {
+            const isCash = m.method === "cash";
+            const isQris = m.method === "qris";
+            const iconName = isCash ? "payments" : isQris ? "qr_code_scanner" : "account_balance";
+            const cardBg = isCash
+              ? "bg-emerald-50/50 border-emerald-200"
+              : isQris
+              ? "bg-purple-50/50 border-purple-200"
+              : "bg-blue-50/50 border-blue-200";
+            const badgeCls = isCash
+              ? "bg-emerald-100 text-emerald-800"
+              : isQris
+              ? "bg-purple-100 text-purple-800"
+              : "bg-blue-100 text-blue-800";
+            const iconCls = isCash
+              ? "text-emerald-700 bg-emerald-100"
+              : isQris
+              ? "text-purple-700 bg-purple-100"
+              : "text-blue-700 bg-blue-100";
+
+            return (
+              <div key={m.method} className={`rounded-[10px] border p-3.5 flex flex-col justify-between gap-3 ${cardBg}`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-8 h-8 rounded-[8px] flex items-center justify-center shrink-0 ${iconCls}`}>
+                      <Icon name={iconName} className="text-[18px]" />
+                    </div>
+                    <div>
+                      <p className="font-body-bold text-body-bold text-text-primary leading-tight">{m.label}</p>
+                      <p className="font-caption text-caption text-text-muted leading-none mt-0.5">
+                        {m.incomeCount + m.expenseCount} transaksi
+                      </p>
+                    </div>
+                  </div>
+                  <span className={`px-2 py-0.5 rounded-[6px] font-caption text-[11px] font-semibold ${badgeCls}`}>
+                    Net {rupiah(m.net)}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-black/5">
+                  <div className="flex flex-col">
+                    <span className="font-caption text-[11px] text-text-muted">Masuk</span>
+                    <span className="font-body-bold text-caption text-success-text tabular-nums">
+                      +{rupiah(m.income)}
+                    </span>
+                    <span className="font-caption text-[10px] text-text-muted">
+                      {m.incomeCount} trx
+                    </span>
+                  </div>
+                  <div className="flex flex-col text-right">
+                    <span className="font-caption text-[11px] text-text-muted">Keluar</span>
+                    <span className="font-body-bold text-caption text-danger-text tabular-nums">
+                      -{rupiah(m.expense)}
+                    </span>
+                    <span className="font-caption text-[10px] text-text-muted">
+                      {m.expenseCount} trx
+                    </span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Section Riwayat & Detail Transaksi Finansial */}
+      <section className="bg-surface rounded-[10px] p-4 clay-card">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2.5 mb-3">
+          <div className="flex items-center gap-2">
+            <Icon name="receipt" className="text-primary text-[20px]" />
+            <div>
+              <span className="font-headline-2 text-headline-2 text-text-primary block">
+                Riwayat Transaksi Finansial
+              </span>
+              <span className="font-caption text-caption text-text-muted block">
+                Daftar pembayaran order, kas masuk, dan kas keluar ({filteredTx.length} transaksi)
+              </span>
+            </div>
+          </div>
+
+          {/* Search box */}
+          <div className="relative min-w-[220px]">
+            <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[18px]" />
+            <input
+              type="text"
+              placeholder="Cari order, plat, keterangan..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full h-9 pl-9 pr-3 rounded-[8px] border border-border bg-surface-container-low font-caption text-caption text-text-primary outline-none focus:border-primary"
+            />
+          </div>
+        </div>
+
+        {/* Filter Bar */}
+        <div className="flex flex-wrap items-center gap-2 mb-3.5 pb-2.5 border-b border-border/50">
+          <span className="font-caption text-[11px] text-text-muted font-medium mr-1">Metode:</span>
+          {[
+            { id: "all", label: "Semua" },
+            { id: "cash", label: "Tunai" },
+            { id: "qris", label: "QRIS" },
+            { id: "bank_transfer", label: "Transfer" },
+          ].map((f) => (
+            <button
+              key={f.id}
+              type="button"
+              onClick={() => setMethodFilter(f.id as any)}
+              className={`px-3 py-1 rounded-full text-caption transition-colors ${
+                methodFilter === f.id
+                  ? "bg-primary text-white font-semibold"
+                  : "bg-surface-container-low text-text-secondary hover:bg-surface-container"
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+
+          <span className="font-caption text-[11px] text-text-muted font-medium ml-2 mr-1">Tipe:</span>
+          {[
+            { id: "all", label: "Semua" },
+            { id: "in", label: "Masuk (+)" },
+            { id: "out", label: "Keluar (-)" },
+          ].map((f) => (
+            <button
+              key={f.id}
+              type="button"
+              onClick={() => setTypeFilter(f.id as any)}
+              className={`px-3 py-1 rounded-full text-caption transition-colors ${
+                typeFilter === f.id
+                  ? "bg-brand-600 text-white font-semibold"
+                  : "bg-surface-container-low text-text-secondary hover:bg-surface-container"
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Transaction items */}
+        {visibleTx.length === 0 ? (
+          <div className="py-8 text-center font-caption text-caption text-text-muted">
+            Tidak ada transaksi yang cocok dengan filter.
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {visibleTx.map((tx) => {
+              const isCash = tx.paymentMethod === "cash";
+              const isQris = tx.paymentMethod === "qris";
+              const methodBadgeCls = isCash
+                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                : isQris
+                ? "bg-purple-50 text-purple-700 border-purple-200"
+                : "bg-blue-50 text-blue-700 border-blue-200";
+              const methodLabel = isCash ? "Tunai" : isQris ? "QRIS" : "Transfer";
+
+              const formattedDate = new Date(tx.createdAt).toLocaleDateString("id-ID", {
+                timeZone: "Asia/Jakarta",
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              });
+
+              return (
+                <div
+                  key={tx.id}
+                  className="p-3 rounded-[8px] bg-surface-variant/40 hover:bg-surface-variant border border-border-subtle flex items-center justify-between gap-3 transition-colors"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div
+                      className={`w-8 h-8 rounded-[8px] flex items-center justify-center shrink-0 ${
+                        tx.type === "in" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
+                      }`}
+                    >
+                      <Icon name={tx.type === "in" ? "arrow_downward" : "arrow_upward"} className="text-[18px]" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-body-bold text-caption text-text-primary truncate">
+                          {tx.description || tx.category}
+                        </p>
+                        <span className={`px-2 py-0.5 rounded-[4px] border text-[11px] font-medium shrink-0 ${methodBadgeCls}`}>
+                          {methodLabel}
+                        </span>
+                      </div>
+                      <p className="font-caption text-[11px] text-text-muted mt-0.5">
+                        {tx.category} · {formattedDate} WIB
+                      </p>
+                    </div>
+                  </div>
+
+                  <span
+                    className={`font-body-bold text-body-bold shrink-0 tabular-nums ${
+                      tx.type === "in" ? "text-success-text" : "text-danger-text"
+                    }`}
+                  >
+                    {tx.type === "in" ? "+" : "-"}{rupiah(tx.amount)}
+                  </span>
+                </div>
+              );
+            })}
+
+            {filteredTx.length > displayCount && (
+              <button
+                type="button"
+                onClick={() => setDisplayCount((c) => c + 15)}
+                className="w-full py-2.5 mt-2 rounded-[8px] bg-surface-container-low hover:bg-surface-container font-caption text-caption text-primary font-semibold transition-colors"
+              >
+                Muat Lebih Banyak ({filteredTx.length - displayCount} transaksi tersisa)
+              </button>
+            )}
+          </div>
+        )}
+      </section>
 
       {/* Row 2 desktop: omzet cabang + rincian keuangan + unit terjual */}
       <div className="lg:grid lg:grid-cols-3 lg:gap-4 flex flex-col gap-4">

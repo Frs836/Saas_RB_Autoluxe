@@ -129,15 +129,13 @@ export default async function RekapPage() {
     branchConfigs[config.id] = config;
   }
 
-  const staff = (staffRes.data ?? [])
-    .filter((row) => row.role !== "maintainer")
-    .map((row) => ({
-      id: row.id as string,
-      fullName: (row.full_name as string) ?? "Staf",
-      role: row.role as string,
-      roleLabel: ATTENDANCE_ROLE_LABELS[(row.role as string) ?? ""] ?? (row.role as string),
-      branchId: (row.branch_id as string | null) ?? null,
-    }));
+  const staff = (staffRes.data ?? []).map((row) => ({
+    id: row.id as string,
+    fullName: (row.full_name as string) ?? "Staf",
+    role: row.role as string,
+    roleLabel: ATTENDANCE_ROLE_LABELS[(row.role as string) ?? ""] ?? (row.role as string),
+    branchId: (row.branch_id as string | null) ?? null,
+  }));
 
   const todayLogs = (todayLogsRes.data ?? []).map((row) => ({
     id: row.id as string,
